@@ -1,0 +1,4 @@
+interface:
+    display_name: 'Symphony Technische Dokumentation'
+    short_description: 'Implementierbare technische Feature-Dokumentation'
+    default_prompt: 'Nutze $symphony-technical-docs, um die technische Dokumentation eines Symphony-Features implementierungsfähig aufzubauen oder mit der verifizierten Umsetzung zu synchronisieren.'

@@ -1,0 +1,16 @@
+{
+  "name": "frontend-feature-workflow",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/features/workflow/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["scope:frontend-feature", "type:feature", "feature:workflow"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/features/workflow/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

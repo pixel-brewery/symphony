@@ -1,0 +1,371 @@
+<mosaik-page
+  class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+  test-id="realsports-boxing-view"
+  [attr.data-screen]="screen()"
+>
+  <mosaik-page-header [text]="'RealSports Boxing'" [inset]="'all'" test-id="boxing-header">
+    <mosaik-button
+      slot="prefix"
+      test-id="boxing-back-arcade"
+      [label]="'All games'"
+      [appearance]="'plain'"
+      [variant]="'neutral'"
+      [command]="{ click: backArcadeCommand }"
+    />
+    @if (screen() === 'game') {
+    <div
+      slot="subHeader"
+      id="boxing-controls"
+      test-id="boxing-legend"
+      class="flex flex-wrap items-center gap-x-5 gap-y-1"
+      [mosaikTypography]="'body2'"
+    >
+      <div class="flex items-center gap-1">
+        <mosaik-kbd [value]="['↑', '←', '↓', '→']" /><span>Move</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <mosaik-kbd [value]="['Space']" /><span>+ direction: punch / guard</span>
+      </div>
+      @if (matchOptions().players === 2) {
+      <div class="flex items-center gap-1">
+        <span>Player 2:</span><mosaik-kbd [value]="['W', 'A', 'S', 'D']" /><mosaik-kbd
+          [value]="['F']"
+        />
+      </div>
+      }
+      <div class="flex items-center gap-1"><mosaik-kbd [value]="['P']" /><span>Pause</span></div>
+    </div>
+    }
+    <div slot="suffix" class="flex flex-wrap items-center gap-2">
+      <mosaik-button
+        test-id="boxing-sound"
+        [label]="soundMuted() ? 'Sound off' : 'Sound on'"
+        [attr.aria-pressed]="!soundMuted()"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: toggleSoundCommand }"
+        (click)="enableAudio()"
+      />
+      @if (screen() === 'game') {
+      <mosaik-button
+        test-id="boxing-menu"
+        [label]="'Menu'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: menuCommand }"
+      />
+      @if (result() === null) {
+      <mosaik-button
+        test-id="boxing-pause"
+        [label]="status() === 'paused' ? 'Resume' : 'Pause'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: togglePauseCommand }"
+        (click)="focusScreen()"
+      />
+      } }
+    </div>
+  </mosaik-page-header>
+  <mosaik-page-content
+    [inset]="'none'"
+    class="relative flex min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+    test-id="boxing-playfield"
+  >
+    <canvas
+      #ringCanvas
+      test-id="boxing-screen"
+      class="absolute inset-0 block h-full w-full"
+      [attr.tabindex]="screen() === 'game' ? 0 : -1"
+      role="img"
+      aria-label="RealSports Boxing ring. Player one uses arrow keys and Space. Player two uses W A S D and F. Hold fire with a direction to punch or guard. P pauses."
+      [attr.aria-describedby]="screen() === 'game' ? 'boxing-controls' : null"
+      (click)="focusScreen()"
+    ></canvas>
+    @if (!screenAvailable()) {
+    <div class="absolute inset-x-4 top-4" role="alert">
+      <mosaik-text
+        [text]="'The ring could not be loaded. Return to All games and try again.'"
+        [wrap]="true"
+      />
+    </div>
+    } @if (screen() !== 'game') {
+    <div class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+      <mosaik-card class="my-auto w-full max-w-2xl shrink-0">
+        @if (screen() === 'intro') {
+        <mosaik-card-header
+          [text]="'RealSports Boxing'"
+          [subText]="'Choose your contender and step into the ring.'"
+        />
+        <mosaik-card-content>
+          <div class="flex flex-col gap-4">
+            <mosaik-text
+              [text]="'Face the computer or a second player. Build a strength advantage, find your opponent’s weak spot and land the deciding punch.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <mosaik-form-field [fieldState]="setup.players()">
+                <mosaik-select
+                  test-id="boxing-players"
+                  [formField]="setup.players"
+                  [label]="'Players'"
+                  [variant]="'primary'"
+                >
+                  <mosaik-select-item
+                    test-id="boxing-mode-cpu"
+                    [value]="1"
+                    [label]="'One player vs computer'"
+                  />
+                  <mosaik-select-item
+                    test-id="boxing-mode-local"
+                    [value]="2"
+                    [label]="'Two local players'"
+                  />
+                </mosaik-select>
+              </mosaik-form-field>
+              @if (setup.players().value() === 1) {
+              <mosaik-form-field [fieldState]="setup.difficulty()">
+                <mosaik-select
+                  test-id="boxing-difficulty"
+                  [formField]="setup.difficulty"
+                  [label]="'Computer difficulty'"
+                  [variant]="'primary'"
+                >
+                  <mosaik-select-item
+                    test-id="boxing-difficulty-a"
+                    [value]="'A'"
+                    [label]="'A · Stronger opponent'"
+                  />
+                  <mosaik-select-item
+                    test-id="boxing-difficulty-b"
+                    [value]="'B'"
+                    [label]="'B · Weaker opponent'"
+                  />
+                </mosaik-select>
+              </mosaik-form-field>
+              }
+              <mosaik-form-field [fieldState]="setup.firstContender()">
+                <mosaik-select
+                  test-id="boxing-contender-1"
+                  [formField]="setup.firstContender"
+                  [label]="setup.players().value() === 1 ? 'Your boxer' : 'Player 1'"
+                  [variant]="'primary'"
+                >
+                  @for (contender of contenders; track contender.id) {
+                  <mosaik-select-item
+                    [attr.test-id]="'boxing-fighter-1-' + contender.id"
+                    [value]="contender.id"
+                    [label]="contender.name"
+                    [disabled]="setup.secondContender().value() === contender.id"
+                  />
+                  }
+                </mosaik-select>
+              </mosaik-form-field>
+              <mosaik-form-field [fieldState]="setup.secondContender()">
+                <mosaik-select
+                  test-id="boxing-contender-2"
+                  [formField]="setup.secondContender"
+                  [label]="setup.players().value() === 1 ? 'Opponent' : 'Player 2'"
+                  [variant]="'primary'"
+                >
+                  @for (contender of contenders; track contender.id) {
+                  <mosaik-select-item
+                    [attr.test-id]="'boxing-fighter-2-' + contender.id"
+                    [value]="contender.id"
+                    [label]="contender.name"
+                    [disabled]="setup.firstContender().value() === contender.id"
+                  />
+                  }
+                </mosaik-select>
+              </mosaik-form-field>
+            </div>
+            @if (setup.firstContender().value() === setup.secondContender().value()) {
+            <mosaik-text [text]="'Choose two different contenders to begin.'" [wrap]="true" />
+            }
+          </div>
+        </mosaik-card-content>
+        <mosaik-card-actions>
+          <div class="flex flex-wrap gap-2">
+            @if (canContinue()) {
+            <mosaik-button
+              test-id="boxing-resume"
+              [label]="'Continue'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: resumeCommand }"
+              (click)="focusScreen()"
+            />
+            }
+            <mosaik-button
+              test-id="boxing-start"
+              [label]="canContinue() ? 'New match' : 'Play'"
+              [iconName]="'play'"
+              [appearance]="canContinue() ? 'outline' : 'solid'"
+              [variant]="'primary'"
+              [command]="{ click: startCommand }"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="boxing-instructions"
+              [label]="'How to play'"
+              [appearance]="'plain'"
+              [variant]="'neutral'"
+              [command]="{ click: instructionsCommand }"
+            />
+          </div>
+        </mosaik-card-actions>
+        } @else {
+        <mosaik-card-header
+          [text]="'How to play'"
+          [subText]="'Move, punch, cover up and look for an opening.'"
+        />
+        <mosaik-card-content>
+          <div class="flex flex-col gap-4">
+            <mosaik-text
+              [text]="'Player 1 moves with the arrow keys and uses Space as the fire button. Player 2 moves with W A S D and uses F. P or Escape pauses the match.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <div
+              class="grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-2"
+              [mosaikTypography]="'body2'"
+            >
+              <span>Fire + toward your opponent</span><span>Jab</span>
+              <span>Fire + away from your opponent</span><span>Cover up</span> <span>Fire + Up</span
+              ><span>Payoff punch</span> <span>Fire + Down</span><span>Body punch</span>
+            </div>
+            <mosaik-text
+              [text]="'Release fire between punches. Toward and away follow your opponent’s position in the ring. Covering up resets an unanswered flurry once, but twelve further unanswered punches can still earn a technical knockout through your guard. Counterpunch or retreat to break the attack.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <mosaik-text
+              [text]="'Twelve unanswered punches earn a technical knockout. Your strength-lead bar blinks when you can land a finishing punch. To score a knockdown, strike your opponent’s weak spot from the correct position:'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <div class="flex flex-col gap-2" [mosaikTypography]="'body2'">
+              @for (contender of contenders; track contender.id) {
+              <span
+                >{{ contender.name }}: @if (contender.weakPunch === 'body') { body punch } @else {
+                payoff punch } @switch (contender.weakPosition) { @case ('level') { from level with
+                your opponent. } @case ('above') { from above your opponent. } @case ('below') {
+                from below your opponent. } }</span
+              >
+              }
+            </div>
+            <mosaik-text
+              [text]="'A match lasts up to seven three-minute rounds, with a rest between rounds. If neither boxer wins by knockout, the scores decide the result.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <mosaik-text
+              [text]="'During a knockdown, watch the count. In two-player mode, the downed player must press their Up key at nine to attempt to get up. Recovery also depends on remaining strength. In one-player mode, recovery is automatic when possible.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+          </div>
+        </mosaik-card-content>
+        <mosaik-card-actions
+          ><mosaik-button
+            test-id="boxing-back-title"
+            [label]="'Back'"
+            [appearance]="'outline'"
+            [variant]="'neutral'"
+            [command]="{ click: menuCommand }"
+        /></mosaik-card-actions>
+        }
+      </mosaik-card>
+    </div>
+    } @else { @if (result(); as result) {
+    <div class="absolute inset-0 flex items-center justify-center overflow-y-auto p-4">
+      <mosaik-card
+        class="my-auto w-full max-w-lg shrink-0"
+        test-id="boxing-result"
+        role="status"
+        [attr.data-winner]="result.winner"
+        [attr.data-reason]="result.reason"
+      >
+        <mosaik-card-header [text]="result.winner === null ? 'The match is a draw' : 'Match won'" />
+        <mosaik-card-content>
+          <div class="flex flex-col gap-3">
+            @if (result.winner !== null) {
+            <span [mosaikTypography]="'body1'"
+              >{{ matchOptions().contenders[result.winner] | boxingContenderName }} wins.</span
+            >
+            }
+            <span
+              >{{ matchOptions().contenders[0] | boxingContenderName }}: {{ result.scores[0] }}
+              points</span
+            >
+            <span
+              >{{ matchOptions().contenders[1] | boxingContenderName }}: {{ result.scores[1] }}
+              points</span
+            >
+            @switch (result.reason) { @case ('knockout') {
+            <span>Knockout in round {{ result.round }}.</span> } @case ('technical-knockout') {
+            <span>Technical knockout in round {{ result.round }}.</span> } @case ('decision') {
+            <span>Decision after seven rounds.</span> } @case ('draw') {
+            <span>Neither boxer finished ahead on points.</span> } }
+          </div>
+        </mosaik-card-content>
+        <mosaik-card-actions>
+          <div class="flex flex-wrap gap-2">
+            <mosaik-button
+              test-id="boxing-rematch"
+              [label]="'Rematch'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: rematchCommand }"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="boxing-result-menu"
+              [label]="'Choose contenders'"
+              [appearance]="'outline'"
+              [variant]="'neutral'"
+              [command]="{ click: menuCommand }"
+            />
+          </div>
+        </mosaik-card-actions>
+      </mosaik-card>
+    </div>
+    } @else {
+    <div
+      class="pointer-events-none absolute top-4 right-4 flex flex-col items-end gap-2"
+      test-id="boxing-message"
+      [mosaikTypography]="'body2'"
+    >
+      @switch (status()) { @case ('ready') {
+      <span>Get ready for the opening bell.</span> } @case ('paused') {
+      <span>Paused. Press P to resume.</span> } @case ('rest') {
+      <span>Between rounds. Recover before the next bell.</span> } @case ('knockdown') { @if
+      (matchOptions().players === 2) {
+      <span
+        >Player {{ (downedPlayer() ?? 0) + 1 }}: press @if (downedPlayer() === 0) { ↑ } @else { W }
+        at the count of nine to get up.</span
+      >
+      } } }
+    </div>
+    } }
+    <p
+      class="sr-only"
+      test-id="boxing-status"
+      role="status"
+      aria-live="polite"
+      [attr.data-status]="status()"
+      [attr.data-round]="round()"
+      [attr.data-time]="secondsRemaining()"
+      [attr.data-count]="count()"
+      [attr.data-players]="matchOptions().players"
+      [attr.data-difficulty]="matchOptions().difficulty"
+      [attr.data-contender-1]="matchOptions().contenders[0]"
+      [attr.data-contender-2]="matchOptions().contenders[1]"
+    >
+      @if (screen() === 'game') { @switch (status()) { @case ('ready') { The match is starting. }
+      @case ('fighting') { Round {{ round() }}. } @case ('paused') { Match paused. } @case ('rest')
+      { Rest between rounds. } @case ('knockdown') { Knockdown. Count {{ count() }}. } @case
+      ('celebration') { Match finished. } } }
+    </p>
+  </mosaik-page-content>
+</mosaik-page>

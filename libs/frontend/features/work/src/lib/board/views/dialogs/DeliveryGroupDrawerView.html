@@ -1,0 +1,115 @@
+<ng-template mosaikDrawerHeader>
+  <mosaik-drawer-header
+    [text]="presenter.proposal()?.assessment?.relation === 'collision' || presenter.proposal()?.assessment?.relation === 'dependency' ? 'Critical path' : 'Delivery group'"
+  >
+    <div slot="subHeader" class="flex min-w-0 flex-wrap gap-x-1">
+      @if (presenter.root(); as root) {
+      <span>{{ root.externalId }}</span><span>· {{ root.title }}</span>
+      }
+    </div>
+    <mosaik-dismiss slot="suffix" test-id="delivery-group-close" (click)="presenter.close()" />
+  </mosaik-drawer-header>
+</ng-template>
+
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="delivery-group-drawer"
+    class="flex h-full min-h-0 flex-col gap-4 overflow-y-auto px-2 py-2"
+  >
+    @if (presenter.proposal(); as proposal) {
+    <mosaik-banner
+      [appearance]="'soft'"
+      [variant]="proposal.assessment.relation === 'joint-delivery' ? 'success' : 'warning'"
+    >
+      <mosaik-banner-header
+        [text]="proposal.assessment.relation === 'joint-delivery' ? 'Joint delivery is supported' : 'Review before grouping'"
+      />
+      <mosaik-banner-sub-header [text]="proposal.assessment.evidence.join(' ')" />
+    </mosaik-banner>
+    @if (presenter.requiresAttestation()) {
+    <mosaik-banner test-id="delivery-group-attestation" [appearance]="'soft'" [variant]="'warning'">
+      <mosaik-banner-header [text]="'The Analyzer found weak evidence'" />
+      <mosaik-banner-sub-header
+        [text]="'Confirming attests that these tickets belong together. Activation moves every member to the root column.'"
+      />
+    </mosaik-banner>
+    } @if (presenter.existingGroup()) {
+    <mosaik-banner [appearance]="'soft'" [variant]="'primary'">
+      <mosaik-banner-header [text]="'Joins an existing delivery group'" />
+      <mosaik-banner-sub-header [text]="presenter.existingGroupSummary()" />
+    </mosaik-banner>
+    } @if (presenter.requestedColumnLabel; as columnLabel) {
+    <mosaik-banner [appearance]="'soft'" [variant]="'primary'">
+      <mosaik-banner-header [text]="'Move to ' + columnLabel" />
+      <mosaik-banner-sub-header
+        [text]="'Choose whether the related tickets should enter this lane together or whether only the selected ticket should move.'"
+      />
+    </mosaik-banner>
+    } @if (proposal.assessment.sharedChangeSurface.length) {
+    <section class="flex min-w-0 flex-col gap-2">
+      <mosaik-text [text]="'Shared change surface'" [readonly]="true" />
+      @for (surface of proposal.assessment.sharedChangeSurface; track surface) {
+      <mosaik-text [text]="surface" [readonly]="true" [wrap]="true" />
+      }
+    </section>
+    } } @else if (presenter.group(); as group) {
+    <mosaik-banner
+      [appearance]="'soft'"
+      [variant]="group.state === 'paused' ? 'warning' : 'primary'"
+    >
+      <mosaik-banner-header
+        [text]="group.state === 'paused' ? 'Group needs attention' : 'Delivered together'"
+      />
+      <mosaik-banner-sub-header
+        [text]="group.state === 'paused' ? 'Align every member to the root column or dissolve the group.' : 'Analyzer, Solver, branch and pull request use the root shown below.'"
+      />
+    </mosaik-banner>
+    }
+
+    <mosaik-cell-group class="flex min-w-0 flex-col gap-1">
+      @for (item of presenter.items(); track item.id) {
+      <mosaik-cell
+        [attr.test-id]="'delivery-group-item-' + item.id"
+        [label]="item.id === presenter.root()?.id ? 'Root · ' + item.externalId : item.externalId"
+        [subLabel]="item.title"
+        (click)="presenter.openWorkItem(item.id)"
+      />
+      }
+    </mosaik-cell-group>
+
+    <mosaik-divider />
+    <div class="flex flex-wrap justify-end gap-2">
+      @if (presenter.proposal()?.state === 'open') {
+      <mosaik-button
+        test-id="delivery-group-reject"
+        [label]="'Keep separate'"
+        [appearance]="'plain'"
+        [disabled]="presenter.busy()"
+        (click)="presenter.reject()"
+      />
+      @if (presenter.canConfirm() || presenter.requiresAttestation()) {
+      <mosaik-button
+        test-id="delivery-group-confirm"
+        [label]="presenter.confirmLabel()"
+        [disabled]="presenter.busy()"
+        (click)="presenter.confirm()"
+      />
+      } } @else if (presenter.group(); as group) {
+      <mosaik-button
+        test-id="delivery-group-dissolve"
+        [label]="'Dissolve group'"
+        [appearance]="'plain'"
+        [disabled]="presenter.busy()"
+        (click)="presenter.dissolve()"
+      />
+      @if (group.state === 'paused') {
+      <mosaik-button
+        test-id="delivery-group-align"
+        [label]="'Align to root column'"
+        [disabled]="presenter.busy()"
+        (click)="presenter.align()"
+      />
+      } }
+    </div>
+  </div>
+</ng-template>

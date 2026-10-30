@@ -1,0 +1,25 @@
+{
+  "name": "application-delivery",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/application/features/delivery/src",
+  "projectType": "library",
+  "tags": ["scope:application", "type:application", "feature:delivery"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/application/features/delivery/tsconfig.lib.json --noEmit",
+          "tsc -p libs/application/features/delivery/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/application/features/delivery/vitest.config.ts"
+      }
+    }
+  }
+}

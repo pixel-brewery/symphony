@@ -1,0 +1,60 @@
+<mosaik-page class="block min-h-full min-w-0" test-id="mobile-settings-view">
+  <mosaik-page-header [inset]="'all'" [text]="'Settings'" [subText]="'Mobile companion'" />
+  <mosaik-page-content [inset]="'all'">
+    <div class="grid gap-3">
+      <mosaik-card [appearance]="'soft'">
+        <mosaik-card-header
+          [text]="'Connection · ' + (presenter.snapshot()?.desktopName ?? 'Symphony Desktop')"
+          [subText]="presenter.connectionState() === 'connected' ? 'Connected on local Wi-Fi' : 'Connection interrupted'"
+        />
+        <mosaik-card-content>
+          <p class="mt-0">This phone is paired with the selected Symphony Desktop instance.</p>
+          @if (presenter.error()) {
+          <mosaik-hint [text]="presenter.error() ?? ''" />
+          }
+          <mosaik-button
+            [appearance]="'outline'"
+            [label]="'Reconnect'"
+            (click)="presenter.retryCommand.execute()"
+          />
+        </mosaik-card-content>
+      </mosaik-card>
+
+      <mosaik-card test-id="mobile-theme-settings-card">
+        <mosaik-card-header
+          [text]="'Appearance'"
+          [subText]="'Choose light, dark, or follow this device.'"
+        />
+        <mosaik-card-content>
+          <mosaik-select
+            class="w-full"
+            test-id="mobile-theme-select"
+            [label]="'Theme'"
+            [value]="presenter.theme()"
+            [variant]="'primary'"
+            (selectionChanged)="presenter.updateThemeCommand.execute($event)"
+          >
+            <mosaik-select-item
+              test-id="mobile-theme-light"
+              [label]="'Light'"
+              [value]="'light'"
+              (click)="presenter.updateThemeCommand.execute('light')"
+            />
+            <mosaik-select-item
+              test-id="mobile-theme-dark"
+              [label]="'Dark'"
+              [value]="'dark'"
+              (click)="presenter.updateThemeCommand.execute('dark')"
+            />
+            <mosaik-select-item
+              test-id="mobile-theme-system"
+              [label]="'System'"
+              [value]="'system'"
+              (click)="presenter.updateThemeCommand.execute('system')"
+            />
+          </mosaik-select>
+        </mosaik-card-content>
+      </mosaik-card>
+    </div>
+  </mosaik-page-content>
+</mosaik-page>

@@ -1,0 +1,15 @@
+{
+  "name": "domain-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/core/src",
+  "projectType": "library",
+  "tags": ["scope:domain", "type:domain", "feature:core"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/domain/core/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

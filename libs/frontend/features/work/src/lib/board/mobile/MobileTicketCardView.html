@@ -1,0 +1,54 @@
+<a
+  symphonyPseudoLink
+  class="block w-full min-w-0 max-w-full"
+  [routerLink]="['/tickets', ticket().id]"
+  [attr.test-id]="'mobile-ticket-' + ticket().id"
+>
+  <mosaik-card class="block w-full min-w-0 max-w-full" [appearance]="'soft'">
+    <mosaik-card-header [text]="ticket().title" [subText]="ticket().externalId" />
+    <mosaik-card-content>
+      <dl class="m-0 grid gap-1">
+        <div class="flex min-w-0 gap-1">
+          <dt>Status</dt>
+          <dd>{{ ticket().stateLabel }}</dd>
+        </div>
+        @if (ticket().health; as health) {
+        <div class="flex min-w-0 gap-1" [attr.test-id]="'mobile-ticket-health-' + ticket().id">
+          <dt>{{ health.severity === 'blocker' ? 'Blocked' : 'Incomplete' }}</dt>
+          <dd>{{ health.issues[0]?.summary }}</dd>
+        </div>
+        } @if (ticket().externalCoordination; as coordination) {
+        <div class="flex min-w-0 gap-1" test-id="mobile-ticket-external-claim">
+          <dt>Symphony</dt>
+          <dd>
+            {{ coordination.action === 'analyze' ? 'Analyzing elsewhere' : 'Solving elsewhere' }}{{
+            coordination.owner ? ' · @' + coordination.owner : '' }}
+          </dd>
+        </div>
+        } @if (ticket().assignees.length) {
+        <div class="flex min-w-0 gap-1">
+          <dt>Assigned</dt>
+          <dd>{{ ticket().assignees.join(', ') }}</dd>
+        </div>
+        } @if (ticket().repository) {
+        <div class="flex min-w-0 gap-1">
+          <dt>Repository</dt>
+          <dd>{{ ticket().repository }}</dd>
+        </div>
+        }
+      </dl>
+      @if (ticket().labels.length) {
+      <div class="mt-2 flex flex-wrap gap-1">
+        @for (label of ticket().labels; track label) {
+        <mosaik-badge
+          [label]="label"
+          [appearance]="'soft'"
+          [variant]="'primary'"
+          [size]="'small'"
+        />
+        }
+      </div>
+      }
+    </mosaik-card-content>
+  </mosaik-card>
+</a>

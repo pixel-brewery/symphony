@@ -1,0 +1,206 @@
+<ng-template mosaikDialogHeader>
+  <mosaik-dialog-header
+    [text]="'Leaderboard'"
+    [subText]="'Your best results from every Arcade game.'"
+  />
+</ng-template>
+
+<ng-template mosaikDialogContent>
+  <div
+    class="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto py-1"
+    test-id="arcade-leaderboard-dialog"
+  >
+    <section class="flex min-w-0 flex-col gap-2" aria-labelledby="leaderboard-pitfall-title">
+      <h2 id="leaderboard-pitfall-title" [mosaikTypography]="'headline5'">Pitfall!</h2>
+      <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-pitfall-results">
+        @for (entry of presenter.pitfallEntries; track entry.id; let rank = $index) {
+        <mosaik-cell
+          test-id="leaderboard-pitfall-result"
+          [attr.data-score]="entry.score"
+          [attr.data-treasures]="entry.treasures"
+          [attr.data-outcome]="entry.outcome"
+        >
+          <span slot="label">{{ rank + 1 }}. {{ entry.score | number }} points</span>
+          <span slot="subLabel"
+            >{{ entry.treasures }}/32 treasures · {{ entry.elapsedSeconds * 1000 |
+            date:'mm:ss':'UTC' }} · {{ entry.completedAt | date:'mediumDate' }} · @if (entry.outcome
+            === 'completed') { All treasures } @else { Expedition ended }</span
+          >
+        </mosaik-cell>
+        } @empty {
+        <mosaik-cell [label]="'No finished expeditions yet.'" />
+        }
+      </mosaik-cell-group>
+    </section>
+
+    <section class="flex min-w-0 flex-col gap-2" aria-labelledby="leaderboard-pitfall-ii-title">
+      <h2 id="leaderboard-pitfall-ii-title" [mosaikTypography]="'headline5'">
+        Pitfall II: Lost Caverns
+      </h2>
+      <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-pitfall-ii-results">
+        @for (entry of presenter.pitfallIIEntries; track entry.id; let rank = $index) {
+        <mosaik-cell
+          test-id="leaderboard-pitfall-ii-result"
+          [attr.data-score]="entry.score"
+          [attr.data-gold]="entry.goldCollected"
+          [attr.data-outcome]="entry.outcome"
+        >
+          <span slot="label">{{ rank + 1 }}. {{ entry.score | number }} points</span>
+          <span slot="subLabel"
+            >{{ entry.goldCollected }}/28 gold bars · {{ entry.elapsedSeconds / 60 | number:'1.0-1'
+            }} minutes · {{ entry.completedAt | date:'mediumDate' }} · Expedition completed</span
+          >
+        </mosaik-cell>
+        } @empty {
+        <mosaik-cell [label]="'No completed Lost Caverns expeditions yet.'" />
+        }
+      </mosaik-cell-group>
+    </section>
+
+    <section class="flex min-w-0 flex-col gap-2" aria-labelledby="leaderboard-breakout-title">
+      <h2 id="leaderboard-breakout-title" [mosaikTypography]="'headline5'">Breakout</h2>
+      <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-breakout-results">
+        @for (entry of presenter.breakoutEntries; track entry.id; let rank = $index) {
+        <mosaik-cell
+          test-id="leaderboard-breakout-result"
+          [attr.data-variation]="entry.variation"
+          [attr.data-winner]="entry.winner"
+        >
+          <div slot="label" class="flex min-w-0 flex-wrap gap-x-2 gap-y-1">
+            <span>{{ rank + 1 }}. Variation {{ entry.variation }}</span>
+            <time [attr.datetime]="entry.completedAt"
+              >{{ entry.completedAt | date:'mediumDate' }}</time
+            >
+          </div>
+          <div slot="subLabel" class="flex min-w-0 flex-col gap-1">
+            @for (team of entry.teams; track team.index) {
+            <span
+              >@if (entry.teams.length > 1) { Team {{ team.index + 1 }} · }{{ team.score }} points ·
+              {{ team.wallsCleared }}/2 walls · {{ team.ballsRemaining }} balls @if (entry.variation
+              >= 5 && entry.variation <= 8) { · {{ team.elapsedSeconds | number:'1.1-1' }} seconds
+              }</span
+            >
+            }
+          </div>
+        </mosaik-cell>
+        } @empty {
+        <mosaik-cell [label]="'No completed Breakout matches yet.'" />
+        }
+      </mosaik-cell-group>
+    </section>
+
+    <section class="flex min-w-0 flex-col gap-2" aria-labelledby="leaderboard-boxing-title">
+      <h2 id="leaderboard-boxing-title" [mosaikTypography]="'headline5'">RealSports Boxing</h2>
+      <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-boxing-results">
+        @for (entry of presenter.boxingEntries; track entry.id; let rank = $index) {
+        <mosaik-cell
+          test-id="leaderboard-boxing-result"
+          [attr.data-winner]="entry.winner"
+          [attr.data-reason]="entry.reason"
+        >
+          <div slot="label" class="flex min-w-0 flex-wrap gap-x-2 gap-y-1">
+            <span
+              >{{ rank + 1 }}. {{ entry.contenders[0] | boxingContenderName }} {{ entry.scores[0]
+              }}–{{ entry.scores[1] }} {{ entry.contenders[1] | boxingContenderName }}</span
+            >
+            <time [attr.datetime]="entry.completedAt"
+              >{{ entry.completedAt | date:'mediumDate' }}</time
+            >
+          </div>
+          <span slot="subLabel"
+            >@if (entry.winner === null) { Draw } @else { {{ entry.contenders[entry.winner] |
+            boxingContenderName }} won } · Round {{ entry.round }} · @switch (entry.reason) { @case
+            ('knockout') { Knockout } @case ('technical-knockout') { Technical knockout } @case
+            ('decision') { Decision } @case ('draw') { Points draw } }</span
+          >
+        </mosaik-cell>
+        } @empty {
+        <mosaik-cell [label]="'No completed boxing matches yet.'" />
+        }
+      </mosaik-cell-group>
+    </section>
+    <section class="flex min-w-0 flex-col gap-2" aria-labelledby="leaderboard-jungle-hunt-title">
+      <h2 id="leaderboard-jungle-hunt-title" [mosaikTypography]="'headline5'">Jungle Hunt</h2>
+      <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-jungle-hunt-results">
+        @for (entry of presenter.jungleHuntEntries; track entry.id; let rank = $index) {
+        <mosaik-cell
+          test-id="leaderboard-jungle-hunt-result"
+          [attr.data-score]="entry.score"
+          [attr.data-level]="entry.level"
+        >
+          <span slot="label">{{ rank + 1 }}. {{ entry.score | number }} points</span>
+          <span slot="subLabel"
+            >Level {{ entry.level }} · Player {{ entry.player }} · @if (entry.outcome ===
+            'completed') { Completed } @else { Game over } · {{ entry.completedAt |
+            date:'mediumDate' }}</span
+          >
+        </mosaik-cell>
+        } @empty { <mosaik-cell [label]="'No finished games yet.'" /> }
+      </mosaik-cell-group>
+    </section>
+    <section class="flex min-w-0 flex-col gap-2" aria-labelledby="leaderboard-pong-title">
+      <h2 id="leaderboard-pong-title" [mosaikTypography]="'headline5'">Pong</h2>
+      <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-pong-results">
+        @for (entry of presenter.pongEntries; track entry.id; let rank = $index) {
+        <mosaik-cell test-id="leaderboard-pong-result" [attr.data-winner]="entry.winner">
+          <span slot="label">{{ rank + 1 }}. {{ entry.scores[0] }}–{{ entry.scores[1] }}</span>
+          <span slot="subLabel"
+            >Player {{ entry.winner + 1 }} won · First to {{ entry.targetScore }} · Two players · {{
+            entry.completedAt | date:'mediumDate' }}</span
+          >
+        </mosaik-cell>
+        } @empty { <mosaik-cell [label]="'No finished games yet.'" /> }
+      </mosaik-cell-group>
+    </section>
+    <section class="flex min-w-0 flex-col gap-2" aria-labelledby="leaderboard-seaquest-title">
+      <h2 id="leaderboard-seaquest-title" [mosaikTypography]="'headline5'">Seaquest</h2>
+      <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-seaquest-results">
+        @for (entry of presenter.seaquestEntries; track entry.id; let rank = $index) {
+        <mosaik-cell
+          test-id="leaderboard-seaquest-result"
+          [attr.data-score]="entry.score"
+          [attr.data-level]="entry.level"
+        >
+          <span slot="label">{{ rank + 1 }}. {{ entry.score | number }} points</span>
+          <span slot="subLabel"
+            >Level {{ entry.level }} · Player {{ entry.player }} · @if (entry.outcome ===
+            'completed') { Completed } @else { Game over } · {{ entry.completedAt |
+            date:'mediumDate' }}</span
+          >
+        </mosaik-cell>
+        } @empty { <mosaik-cell [label]="'No finished games yet.'" /> }
+      </mosaik-cell-group>
+    </section>
+    <section class="flex min-w-0 flex-col gap-2" aria-labelledby="leaderboard-river-raid-title">
+      <h2 id="leaderboard-river-raid-title" [mosaikTypography]="'headline5'">River Raid</h2>
+      <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-river-raid-results">
+        @for (entry of presenter.riverRaidEntries; track entry.id; let rank = $index) {
+        <mosaik-cell
+          test-id="leaderboard-river-raid-result"
+          [attr.data-score]="entry.score"
+          [attr.data-level]="entry.level"
+        >
+          <span slot="label">{{ rank + 1 }}. {{ entry.score | number }} points</span>
+          <span slot="subLabel"
+            >Level {{ entry.level }} · Player {{ entry.player }} · @if (entry.outcome ===
+            'completed') { Completed } @else { Game over } · {{ entry.completedAt |
+            date:'mediumDate' }}</span
+          >
+        </mosaik-cell>
+        } @empty { <mosaik-cell [label]="'No finished games yet.'" /> }
+      </mosaik-cell-group>
+    </section>
+  </div>
+</ng-template>
+
+<ng-template mosaikDialogFooter>
+  <div class="flex items-center justify-end">
+    <mosaik-button
+      test-id="arcade-leaderboard-close"
+      [label]="'Close'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [command]="{ click: presenter.closeCommand }"
+    />
+  </div>
+</ng-template>

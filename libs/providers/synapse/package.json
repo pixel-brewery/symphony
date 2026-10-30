@@ -1,0 +1,36 @@
+{
+  "name": "@symphony/providers-synapse",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@symphony/domain-workflow": "workspace:*",
+    "@types/node": "26.6.3",
+    "vitest": "4.1.11"
+  },
+  "dependencies": {
+    "@pixel-brewery/synapse-auth": "0.0.1",
+    "@pixel-brewery/synapse-core": "0.0.1",
+    "@pixel-brewery/synapse-provider-claude": "0.0.1",
+    "@pixel-brewery/synapse-provider-codex": "0.0.1",
+    "@pixel-brewery/synapse-provider-opencode": "0.0.1",
+    "@pixel-brewery/synapse-routing": "0.0.1",
+    "@pixel-brewery/synapse-runtime": "0.0.1",
+    "@symphony/application-ai": "workspace:*",
+    "@symphony/application-execution": "workspace:*",
+    "@symphony/application-work": "workspace:*",
+    "@symphony/domain-ai": "workspace:*",
+    "@symphony/domain-skills": "workspace:*",
+    "@symphony/domain-work": "workspace:*"
+  }
+}

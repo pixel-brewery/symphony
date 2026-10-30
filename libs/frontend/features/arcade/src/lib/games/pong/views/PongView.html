@@ -1,0 +1,266 @@
+<mosaik-page
+  class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+  test-id="pong-view"
+  [attr.data-screen]="screen()"
+  [attr.data-status]="status()"
+>
+  <mosaik-page-header [text]="'Pong'" [inset]="'all'" test-id="pong-header">
+    @if (screen() === 'game' && status() !== 'gameOver') {
+    <div
+      slot="subHeader"
+      id="pong-controls"
+      class="flex flex-wrap items-center gap-x-4 gap-y-1"
+      [mosaikTypography]="'body2'"
+    >
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['W']" /><mosaik-kbd [value]="['S']" /><span>Player 1</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['↑']" /><mosaik-kbd [value]="['↓']" /><span>Player 2</span>
+      </div>
+      <div class="flex items-center gap-2"><mosaik-kbd [value]="['P']" /><span>Pause</span></div>
+      <span>First to {{ targetScore() }} · Automatic serve</span>
+    </div>
+    }
+    <mosaik-button
+      slot="prefix"
+      test-id="pong-back-arcade"
+      [label]="'All games'"
+      [appearance]="'plain'"
+      [variant]="'neutral'"
+      [command]="{ click: backArcadeCommand }"
+    />
+    <div slot="suffix" class="flex flex-wrap items-center gap-2">
+      <mosaik-button
+        test-id="pong-sound"
+        [label]="soundMuted() ? 'Sound off' : 'Sound on'"
+        [attr.aria-pressed]="!soundMuted()"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: toggleSoundCommand }"
+        (click)="enableAudio()"
+      />
+      @if (screen() === 'game') {
+      <mosaik-button
+        test-id="pong-menu"
+        [label]="'Menu'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: menuCommand }"
+      />
+      @if (status() !== 'gameOver') {
+      <mosaik-button
+        test-id="pong-pause"
+        [label]="status() === 'paused' ? 'Resume' : 'Pause'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: togglePauseCommand }"
+        (click)="focusScreen()"
+      />
+      }
+      <mosaik-button
+        test-id="pong-reset"
+        [label]="'New match'"
+        [appearance]="'outline'"
+        [variant]="'primary'"
+        [command]="{ click: rematchCommand }"
+        (click)="focusScreen()"
+      />
+      }
+    </div>
+  </mosaik-page-header>
+  <mosaik-page-content
+    [inset]="'none'"
+    class="relative flex min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+    test-id="pong-playfield"
+  >
+    <canvas
+      #playfieldCanvas
+      test-id="pong-screen"
+      class="absolute inset-0 block h-full w-full"
+      [attr.tabindex]="screen() === 'game' ? 0 : -1"
+      role="img"
+      aria-label="Two-player Pong court. Player one uses W and S; player two uses Up and Down. Pointer movement in either half controls that player's paddle. P pauses."
+      [attr.aria-describedby]="screen() === 'game' && status() !== 'gameOver' ? 'pong-controls' : null"
+      (click)="focusScreen()"
+    ></canvas>
+    <span
+      class="sr-only"
+      test-id="pong-status"
+      [attr.data-status]="status()"
+      [attr.data-left-score]="scores()[0]"
+      [attr.data-right-score]="scores()[1]"
+      [attr.data-target-score]="targetScore()"
+      [attr.data-winner]="winner()"
+      >Player 1: {{ scores()[0] }}. Player 2: {{ scores()[1] }}. First to {{ targetScore() }}.</span
+    >
+    @if (!screenAvailable()) {
+    <div class="absolute inset-x-4 top-4" role="alert">
+      <mosaik-text
+        [text]="'The court could not be loaded. Return to Arcade and try again.'"
+        [wrap]="true"
+      />
+    </div>
+    } @if (screen() !== 'game') {
+    <div class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+      <mosaik-card class="my-auto w-full max-w-xl shrink-0">
+        @if (screen() === 'intro') {
+        <mosaik-card-header [text]="'Pong'" [subText]="'Atari · Original arcade game · 1972'" />
+        <mosaik-card-content>
+          <div class="flex flex-col gap-5">
+            <mosaik-text
+              [text]="'Two players. One ball. Keep the rally alive.'"
+              [wrap]="true"
+              [mosaikTypography]="'h4'"
+            />
+            <mosaik-text
+              [text]="'Play together on one keyboard. Player 1 uses W and S; Player 2 uses Up and Down. The ball serves automatically after every point.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <mosaik-form-field [fieldState]="setupForm.targetScore()">
+              <mosaik-select
+                test-id="pong-target-score"
+                [label]="'Points to win · original operator setting'"
+                [formField]="setupForm.targetScore"
+              >
+                <mosaik-select-item test-id="pong-target-11" [label]="'11 points'" [value]="'11'" />
+                <mosaik-select-item test-id="pong-target-15" [label]="'15 points'" [value]="'15'" />
+              </mosaik-select>
+            </mosaik-form-field>
+          </div>
+        </mosaik-card-content>
+        <mosaik-card-actions
+          ><div class="flex flex-wrap gap-2">
+            @if (canContinue()) {
+            <mosaik-button
+              test-id="pong-resume"
+              [label]="'Continue'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: resumeCommand }"
+              (click)="focusScreen()"
+            />
+            }
+            <mosaik-button
+              test-id="pong-start"
+              [label]="canContinue() ? 'New match' : 'Play · 2 players'"
+              [appearance]="canContinue() ? 'outline' : 'solid'"
+              [variant]="'primary'"
+              [command]="{ click: newGameCommand }"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="pong-instructions"
+              [label]="'How to play'"
+              [appearance]="'plain'"
+              [variant]="'neutral'"
+              [command]="{ click: instructionsCommand }"
+            /></div
+        ></mosaik-card-actions>
+        } @else {
+        <mosaik-card-header
+          [text]="'How to play'"
+          [subText]="'Two human players, just like the original cabinet.'"
+        />
+        <mosaik-card-content
+          ><div class="flex flex-col gap-4" [mosaikTypography]="'body2'">
+            <div class="grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-3">
+              <div class="flex gap-1">
+                <mosaik-kbd [value]="['W']" /><mosaik-kbd [value]="['S']" />
+              </div>
+              <span>Player 1: move the left paddle up and down.</span>
+              <div class="flex gap-1">
+                <mosaik-kbd [value]="['↑']" /><mosaik-kbd [value]="['↓']" />
+              </div>
+              <span>Player 2: move the right paddle up and down.</span>
+              <mosaik-kbd [value]="['P']" /><span>Pause or resume. Escape also works.</span>
+            </div>
+            <p>
+              Move the pointer up or down in either half of the court to position that player's
+              paddle directly. The keyboard and pointer replace the cabinet's two rotary knobs.
+            </p>
+            <p>
+              Return the ball with your paddle. Miss it and your opponent scores. The first player
+              to reach the selected 11 or 15 points wins; no two-point lead is required.
+            </p>
+            <p>
+              The part of the paddle the ball touches changes its angle. Central contacts can send
+              it straight across; edges produce steeper rebounds. The ball speeds up after four and
+              twelve paddle hits, and slows down again after a point.
+            </p>
+            <p>
+              There is a short automatic serve delay after each point. The next ball travels toward
+              the player who missed. A small gap above each paddle is part of the original cabinet's
+              behavior.
+            </p>
+            <p>
+              Menus, pause, sound controls and saved match results are Symphony additions. There is
+              no computer opponent in this original two-player version.
+            </p>
+          </div></mosaik-card-content
+        >
+        <mosaik-card-actions
+          ><mosaik-button
+            test-id="pong-back-title"
+            [label]="'Back'"
+            [appearance]="'outline'"
+            [variant]="'neutral'"
+            [command]="{ click: menuCommand }"
+        /></mosaik-card-actions>
+        }
+      </mosaik-card>
+    </div>
+    } @else if (status() === 'paused') {
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <mosaik-card class="w-full max-w-sm" test-id="pong-paused">
+        <mosaik-card-header [text]="'Paused'" />
+        <mosaik-card-actions
+          ><mosaik-button
+            test-id="pong-resume"
+            [label]="'Resume match'"
+            [appearance]="'solid'"
+            [variant]="'primary'"
+            [command]="{ click: resumeCommand }"
+            (click)="focusScreen()"
+        /></mosaik-card-actions>
+      </mosaik-card>
+    </div>
+    } @else if (status() === 'gameOver') {
+    <div
+      class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+      role="status"
+    >
+      <mosaik-card class="my-auto w-full max-w-md shrink-0" test-id="pong-results">
+        <mosaik-card-header
+          [text]="winner() === 0 ? 'Player 1 wins' : 'Player 2 wins'"
+          [subText]="'Match complete'"
+        />
+        <mosaik-card-content
+          ><span [mosaikTypography]="'h3'"
+            >{{ scores()[0] }} – {{ scores()[1] }}</span
+          ></mosaik-card-content
+        >
+        <mosaik-card-actions
+          ><div class="flex flex-wrap gap-2">
+            <mosaik-button
+              test-id="pong-replay"
+              [label]="'Play again'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: rematchCommand }"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="pong-results-arcade"
+              [label]="'All games'"
+              [appearance]="'plain'"
+              [variant]="'neutral'"
+              [command]="{ click: backArcadeCommand }"
+            /></div
+        ></mosaik-card-actions>
+      </mosaik-card>
+    </div>
+    }
+  </mosaik-page-content>
+</mosaik-page>

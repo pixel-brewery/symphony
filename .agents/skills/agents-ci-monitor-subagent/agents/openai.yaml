@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Ci Monitor Subagent'
+  short_description: 'Apply repository agents guidance'
+  default_prompt: 'Use $agents-ci-monitor-subagent for the applicable repository guidance.'

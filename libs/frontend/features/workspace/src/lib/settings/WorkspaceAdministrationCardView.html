@@ -1,0 +1,111 @@
+@if (presenter.workspace(); as item) {
+<mosaik-card class="w-full" [attr.test-id]="'workspace-card-' + item.id">
+  <mosaik-card-header
+    [text]="item.displayName"
+    [subText]="item.shortCode + ' · Workspace administration'"
+  />
+  <mosaik-card-content
+    ><div class="flex min-w-0 flex-col gap-4">
+      @let storage = presenter.storage();
+      <section class="flex min-w-0 flex-col gap-2" [attr.test-id]="'workspace-storage-' + item.id">
+        <symphony-storage-breakdown
+          [usage]="storage"
+          [measured]="presenter.storageMeasured()"
+          [limitGiB]="presenter.storageLimit()"
+          [sizeTestId]="'workspace-storage-size-' + item.id"
+          [barTestId]="'workspace-storage-progress-' + item.id"
+        />
+        <div
+          class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-4 max-[640px]:grid-cols-1"
+        >
+          <mosaik-numberbox
+            [attr.test-id]="'workspace-storage-limit-' + item.id"
+            [label]="'Maximum workspace size (GB)'"
+            [min]="2"
+            [max]="1024"
+            [value]="presenter.storageLimit()"
+            (input)="presenter.updateWorkspaceStorageLimitCommand.execute($event)"
+          />
+          <mosaik-button
+            [attr.test-id]="'save-workspace-storage-limit-' + item.id"
+            [label]="'Save limit'"
+            [appearance]="'solid'"
+            [variant]="'primary'"
+            [disabled]="presenter.configurationBusy()"
+            (click)="presenter.saveWorkspaceStorageLimitCommand.execute()"
+          />
+        </div>
+        @if (storage?.pressure === 'critical') {
+        <mosaik-banner
+          [attr.test-id]="'workspace-storage-blocked-' + item.id"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'danger'"
+          [iconName]="'errorCircle'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'Storage limit reached - new writes are blocked'" />
+          <mosaik-banner-sub-header
+            [text]="'Clear inactive workspaces or raise the limit only after confirming enough free disk space.'"
+          />
+        </mosaik-banner>
+        }
+      </section>
+      <mosaik-divider />
+      <section
+        class="flex min-w-0 flex-col gap-2"
+        [attr.test-id]="'workspace-delivery-grouping-' + item.id"
+      >
+        <symphony-headline
+          header="Delivery grouping"
+          description="Analyzer suggestions are always shown on the board. Opt in only when fully compatible tickets may start one shared delivery workflow without a second confirmation."
+        />
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          [attr.test-id]="'workspace-automatic-delivery-grouping-' + item.id"
+          [isChecked]="item.automaticDeliveryGroupingEnabled"
+          [disabled]="presenter.configurationBusy()"
+          (checked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, true])"
+          (unchecked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, false])"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Automatically activate safe groups'" [wrap]="true" />
+          </div>
+        </mosaik-toggle-switch>
+      </section></div
+  ></mosaik-card-content>
+  <mosaik-card-footer>
+    <div class="flex w-full flex-wrap justify-end gap-2">
+      <mosaik-button
+        class="mr-auto"
+        [attr.test-id]="'delete-workspace-' + item.id"
+        [label]="'Delete workspace'"
+        [iconName]="'delete'"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        [isBusy]="presenter.store.workspaceDeletionBusy() === item.id"
+        [disabled]="presenter.workspaces().length === 1 || !!presenter.store.workspaceDeletionBusy()"
+        (click)="presenter.confirmDeleteWorkspaceCommand.execute(item)"
+      />
+      <mosaik-button
+        [attr.test-id]="'export-workspace-' + item.id"
+        [label]="'Export workspace'"
+        [appearance]="'plain'"
+        [isBusy]="presenter.store.workspaceTransferBusy() === item.id"
+        [disabled]="!!presenter.store.workspaceTransferBusy()"
+        (click)="presenter.chooseWorkspaceExportCommand.execute(item)"
+      />
+      <mosaik-button
+        [label]="'Use only this workspace'"
+        [appearance]="'plain'"
+        (click)="presenter.focusWorkspaceCommand.execute(item.id)"
+      />
+      <mosaik-button
+        [label]="'Edit workspace'"
+        [appearance]="'outline'"
+        (click)="presenter.openWorkspaceCommand.execute(item.id)"
+      />
+    </div>
+  </mosaik-card-footer>
+</mosaik-card>
+}

@@ -1,0 +1,100 @@
+// #region Imports
+
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  AnchorComponent,
+  BannerComponent,
+  BannerHeaderComponent,
+  BannerSubHeaderComponent,
+  ButtonComponent,
+  ChipComponent,
+  DividerComponent,
+  DropDownButtonComponent,
+  EmptyStateComponent,
+  IconComponent,
+  IconNameDirective,
+  MenuComponent,
+  MenuItemComponent,
+  PageComponent,
+  PageContentComponent,
+  PageHeaderComponent,
+  PagePreContentComponent,
+  ProgressRingComponent,
+  SelectComponent,
+  SelectItemComponent,
+  SkeletonComponent,
+  TimeAgoPipe,
+  TooltipDirective,
+  TextBoxComponent,
+  DisclosureComponent,
+} from '@pixel-brewery/mosaik-elements-angular';
+import { View, VIEW_PRESENTER, WorkspaceScopePresenter } from '@symphony/frontend-core';
+import {
+  CollectionListComponent,
+  CollectionListEmptyDirective,
+  CollectionListItemDirective,
+  CollectionListLoadingItemDirective,
+  CiRunDurationPipe,
+  CiRunStatusLabelPipe,
+  CiRunStatusVariantPipe,
+  HoverRevealForDirective,
+  PageToolbarComponent,
+} from '@symphony/frontend-ui';
+import { ActionsViewPresenter } from '../view-presenters/ActionsViewPresenter';
+
+// #endregion
+
+@Component({
+  selector: 'symphony-actions-view',
+  host: { class: 'flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden' },
+  imports: [
+    FormsModule,
+    AnchorComponent,
+    BannerComponent,
+    BannerHeaderComponent,
+    BannerSubHeaderComponent,
+    ButtonComponent,
+    ChipComponent,
+    CiRunDurationPipe,
+    CiRunStatusLabelPipe,
+    CiRunStatusVariantPipe,
+    CollectionListComponent,
+    CollectionListEmptyDirective,
+    CollectionListItemDirective,
+    CollectionListLoadingItemDirective,
+    DatePipe,
+    DividerComponent,
+    DropDownButtonComponent,
+    EmptyStateComponent,
+    HoverRevealForDirective,
+    IconComponent,
+    IconNameDirective,
+    MenuComponent,
+    MenuItemComponent,
+    NgTemplateOutlet,
+    PageComponent,
+    PageContentComponent,
+    PageHeaderComponent,
+    PagePreContentComponent,
+    PageToolbarComponent,
+    ProgressRingComponent,
+    SelectComponent,
+    SelectItemComponent,
+    SkeletonComponent,
+    TimeAgoPipe,
+    TooltipDirective,
+    TextBoxComponent,
+    DisclosureComponent,
+  ],
+  providers: [
+    WorkspaceScopePresenter,
+    ActionsViewPresenter,
+    { provide: VIEW_PRESENTER, useExisting: ActionsViewPresenter },
+  ],
+  templateUrl: './ActionsView.html',
+  styleUrl: './ActionsView.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ActionsView extends View<ActionsViewPresenter> {}

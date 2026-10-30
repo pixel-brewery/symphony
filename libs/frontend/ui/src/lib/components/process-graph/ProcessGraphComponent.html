@@ -1,0 +1,63 @@
+<mosaik-flow
+  test-id="process-graph"
+  class="block h-full w-full"
+  [label]="'Process graph'"
+  [selectedKey]="selectedKey()"
+  (flowSelectionChanged)="onSelectionChanged($event)"
+>
+  @for (node of graph().nodes; track node.stageId) { @let presentation = node |
+  workflowGraphNodePresentation;
+  <mosaik-flow-node
+    [nodeKey]="'stage:' + node.stageId"
+    [label]="node.label"
+    [variant]="presentation.variant"
+    [attr.test-id]="'process-stage-' + node.stageId"
+    [attr.data-kind]="node.kind"
+    [attr.data-state]="node.state"
+    [attr.aria-current]="node.state === 'current' ? 'step' : null"
+  >
+    <div class="flex min-w-0 items-center gap-2">
+      <mosaik-icon [icon]="presentation.icon" [size]="'small'" />
+      <div class="flex min-w-0 flex-1 flex-col gap-1">
+        <mosaik-text [text]="node.label" [wrap]="true" />
+        @if (node.kind === 'human-gate') { <mosaik-hint [text]="'Human gate'" /> } @else if
+        (node.kind === 'terminal') { <mosaik-hint [text]="'Terminal'" /> } @else {
+        <mosaik-hint [text]="node.roles.join(' → ')" /> }
+      </div>
+      @if (node.visitCount > 1) {
+      <mosaik-badge
+        [attr.test-id]="'process-stage-visits-' + node.stageId"
+        [label]="node.visitCount + '×'"
+        [appearance]="'soft'"
+        [variant]="'primary'"
+        [size]="'small'"
+      />
+      }
+    </div>
+  </mosaik-flow-node>
+  } @for (edge of graph().edges; track edge.transitionId; let index = $index) {
+  <mosaik-flow-edge
+    [edgeKey]="'transition:' + edge.transitionId"
+    [source]="'stage:' + edge.from"
+    [target]="'stage:' + edge.to"
+    [sourceSide]="edge.direction === 'forward' ? 'bottom' : 'left'"
+    [targetSide]="edge.direction === 'forward' ? 'top' : 'left'"
+    [offset]="edge.direction === 'forward' ? 32 : 64 + index * 16"
+    [labelPosition]="0.4 + (index % 3) * 0.1"
+    [label]="edge.trigger | workflowTriggerLabel"
+    [attr.test-id]="'process-edge-' + edge.transitionId"
+    [attr.data-direction]="edge.direction"
+    [attr.data-state]="edge.state"
+  >
+    <mosaik-badge
+      slot="label"
+      [label]="(edge.trigger | workflowTriggerLabel) + (edge.traversalCount > 1 ? ' ×' + edge.traversalCount : '')"
+      [appearance]="'soft'"
+      [variant]="edge.state === 'taken' ? 'primary' : 'neutral'"
+      [size]="'small'"
+    />
+  </mosaik-flow-edge>
+  }
+  <mosaik-flow-minimap slot="minimap" test-id="process-minimap" />
+  <mosaik-flow-controls slot="controls" test-id="process-controls" />
+</mosaik-flow>

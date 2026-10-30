@@ -1,0 +1,1513 @@
+<ng-template mosaikDrawerHeader>
+  @let taskStatus = presenter.execution() | taskStatusPresentation:
+  presenter.externalCoordination(): presenter.isStarting(): presenter.isSolving():
+  !!presenter.workItem(): presenter.stage();
+  <mosaik-drawer-header
+    class="[app-region:no-drag] [-webkit-app-region:no-drag]"
+    [text]="presenter.mode() === 'create' ? 'Create work item' : (presenter.workItem()?.externalId ?? 'Work item')"
+  >
+    @if (presenter.workItem(); as item) {
+    <div slot="subHeader" class="flex min-w-0 flex-wrap gap-x-1">
+      @if (presenter.implementationBranch()) {
+      <span class="technical-value">{{ presenter.implementationBranch() }}</span>
+      <span>·</span>
+      }
+      <span>{{ item.repository }}</span>
+      <span>· {{ taskStatus.label }}</span>
+    </div>
+    } @else if (presenter.mode() === 'create') {
+    <span slot="subHeader">Add work to the selected workspace</span>
+    } @if (presenter.mode() === 'edit' && presenter.workItemUrl(); as workItemUrl) {
+    <mosaik-button
+      slot="suffix"
+      test-id="task-open-remote-work-item"
+      [label]="presenter.workItemOpenLabel()"
+      [iconName]="presenter.workItemOpenIcon()"
+      [appearance]="'plain'"
+      [size]="'small'"
+      [href]="workItemUrl"
+      [target]="'_blank'"
+      [rel]="'noreferrer'"
+    />
+    }
+    <mosaik-button
+      slot="suffix"
+      test-id="task-drawer-header-close"
+      [iconName]="'dismiss'"
+      [appearance]="'plain'"
+      [size]="'small'"
+      [command]="{ click: presenter.closeCommand }"
+    />
+  </mosaik-drawer-header>
+</ng-template>
+
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="task-drawer"
+    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+  >
+    @if (presenter.health(); as health) {
+    <section
+      test-id="task-health"
+      class="flex flex-none flex-col gap-2"
+      [attr.aria-label]="
+        health.severity === 'blocker'
+          ? 'Problems blocking this work item'
+          : 'Incomplete work-item information'
+      "
+    >
+      @for (issue of health.issues; track issue.id) {
+      <mosaik-banner
+        [attr.test-id]="'task-health-issue-' + issue.id"
+        [isOpen]="true"
+        [appearance]="'soft'"
+        [variant]="issue.severity === 'blocker' ? 'warning' : 'info'"
+        [iconName]="issue.severity === 'blocker' ? 'errorCircle' : 'info'"
+        [iconSize]="'small'"
+        [horizontalContentAlignment]="'stretch'"
+      >
+        <mosaik-banner-header [text]="issue.summary" />
+        <div slot="subHeader" class="flex min-w-0 flex-col gap-2">
+          <mosaik-text
+            [attr.test-id]="'task-health-detail-' + issue.id"
+            [text]="issue.detail"
+            [wrap]="true"
+          />
+          <div class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Next step'" [mosaikTypography]="'subtitle2'" [wrap]="true" />
+            <mosaik-text
+              [attr.test-id]="'task-health-remedy-' + issue.id"
+              [text]="issue.remedy"
+              [wrap]="true"
+            />
+          </div>
+        </div>
+      </mosaik-banner>
+      } @if (presenter.repairs().length) {
+      <div class="flex min-w-0 justify-end">
+        <mosaik-button
+          test-id="task-health-repair"
+          [label]="'Repair ' + presenter.repairs().length + (presenter.repairs().length === 1 ? ' field' : ' fields')"
+          [iconName]="'sync'"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [isBusy]="presenter.isRepairing()"
+          [disabled]="presenter.isRepairing() || presenter.isRunning() || presenter.isSaving()"
+          (click)="presenter.applyRepairsCommand.execute()"
+        />
+      </div>
+      }
+    </section>
+    } @if (presenter.isHydrating()) {
+    <!-- The loading dialog keeps the loaded anatomy of its mode: static headings, labels and section
+         headers stay readable, and only values that are still loading are skeleton lines in the
+         line height of the text that replaces them. -->
+    <div
+      test-id="task-loading-skeleton"
+      class="flex flex-col gap-3 p-2"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading work-item data"
+    >
+      @if (presenter.mode() === 'edit') {
+      <section class="flex min-w-0 flex-col gap-4 py-2">
+        <div class="flex min-w-0 items-start justify-between gap-4">
+          <div class="flex h-3.5 min-w-0 flex-1 items-center">
+            <mosaik-skeleton [width]="'56%'" [height]="'20px'" [shimmer]="true" />
+          </div>
+          <div class="flex flex-none items-center gap-2">
+            <mosaik-skeleton [width]="'8.5rem'" [height]="'20px'" [shimmer]="true" />
+            <mosaik-button
+              [label]="'Edit'"
+              [iconName]="'edit'"
+              [appearance]="'plain'"
+              [disabled]="true"
+            />
+          </div>
+        </div>
+        <div class="grid w-full min-w-0 grid-cols-2 gap-2 max-[56rem]:grid-cols-1">
+          <mosaik-cell-group class="h-auto min-w-0">
+            <mosaik-cell>
+              <div slot="label" class="flex h-3.5 items-center">
+                <mosaik-skeleton [width]="'9rem'" [height]="'14px'" [shimmer]="true" />
+              </div>
+              <span slot="subLabel">Repository</span>
+            </mosaik-cell>
+            <mosaik-cell>
+              <div slot="label" class="flex h-3.5 items-center">
+                <mosaik-skeleton [width]="'11rem'" [height]="'14px'" [shimmer]="true" />
+              </div>
+              <span slot="subLabel">Status</span>
+            </mosaik-cell>
+          </mosaik-cell-group>
+          <mosaik-cell-group class="h-auto min-w-0">
+            <mosaik-cell>
+              <div slot="label" class="flex h-2.5 items-center gap-2">
+                <mosaik-skeleton
+                  [shape]="'circle'"
+                  [width]="'20px'"
+                  [height]="'20px'"
+                  [shimmer]="true"
+                />
+                <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
+              </div>
+              <span slot="subLabel">Assigned</span>
+            </mosaik-cell>
+            <mosaik-cell>
+              <div slot="label" class="flex h-2.5 items-center">
+                <mosaik-skeleton [width]="'20rem'" [height]="'14px'" [shimmer]="true" />
+              </div>
+              <span slot="subLabel">Activity</span>
+            </mosaik-cell>
+          </mosaik-cell-group>
+        </div>
+        <mosaik-expander [header]="'Description'" [isExpanded]="false" [appearance]="'plain'" />
+      </section>
+      @if (presenter.executionAvailable || presenter.workflowAvailable) {
+      <mosaik-expander
+        [header]="'Checks'"
+        [subHeader]="'Workflow decisions and execution'"
+        [isExpanded]="false"
+        [appearance]="'plain'"
+      />
+      }
+      <mosaik-expander [header]="'Activity'" [isExpanded]="true" [appearance]="'plain'">
+        <section class="flex min-w-0 flex-col gap-3 px-1 pb-2 pt-3">
+          <mosaik-card [appearance]="'outline'">
+            <mosaik-card-content>
+              <mosaik-cell [label]="'Ticket opened'">
+                <div slot="subLabel" class="flex h-2.5 items-center">
+                  <mosaik-skeleton [width]="'11rem'" [height]="'12px'" [shimmer]="true" />
+                </div>
+                <mosaik-skeleton slot="end" [width]="'3rem'" [height]="'20px'" [shimmer]="true" />
+              </mosaik-cell>
+            </mosaik-card-content>
+          </mosaik-card>
+        </section>
+      </mosaik-expander>
+      } @else {
+      <div class="flex flex-col gap-2">
+        <mosaik-text
+          [text]="'How do you want to create this issue?'"
+          [mosaikTypography]="'subtitle2'"
+        />
+        <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+      </div>
+      <section class="flex flex-col gap-2">
+        <div class="flex min-w-0 flex-col gap-1">
+          <mosaik-text [text]="'Create work item'" [mosaikTypography]="'subtitle1'" />
+          <mosaik-hint [text]="'Enter the work-item details yourself. No AI is used.'" />
+        </div>
+        <div class="flex min-w-0 flex-col gap-0.75">
+          <mosaik-text [text]="'Title'" [mosaikTypography]="'subtitle2'" />
+          <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+        </div>
+        <div class="flex min-w-0 flex-col gap-0.75">
+          <mosaik-text [text]="'Description'" [mosaikTypography]="'subtitle2'" />
+          <mosaik-skeleton [width]="'100%'" [height]="'258px'" [shimmer]="true" />
+          <mosaik-hint [text]="'Markdown is rendered when the work item is viewed.'" />
+        </div>
+        <mosaik-expander
+          [header]="'Details'"
+          [subHeader]="'Provider fields, labels, and assignees'"
+          [isExpanded]="true"
+          [appearance]="'plain'"
+        >
+          <div class="grid min-w-0 grid-cols-2 gap-2 px-1 pb-2 pt-3 max-[42rem]:grid-cols-1">
+            @for (field of [1, 2, 3, 4]; track field) {
+            <div class="flex min-w-0 flex-col gap-0.75">
+              <div class="flex h-2.5 items-center">
+                <mosaik-skeleton [width]="'6rem'" [height]="'14px'" [shimmer]="true" />
+              </div>
+              <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+            </div>
+            }
+          </div>
+        </mosaik-expander>
+      </section>
+      }
+    </div>
+    } @else { @let taskStatus = presenter.execution() | taskStatusPresentation:
+    presenter.externalCoordination(): presenter.isStarting(): presenter.isSolving():
+    !!presenter.workItem(): presenter.stage(); @let taskActions = presenter.analysisExecution() |
+    taskActionPresentation: presenter.isRunning(): presenter.requiresFeedback();
+    <div
+      class="flex flex-col gap-3 p-2"
+      [mosaikAnimate]="'fadeIn'"
+      [mosaikAnimateOptions]="{ duration: 200 }"
+    >
+      @if (presenter.queueEntry(); as queueEntry) {
+      <mosaik-banner test-id="task-drawer-queued" [variant]="'info'" [appearance]="'soft'">
+        <mosaik-text
+          [text]="queueEntry.lastError ?? (queueEntry.kind === 'analysis' ? 'The analysis is queued and starts as soon as an execution slot frees up.' : 'The implementation is queued and starts as soon as an execution slot frees up.')"
+        />
+      </mosaik-banner>
+      } @else if (presenter.isRunning()) {
+      <mosaik-progress-bar
+        aiEnhanced
+        test-id="task-drawer-progress"
+        [isIndeterminate]="true"
+        [variant]="'highlight'"
+      />
+      } @if (presenter.mode() === 'edit' && presenter.implementationBranch(); as branch) {
+      <section class="flex flex-wrap items-center justify-between gap-2" test-id="task-delivery">
+        @if (presenter.branchUrl(); as branchUrl) {
+        <mosaik-button
+          test-id="task-solution-branch"
+          [label]="branch"
+          [iconName]="'branch'"
+          [appearance]="'outline'"
+          [href]="branchUrl"
+          [target]="'_blank'"
+          [rel]="'noreferrer'"
+        />
+        } @else {
+        <mosaik-chip
+          test-id="task-solution-branch"
+          [label]="branch"
+          [iconName]="'branch'"
+          [appearance]="'soft'"
+          [variant]="'neutral'"
+          [mosaikTooltip]="'Local branch · available on GitHub after creating the pull request'"
+          [mosaikTooltipPlacement]="'bottom'"
+        />
+        } @if (presenter.pullRequest(); as pullRequest) {
+        <mosaik-button
+          test-id="task-pull-request"
+          [label]="'PR #' + pullRequest.number"
+          [iconName]="'github'"
+          [variant]="'success'"
+          [href]="pullRequest.externalUrl"
+          [target]="'_blank'"
+          [rel]="'noreferrer'"
+        />
+        } @else if (presenter.publicationAvailable && presenter.solutionExecution()?.state ===
+        'succeeded') {
+        <mosaik-button
+          test-id="task-create-pull-request"
+          [label]="'Create pull request'"
+          [iconName]="'add'"
+          [variant]="'success'"
+          [disabled]="!presenter.canPublishPullRequest()"
+          [isBusy]="presenter.isPublishingPullRequest()"
+          (click)="presenter.publishPullRequestCommand.execute()"
+        />
+        }
+      </section>
+      } @if (presenter.mode() === 'create') {
+      <div class="flex flex-col gap-2" test-id="issue-create-mode">
+        <mosaik-text
+          [text]="'How do you want to create this issue?'"
+          [mosaikTypography]="'subtitle2'"
+        />
+        <mosaik-segment [appearance]="'soft'">
+          <mosaik-segment-item
+            test-id="issue-create-mode-manual"
+            [label]="'Manual'"
+            [isChecked]="presenter.createInputMode() === 'manual'"
+            (checked)="presenter.selectCreateInputModeCommand.execute('manual')"
+          />
+          <mosaik-segment-item
+            test-id="issue-create-mode-ai"
+            [label]="'With AI'"
+            [variant]="'highlight'"
+            [isChecked]="presenter.createInputMode() === 'ai'"
+            (checked)="presenter.selectCreateInputModeCommand.execute('ai')"
+          />
+        </mosaik-segment>
+      </div>
+      } @if (presenter.mode() === 'create' && presenter.createInputMode() === 'ai' &&
+      presenter.creatorStage() === 'prompt') {
+      <section class="flex flex-col gap-2" test-id="issue-creator">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <mosaik-text [text]="'Create with AI'" [mosaikTypography]="'subtitle1'" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="
+                presenter.hasIssueCreator()
+                  ? 'The agent formulates and classifies the complete work item.'
+                  : 'Assign the creation responsibility to an agent before generating a draft.'
+              "
+            />
+          </div>
+          <mosaik-badge aiEnhanced [label]="'AI'" [appearance]="'soft'" [variant]="'highlight'" />
+        </div>
+
+        @if ((presenter.metadata()?.repositories ?? []).length > 1) {
+        <mosaik-form-field [fieldState]="presenter.form.repository()">
+          <mosaik-select
+            test-id="issue-repository"
+            [formField]="presenter.form.repository"
+            [label]="'Repository'"
+            [required]="true"
+            (changed)="presenter.repositoryChangedCommand.execute()"
+          >
+            @for (repository of presenter.metadata()?.repositories ?? []; track repository) {
+            <mosaik-select-item [value]="repository" [label]="repository" />
+            }
+          </mosaik-select>
+        </mosaik-form-field>
+        } @if (presenter.creationAgents().length > 1) {
+        <mosaik-select
+          test-id="issue-creator-agent"
+          [label]="'AI agent'"
+          [value]="presenter.creationAgentId()"
+          (selectionChanged)="presenter.updateCreationAgentCommand.execute($event)"
+        >
+          @for (agent of presenter.creationAgents(); track agent.id) {
+          <mosaik-select-item
+            [attr.test-id]="'issue-creator-agent-' + agent.id"
+            [label]="agent.displayName"
+            [value]="agent.id"
+            (click)="presenter.updateCreationAgentCommand.execute(agent.id)"
+          />
+          }
+        </mosaik-select>
+        } @else if (presenter.creationAgent(); as agent) {
+        <mosaik-hint
+          test-id="issue-creator-agent"
+          [textOverflow]="'wrap'"
+          [text]="agent.displayName + ' takes this task.'"
+        />
+        }
+
+        <mosaik-prompt-box
+          aiEnhanced
+          test-id="issue-creator-prompt"
+          [label]="'Describe the issue'"
+          [placeholder]="'Describe the problem, expected behavior, relevant context and constraints…'"
+          [value]="presenter.draftPrompt()"
+          [minRows]="6"
+          [maxRows]="14"
+          [minlength]="10"
+          [maxlength]="50000"
+          [required]="true"
+          [showSubmitButton]="true"
+          [submitOnEnter]="false"
+          [autofocus]="true"
+          [appearance]="'outline'"
+          [variant]="'highlight'"
+          [disabled]="!presenter.hasIssueCreator() || presenter.isDrafting()"
+          (input)="presenter.updateDraftPromptCommand.execute($event)"
+          (promptSubmitted)="presenter.draftWithIssueCreatorCommand.execute($event)"
+        >
+          <mosaik-prompt-box-voice-recorder-tool
+            [state]="presenter.voiceState()('work-item-creation')"
+            [disabled]="!presenter.voiceInputAvailable || !presenter.hasIssueCreator() || presenter.isDrafting()"
+            (recorderStart)="presenter.startVoiceInputCommand.execute('work-item-creation')"
+            (recorderStop)="presenter.stopVoiceInputCommand.execute()"
+            (recorderCancel)="presenter.cancelVoiceInputCommand.execute()"
+          />
+        </mosaik-prompt-box>
+
+        @if (presenter.isDrafting()) {
+        <div class="flex items-end gap-2">
+          <div class="flex min-w-0 flex-1 flex-col gap-2" role="status" aria-busy="true">
+            <mosaik-progress-bar aiEnhanced [isIndeterminate]="true" [variant]="'highlight'" />
+            <mosaik-hint [text]="'Creating and classifying the issue draft…'" />
+          </div>
+          <mosaik-button
+            test-id="issue-creator-cancel"
+            [label]="'Cancel generation'"
+            [iconName]="'clear'"
+            [appearance]="'outline'"
+            [variant]="'danger'"
+            [isBusy]="presenter.isCancellingDraft()"
+            [disabled]="presenter.isCancellingDraft()"
+            (click)="presenter.cancelDraftCommand.execute()"
+          />
+        </div>
+        } @else if (!presenter.hasIssueCreator()) { @if (presenter.skillsAvailable) {
+        <mosaik-button
+          test-id="issue-creator-open-skills"
+          [label]="'Open Skills'"
+          [iconName]="'skills'"
+          [appearance]="'solid'"
+          [variant]="'highlight'"
+          (click)="presenter.openSkillsCommand.execute()"
+        />
+        } } @else {
+        <mosaik-hint
+          [text]="'AI generates the issue and values for the Project fields currently available on GitHub. You review everything before GitHub is changed.'"
+        />
+        }
+      </section>
+      } @else {
+      <section class="flex flex-col gap-2" test-id="issue-editor">
+        @if (presenter.mode() === 'create') {
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex min-w-0 flex-col gap-1">
+            <mosaik-text
+              [text]="presenter.isAiDraft() ? 'Review AI draft' : 'Create work item'"
+              [mosaikTypography]="'subtitle1'"
+            />
+            <mosaik-hint
+              [text]="presenter.isAiDraft() ? 'Review and correct the classified work item before it is created.' : 'Enter the work-item details yourself. No AI is used.'"
+            />
+          </div>
+          @if (presenter.isAiDraft()) {
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <mosaik-badge
+              aiEnhanced
+              [label]="'AI draft'"
+              [appearance]="'soft'"
+              [variant]="'highlight'"
+            />
+          </div>
+          }
+        </div>
+        <mosaik-form-field [fieldState]="presenter.form.title()">
+          <mosaik-textbox
+            aiEnhanced
+            [aiEnabled]="presenter.isAiDraft()"
+            test-id="issue-title"
+            [formField]="presenter.form.title"
+            [label]="'Title'"
+            [placeholder]="'Describe the requested change'"
+            [required]="true"
+          />
+        </mosaik-form-field>
+        <mosaik-form-field [fieldState]="presenter.form.body()">
+          <mosaik-textbox
+            aiEnhanced
+            [aiEnabled]="presenter.isAiDraft()"
+            test-id="issue-body"
+            [formField]="presenter.form.body"
+            [label]="'Description'"
+            [placeholder]="'Write the issue in Markdown…'"
+            [multiline]="true"
+            [multilineRows]="12"
+            [resize]="'vertical'"
+            [maxlength]="60000"
+          />
+          <mosaik-hint [text]="'Markdown is rendered when the work item is viewed.'" />
+        </mosaik-form-field>
+        } @else {
+        <section class="flex min-w-0 flex-col gap-4 py-2" test-id="task-summary">
+          <div class="flex min-w-0 items-start justify-between gap-4">
+            <mosaik-text
+              test-id="task-drawer-title"
+              class="min-w-0"
+              [text]="presenter.form.title().value() || 'Untitled work item'"
+              [mosaikTypography]="'headline5'"
+              [wrap]="true"
+            />
+            <div class="flex flex-none flex-wrap items-center justify-end gap-2">
+              <mosaik-badge
+                test-id="task-drawer-status"
+                [label]="taskStatus.label"
+                [appearance]="'soft'"
+                [variant]="taskStatus.variant"
+              />
+              <mosaik-button
+                test-id="task-drawer-edit-content"
+                [label]="presenter.isEditingContent() ? 'Preview' : 'Edit'"
+                [iconName]="presenter.isEditingContent() ? 'eyeShow' : 'edit'"
+                [appearance]="'plain'"
+                (click)="presenter.toggleContentEditingCommand.execute()"
+              />
+            </div>
+          </div>
+
+          @if (presenter.workItem(); as workItem) {
+          <div
+            class="grid w-full min-w-0 grid-cols-2 gap-2 max-[56rem]:grid-cols-1"
+            test-id="task-metadata"
+          >
+            <mosaik-cell-group class="h-auto min-w-0">
+              <mosaik-cell [label]="workItem.repository" [subLabel]="'Repository'" />
+              <mosaik-cell [label]="taskStatus.label" [subLabel]="'Status'" />
+            </mosaik-cell-group>
+            <mosaik-cell-group class="h-auto min-w-0">
+              <mosaik-cell>
+                <div slot="label" class="flex min-w-0 flex-wrap items-center gap-2">
+                  @for (assignee of workItem.assignees; track assignee.login) {
+                  <mosaik-avatar
+                    [text]="assignee.displayName ?? assignee.login"
+                    [src]="assignee.avatarUrl ?? ''"
+                    [size]="'tiny'"
+                    [appearance]="'soft'"
+                    [mosaikTooltip]="assignee.displayName ?? assignee.login"
+                  />
+                  <span>{{ assignee.displayName ?? assignee.login }}</span>
+                  } @empty {
+                  <span>Not assigned</span>
+                  }
+                </div>
+                <span slot="subLabel">Assigned</span>
+              </mosaik-cell>
+              <mosaik-cell test-id="task-drawer-dates">
+                <div slot="label" class="flex min-w-0 flex-wrap gap-x-2 gap-y-1">
+                  @if (workItem.createdAt) {
+                  <time [attr.datetime]="workItem.createdAt"
+                    >Created {{ workItem.createdAt | date: 'medium' }}</time
+                  >
+                  } @if (workItem.updatedAt) {
+                  <time [attr.datetime]="workItem.updatedAt"
+                    >Last changed {{ workItem.updatedAt | date: 'medium' }}</time
+                  >
+                  }
+                </div>
+                <span slot="subLabel">Activity</span>
+              </mosaik-cell>
+            </mosaik-cell-group>
+          </div>
+          } @if (presenter.externalCoordination()) {
+          <mosaik-banner
+            test-id="task-external-claim"
+            [isOpen]="true"
+            [appearance]="'soft'"
+            [variant]="'warning'"
+            [iconName]="'errorCircle'"
+            [iconSize]="'small'"
+          >
+            <mosaik-banner-header
+              [text]="presenter.externalCoordination()!.action === 'solve' ? 'Solution is running on another instance' : 'Analysis is running on another instance'"
+            />
+            <mosaik-banner-sub-header
+              [text]="presenter.externalCoordination()!.owner ? 'This ticket is locked by the Symphony instance connected as @' + presenter.externalCoordination()!.owner + '. Continue or cancel the work on that instance.' : 'This ticket is locked by another Symphony instance. Continue or cancel the work on that instance.'"
+            />
+          </mosaik-banner>
+          } @if (presenter.isEditingContent()) {
+          <mosaik-form-field [fieldState]="presenter.form.title()">
+            <mosaik-textbox
+              aiEnhanced
+              [aiEnabled]="presenter.isAiDraft()"
+              test-id="issue-title"
+              [formField]="presenter.form.title"
+              [label]="'Title'"
+              [placeholder]="'Describe the requested change'"
+              [required]="true"
+            />
+          </mosaik-form-field>
+          }
+
+          <mosaik-expander
+            test-id="task-description-section"
+            [header]="'Description'"
+            [isExpanded]="presenter.isEditingContent()"
+            [appearance]="'plain'"
+          >
+            <div class="flex min-w-0 flex-col gap-3 px-1 pb-2 pt-3">
+              @if (presenter.isEditingContent()) {
+              <mosaik-form-field [fieldState]="presenter.form.body()">
+                <mosaik-textbox
+                  test-id="issue-body"
+                  [formField]="presenter.form.body"
+                  [label]="'Description'"
+                  [placeholder]="'Write the issue in Markdown…'"
+                  [multiline]="true"
+                  [multilineRows]="12"
+                  [resize]="'vertical'"
+                  [maxlength]="60000"
+                />
+                <mosaik-hint [text]="'Markdown is rendered when the work item is viewed.'" />
+              </mosaik-form-field>
+              } @else {
+              <!-- The readable rendering follows the form, not the stored item: unsaved edits stay
+             visible after switching back, and "Save changes" still decides what is written. -->
+              @if (presenter.form.body().value()) {
+              <symphony-markdown
+                class="min-w-0"
+                test-id="task-drawer-description"
+                [text]="presenter.form.body().value()"
+              />
+              } @else {
+              <mosaik-hint
+                test-id="task-drawer-description-empty"
+                [text]="'No description yet. Edit the work item to add one.'"
+              />
+              } }
+            </div>
+          </mosaik-expander>
+        </section>
+        } @if (presenter.mode() === 'create' || presenter.isEditingContent()) {
+        <mosaik-expander
+          test-id="task-details-section"
+          [header]="'Details'"
+          [subHeader]="'Provider fields, labels, and assignees'"
+          [isExpanded]="true"
+          [appearance]="'plain'"
+        >
+          <div class="flex min-w-0 flex-col gap-3 px-1 pb-2 pt-3">
+            @if ((presenter.metadata()?.repositories ?? []).length > 1) {
+            <div class="grid grid-cols-2 gap-2 max-[42rem]:grid-cols-1">
+              <mosaik-form-field [fieldState]="presenter.form.repository()">
+                <mosaik-select
+                  test-id="issue-repository"
+                  [formField]="presenter.form.repository"
+                  [label]="'Repository'"
+                  [required]="true"
+                  [isReadOnly]="presenter.mode() === 'edit'"
+                  (changed)="presenter.repositoryChangedCommand.execute()"
+                >
+                  @for (repository of presenter.metadata()?.repositories ?? []; track repository) {
+                  <mosaik-select-item [value]="repository" [label]="repository" />
+                  }
+                </mosaik-select>
+              </mosaik-form-field>
+            </div>
+            } @if (presenter.mode() === 'create' && (presenter.metadata()?.workItemTypes ??
+            []).length) {
+            <div class="grid grid-cols-2 gap-2 max-[42rem]:grid-cols-1">
+              <mosaik-select
+                test-id="issue-work-item-type"
+                [formField]="presenter.form.workItemType"
+                [label]="'Work item type'"
+                [required]="true"
+              >
+                @for (workItemType of presenter.metadata()?.workItemTypes ?? []; track workItemType)
+                {
+                <mosaik-select-item [value]="workItemType" [label]="workItemType" />
+                }
+              </mosaik-select>
+            </div>
+            } @if (presenter.projectFields().length) {
+            <section class="flex flex-col gap-2" test-id="issue-project-fields">
+              <div class="flex flex-col gap-2">
+                <mosaik-text [text]="'Project fields'" [mosaikTypography]="'subtitle2'" />
+                <mosaik-hint
+                  [text]="'Fields and options come directly from the configured GitHub Project.'"
+                />
+              </div>
+              <div class="grid grid-cols-2 gap-2 max-[42rem]:grid-cols-1">
+                @for (field of presenter.projectFields(); track field.id) {
+                <div
+                  class="min-w-0"
+                  [class.col-span-full]="field.type === 'multi-select'"
+                  [attr.test-id]="'issue-project-field-' + field.id"
+                >
+                  @switch (field.type) { @case ('text') {
+                  <mosaik-textbox
+                    aiEnhanced
+                    [aiEnabled]="presenter.isAiDraft()"
+                    [label]="field.name"
+                    [value]="presenter.projectFieldText()(field.id)"
+                    [maxlength]="10000"
+                    [isClearable]="true"
+                    (input)="presenter.updateProjectFieldCommand.execute([field, $event])"
+                    (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+                  />
+                  } @case ('number') {
+                  <mosaik-numberbox
+                    [label]="field.name"
+                    [value]="presenter.projectFieldNumber()(field.id)"
+                    [isClearable]="true"
+                    (change)="presenter.updateProjectFieldCommand.execute([field, $event])"
+                    (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+                  />
+                  } @case ('date') {
+                  <mosaik-datebox
+                    [label]="field.name"
+                    [value]="presenter.projectFieldDate()(field.id)"
+                    [isClearable]="true"
+                    [dropDownPlacement]="'bottom-end'"
+                    (change)="presenter.updateProjectFieldCommand.execute([field, $event])"
+                    (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+                  />
+                  } @case ('single-select') {
+                  <mosaik-select
+                    aiEnhanced
+                    [aiEnabled]="presenter.isAiDraft()"
+                    [label]="field.name"
+                    [value]="presenter.projectFieldSelection()(field.id)"
+                    [isClearable]="field.role !== 'workflow-state'"
+                    (selectionChanged)="presenter.updateProjectFieldCommand.execute([field, $event])"
+                    (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+                  >
+                    @for (option of field.options; track option.id) {
+                    <mosaik-select-item
+                      [attr.test-id]="'issue-project-field-' + field.id + '-option-' + option.id"
+                      [value]="option.id"
+                      [label]="option.label"
+                    />
+                    }
+                  </mosaik-select>
+                  } @case ('iteration') {
+                  <mosaik-select
+                    aiEnhanced
+                    [aiEnabled]="presenter.isAiDraft()"
+                    [label]="field.name"
+                    [value]="presenter.projectFieldSelection()(field.id)"
+                    [isClearable]="true"
+                    (selectionChanged)="presenter.updateProjectFieldCommand.execute([field, $event])"
+                    (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+                  >
+                    @for (option of field.options; track option.id) {
+                    <mosaik-select-item
+                      [attr.test-id]="'issue-project-field-' + field.id + '-option-' + option.id"
+                      [value]="option.id"
+                      [label]="option.startDate ? option.label + ' · ' + option.startDate : option.label"
+                    />
+                    }
+                  </mosaik-select>
+                  } @case ('multi-select') {
+                  <div class="flex flex-col gap-2">
+                    <mosaik-text [text]="field.name" [mosaikTypography]="'subtitle2'" />
+                    <div class="grid grid-cols-2 gap-2 max-[42rem]:grid-cols-1">
+                      @for (option of field.options; track option.id) {
+                      <div class="flex min-w-0 items-center gap-2 p-2">
+                        <mosaik-checkbox
+                          aiEnhanced
+                          [aiEnabled]="presenter.isAiDraft() && presenter.isProjectFieldOptionSelected()(field.id, option.id)"
+                          [attr.test-id]="'issue-project-field-' + field.id + '-option-' + option.id"
+                          [label]="option.label"
+                          [isChecked]="presenter.isProjectFieldOptionSelected()(field.id, option.id)"
+                          (click)="presenter.toggleProjectFieldOptionCommand.execute([field.id, option.id])"
+                        />
+                      </div>
+                      }
+                    </div>
+                  </div>
+                  } }
+                </div>
+                }
+              </div>
+            </section>
+            }
+
+            <div class="flex flex-col gap-2" test-id="issue-labels">
+              <mosaik-text [text]="'Labels'" [mosaikTypography]="'subtitle2'" />
+              <div class="grid grid-cols-2 gap-2 max-[42rem]:grid-cols-1">
+                @for (label of presenter.metadata()?.labels ?? []; track label.name) {
+                <div class="flex min-w-0 items-center gap-2 p-2">
+                  <mosaik-checkbox
+                    aiEnhanced
+                    [aiEnabled]="presenter.isAiDraft() && presenter.isLabelSelected()(label.name)"
+                    [attr.test-id]="'issue-label-' + label.name"
+                    [label]="label.name"
+                    [isChecked]="presenter.isLabelSelected()(label.name)"
+                    (click)="presenter.toggleLabelCommand.execute(label.name)"
+                  />
+                </div>
+                }
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-2" test-id="issue-assignees">
+              <mosaik-text [text]="'Assignees'" [mosaikTypography]="'subtitle2'" />
+              <div class="grid grid-cols-2 gap-2 max-[42rem]:grid-cols-1">
+                @for (assignee of presenter.metadata()?.assignees ?? []; track assignee.login) {
+                <div class="flex min-w-0 items-center gap-2 p-2">
+                  <mosaik-avatar
+                    slot="start"
+                    [text]="assignee.displayName ?? assignee.login"
+                    [src]="assignee.avatarUrl ?? ''"
+                    [size]="'tiny'"
+                  />
+                  <mosaik-checkbox
+                    aiEnhanced
+                    [aiEnabled]="presenter.isAiDraft() && presenter.isAssigneeSelected()(assignee.login)"
+                    [attr.test-id]="'issue-assignee-' + assignee.login"
+                    [label]="assignee.displayName ?? assignee.login"
+                    [isChecked]="presenter.isAssigneeSelected()(assignee.login)"
+                    (click)="presenter.toggleAssigneeCommand.execute(assignee.login)"
+                  />
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+        </mosaik-expander>
+        }
+      </section>
+      } @if (presenter.mode() === 'edit' && (presenter.executionAvailable ||
+      presenter.workflowAvailable || presenter.latestVerificationReport())) {
+      <mosaik-expander
+        test-id="task-checks-section"
+        [header]="'Checks'"
+        [subHeader]="presenter.latestVerificationReport() ? presenter.latestVerificationReport()!.checks.length + ' verification checks' : 'Workflow decisions and execution'"
+        [appearance]="'plain'"
+      >
+        <div class="flex min-w-0 flex-col gap-4 px-1 pb-2 pt-3">
+          @if (presenter.latestVerificationReport(); as report) {
+          <mosaik-card test-id="task-verification-report" [appearance]="'outline'">
+            <mosaik-card-header
+              [text]="report.state === 'passed' ? 'Verification passed' : 'Verification needs attention'"
+              [subText]="(report.recordedAt | date: 'medium') ?? ''"
+            />
+            <mosaik-card-content>
+              <mosaik-cell-group class="h-auto">
+                @for (check of report.checks; track check.label) {
+                <mosaik-cell [label]="check.label">
+                  <mosaik-badge
+                    slot="end"
+                    [label]="check.state === 'passed' ? 'Passed' : 'Failed'"
+                    [iconName]="check.state === 'passed' ? 'checkmark' : 'errorCircle'"
+                    [appearance]="'soft'"
+                    [variant]="
+                  (check.state === 'passed') | booleanVariant: 'success' : 'danger'
+                "
+                  />
+                </mosaik-cell>
+                }
+              </mosaik-cell-group>
+            </mosaik-card-content>
+          </mosaik-card>
+          } @if (presenter.workflowAvailable && presenter.gateDecisions().length) {
+          <section class="flex flex-col gap-2" test-id="task-gate-decisions">
+            <mosaik-text [text]="'Your decision'" [mosaikTypography]="'subtitle1'" />
+            <mosaik-card [appearance]="'outline'">
+              <mosaik-card-header
+                [text]="'This work item waits for you'"
+                [subText]="'Nothing runs on it until you decide how it continues.'"
+              />
+              <mosaik-card-content>
+                <div class="flex flex-wrap gap-2">
+                  @for (decision of presenter.gateDecisions(); track decision.id) {
+                  <mosaik-button
+                    [attr.test-id]="'task-gate-decision-' + decision.id"
+                    [label]="decision.label"
+                    [appearance]="decision.effect === 'advance' ? 'solid' : 'outline'"
+                    [variant]="decision.effect === 'advance' ? 'primary' : 'secondary'"
+                    [mosaikTooltip]="decision.description ?? ''"
+                    [disabled]="presenter.isRunning()"
+                    (click)="presenter.decideCommand.execute(decision.id)"
+                  />
+                  }
+                </div>
+              </mosaik-card-content>
+            </mosaik-card>
+          </section>
+          } @if (presenter.executionAvailable) {
+          <section class="flex flex-col gap-2" test-id="task-ai-delegation">
+            <mosaik-text [text]="'Assign to your AI team'" [mosaikTypography]="'subtitle1'" />
+            <mosaik-card [appearance]="'outline'">
+              <mosaik-card-header
+                [text]="
+              presenter.goal()
+                ? (presenter.goal()!.state | goalStateLabel)
+                : 'Who should take this task?'
+            "
+                [subText]="
+              presenter.goal()
+                ? (presenter.responsibleAgent()?.displayName ?? 'Not assigned') +
+                  ' · ' +
+                  presenter.goal()!.assignment.objective
+                : 'Choose an agent. Symphony coordinates the remaining steps.'
+            "
+              />
+              <mosaik-card-content>
+                <div class="flex flex-col gap-2">
+                  <mosaik-select
+                    test-id="task-responsible-agent"
+                    [label]="'AI agent'"
+                    [value]="presenter.responsibleAgentId()"
+                    (selectionChanged)="presenter.updateResponsibleAgentCommand.execute($event)"
+                  >
+                    @for (agent of presenter.workspaceAgents(); track agent.id) {
+                    <mosaik-select-item
+                      [attr.test-id]="'task-responsible-agent-' + agent.id"
+                      [label]="agent.displayName"
+                      [value]="agent.id"
+                      (click)="presenter.updateResponsibleAgentCommand.execute(agent.id)"
+                    />
+                    }
+                  </mosaik-select>
+                  @if (presenter.workspaceTeams().length > 1) {
+                  <mosaik-select
+                    test-id="task-agent-team"
+                    [label]="'Delivery team'"
+                    [value]="presenter.delegatedTeamId()"
+                    (selectionChanged)="presenter.updateDelegatedTeamCommand.execute($event)"
+                  >
+                    @for (team of presenter.workspaceTeams(); track team.id) {
+                    <mosaik-select-item
+                      [attr.test-id]="'task-agent-team-' + team.id"
+                      [label]="team.displayName"
+                      [value]="team.id"
+                      (click)="presenter.updateDelegatedTeamCommand.execute(team.id)"
+                    />
+                    }
+                  </mosaik-select>
+                  }
+                  <mosaik-button
+                    test-id="task-delegate-goal"
+                    [label]="presenter.goal() ? 'Update assignment' : 'Assign task'"
+                    [appearance]="'solid'"
+                    [variant]="'primary'"
+                    [isBusy]="presenter.delegationBusy()"
+                    [disabled]="!presenter.delegatedTeamId() || !presenter.responsibleAgentId()"
+                    (click)="presenter.delegateGoalCommand.execute()"
+                  />
+                  @if (presenter.goal(); as goal) { @if (goal.state === 'reviewing') {
+                  <div class="flex min-w-0 flex-col gap-2 pt-2" test-id="task-goal-review">
+                    <mosaik-prompt-box
+                      test-id="task-goal-feedback"
+                      [label]="'What should be changed? (required only when requesting changes)'"
+                      [placeholder]="'Describe the correction in business terms…'"
+                      [value]="presenter.solutionPrompt()"
+                      [minRows]="3"
+                      [maxRows]="8"
+                      [maxlength]="20000"
+                      [showSubmitButton]="false"
+                      [appearance]="'outline'"
+                      (input)="presenter.updateSolutionPromptCommand.execute($event)"
+                    />
+                    <div class="flex flex-col gap-2">
+                      <mosaik-button
+                        test-id="task-goal-approve"
+                        [label]="'Accept work'"
+                        [appearance]="'solid'"
+                        [variant]="'success'"
+                        [isBusy]="presenter.delegationBusy()"
+                        (click)="presenter.reviewGoalCommand.execute('approved')"
+                      />
+                      <mosaik-button
+                        test-id="task-goal-revision"
+                        [label]="'Request changes'"
+                        [appearance]="'outline'"
+                        [variant]="'warning'"
+                        [isBusy]="presenter.delegationBusy()"
+                        [disabled]="!presenter.solutionPrompt().trim()"
+                        (click)="presenter.reviewGoalCommand.execute('revision-required')"
+                      />
+                    </div>
+                  </div>
+                  }
+                  <mosaik-expander
+                    test-id="task-goal-evidence"
+                    [header]="'Technical details'"
+                    [subHeader]="'Team, active agent, implementation limits, and verification evidence'"
+                  >
+                    <mosaik-cell-group class="flex h-auto min-w-0 flex-col gap-2 pt-2">
+                      <mosaik-cell
+                        [label]="'Responsible agent'"
+                        [subLabel]="presenter.responsibleAgent()?.displayName ?? 'Not assigned'"
+                      />
+                      <mosaik-cell
+                        [label]="'Currently working'"
+                        [subLabel]="presenter.executingAgent()?.displayName ?? 'Not assigned'"
+                      />
+                      <mosaik-cell
+                        [label]="'Delivery team'"
+                        [subLabel]="presenter.goalTeam()?.displayName ?? 'Not delegated'"
+                      />
+                      <mosaik-cell
+                        [label]="'Implementation limits'"
+                        [subLabel]="goal.implementationContract ? ('Version ' + goal.implementationContract.version + ' · ' + goal.implementationContract.acceptanceCriteria.length + ' acceptance criteria') : 'Prepared after planning'"
+                      />
+                      <mosaik-cell
+                        [label]="'Checks and handoffs'"
+                        [subLabel]="goal.verificationReports.length + ' reports · ' + goal.handoffs.length + ' handoffs'"
+                      />
+                    </mosaik-cell-group>
+                  </mosaik-expander>
+                  }
+                </div>
+              </mosaik-card-content>
+            </mosaik-card>
+          </section>
+          }
+          <section class="flex flex-col gap-2" test-id="task-checks-content">
+            @if (presenter.executionAvailable) {
+            <mosaik-expander
+              test-id="task-step-by-step-controls"
+              [header]="'Step-by-step controls'"
+              [subHeader]="'Run planning or implementation manually, or choose a skill for a single step'"
+              [isExpanded]="true"
+            >
+              <div class="flex min-w-0 flex-col gap-2 pt-2">
+                <div class="flex flex-col gap-2">
+                  @if (presenter.noStepReason(); as reason) {
+                  <mosaik-hint
+                    test-id="task-no-step-available"
+                    [textOverflow]="'wrap'"
+                    [text]="reason"
+                  />
+                  } @if (presenter.runsAnalysisStep()) {
+                  <mosaik-card test-id="task-analysis-step" [appearance]="'outline'">
+                    <mosaik-card-header
+                      [text]="presenter.analysisExecution()?.state === 'succeeded' ? 'Re-analyze issue' : 'Analyze issue'"
+                      [subText]="'Choose manual input or explicitly opt in to AI for this step.'"
+                    />
+                    <mosaik-card-content>
+                      <div class="flex flex-col gap-2">
+                        <mosaik-segment test-id="task-analysis-mode" [appearance]="'soft'">
+                          <mosaik-segment-item
+                            test-id="task-analysis-mode-manual"
+                            [label]="'Manual'"
+                            [isChecked]="presenter.analysisInputMode() === 'manual'"
+                            (checked)="presenter.selectAnalysisInputModeCommand.execute('manual')"
+                          />
+                          <mosaik-segment-item
+                            test-id="task-analysis-mode-ai"
+                            [label]="'With AI'"
+                            [variant]="'highlight'"
+                            [isChecked]="presenter.analysisInputMode() === 'ai'"
+                            (checked)="presenter.selectAnalysisInputModeCommand.execute('ai')"
+                          />
+                        </mosaik-segment>
+
+                        @if (presenter.analysisInputMode() === 'manual') {
+                        <div class="flex flex-col gap-2" test-id="task-analysis-manual">
+                          <mosaik-textbox
+                            test-id="task-manual-analysis"
+                            [label]="'Analysis (Markdown)'"
+                            [placeholder]="'Document the evidence, implementation approach, risks and verification steps…'"
+                            [value]="presenter.manualAnalysis()"
+                            [multiline]="true"
+                            [multilineRows]="8"
+                            [resize]="'vertical'"
+                            [maxlength]="1000000"
+                            [required]="true"
+                            [variant]="'primary'"
+                            [disabled]="presenter.isRunning()"
+                            (input)="presenter.updateManualAnalysisCommand.execute($event)"
+                          />
+                          <mosaik-hint
+                            [text]="'This records your analysis without invoking a skill or Codex.'"
+                          />
+                        </div>
+                        } @else {
+                        <div class="flex flex-col gap-2" test-id="task-analysis-ai">
+                          <mosaik-badge
+                            test-id="task-analysis-skill"
+                            [label]="
+                          presenter.hasAnalysisSkill()
+                            ? (presenter.analysisSkill()?.name ?? 'Analysis skill')
+                            : 'No analysis skill assigned'
+                        "
+                            [appearance]="'soft'"
+                            [variant]="'highlight'"
+                          />
+                          @if (presenter.hasAnalysisSkill()) {
+                          <mosaik-prompt-box
+                            aiEnhanced
+                            test-id="task-analysis-prompt"
+                            [label]="'Analysis focus (optional)'"
+                            [placeholder]="'Add evidence, constraints or questions the Analyzer should focus on…'"
+                            [value]="presenter.analysisPrompt()"
+                            [minRows]="3"
+                            [maxRows]="8"
+                            [maxlength]="20000"
+                            [showSubmitButton]="false"
+                            [appearance]="'outline'"
+                            [variant]="'highlight'"
+                            [disabled]="presenter.isRunning()"
+                            (input)="presenter.updateAnalysisPromptCommand.execute($event)"
+                          >
+                            <mosaik-prompt-box-voice-recorder-tool
+                              [state]="presenter.voiceState()('analysis')"
+                              [disabled]="!presenter.voiceInputAvailable || presenter.isRunning()"
+                              (recorderStart)="presenter.startVoiceInputCommand.execute('analysis')"
+                              (recorderStop)="presenter.stopVoiceInputCommand.execute()"
+                              (recorderCancel)="presenter.cancelVoiceInputCommand.execute()"
+                            />
+                          </mosaik-prompt-box>
+                          <mosaik-hint
+                            [text]="'The assigned skill receives the issue, repository evidence and this optional focus.'"
+                          />
+                          } @else { @if (presenter.skillsAvailable) {
+                          <mosaik-button
+                            test-id="task-analysis-open-skills"
+                            [label]="'Open Skills'"
+                            [iconName]="'skills'"
+                            [appearance]="'solid'"
+                            [variant]="'highlight'"
+                            (click)="presenter.openSkillsCommand.execute()"
+                          />
+                          } }
+                        </div>
+                        }
+                      </div>
+                      <mosaik-button
+                        aiEnhanced
+                        [aiEnabled]="presenter.analysisInputMode() === 'ai'"
+                        test-id="task-drawer-start"
+                        [label]="presenter.analysisInputMode() === 'manual' ? presenter.analysisExecution()?.state === 'succeeded' ? 'Record new analysis' : 'Record analysis' : taskActions.analysisLabel"
+                        [iconName]="taskActions.analysisIcon"
+                        [appearance]="'solid'"
+                        [variant]="
+                      (presenter.analysisInputMode() === 'ai')
+                        | booleanVariant: 'highlight' : 'primary'
+                    "
+                        [isBusy]="presenter.isStarting()"
+                        [disabled]="!presenter.canStart()"
+                        [mosaikTooltip]="presenter.analysisInputMode() === 'ai' && !presenter.hasAnalysisSkill() ? 'Assign an analysis skill in Skills first' : ''"
+                        (click)="presenter.startTaskCommand.execute()"
+                      />
+                    </mosaik-card-content>
+                  </mosaik-card>
+                  } @if (presenter.runsSolutionStep() && presenter.hasSuccessfulAnalysis()) {
+                  <mosaik-card test-id="task-solution-step" [appearance]="'outline'">
+                    <mosaik-card-header
+                      [text]="presenter.requiresFeedback() ? 'Rework implementation' : 'Implement fix'"
+                      [subText]="'Choose manual completion or explicitly opt in to AI for this step.'"
+                    />
+                    <mosaik-card-content>
+                      <div class="flex flex-col gap-2">
+                        <mosaik-segment test-id="task-solution-mode" [appearance]="'soft'">
+                          <mosaik-segment-item
+                            test-id="task-solution-mode-manual"
+                            [label]="'Manual'"
+                            [isChecked]="presenter.solutionInputMode() === 'manual'"
+                            (checked)="presenter.selectSolutionInputModeCommand.execute('manual')"
+                          />
+                          <mosaik-segment-item
+                            test-id="task-solution-mode-ai"
+                            [label]="'With AI'"
+                            [variant]="'highlight'"
+                            [isChecked]="presenter.solutionInputMode() === 'ai'"
+                            (checked)="presenter.selectSolutionInputModeCommand.execute('ai')"
+                          />
+                        </mosaik-segment>
+
+                        @if (presenter.solutionInputMode() === 'manual') {
+                        <div class="flex flex-col gap-2" test-id="task-solution-manual">
+                          <mosaik-textbox
+                            test-id="task-manual-solution"
+                            [label]="presenter.requiresFeedback() ? 'Rework notes (Markdown)' : 'Implementation notes (Markdown)'"
+                            [placeholder]="presenter.requiresFeedback() ? 'Document the changes made during rework and how they were verified…' : 'Document the implementation and verification you completed…'"
+                            [value]="presenter.manualSolution()"
+                            [multiline]="true"
+                            [multilineRows]="8"
+                            [resize]="'vertical'"
+                            [maxlength]="1000000"
+                            [required]="true"
+                            [variant]="'primary'"
+                            [disabled]="presenter.isRunning()"
+                            (input)="presenter.updateManualSolutionCommand.execute($event)"
+                          />
+                          <mosaik-hint
+                            [text]="'This records the completed work without invoking a skill, Codex or a managed worktree.'"
+                          />
+                        </div>
+                        } @else {
+                        <div class="flex flex-col gap-2" test-id="task-solution-ai">
+                          <mosaik-badge
+                            test-id="task-solution-skill"
+                            [label]="
+                          presenter.hasSolutionSkill()
+                            ? (presenter.solutionSkill()?.name ?? 'Solution skill')
+                            : 'No solution skill assigned'
+                        "
+                            [appearance]="'soft'"
+                            [variant]="'highlight'"
+                          />
+                          @if (!presenter.hasSolutionSkill()) { @if (presenter.skillsAvailable) {
+                          <mosaik-button
+                            test-id="task-solution-open-skills"
+                            [label]="'Open Skills'"
+                            [iconName]="'skills'"
+                            [appearance]="'solid'"
+                            [variant]="'highlight'"
+                            (click)="presenter.openSkillsCommand.execute()"
+                          />
+                          } } @else if (presenter.requiresFeedback()) {
+                          <mosaik-prompt-box
+                            aiEnhanced
+                            test-id="task-solver-feedback"
+                            [label]="'Changes for the Solver'"
+                            [placeholder]="'Describe what should be corrected or refined…'"
+                            [value]="presenter.solutionPrompt()"
+                            [minRows]="4"
+                            [maxRows]="10"
+                            [minlength]="1"
+                            [maxlength]="20000"
+                            [required]="true"
+                            [showSubmitButton]="false"
+                            [appearance]="'outline'"
+                            [variant]="'highlight'"
+                            [disabled]="presenter.isRunning()"
+                            (input)="presenter.updateSolutionPromptCommand.execute($event)"
+                          >
+                            <mosaik-prompt-box-voice-recorder-tool
+                              [state]="presenter.voiceState()('solution')"
+                              [disabled]="!presenter.voiceInputAvailable || presenter.isRunning()"
+                              (recorderStart)="presenter.startVoiceInputCommand.execute('solution')"
+                              (recorderStop)="presenter.stopVoiceInputCommand.execute()"
+                              (recorderCancel)="presenter.cancelVoiceInputCommand.execute()"
+                            />
+                          </mosaik-prompt-box>
+                          } @else {
+                          <mosaik-hint
+                            [text]="'The assigned skill implements the approved analysis in a new isolated worktree.'"
+                          />
+                          }
+                        </div>
+                        }
+                      </div>
+                      <mosaik-button
+                        aiEnhanced
+                        [aiEnabled]="presenter.solutionInputMode() === 'ai'"
+                        test-id="task-drawer-solve"
+                        [label]="presenter.solutionInputMode() === 'manual' ? presenter.requiresFeedback() ? 'Record rework' : 'Record implementation' : taskActions.solutionLabel"
+                        [iconName]="presenter.requiresFeedback() | booleanIcon: 'sync' : 'play'"
+                        [appearance]="'solid'"
+                        [variant]="
+                      (presenter.solutionInputMode() === 'ai')
+                        | booleanVariant: 'highlight' : 'primary'
+                    "
+                        [isBusy]="presenter.isSolving()"
+                        [disabled]="!presenter.canSolve()"
+                        [mosaikTooltip]="presenter.solutionInputMode() === 'ai' && !presenter.hasSolutionSkill() ? 'Activate a solution skill in Skills first' : ''"
+                        (click)="presenter.startSolutionCommand.execute()"
+                      />
+                    </mosaik-card-content>
+                  </mosaik-card>
+                  }
+                </div>
+              </div>
+            </mosaik-expander>
+            } @if (presenter.analysisExecution()?.summary; as summary) {
+            <mosaik-card
+              aiEnhanced
+              [aiEnabled]="presenter.analysisResultIsAi()"
+              [appearance]="'outline'"
+              ><mosaik-card-header
+                [text]="'Analysis'"
+                [subText]="presenter.analysisResultIsAi() ? presenter.analysisResultSkill() ? 'Generated by ' + presenter.analysisResultSkill()!.displayName : 'AI-generated result' : 'Recorded manually'" /><mosaik-card-content
+                ><symphony-markdown
+                  test-id="task-result-markdown"
+                  [text]="summary" /></mosaik-card-content
+            ></mosaik-card>
+            } @if (presenter.solutionExecution()?.summary; as summary) {
+            <mosaik-card
+              aiEnhanced
+              [aiEnabled]="presenter.solutionResultIsAi()"
+              [appearance]="'outline'"
+              ><mosaik-card-header
+                [text]="'Implementation'"
+                [subText]="presenter.solutionResultIsAi() ? presenter.solutionResultSkill() ? 'Generated by ' + presenter.solutionResultSkill()!.displayName : 'AI-generated result' : 'Recorded manually'" /><mosaik-card-content
+                ><symphony-markdown
+                  test-id="task-solution-markdown"
+                  [text]="summary" /></mosaik-card-content
+            ></mosaik-card>
+            } @if (presenter.execution()?.error; as executionError) {
+            <mosaik-card [appearance]="'soft'"
+              ><mosaik-card-header [text]="'Task failed'" /><mosaik-card-content
+                ><symphony-markdown
+                  test-id="task-error-markdown"
+                  [text]="executionError" /></mosaik-card-content
+            ></mosaik-card>
+            }
+          </section>
+        </div>
+      </mosaik-expander>
+
+      <mosaik-expander
+        test-id="task-activity-section"
+        [header]="'Activity · ' + presenter.activityCount()"
+        [isExpanded]="true"
+        [appearance]="'plain'"
+      >
+        <section class="flex min-w-0 flex-col gap-3 px-1 pb-2 pt-3" test-id="task-drawer-events">
+          @if (presenter.workItem(); as workItem) { @if (workItem.createdAt) {
+          <mosaik-card test-id="task-activity-opened" [appearance]="'outline'">
+            <mosaik-card-content>
+              <mosaik-cell
+                [label]="'Ticket opened'"
+                [subLabel]="(workItem.createdAt | date: 'medium') ?? ''"
+              >
+                <mosaik-badge
+                  slot="end"
+                  [label]="workItem.externalId"
+                  [appearance]="'soft'"
+                  [variant]="'neutral'"
+                />
+              </mosaik-cell>
+            </mosaik-card-content>
+          </mosaik-card>
+          } } @if (presenter.events().length) {
+          <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+            @for (event of presenter.events(); track event.id) { @let eventPresentation = event |
+            taskEventPresentation; @let eventActor = event.origin === 'agent' ?
+            (presenter.executingAgent()?.displayName ?? presenter.responsibleAgent()?.displayName ??
+            'Not assigned') : 'Symphony';
+            <mosaik-timeline-item>
+              <mosaik-timeline-marker
+                [iconName]="eventPresentation.icon"
+                [variant]="eventPresentation.variant"
+                [appearance]="'soft'"
+                [size]="'medium'"
+                [isBusy]="event.kind === 'agent.progress' && presenter.isRunning()"
+              />
+              <mosaik-timeline-content>
+                <mosaik-comment [attr.test-id]="'task-event-comment-' + event.id">
+                  <mosaik-avatar
+                    slot="avatar"
+                    [text]="eventActor | initials"
+                    [size]="'tiny'"
+                    [appearance]="'soft'"
+                  />
+                  <span slot="author">{{ eventActor }}</span>
+                  <time slot="at" [attr.datetime]="event.occurredAt"
+                    >{{ event.occurredAt | date: 'medium' }}</time
+                  >
+                  <div slot="content" class="flex w-full min-w-0 flex-col gap-1">
+                    <mosaik-text [text]="eventPresentation.label" [readonly]="true" [wrap]="true" />
+                    <mosaik-text
+                      [attr.test-id]="'task-event-markdown-' + event.id"
+                      [text]="eventPresentation.message"
+                      [readonly]="true"
+                      [wrap]="true"
+                    />
+                  </div>
+                </mosaik-comment>
+              </mosaik-timeline-content>
+            </mosaik-timeline-item>
+            }
+          </mosaik-timeline>
+          }
+
+          <section class="flex min-w-0 flex-col gap-3" test-id="task-drawer-comments">
+            @if (presenter.comments().length) { @for (comment of presenter.comments(); track
+            comment.id) { @let commentAuthor = comment.author?.displayName ?? comment.author?.login
+            ?? 'Unknown author';
+            <mosaik-comment [attr.test-id]="'task-drawer-comment-' + comment.id">
+              <mosaik-avatar
+                slot="avatar"
+                [text]="commentAuthor | initials"
+                [src]="comment.author?.avatarUrl ?? ''"
+                [size]="'tiny'"
+                [appearance]="'soft'"
+              />
+              <span slot="author">{{ commentAuthor }}</span>
+              <time slot="at" [attr.datetime]="comment.createdAt"
+                >{{ comment.createdAt | date: 'medium' }}</time
+              >
+              @if (comment.body) {
+              <symphony-markdown slot="content" [text]="comment.body" [compact]="true" />
+              } @else {
+              <mosaik-hint slot="content" [text]="'(empty comment)'" />
+              } @if (comment.url) {
+              <mosaik-button
+                slot="actions"
+                [label]="'Open'"
+                [iconName]="'open'"
+                [appearance]="'plain'"
+                [href]="comment.url"
+                [target]="'_blank'"
+                [rel]="'noreferrer'"
+              />
+              }
+            </mosaik-comment>
+            } } @else {
+            <mosaik-hint
+              test-id="task-drawer-comments-empty"
+              [text]="'No comments on this work item yet.'"
+            />
+            }
+          </section>
+        </section>
+      </mosaik-expander>
+      }
+    </div>
+    }
+  </div>
+</ng-template>
+
+<ng-template mosaikDrawerFooter>
+  <!-- The footer is the same while the dialog loads: its controls stay disabled until the work
+       item is known, so the composer and the actions never change place. -->
+  @if (presenter.mode() === 'edit' && !presenter.isEditingSession()) {
+  <div class="flex w-full min-w-0 items-end gap-2">
+    @if (presenter.queueEntry()) {
+    <mosaik-button
+      test-id="task-drawer-remove-queue-entry"
+      [label]="'Remove from queue'"
+      [iconName]="'clear'"
+      [appearance]="'solid'"
+      [variant]="'danger'"
+      [isBusy]="presenter.isRemovingQueueEntry()"
+      [disabled]="presenter.isRemovingQueueEntry()"
+      (click)="presenter.removeQueueEntryCommand.execute()"
+    />
+    } @else if (presenter.activeExecution()) {
+    <mosaik-button
+      test-id="task-drawer-cancel-execution"
+      [label]="'Cancel execution'"
+      [iconName]="'clear'"
+      [appearance]="'outline'"
+      [variant]="'danger'"
+      [isBusy]="presenter.isCancellingExecution()"
+      [disabled]="presenter.isCancellingExecution()"
+      (click)="presenter.cancelActiveExecutionCommand.execute()"
+    />
+    }
+    <mosaik-textbox
+      class="min-w-0 flex-1"
+      test-id="task-drawer-comment-draft"
+      [label]="'Add a comment'"
+      [placeholder]="'Write a comment. Markdown is supported…'"
+      [value]="presenter.commentDraft()"
+      [multiline]="true"
+      [multilineRows]="2"
+      [resize]="'none'"
+      [maxlength]="60000"
+      [appearance]="'outline'"
+      [disabled]="presenter.isHydrating() || presenter.isCommenting()"
+      (input)="presenter.updateCommentDraftCommand.execute($event)"
+    >
+      <mosaik-button
+        slot="suffix"
+        test-id="task-drawer-comment-submit"
+        [label]="'Send'"
+        [iconName]="'arrowRight'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.isCommenting()"
+        [disabled]="presenter.isHydrating() || !presenter.commentDraft().trim() || presenter.isCommenting()"
+        [command]="{ click: presenter.publishCommentCommand }"
+      />
+    </mosaik-textbox>
+  </div>
+  } @else if (presenter.mode() === 'edit') {
+  <div class="flex w-full flex-wrap items-center justify-end gap-2">
+    <mosaik-button
+      test-id="task-edit-cancel"
+      [label]="'Cancel editing'"
+      [appearance]="'plain'"
+      [command]="{ click: presenter.cancelContentEditingCommand }"
+    />
+    <mosaik-button
+      test-id="issue-save"
+      [label]="'Save changes'"
+      [iconName]="'save'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.isSaving()"
+      [disabled]="!presenter.canSave()"
+      (click)="presenter.saveCommand.execute()"
+    />
+  </div>
+  } @else {
+  <div class="flex w-full flex-wrap items-center justify-between gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      @if (presenter.mode() === 'create' && presenter.createInputMode() === 'ai' &&
+      presenter.creatorStage() === 'review') {
+      <mosaik-button
+        test-id="issue-creator-start-over"
+        [label]="'Start over'"
+        [iconName]="'chevronLeft'"
+        [appearance]="'plain'"
+        [variant]="'highlight'"
+        (click)="presenter.startOverCommand.execute()"
+      />
+      }
+    </div>
+    <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+      <mosaik-button
+        test-id="task-drawer-close"
+        [label]="'Cancel'"
+        [appearance]="'plain'"
+        (click)="presenter.closeCommand.execute()"
+      />
+      @if (presenter.createInputMode() === 'manual' || presenter.creatorStage() === 'review') {
+      <mosaik-button
+        test-id="issue-save"
+        [label]="'Create work item'"
+        [iconName]="'add'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.isSaving()"
+        [disabled]="!presenter.canSave()"
+        (click)="presenter.saveCommand.execute()"
+      />
+      }
+    </div>
+  </div>
+  }
+</ng-template>

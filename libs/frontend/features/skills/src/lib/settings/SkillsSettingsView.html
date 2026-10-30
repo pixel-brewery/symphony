@@ -1,0 +1,90 @@
+<section test-id="builtin-skills" class="flex min-w-0 flex-col gap-4">
+  <symphony-headline
+    header="Process roles"
+    description="Symphony ships one role per process step. Add instructions to refine how a role works; permissions and the reporting contract stay fixed."
+  />
+  @for (skill of presenter.builtinSkills(); track skill.role) {
+  <mosaik-card [attr.test-id]="'builtin-skill-' + skill.role">
+    <mosaik-card-header [text]="skill.displayName" [subText]="skill.description">
+      <mosaik-badge slot="end" [appearance]="'soft'" [label]="'v' + skill.version" />
+    </mosaik-card-header>
+    <mosaik-card-content>
+      <div class="flex min-w-0 flex-col gap-3">
+        <div class="flex flex-wrap gap-2">
+          <mosaik-badge
+            [appearance]="'outline'"
+            [label]="skill.mutatesWorkspace ? 'Changes files' : 'Reads only'"
+          />
+          @if (skill.publishesPullRequest) {
+          <mosaik-badge [appearance]="'outline'" [label]="'Publishes pull requests'" />
+          }
+        </div>
+        <mosaik-segment [appearance]="'soft'">
+          <mosaik-segment-item
+            [attr.test-id]="'builtin-skill-tab-shipped-' + skill.role"
+            [label]="'Built-in instructions'"
+            [isChecked]="presenter.skillTab()(skill.role) === 'shipped'"
+            (checked)="presenter.selectSkillTabCommand.execute([skill.role, 'shipped'])"
+          />
+          <mosaik-segment-item
+            [attr.test-id]="'builtin-skill-tab-additional-' + skill.role"
+            [label]="'Your additions'"
+            [isChecked]="presenter.skillTab()(skill.role) === 'additional'"
+            (checked)="presenter.selectSkillTabCommand.execute([skill.role, 'additional'])"
+          />
+        </mosaik-segment>
+        @if (presenter.skillTab()(skill.role) === 'shipped') {
+        <mosaik-textbox
+          [attr.test-id]="'builtin-skill-shipped-' + skill.role"
+          [label]="'Built-in instructions'"
+          [multiline]="true"
+          [multilineRows]="12"
+          [readonly]="true"
+          [value]="skill.instructions"
+        />
+        <mosaik-hint
+          [text]="'Shipped with Symphony and versioned with it. Read them to see what your additions build on.'"
+        />
+        } @else {
+        <mosaik-textbox
+          [attr.test-id]="'builtin-skill-instructions-' + skill.role"
+          [label]="'Additional instructions'"
+          [multiline]="true"
+          [multilineRows]="12"
+          [value]="presenter.skillInstructions()(skill.role)"
+          (valueChange)="presenter.updateSkillInstructionsCommand.execute([skill.role, $event])"
+        />
+        <mosaik-hint
+          [text]="'Appended below the built-in instructions. They refine how the role works and cannot widen what it is allowed to do.'"
+        />
+        }
+      </div>
+    </mosaik-card-content>
+    <mosaik-card-footer>
+      <div class="flex w-full justify-end gap-2">
+        <mosaik-button
+          [attr.test-id]="'builtin-skill-reset-' + skill.role"
+          [label]="'Reset'"
+          [appearance]="'plain'"
+          (click)="presenter.resetSkillInstructionsCommand.execute(skill.role)"
+        />
+        <mosaik-button
+          [attr.test-id]="'builtin-skill-save-' + skill.role"
+          [label]="'Save'"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [disabled]="presenter.skillsBusy()"
+          (click)="presenter.saveSkillInstructionsCommand.execute(skill.role)"
+        />
+      </div>
+    </mosaik-card-footer>
+  </mosaik-card>
+  } @empty {
+  <mosaik-empty-state
+    test-id="builtin-skills-empty"
+    [iconName]="'skills'"
+    [header]="'No roles loaded'"
+    [content]="'Reopen settings to load the built-in process roles.'"
+  />
+  }
+</section>

@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Reuse Existing Patterns'
+  short_description: 'Find and reuse the owning implementation path'
+  default_prompt: 'Use $reuse-existing-patterns before and after a Symphony implementation.'

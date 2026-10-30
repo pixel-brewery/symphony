@@ -1,0 +1,262 @@
+<ng-template mosaikDrawerHeader>
+  <mosaik-drawer-header [text]="'Process'">
+    <div slot="subHeader" class="flex min-w-0 flex-wrap gap-x-1">
+      @if (presenter.workItem(); as item) {
+      <span>{{ item.externalId }}</span>
+      <span>· {{ item.title }}</span>
+      }
+    </div>
+    <mosaik-dismiss
+      slot="suffix"
+      test-id="process-drawer-close"
+      (click)="presenter.closeCommand.execute()"
+    />
+  </mosaik-drawer-header>
+</ng-template>
+
+<ng-template mosaikDrawerContent>
+  <div test-id="process-drawer" class="flex h-full min-h-0 w-full flex-col gap-4 px-2 py-2">
+    @if (presenter.isHydrating()) {
+    <!-- The loaded layout in place: the stage row with its Refresh action, the graph canvas in its
+         own size, and the selected stage's heading, description and kind. -->
+    <div
+      test-id="process-loading-skeleton"
+      class="contents"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading process state"
+    >
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'6rem'" [height]="'12px'" [shimmer]="true" />
+        </div>
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
+        </div>
+        <span class="flex-1"></span>
+        <mosaik-button
+          [label]="'Refresh'"
+          [iconName]="'sync'"
+          [appearance]="'plain'"
+          [size]="'tiny'"
+          [disabled]="true"
+        />
+      </div>
+      <div class="min-h-[26rem] flex-[2] overflow-hidden">
+        <mosaik-skeleton
+          class="block h-full w-full"
+          [width]="'100%'"
+          [height]="'100%'"
+          [shimmer]="true"
+        />
+      </div>
+      <div class="flex min-h-0 flex-1 flex-col gap-3">
+        <section class="flex flex-col gap-2">
+          <div class="flex h-3 items-center">
+            <mosaik-skeleton [width]="'6rem'" [height]="'16px'" [shimmer]="true" />
+          </div>
+          <div class="flex h-3 items-center">
+            <mosaik-skeleton [width]="'60%'" [height]="'14px'" [shimmer]="true" />
+          </div>
+          <mosaik-cell-group class="flex min-w-0 flex-col gap-1">
+            <mosaik-cell>
+              <div slot="label" class="flex h-3 items-center">
+                <mosaik-skeleton [width]="'3rem'" [height]="'14px'" [shimmer]="true" />
+              </div>
+              <div slot="subLabel" class="flex h-2.5 items-center">
+                <mosaik-skeleton [width]="'6rem'" [height]="'12px'" [shimmer]="true" />
+              </div>
+            </mosaik-cell>
+          </mosaik-cell-group>
+        </section>
+      </div>
+    </div>
+    } @else if (presenter.graph(); as graph) {
+    <div class="flex flex-wrap items-center gap-2">
+      @if (presenter.runtimeState(); as runtimeState) { @let runtime = runtimeState |
+      workflowRuntimeStatePresentation;
+      <mosaik-chip
+        test-id="process-runtime-state"
+        [label]="runtime.label"
+        [appearance]="'soft'"
+        [variant]="runtime.variant"
+        [size]="'tiny'"
+      />
+      } @if (graph.currentStageId; as currentStageId) {
+      <mosaik-hint test-id="process-current-stage" [text]="'Stage: ' + currentStageId" />
+      } @if (!presenter.hasRecord()) {
+      <mosaik-hint
+        test-id="process-no-record"
+        [text]="'No run has touched this item yet. The stage comes from its board column.'"
+        [textOverflow]="'wrap'"
+      />
+      }
+      <span class="flex-1"></span>
+      <mosaik-button
+        test-id="process-refresh"
+        [label]="'Refresh'"
+        [iconName]="'sync'"
+        [appearance]="'plain'"
+        [size]="'tiny'"
+        (click)="presenter.refreshCommand.execute()"
+      />
+    </div>
+
+    <div class="min-h-[26rem] flex-[2] overflow-hidden">
+      <symphony-process-graph
+        [graph]="graph"
+        [selectedStageId]="presenter.selectedStageId()"
+        [selectedTransitionId]="presenter.selectedTransitionId()"
+        (stageSelected)="presenter.selectStageCommand.execute($event)"
+        (transitionSelected)="presenter.selectTransitionCommand.execute($event)"
+      />
+    </div>
+
+    <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      @if (presenter.selectedStage(); as stage) {
+      <section test-id="process-stage-detail" class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <mosaik-text [text]="stage.label" [mosaikTypography]="'subtitle1'" />
+          <mosaik-button
+            test-id="process-clear-selection"
+            [label]="'Show everything'"
+            [appearance]="'plain'"
+            [size]="'tiny'"
+            (click)="presenter.clearSelectionCommand.execute()"
+          />
+        </div>
+        <mosaik-text [text]="stage.description" [readonly]="true" [wrap]="true" />
+        <mosaik-cell-group class="flex min-w-0 flex-col gap-1">
+          <mosaik-cell [label]="'Kind'" [subLabel]="stage.kind" />
+          @if (stage.roles.length > 0) {
+          <mosaik-cell [label]="'Roles'" [subLabel]="stage.roles.join(' → ')" />
+          } @if (stage.visitCount > 0) {
+          <mosaik-cell [label]="'Entered'" [subLabel]="stage.visitCount + '×'" />
+          }
+        </mosaik-cell-group>
+      </section>
+      } @else if (presenter.selectedTransition(); as transition) {
+      <section test-id="process-transition-detail" class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <mosaik-text
+            [text]="transition.from + ' → ' + transition.to"
+            [mosaikTypography]="'subtitle1'"
+          />
+          <mosaik-button
+            test-id="process-clear-selection"
+            [label]="'Show everything'"
+            [appearance]="'plain'"
+            [size]="'tiny'"
+            (click)="presenter.clearSelectionCommand.execute()"
+          />
+        </div>
+        <mosaik-cell-group class="flex min-w-0 flex-col gap-1">
+          <mosaik-cell [label]="'Trigger'" [subLabel]="transition.trigger | workflowTriggerLabel" />
+          <mosaik-cell
+            [label]="'Guards'"
+            [subLabel]="transition.guards.length ? transition.guards.join(', ') : 'None'"
+          />
+          @if (transition.invalidates.length > 0) {
+          <mosaik-cell [label]="'Invalidates'" [subLabel]="transition.invalidates.join(', ')" />
+          }
+          <mosaik-cell [label]="'Taken'" [subLabel]="transition.traversalCount + '×'" />
+        </mosaik-cell-group>
+      </section>
+      } @if (presenter.humanRequest(); as request) {
+      <mosaik-banner
+        test-id="process-human-request"
+        [variant]="request.escalatedAt ? 'danger' : 'warning'"
+        [appearance]="'soft'"
+      >
+        <mosaik-banner-header [text]="request.question" />
+        <mosaik-banner-sub-header [text]="request.rationale" />
+      </mosaik-banner>
+      @if (request.escalatedAt || request.remindedAt) {
+      <mosaik-text
+        test-id="process-question-overdue"
+        [text]="
+          (request.escalatedAt ? 'Escalated: unanswered since ' : 'Reminder: unanswered since ') +
+          (request.raisedAt | date: 'medium')
+        "
+        [readonly]="true"
+        [wrap]="true"
+      />
+      }
+      <div class="flex min-w-0 flex-wrap items-center gap-2">
+        @for (option of request.options; track option) {
+        <mosaik-button
+          [attr.test-id]="'process-question-option-' + $index"
+          [label]="option"
+          [size]="'tiny'"
+          (click)="presenter.answerQuestionCommand.execute(option)"
+        />
+        }
+        <mosaik-button
+          test-id="process-question-dismiss"
+          [label]="'Dismiss question'"
+          [appearance]="'plain'"
+          [size]="'tiny'"
+          (click)="presenter.answerQuestionCommand.execute()"
+        />
+      </div>
+      }
+
+      <mosaik-divider />
+
+      <mosaik-text [text]="'History'" [mosaikTypography]="'subtitle2'" />
+      @if (presenter.auditTrail().length > 0) {
+      <mosaik-timeline test-id="process-audit-trail" [orientation]="'vertical'" [align]="'start'">
+        @for (entry of presenter.auditTrail(); track entry.id) { @let audit = entry.kind |
+        workflowAuditPresentation;
+        <mosaik-timeline-item>
+          <mosaik-timeline-marker
+            [iconName]="audit.icon"
+            [variant]="audit.variant"
+            [appearance]="'soft'"
+            [size]="'medium'"
+          />
+          <mosaik-timeline-content>
+            <div class="flex min-w-0 flex-col gap-1">
+              <mosaik-text
+                [attr.test-id]="'process-audit-' + entry.id"
+                [text]="entry.detail"
+                [readonly]="true"
+                [wrap]="true"
+              />
+              <mosaik-text
+                [text]="(entry.occurredAt | date: 'medium') + ' · ' + entry.actor"
+                [readonly]="true"
+                [mosaikTypography]="'caption'"
+              />
+              @if (entry.failedGuards?.length) {
+              <mosaik-text
+                [text]="'Failed guards: ' + entry.failedGuards.join(', ')"
+                [readonly]="true"
+                [mosaikTypography]="'caption'"
+                [wrap]="true"
+              />
+              }
+            </div>
+          </mosaik-timeline-content>
+        </mosaik-timeline-item>
+        }
+      </mosaik-timeline>
+      } @else {
+      <mosaik-empty-state
+        test-id="process-audit-empty"
+        [iconName]="'executionOutline'"
+        [header]="'Nothing recorded yet'"
+        [content]="'The history fills up as runs report results and people decide at the gates.'"
+      />
+      }
+    </div>
+    } @else {
+    <mosaik-empty-state
+      test-id="process-unavailable"
+      [iconName]="'info'"
+      [header]="'No process configured'"
+      [content]="'Symphony could not load the workflow definition for this work item.'"
+    />
+    }
+  </div>
+</ng-template>

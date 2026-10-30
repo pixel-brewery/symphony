@@ -1,0 +1,125 @@
+<div
+  #viewport
+  data-orbit-viewport
+  test-id="orbit-canvas"
+  [attr.data-render-state]="renderState()"
+  [attr.data-asset-state]="frame()?.assetState ?? 'loading'"
+  [attr.data-ticket-count]="frame()?.ticketCount ?? 0"
+  [attr.data-label-count]="frame()?.labels?.length ?? 0"
+  [attr.data-crew-count]="crew().length"
+  [attr.data-flight-count]="frame()?.activeFlybyCount ?? 0"
+  [attr.data-zoom-level]="frame()?.zoomLevel ?? 'system'"
+  [attr.data-camera-x]="frame()?.camera?.position?.x"
+  [attr.data-camera-y]="frame()?.camera?.position?.y"
+  [attr.data-camera-z]="frame()?.camera?.position?.z"
+  [attr.data-camera-target-x]="frame()?.camera?.target?.x"
+  [attr.data-camera-target-y]="frame()?.camera?.target?.y"
+  [attr.data-camera-target-z]="frame()?.camera?.target?.z"
+>
+  @for (key of [canvasKey()]; track key) {
+  <canvas #webgl test-id="orbit-webgl" aria-hidden="true"></canvas>
+  }
+  <div data-orbit-labels>
+    @for (label of frame()?.labels ?? []; track label.node.id) {
+    <div
+      data-orbit-label
+      [attr.test-id]="'orbit-label-' + label.node.id"
+      [attr.data-node-id]="label.node.id"
+      [attr.data-celestial-body]="label.node.celestialBody"
+      [attr.data-scene-x]="label.anchorX"
+      [attr.data-scene-y]="label.anchorY"
+      [attr.data-selected]="selectedId() === label.node.id"
+      [style.left.px]="label.x"
+      [style.top.px]="label.y"
+      [style.width.px]="label.width"
+      [style.height.px]="label.height"
+      (focusin)="pinNode(label.node.id)"
+      (keydown)="labelKeydown($event, label.node.id)"
+    >
+      <mosaik-button
+        [orientation]="'vertical'"
+        [size]="'small'"
+        [fit]="'width'"
+        [appearance]="selectedId() === label.node.id ? 'solid' : 'soft'"
+        [variant]="nodeVariant(label.node)"
+        [attr.aria-label]="label.node.title ?? label.node.label"
+        [attr.aria-pressed]="selectedId() === label.node.id"
+        (click)="selectNode(label.node.id)"
+        (dblclick)="focusNode(label.node.id)"
+      >
+        <span slot="label" class="flex min-w-0 flex-col items-center">
+          @if (label.node.kind === 'group' && label.node.count !== undefined) {
+          <span [mosaikTypography]="'caption'" [attr.test-id]="'orbit-group-count-' + label.node.id"
+            >{{ label.node.count }} {{ label.node.label }}</span
+          >
+          } @else {
+          <mosaik-text [text]="label.node.label" [mosaikTypography]="'caption'" [maxLines]="1" />
+          } @if (label.node.kind === 'ticket' && label.node.stageLabel) {
+          <mosaik-text
+            [text]="label.node.stageLabel"
+            [mosaikTypography]="'caption'"
+            [maxLines]="1"
+          />
+          } @else if (label.node.kind === 'production' || label.node.kind === 'target') { @if
+          (label.node.deliveryState === 'confirmed' && label.node.version) {
+          <mosaik-text [text]="label.node.version" [mosaikTypography]="'caption'" [maxLines]="1" />
+          } @else {
+          <mosaik-text
+            [text]="'No confirmed version'"
+            [mosaikTypography]="'caption'"
+            [maxLines]="1"
+          />
+          } }
+        </span>
+      </mosaik-button>
+    </div>
+    }
+  </div>
+  <div data-orbit-flybys aria-hidden="true">
+    @for (flyby of frame()?.flybys ?? []; track flyby.id) {
+    <div
+      data-orbit-flyby
+      [attr.test-id]="'orbit-flyby-' + flyby.id"
+      [attr.data-agent-id]="flyby.pilot.id"
+      [attr.data-figure-source]="flyby.source"
+      [attr.data-projected-size]="flyby.size"
+      [style.left.px]="flyby.x"
+      [style.top.px]="flyby.y"
+    >
+      <mosaik-text
+        [text]="flyby.pilot.name"
+        [mosaikTypography]="'caption'"
+        [alignment]="'center'"
+        [maxLines]="1"
+      />
+    </div>
+    }
+  </div>
+  @if (renderState() === 'unavailable' || renderState() === 'context-lost') {
+  <div
+    data-orbit-fallback
+    class="absolute inset-0 flex items-center justify-center p-6"
+    role="status"
+    test-id="orbit-webgl-fallback"
+  >
+    <div class="flex max-w-80 flex-col items-center gap-4">
+      <mosaik-text
+        [text]="renderState() === 'context-lost' ? '3D was interrupted' : '3D is unavailable'"
+        [wrap]="true"
+        [alignment]="'center'"
+      />
+      <mosaik-text
+        [text]="'Find tickets in the object browser.'"
+        [wrap]="true"
+        [alignment]="'center'"
+      />
+      <mosaik-button
+        [label]="'Retry'"
+        [appearance]="'soft'"
+        test-id="orbit-webgl-retry"
+        (click)="retry()"
+      />
+    </div>
+  </div>
+  }
+</div>

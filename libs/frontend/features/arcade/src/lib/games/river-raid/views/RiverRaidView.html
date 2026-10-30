@@ -1,0 +1,305 @@
+<mosaik-page
+  class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+  test-id="river-raid-view"
+  [attr.data-screen]="screen()"
+>
+  <mosaik-page-header [text]="'River Raid'" [inset]="'all'" test-id="river-raid-header">
+    @if (screen() === 'game' && status() !== 'ended') {
+    <div
+      slot="subHeader"
+      id="river-raid-controls"
+      class="flex flex-wrap items-center gap-x-4 gap-y-1"
+      [mosaikTypography]="'body2'"
+    >
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" /><span>Bank</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['↑']" /><mosaik-kbd [value]="['↓']" /><span>Accelerate / slow</span>
+      </div>
+      <div class="flex items-center gap-2"><mosaik-kbd [value]="['Space']" /><span>Fire</span></div>
+      <div class="flex items-center gap-2"><mosaik-kbd [value]="['P']" /><span>Pause</span></div>
+    </div>
+    }
+    <mosaik-button
+      slot="prefix"
+      test-id="river-raid-back-arcade"
+      [label]="'All games'"
+      [appearance]="'plain'"
+      [variant]="'neutral'"
+      [command]="{click: backArcadeCommand}"
+    />
+    <div slot="suffix" class="flex flex-wrap items-center gap-2">
+      <mosaik-button
+        test-id="river-raid-sound"
+        [label]="soundMuted() ? 'Sound off' : 'Sound on'"
+        [attr.aria-pressed]="!soundMuted()"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{click: toggleSoundCommand}"
+        (click)="enableAudio()"
+      />
+      @if (screen() === 'game') {
+      <mosaik-button
+        test-id="river-raid-menu"
+        [label]="'Menu'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{click: menuCommand}"
+      />
+      @if (status() !== 'ended') {
+      <mosaik-button
+        test-id="river-raid-pause"
+        [label]="status() === 'paused' ? 'Resume' : 'Pause'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{click: togglePauseCommand}"
+        (click)="focusScreen()"
+      />
+      }
+      <mosaik-button
+        test-id="river-raid-reset"
+        [label]="'New game'"
+        [iconName]="'play'"
+        [appearance]="'outline'"
+        [variant]="'primary'"
+        [command]="{click: newGameCommand}"
+        (click)="focusScreen()"
+      />
+      }
+    </div>
+  </mosaik-page-header>
+  <mosaik-page-content
+    [inset]="'none'"
+    class="relative flex min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+    test-id="river-raid-playfield"
+  >
+    <canvas
+      #playfieldCanvas
+      test-id="river-raid-screen"
+      class="absolute inset-0 block h-full w-full"
+      [attr.tabindex]="screen() === 'game' ? 0 : -1"
+      role="img"
+      aria-label="River Raid river playfield. Arrow keys bank and change speed, Space fires, P pauses."
+      [attr.aria-describedby]="screen() === 'game' ? 'river-raid-controls' : null"
+      (click)="focusScreen()"
+    ></canvas>
+    <span
+      class="sr-only"
+      test-id="river-raid-status"
+      [attr.data-status]="status()"
+      [attr.data-score]="score()"
+      [attr.data-player]="player()"
+      [attr.data-fuel]="fuel()"
+      [attr.data-level]="level()"
+      >Player {{ player() }}, {{ score() | number }} points, section {{ level() }}, fuel {{ fuel() *
+      100 | number:'1.0-0' }} percent.</span
+    >
+    @if (!screenAvailable()) {
+    <div class="absolute inset-x-4 top-4" role="alert">
+      <mosaik-text
+        [text]="'The playfield could not be loaded. Return to Arcade and try again.'"
+        [wrap]="true"
+      />
+    </div>
+    } @if (screen() !== 'game') {
+    <div class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+      <mosaik-card class="my-auto w-full max-w-2xl shrink-0">
+        @switch (screen()) { @case ('intro') {
+        <mosaik-card-header
+          [text]="'River Raid'"
+          [subText]="'An assault flight by Carol Shaw · 1982'"
+        />
+        <mosaik-card-content>
+          <div class="flex flex-col gap-5">
+            <mosaik-text
+              [text]="'Fly the River of No Return.'"
+              [wrap]="true"
+              [mosaikTypography]="'h4'"
+            />
+            <mosaik-text
+              [text]="'Bank between the riverbanks and islands, destroy enemy aircraft and tankers, and blast every bridge. Fly over fuel depots to replenish your tank before it empties.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <div class="flex flex-col gap-2">
+              <span [mosaikTypography]="'body2'">Game select</span>
+              <div class="flex flex-wrap gap-2">
+                <mosaik-button
+                  test-id="river-raid-one-player"
+                  [label]="'1 player'"
+                  [appearance]="playerCount() === 1 ? 'solid' : 'outline'"
+                  [variant]="'primary'"
+                  [attr.aria-pressed]="playerCount() === 1"
+                  [command]="{click: playersCommand}"
+                  [commandParameter]="1"
+                />
+                <mosaik-button
+                  test-id="river-raid-two-players"
+                  [label]="'2 players · taking turns'"
+                  [appearance]="playerCount() === 2 ? 'solid' : 'outline'"
+                  [variant]="'primary'"
+                  [attr.aria-pressed]="playerCount() === 2"
+                  [command]="{click: playersCommand}"
+                  [commandParameter]="2"
+                />
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <span [mosaikTypography]="'body2'">Difficulty switches · applied to a new game</span>
+              <mosaik-button
+                test-id="river-raid-difficulty-one"
+                [label]="difficulty()[0] === 'b' ? 'Player 1 · B · guided missiles' : 'Player 1 · A · straight missiles'"
+                [appearance]="'outline'"
+                [variant]="'neutral'"
+                [command]="{click: difficultyCommand}"
+                [commandParameter]="0"
+              />
+              @if (playerCount() === 2) {
+              <mosaik-button
+                test-id="river-raid-difficulty-two"
+                [label]="difficulty()[1] === 'b' ? 'Player 2 · B · guided missiles' : 'Player 2 · A · straight missiles'"
+                [appearance]="'outline'"
+                [variant]="'neutral'"
+                [command]="{click: difficultyCommand}"
+                [commandParameter]="1"
+              />
+              }
+            </div>
+          </div>
+        </mosaik-card-content>
+        <mosaik-card-actions
+          ><div class="flex flex-wrap gap-2">
+            @if (canContinue()) {
+            <mosaik-button
+              test-id="river-raid-resume"
+              [label]="'Continue'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{click: resumeCommand}"
+              (click)="focusScreen()"
+            />
+            }
+            <mosaik-button
+              test-id="river-raid-start"
+              [label]="canContinue() ? 'New game' : 'Play'"
+              [iconName]="'play'"
+              [appearance]="canContinue() ? 'outline' : 'solid'"
+              [variant]="'primary'"
+              [command]="{click: newGameCommand}"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="river-raid-instructions"
+              [label]="'How to play'"
+              [appearance]="'plain'"
+              [variant]="'neutral'"
+              [command]="{click: instructionsCommand}"
+            /></div
+        ></mosaik-card-actions>
+        } @case ('instructions') {
+        <mosaik-card-header
+          [text]="'How to play'"
+          [subText]="'Keep your fuel up and clear the bridges.'"
+        />
+        <mosaik-card-content
+          ><div class="flex flex-col gap-4">
+            <div class="grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-3">
+              <div class="flex gap-1">
+                <mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" />
+              </div>
+              <span>Bank left or right. A and D also work.</span>
+              <div class="flex gap-1">
+                <mosaik-kbd [value]="['↑']" /><mosaik-kbd [value]="['↓']" />
+              </div>
+              <span
+                >Accelerate or slow down. W and S also work. Release to return to cruising
+                speed.</span
+              >
+              <mosaik-kbd [value]="['Space']" /><span
+                >Fire. Hold for continuous missiles. Any direction or Fire launches a waiting
+                jet.</span
+              >
+              <mosaik-kbd [value]="['P']" /><span>Pause or resume. Escape also works.</span>
+            </div>
+            <mosaik-text
+              [text]="'You have one jet in flight and three reserves. Crashing into the banks, islands, enemies or an intact bridge costs a jet. An empty tank also ends the flight. Restart at the last cleared bridge with a full tank.'"
+              [wrap]="true"
+            />
+            <mosaik-text
+              [text]="'Fly over a fuel depot to refuel. Slowing down gives you more fuel. You can then shoot the depot for points, even while refueling. A low-fuel warning sounds below one quarter of a tank.'"
+              [wrap]="true"
+            />
+            <mosaik-text
+              [text]="'Tankers: 30 points. Helicopters: 60. Fuel depots: 80. Jets: 100. Bridges: 500. Every 10,000 points earns a reserve jet, up to nine reserves. At one million points the counter fills with exclamation marks and the game ends.'"
+              [wrap]="true"
+            />
+            <mosaik-text
+              [text]="'With difficulty B, fired missiles follow your horizontal position. With A, they continue straight. Two players share the keyboard and alternate after each lost jet; each keeps a separate score, reserves and bridge checkpoint.'"
+              [wrap]="true"
+            /></div
+        ></mosaik-card-content>
+        <mosaik-card-actions
+          ><mosaik-button
+            test-id="river-raid-back-title"
+            [label]="'Back'"
+            [appearance]="'outline'"
+            [variant]="'neutral'"
+            [command]="{click: menuCommand}"
+        /></mosaik-card-actions>
+        } }
+      </mosaik-card>
+    </div>
+    } @else if (status() === 'ended') {
+    <div
+      class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+      role="status"
+    >
+      <mosaik-card class="my-auto w-full max-w-lg shrink-0" test-id="river-raid-results">
+        <mosaik-card-header [text]="'Mission over'" />
+        <mosaik-card-content
+          ><div class="flex flex-col gap-3">
+            @for (result of results(); track result.player) {
+            <span [mosaikTypography]="'h4'"
+              >Player {{ result.player }} · {{ result.score | number }} points</span
+            >
+            <span
+              >Section {{ result.level }} · {{ result.outcome === 'completed' ? 'Maximum score
+              reached' : 'Squadron lost' }}</span
+            >
+            }
+          </div></mosaik-card-content
+        >
+        <mosaik-card-actions
+          ><div class="flex flex-wrap gap-2">
+            <mosaik-button
+              test-id="river-raid-replay"
+              [label]="'Play again'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{click: newGameCommand}"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="river-raid-results-arcade"
+              [label]="'All games'"
+              [appearance]="'plain'"
+              [variant]="'neutral'"
+              [command]="{click: backArcadeCommand}"
+            /></div
+        ></mosaik-card-actions>
+      </mosaik-card>
+    </div>
+    } @else if (status() === 'ready' || status() === 'paused') {
+    <div class="absolute inset-x-4 top-4 flex justify-center" role="status">
+      <mosaik-card
+        ><mosaik-card-content>
+          @if (status() === 'ready') {
+          <span>Player {{ player() }} · Press a direction or Space to launch.</span> } @else {
+          <span>Paused · Press P or Resume to continue.</span> }
+        </mosaik-card-content></mosaik-card
+      >
+    </div>
+    }
+  </mosaik-page-content>
+</mosaik-page>

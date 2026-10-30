@@ -1,0 +1,14 @@
+@if (presenter.isHydrating()) {
+<div
+  test-id="startup-splash"
+  class="absolute inset-0 flex h-dvh w-screen items-center justify-center"
+  role="status"
+  aria-label="Starting Symphony"
+>
+  <img class="block h-32 w-32" src="icons/symphony-mark.svg" alt="Symphony" />
+</div>
+} @else {
+<div class="absolute inset-0 block h-dvh w-screen">
+  <router-outlet />
+</div>
+}

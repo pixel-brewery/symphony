@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Inspect Reference UI'
+  short_description: 'Compare Symphony UI with read-only references'
+  default_prompt: 'Use $inspect-reference-ui to compare Symphony UI architecture with FLAMOX365 and Mosaik.'

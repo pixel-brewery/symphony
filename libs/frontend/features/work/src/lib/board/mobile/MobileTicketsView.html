@@ -1,0 +1,37 @@
+<mosaik-page class="block min-h-full min-w-0" test-id="mobile-tickets-view">
+  <mosaik-page-header
+    [inset]="'all'"
+    [text]="'Tickets'"
+    [subText]="presenter.tickets().length + ' shown'"
+  >
+    <mosaik-button
+      slot="suffix"
+      [label]="'New'"
+      [variant]="'primary'"
+      [routerLink]="['/tickets/new']"
+      test-id="mobile-tickets-create"
+    />
+  </mosaik-page-header>
+  <mosaik-page-pre-content [inset]="'horizontal'">
+    <mosaik-searchbox
+      class="flex w-full min-w-0"
+      [value]="presenter.query()"
+      [placeholder]="'Title or ticket ID'"
+      [isClearable]="true"
+      [mode]="'delay'"
+      [delay]="150"
+      (searched)="presenter.updateQueryCommand.execute($event)"
+      (cleared)="presenter.clearQueryCommand.execute()"
+      test-id="mobile-ticket-search"
+    />
+  </mosaik-page-pre-content>
+  <mosaik-page-content [inset]="'all'">
+    <div class="grid min-w-0 gap-2">
+      @for (ticket of presenter.tickets(); track ticket.id) {
+      <symphony-mobile-ticket-card [ticket]="ticket" />
+      } @empty {
+      <p>No matching tickets.</p>
+      }
+    </div>
+  </mosaik-page-content>
+</mosaik-page>

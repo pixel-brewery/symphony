@@ -1,0 +1,16 @@
+{
+  "name": "frontend-quick-create",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/quick-create/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["scope:frontend", "type:quick-create"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/quick-create/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

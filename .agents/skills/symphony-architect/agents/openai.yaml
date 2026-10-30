@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Symphony Architect'
+  short_description: 'Apply shared foundations to Symphony engineering'
+  default_prompt: 'Use $symphony-architect to plan, implement, test or review this Symphony engineering task.'

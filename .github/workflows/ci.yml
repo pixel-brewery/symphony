@@ -1,0 +1,141 @@
+name: Repository Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: quality-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Agents, Format, Lint, Typecheck, Test and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Enable Corepack for dependency caching
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.15.0
+          cache: yarn
+
+      - name: Enable Yarn
+        run: corepack prepare yarn@4.10.3 --activate
+
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: yarn install --immutable
+
+      - name: Classify documentation changes
+        id: documentation-scope
+        env:
+          DOCUMENTATION_BASE_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$DOCUMENTATION_BASE_REVISION" ] || [ "$DOCUMENTATION_BASE_REVISION" = "0000000000000000000000000000000000000000" ]; then
+            echo "documentation_changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$DOCUMENTATION_BASE_REVISION" HEAD -- docs/; then
+            echo "documentation_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "documentation_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate operational documentation
+        if: steps.documentation-scope.outputs.documentation_changed == 'true'
+        run: yarn node .agents/skills/symphony-docs/scripts/validate-docs.mjs docs
+
+      - name: Verify repository
+        run: yarn verify
+
+  electron-e2e:
+    name: Electron E2E
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Enable Corepack for dependency caching
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.15.0
+          cache: yarn
+
+      - name: Enable Yarn
+        run: corepack prepare yarn@4.10.3 --activate
+
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: yarn install --immutable
+
+      - name: Build
+        run: yarn build
+
+      - name: Install Chromium for the mobile companion journey
+        run: yarn playwright install chromium
+
+      - name: Run Electron tests
+        run: yarn e2e
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: playwright-report
+          path: |
+            apps/renderer-e2e/output/playwright/**
+            output/playwright/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  package:
+    name: Package smoke test
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Enable Corepack for dependency caching
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.15.0
+          cache: yarn
+
+      - name: Enable Yarn
+        run: corepack prepare yarn@4.10.3 --activate
+
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: yarn install --immutable
+
+      - name: Package
+        run: yarn forge:package

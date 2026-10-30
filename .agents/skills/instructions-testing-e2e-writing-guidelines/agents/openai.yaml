@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Testing E2E Writing Guidelines'
+  short_description: 'Apply repository instructions guidance'
+  default_prompt: 'Use $instructions-testing-e2e-writing-guidelines for the applicable repository guidance.'

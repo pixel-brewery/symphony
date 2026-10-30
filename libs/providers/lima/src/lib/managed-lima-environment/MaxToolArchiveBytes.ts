@@ -1,0 +1,1 @@
+export const MAX_TOOL_ARCHIVE_BYTES = 64 * 1024 * 1024;

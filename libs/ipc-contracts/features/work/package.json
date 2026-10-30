@@ -1,0 +1,23 @@
+{
+  "name": "@symphony/ipc-contracts-work",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@symphony/configuration-composition": "workspace:*",
+    "@symphony/configuration-work": "workspace:*",
+    "@symphony/ipc-contracts-skills": "workspace:*",
+    "@symphony/ipc-contracts-workflow": "workspace:*",
+    "zod": "4.6.5"
+  }
+}

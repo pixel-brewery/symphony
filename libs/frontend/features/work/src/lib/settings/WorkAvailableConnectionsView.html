@@ -1,0 +1,18 @@
+@if(presenter.workspace(); as item){
+<mosaik-cell
+  [attr.test-id]="'azure-account-' + item.id"
+  [label]="'Azure DevOps'"
+  [subLabel]="'Add a work-item account'"
+>
+  <mosaik-avatar slot="start" [size]="'small'" [appearance]="'soft'" [iconName]="'azureDevOps'" />
+  <mosaik-button
+    slot="end"
+    [attr.test-id]="'add-azure-source-' + item.id"
+    [label]="'Connect'"
+    [iconName]="'add'"
+    [appearance]="'solid'"
+    [variant]="'primary'"
+    (click)="presenter.openAzureCommand.execute([item.id])"
+  />
+</mosaik-cell>
+}

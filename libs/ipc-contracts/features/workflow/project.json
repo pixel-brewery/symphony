@@ -1,0 +1,25 @@
+{
+  "name": "ipc-contracts-workflow",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ipc-contracts/features/workflow/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:ipc", "feature:workflow"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/ipc-contracts/features/workflow/tsconfig.lib.json --noEmit",
+          "tsc -p libs/ipc-contracts/features/workflow/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/ipc-contracts/features/workflow/vitest.config.ts"
+      }
+    }
+  }
+}

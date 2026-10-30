@@ -1,0 +1,20 @@
+/** Typed IPC operations consumed by Execution. @public */
+export type ExecutionRequestMethod =
+  | 'analyzer.start'
+  | 'work-items.delegate'
+  | 'goals.review'
+  | 'delivery-groups.assess'
+  | 'delivery-groups.create-direct'
+  | 'delivery-groups.confirm'
+  | 'delivery-groups.reject'
+  | 'delivery-groups.dissolve'
+  | 'delivery-groups.align'
+  | 'analysis.complete-manually'
+  | 'solver.start'
+  | 'solution.complete-manually'
+  | 'execution-queue.remove'
+  | 'execution.cancel'
+  | 'execution.pause'
+  | 'execution.resume'
+  | 'execution-state.get'
+  | 'work-items.detail';

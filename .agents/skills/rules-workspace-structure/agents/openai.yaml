@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Workspace Structure'
+  short_description: 'Apply repository rules guidance'
+  default_prompt: 'Use $rules-workspace-structure for the applicable repository guidance.'

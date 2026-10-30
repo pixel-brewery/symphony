@@ -1,0 +1,28 @@
+{
+  "name": "orchestrator",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/orchestrator/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/orchestrator"],
+      "options": { "command": "node tools/build-node-apps.mjs orchestrator" }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc -p apps/orchestrator/tsconfig.app.json --noEmit" }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint apps/orchestrator libs/application libs/configuration libs/domain libs/logging libs/persistence libs/providers"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "vitest run --config apps/orchestrator/vitest.config.ts" }
+    }
+  },
+  "tags": ["scope:desktop", "type:application"]
+}

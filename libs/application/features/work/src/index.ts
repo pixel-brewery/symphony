@@ -1,0 +1,14 @@
+export { WorkItemService } from './lib/WorkItemService';
+export type { IWorkItemServiceDependencies } from './lib/IWorkItemServiceDependencies';
+export type { IWorkItemTrackingPort } from './lib/IWorkItemTrackingPort';
+export type { IWorkItemSkillCatalog } from './lib/IWorkItemSkillCatalog';
+export type { IIssueDraftingPort } from './lib/IIssueDraftingPort';
+export type { IWorkItemCoordinationPort } from './lib/ports/IWorkItemCoordinationPort';
+export { WorkItemClaimLostError } from './lib/ports/WorkItemClaimLostError';
+export { WorkItemClaimMissingError } from './lib/ports/WorkItemClaimMissingError';
+export { WorkTrackingProjectionService } from './lib/WorkTrackingProjectionService';
+export type { IWorkTrackingProjectionDependencies } from './lib/IWorkTrackingProjectionDependencies';
+export type { IWorkTrackingProjectionScope } from './lib/IWorkTrackingProjectionScope';
+export type { IWorkTrackingProjectionPort } from './lib/IWorkTrackingProjectionPort';
+export type { IWorkTrackingProjectionRepository } from './lib/IWorkTrackingProjectionRepository';
+export type { IWorkItemDetailProjection } from './lib/IWorkItemDetailProjection';

@@ -1,0 +1,1 @@
+export const GIT_TIMEOUT_MILLISECONDS = 5 * 60 * 1_000;

@@ -1,0 +1,25 @@
+{
+  "name": "configuration-composition",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/configuration/composition/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:composition"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/configuration/composition/tsconfig.lib.json --noEmit",
+          "tsc -p libs/configuration/composition/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/configuration/composition/vitest.config.ts"
+      }
+    }
+  }
+}

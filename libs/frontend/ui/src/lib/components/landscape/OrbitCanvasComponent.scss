@@ -1,0 +1,62 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+[data-orbit-viewport] {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--mosaik-scheme-background);
+  color: var(--mosaik-scheme-foreground);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+[data-orbit-labels] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+[data-orbit-label] {
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  pointer-events: none;
+}
+
+[data-orbit-label] > mosaik-button {
+  display: block;
+  width: 100%;
+  pointer-events: auto;
+}
+
+[data-orbit-fallback] {
+  background: var(--mosaik-scheme-background);
+}
+
+[data-orbit-flybys] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+[data-orbit-flyby] {
+  position: absolute;
+  width: 180px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}

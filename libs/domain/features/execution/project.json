@@ -1,0 +1,25 @@
+{
+  "name": "domain-execution",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/features/execution/src",
+  "projectType": "library",
+  "tags": ["scope:domain", "type:domain", "feature:execution"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/domain/features/execution/tsconfig.lib.json --noEmit",
+          "tsc -p libs/domain/features/execution/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/domain/features/execution/vitest.config.ts"
+      }
+    }
+  }
+}

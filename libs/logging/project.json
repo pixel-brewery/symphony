@@ -1,0 +1,15 @@
+{
+  "name": "logging",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/logging/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:infrastructure"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/logging/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

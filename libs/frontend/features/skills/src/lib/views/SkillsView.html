@@ -1,0 +1,117 @@
+<mosaik-page
+  class="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden"
+  test-id="skills-view"
+>
+  <mosaik-page-header slot="header" [inset]="'all'" test-id="skills-page-header" [text]="'Skills'">
+    <symphony-page-toolbar
+      test-id="skills-page-toolbar"
+      [ariaLabel]="'Skills'"
+      [mosaikAnimate]="'fadeSlideInDown'"
+      [mosaikAnimateOptions]="{ duration: 200 }"
+    >
+      <mosaik-button
+        slot="start"
+        test-id="new-skill"
+        [iconName]="'add'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [attr.aria-label]="'New skill'"
+        [mosaikTooltip]="'New skill'"
+        (click)="presenter.newSkillCommand.execute()"
+      />
+      <mosaik-button
+        slot="end"
+        test-id="open-skill-catalog"
+        [label]="'Add skills'"
+        [iconName]="'skills'"
+        [appearance]="'outline'"
+        (click)="presenter.openCatalogCommand.execute()"
+      />
+      <mosaik-button
+        slot="end"
+        test-id="refresh-skills"
+        [iconName]="'sync'"
+        [appearance]="'outline'"
+        [disabled]="presenter.store.skillsBusy()"
+        [mosaikTooltip]="'Refresh installed skills'"
+        [attr.aria-label]="'Refresh installed skills'"
+        (click)="presenter.store.refreshSkills()"
+      />
+    </symphony-page-toolbar>
+  </mosaik-page-header>
+  <mosaik-page-content
+    class="flex min-h-0 flex-1 flex-col overflow-y-auto"
+    [inset]="'none'"
+    [mosaikAnimate]="'fadeSlideInDown'"
+    [mosaikAnimateOptions]="{ duration: 200 }"
+  >
+    @if (presenter.activeSkills().length) {
+    <div class="grid grid-cols-3 gap-3 max-lg:grid-cols-2 max-sm:grid-cols-1">
+      @for (skill of presenter.activeSkills(); track skill.id) {
+      <mosaik-card
+        class="min-w-0"
+        [attr.test-id]="'skill-package-' + skill.source + '-' + skill.name"
+        (click)="presenter.openSkillCommand.execute(skill)"
+      >
+        <mosaik-card-header [text]="skill.displayName" [subText]="skill.name">
+          <mosaik-badge
+            slot="suffix"
+            [label]="skill.source === 'user' ? 'Shared' : skill.source"
+            [appearance]="'soft'"
+            [variant]="(skill.source === 'user') | booleanVariant: 'success' : 'neutral'"
+          />
+        </mosaik-card-header>
+        <mosaik-card-content class="flex min-h-24 flex-col justify-between gap-2">
+          <p>{{ skill.description }}</p>
+          <div class="flex flex-col gap-2" (click)="$event.stopPropagation()">
+            <mosaik-select
+              [attr.test-id]="'active-skill-flow-role-' + skill.name"
+              [label]="'Flow step'"
+              [placeholder]="'Choose a flow step'"
+              [variant]="'primary'"
+              [required]="true"
+              [value]="presenter.store.skillFlowRole(skill.id)"
+              [disabled]="presenter.store.configurationBusy()"
+              (selectionChanged)="presenter.assignFlowCommand.execute([skill.id, $event])"
+            >
+              @for (option of presenter.flowOptions; track option.role) {
+              <mosaik-select-item
+                [label]="option.label + ' · ' + option.placement"
+                [value]="option.role"
+              />
+              }
+            </mosaik-select>
+            @if (presenter.flowOption()(skill.id); as flow) {
+            <small>{{ flow.placement }}</small>
+            } @else {
+            <small>Choose where this skill runs in the flow.</small>
+            }
+          </div>
+          <small>
+            {{ skill.resourceCount }} resources · {{ skill.implicitInvocation ? 'automatic +
+            explicit' : 'explicit only' }}
+          </small>
+        </mosaik-card-content>
+        <mosaik-card-footer>
+          <mosaik-button
+            [attr.test-id]="'deactivate-skill-' + skill.name"
+            [label]="'Deactivate'"
+            [iconName]="'clear'"
+            [appearance]="'plain'"
+            [disabled]="presenter.store.skillsBusy()"
+            (click)="$event.stopPropagation(); presenter.store.deactivateSkill(skill.id)"
+          />
+        </mosaik-card-footer>
+      </mosaik-card>
+      }
+    </div>
+    } @else {
+    <mosaik-empty-state
+      test-id="active-skills-empty"
+      [iconName]="'skills'"
+      [header]="presenter.searchQuery().trim() ? 'No matching installed skills' : 'No installed skills'"
+      [content]="presenter.searchQuery().trim() ? 'Try a different term in global search.' : 'Use Add skills to activate a discovered package.'"
+    />
+    }
+  </mosaik-page-content>
+</mosaik-page>

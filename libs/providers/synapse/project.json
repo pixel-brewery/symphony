@@ -1,0 +1,25 @@
+{
+  "name": "providers-synapse",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/synapse/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:synapse"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/synapse/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/synapse/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/synapse/vitest.config.ts"
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+<div class="relative block h-full w-full min-w-0 overflow-hidden" test-id="mobile-presenter-view">
+  <main
+    class="block h-dvh w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-y-contain"
+    [class]="presenter.snapshot() ? 'pb-[calc(12rem+env(safe-area-inset-bottom))]' : ''"
+  >
+    @if (presenter.snapshot()) {
+    <router-outlet />
+    } @else {
+    <section
+      class="flex min-h-dvh px-[max(1.5rem,env(safe-area-inset-left))] pt-[max(1.5rem,env(safe-area-inset-top))] pr-[max(1.5rem,env(safe-area-inset-right))] pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+      aria-live="polite"
+    >
+      <div class="mx-auto flex w-full max-w-sm flex-col gap-6">
+        <header class="flex shrink-0 flex-col items-start gap-4">
+          <img
+            class="block h-[48px] w-[48px] shrink-0"
+            test-id="mobile-symphony-mark"
+            src="icons/symphony-mark.svg"
+            alt="Symphony"
+          />
+          <div class="flex min-w-0 flex-col gap-1">
+            <h1 class="m-0" mosaikTypography="headline5">Connect to Symphony</h1>
+            <mosaik-text
+              [mosaikTypography]="'body1'"
+              [text]="'Pair this phone with Symphony Desktop on the same Wi-Fi network.'"
+              [wrap]="true"
+            />
+          </div>
+        </header>
+        @switch (presenter.pairingState()) { @case ('requesting') {
+        <mosaik-busy-state
+          class="h-auto min-h-24 shrink-0"
+          [content]="'Preparing the pairing request…'"
+        />
+        } @case ('waiting') {
+        <mosaik-message
+          class="block h-auto w-full shrink-0"
+          [appearance]="'soft'"
+          [variant]="'info'"
+          [fit]="'width'"
+          [header]="'Approve on your Mac'"
+          [content]="'Confirm that this phone and the verification code match.'"
+        />
+        <div class="flex shrink-0 flex-col items-center gap-1 py-2">
+          <mosaik-text
+            test-id="mobile-verification-code"
+            [mosaikTypography]="'headline2'"
+            [text]="presenter.pairing()?.verificationCode ?? ''"
+            [alignment]="'center'"
+          />
+          <mosaik-text
+            [text]="'Keep this page open until approval is complete.'"
+            [wrap]="true"
+            [alignment]="'center'"
+          />
+        </div>
+        } @case ('rejected') {
+        <mosaik-message
+          class="block h-auto w-full shrink-0"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [fit]="'width'"
+          [header]="'Pairing declined'"
+          [content]="'Generate a new QR code in Symphony Desktop when you are ready to try again.'"
+        />
+        } @case ('expired') {
+        <mosaik-message
+          class="block h-auto w-full shrink-0"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [fit]="'width'"
+          [header]="'QR code expired'"
+          [content]="'Generate and scan a new QR code in Symphony Desktop.'"
+        />
+        } @case ('approved') {
+        <mosaik-busy-state
+          class="h-auto min-h-24 shrink-0"
+          [content]="'Finishing the connection…'"
+        />
+        } @default {
+        <mosaik-message
+          class="block h-auto w-full shrink-0"
+          [appearance]="'soft'"
+          [variant]="'info'"
+          [fit]="'width'"
+          [header]="'Scan a QR code'"
+          [content]="'Open Mobile access in Symphony Desktop and scan the QR code shown there.'"
+        />
+        } } @if (presenter.error()) {
+        <mosaik-message
+          class="block h-auto w-full shrink-0"
+          test-id="mobile-connection-error"
+          [appearance]="'soft'"
+          [variant]="'danger'"
+          [fit]="'width'"
+          [header]="'Connection interrupted'"
+          [content]="presenter.error() ?? ''"
+        />
+        <mosaik-button
+          class="block h-auto w-full shrink-0"
+          test-id="retry-mobile-connection"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [label]="'Retry connection'"
+          (click)="presenter.retryCommand.execute()"
+        />
+        }
+      </div>
+    </section>
+    }
+  </main>
+
+  @if (presenter.snapshot()) {
+  <nav
+    class="absolute right-2 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-2 z-100 h-14 overflow-hidden p-1"
+    aria-label="Main navigation"
+  >
+    <mosaik-tab-strip
+      class="flex h-full w-full flex-none"
+      [placement]="'bottom'"
+      [hasIndicator]="false"
+    >
+      @for (item of presenter.navigationItems(); track item.key) {
+      <mosaik-tab-strip-item
+        class="h-full min-w-0 flex-1"
+        [label]="item.label"
+        [icon]="item.icon"
+        [orientation]="'vertical'"
+        [isSelected]="presenter.isSelected()(item)"
+        [value]="item.key"
+        [attr.test-id]="'mobile-navigation-' + item.key"
+        (selected)="presenter.selectCommand.execute(item)"
+      />
+      }
+    </mosaik-tab-strip>
+  </nav>
+  }
+</div>

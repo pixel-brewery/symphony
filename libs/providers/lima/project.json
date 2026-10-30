@@ -1,0 +1,25 @@
+{
+  "name": "providers-lima",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/lima/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:lima"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/lima/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/lima/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/lima/vitest.config.ts"
+      }
+    }
+  }
+}

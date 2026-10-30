@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Create Employee Figure'
+  short_description: 'Animate Symphony employees with the Codex sprite workflow'
+  default_prompt: 'Use $create-employee-figure to create or repair an interactive animated Symphony employee in the OpenDots plush style, using the Codex create-pet pipeline and validating all states and look directions.'

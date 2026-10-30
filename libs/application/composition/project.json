@@ -1,0 +1,15 @@
+{
+  "name": "application-composition",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/application/composition/src",
+  "projectType": "library",
+  "tags": ["scope:application", "type:composition"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/application/composition/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

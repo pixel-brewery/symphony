@@ -1,0 +1,94 @@
+@let usage = this.usage(); @let available = this.available();
+<div class="flex min-w-0 flex-wrap items-baseline gap-2">
+  @if (pending()) {
+  <strong [attr.test-id]="sizeTestId()">Measuring…</strong>
+  <span> counting every managed file against the {{ limitGiB() }} GB limit </span>
+  } @else {
+  <strong [attr.test-id]="sizeTestId()">{{ usage?.allocatedBytes | storageSize }}</strong>
+  <span> of {{ limitGiB() }} GB · {{ usage?.pressure | storagePressureLabel }} </span>
+  }
+</div>
+@if (pending()) {
+<!-- An empty bar reads as an empty disk; a skeleton reads as a measurement still running. It has
+     the bar's anatomy: the 10px track and the legend row below it. -->
+<div
+  class="flex min-w-0 flex-col"
+  [attr.test-id]="barTestId() + '-loading'"
+  role="status"
+  aria-label="Measuring storage"
+>
+  <mosaik-skeleton [height]="'10px'" [width]="'100%'" [shimmer]="true" />
+  <div class="flex h-3 items-center justify-center gap-4">
+    <mosaik-skeleton [height]="'12px'" [width]="'6rem'" [shimmer]="true" />
+    <mosaik-skeleton [height]="'12px'" [width]="'7rem'" [shimmer]="true" />
+    <mosaik-skeleton [height]="'12px'" [width]="'5rem'" [shimmer]="true" />
+  </div>
+</div>
+} @else {
+<mosaik-segment-bar
+  [attr.test-id]="barTestId()"
+  [min]="0"
+  [max]="limitBytes()"
+  [thickness]="'10px'"
+  [segmentGap]="2"
+>
+  @for (entry of entries(); track entry.id) {
+  <mosaik-segment-bar-item
+    [id]="entry.segmentItemId"
+    [attr.test-id]="barTestId() + '-segment-' + entry.id"
+    [value]="entry.allocatedBytes"
+    [variant]="entry.variant"
+    [label]="entry.label"
+  />
+  }
+  <div
+    slot="hint"
+    class="flex w-full min-w-0 flex-wrap items-center justify-center gap-x-4 gap-y-1 leading-normal"
+    [attr.test-id]="barTestId() + '-legend'"
+  >
+    @for (entry of entries(); track entry.id) {
+    <span
+      class="inline-flex min-w-0 items-center gap-1.5"
+      [id]="entry.segmentItemId + '-legend'"
+      [attr.test-id]="barTestId() + '-legend-' + entry.id"
+    >
+      <mosaik-dot [size]="'small'" [fill]="'full'" [variant]="entry.variant" />
+      <mosaik-text
+        [text]="entry.label + ' · ' + (entry.allocatedBytes | storageSize)"
+        [mosaikTypography]="'caption'"
+        [wrap]="true"
+        [readonly]="true"
+      />
+      <mosaik-tooltip
+        [for]="entry.segmentItemId + '-legend'"
+        [content]="entry.description"
+        [placement]="'top'"
+      />
+    </span>
+    } @if (available) {
+    <span
+      class="inline-flex min-w-0 items-center gap-1.5"
+      [id]="barTestId() + '-legend-available-anchor'"
+      [attr.test-id]="barTestId() + '-legend-available'"
+    >
+      <mosaik-dot
+        [size]="'small'"
+        [fill]="'empty'"
+        [variant]="usage?.pressure | storagePressureVariant"
+      />
+      <mosaik-text
+        [text]="'Available · ' + (available.allocatedBytes | storageSize)"
+        [mosaikTypography]="'caption'"
+        [wrap]="true"
+        [readonly]="true"
+      />
+      <mosaik-tooltip
+        [for]="barTestId() + '-legend-available-anchor'"
+        [content]="available.description"
+        [placement]="'top'"
+      />
+    </span>
+    }
+  </div>
+</mosaik-segment-bar>
+}

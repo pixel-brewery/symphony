@@ -1,0 +1,56 @@
+<mosaik-card test-id="arcade-settings-card">
+  <mosaik-card-header
+    [text]="'Navigation'"
+    [subText]="'Choose which optional destinations appear in Symphony.'"
+  />
+  <mosaik-card-content>
+    <mosaik-cell-group>
+      <mosaik-cell [label]="'Show Arcade'">
+        <mosaik-text
+          slot="subLabel"
+          [text]="'Add the three bundled games to the main navigation.'"
+          [wrap]="true"
+        />
+        <mosaik-toggle-switch
+          slot="end"
+          test-id="arcade-enabled-toggle"
+          [variant]="'primary'"
+          [isChecked]="presenter.arcadeEnabled()"
+          (checked)="presenter.updateArcadeEnabledCommand.execute(true)"
+          (unchecked)="presenter.updateArcadeEnabledCommand.execute(false)"
+        />
+      </mosaik-cell>
+      @if (presenter.arcadeEnabled()) {
+      <mosaik-divider />
+      <mosaik-cell [label]="'God mode'">
+        <mosaik-text
+          slot="subLabel"
+          [text]="
+            presenter.arcadeGodModeEnabled()
+              ? 'God mode is active for this session.'
+              : 'Press the keys in order. Progress resets after two seconds without a key.'
+          "
+          [wrap]="true"
+        />
+        <div
+          slot="end"
+          test-id="arcade-god-mode-sequence"
+          class="flex flex-wrap items-center justify-end gap-1"
+          role="group"
+          aria-label="God mode key sequence"
+        >
+          @for (key of presenter.arcadeGodModeSequence; track $index) {
+          <mosaik-kbd
+            [attr.test-id]="'arcade-god-mode-key-' + $index"
+            [value]="[key]"
+            [variant]="
+              $index < presenter.arcadeGodModeProgress() ? 'success' : 'default'
+            "
+          />
+          }
+        </div>
+      </mosaik-cell>
+      }
+    </mosaik-cell-group>
+  </mosaik-card-content>
+</mosaik-card>
