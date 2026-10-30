@@ -1,0 +1,809 @@
+name: Continuous Desktop Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      specifier:
+        description: Semantic version increment for the next desktop release
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: continuous-desktop-release
+  cancel-in-progress: false
+
+env:
+  RELEASE_SPECIFIER: ${{ inputs.specifier || 'patch' }}
+  NODE_VERSION: 24.15.0
+  YARN_VERSION: 4.10.3
+
+jobs:
+  configure:
+    name: Resolve release identity
+    if: github.repository_id == '1440122208' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+      pages: read
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+      commit: ${{ steps.release.outputs.commit }}
+      update-base-url: ${{ steps.origin.outputs.update-base-url }}
+      artifact-base-url: ${{ steps.origin.outputs.artifact-base-url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require the public release repository and configured update site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONFIGURED_BASE_URL: ${{ vars.SYMPHONY_UPDATE_BASE_URL }}
+        run: |
+          set -euo pipefail
+          gh api repositories/1440122208 --jq '{id, full_name, private, default_branch}' > "$RUNNER_TEMP/release-repository.json"
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const repository = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/release-repository.json`, 'utf8'));
+          if (repository.id !== 1440122208 || repository.full_name !== process.env.GITHUB_REPOSITORY || repository.full_name !== 'pixel-brewery/symphony' || repository.private || repository.default_branch !== 'main') {
+            throw new Error('Desktop publication requires the transferred, public pixel-brewery/symphony repository with main as its default branch.');
+          }
+          NODE
+          gh api "repos/${GITHUB_REPOSITORY}/pages" > "$RUNNER_TEMP/release-pages.json"
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const pages = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/release-pages.json`, 'utf8'));
+          const baseUrl = (process.env.CONFIGURED_BASE_URL || 'https://pixel-brewery.github.io/symphony').replace(/\/+$/u, '');
+          const parsed = new URL(baseUrl);
+          if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search || parsed.hash) {
+            throw new Error('The update origin must be a credential-free HTTPS URL.');
+          }
+          if (pages.build_type !== 'legacy' || pages.source?.branch !== 'gh-pages' || pages.source?.path !== '/' || pages.html_url?.replace(/\/+$/u, '') !== baseUrl) {
+            throw new Error('Configure GitHub Pages from gh-pages / and match SYMPHONY_UPDATE_BASE_URL to the published site before releasing.');
+          }
+          NODE
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - run: corepack prepare yarn@${YARN_VERSION} --activate
+
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: yarn install --immutable
+
+      # Prepare exactly once. The same metadata-only commit is verified, packaged,
+      # and finally pushed; no later job repeats version or changelog resolution.
+      - name: Resolve the semantic release
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          case "$RELEASE_SPECIFIER" in patch|minor|major) ;; *) exit 1 ;; esac
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          release_args=("$RELEASE_SPECIFIER")
+          stable_tags="$(git tag --list)"
+          if ! grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' <<< "$stable_tags"; then
+            release_args+=(--first-release)
+          fi
+          yarn release:nx "${release_args[@]}"
+          version="$(node -p "require('./package.json').version")"
+          tag="v${version}"
+          git show-ref --verify --quiet "refs/tags/${tag}"
+          yarn prettier --write CHANGELOG.md
+          if ! git diff --quiet -- CHANGELOG.md; then
+            git add CHANGELOG.md
+            git commit --amend --no-edit
+            git tag --force --annotate "$tag" --message "$tag"
+          fi
+          test "$(git rev-parse HEAD^)" = "$GITHUB_SHA"
+          test "$(git rev-list --count "${GITHUB_SHA}..HEAD")" = 1
+          test "$(git rev-parse "${tag}^{commit}")" = "$(git rev-parse HEAD)"
+          while IFS= read -r path; do
+            case "$path" in
+              package.json|yarn.lock|CHANGELOG.md) ;;
+              *) echo "Unexpected release change: $path" >&2; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$GITHUB_SHA" HEAD)
+          test -z "$(git status --porcelain --untracked-files=no)"
+          mkdir -p "$RUNNER_TEMP/release-metadata"
+          git bundle create "$RUNNER_TEMP/release-metadata/release.bundle" "refs/tags/${tag}" "^${GITHUB_SHA}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # The update origin is compiled into Electron Main, so every build job needs the
+      # same value. A repository variable wins so a custom domain can replace the
+      # default GitHub Pages origin without touching this workflow.
+      - name: Resolve the update origin
+        id: origin
+        env:
+          CONFIGURED_BASE_URL: ${{ vars.SYMPHONY_UPDATE_BASE_URL }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          base_url="${CONFIGURED_BASE_URL:-https://pixel-brewery.github.io/symphony}"
+          while [[ "$base_url" == */ ]]; do base_url="${base_url%/}"; done
+          case "$base_url" in
+            https://*) ;;
+            *) echo "The update origin must be an HTTPS URL: $base_url" >&2; exit 1 ;;
+          esac
+          echo "version=${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "update-base-url=$base_url" >> "$GITHUB_OUTPUT"
+          echo "artifact-base-url=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/v${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse to reuse an existing release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${RELEASE_TAG}" > "$RUNNER_TEMP/release-refs.json"
+          if jq -e --arg ref "refs/tags/${RELEASE_TAG}" 'any(.[]; .ref == $ref)' "$RUNNER_TEMP/release-refs.json" >/dev/null; then
+            echo "Release ${RELEASE_TAG} already exists and published bytes are immutable." >&2
+            exit 1
+          fi
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq '.[].tag_name' > "$RUNNER_TEMP/release-tags.txt"
+          if grep -Fxq "$RELEASE_TAG" "$RUNNER_TEMP/release-tags.txt"; then
+            echo "Release ${RELEASE_TAG} already exists and published bytes are immutable." >&2
+            exit 1
+          fi
+
+      - name: Preserve the exact prepared release commit
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-metadata
+          path: ${{ runner.temp }}/release-metadata/release.bundle
+          if-no-files-found: error
+          retention-days: 14
+
+  verify:
+    name: Verify release source (${{ matrix.os }})
+    needs: configure
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    env:
+      RELEASE_TAG: ${{ needs.configure.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.configure.outputs.commit }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-metadata
+          path: ${{ runner.temp }}/release-metadata
+      - name: Check out the exact prepared release
+        run: |
+          set -euo pipefail
+          git bundle verify "$RUNNER_TEMP/release-metadata/release.bundle"
+          git fetch --no-tags "$RUNNER_TEMP/release-metadata/release.bundle" "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          test "$(git rev-parse "${RELEASE_TAG}^{commit}")" = "$RELEASE_COMMIT"
+          git checkout --detach "$RELEASE_COMMIT"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: corepack enable
+      - run: corepack prepare yarn@${YARN_VERSION} --activate
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: yarn install --immutable
+      - name: Validate product documentation
+        run: yarn node .agents/skills/symphony-docs/scripts/validate-docs.mjs docs
+      - run: yarn verify
+      - name: Install Chromium for the mobile companion journey
+        if: matrix.os == 'macos-latest'
+        run: yarn playwright install chromium
+      - name: Run Electron tests
+        if: matrix.os == 'macos-latest'
+        run: yarn e2e
+      - name: Verify the packaged application
+        if: matrix.os == 'macos-latest'
+        run: yarn forge:package
+      - name: Upload the Playwright report
+        if: failure() && matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-playwright-report
+          path: |
+            apps/renderer-e2e/output/playwright/**
+            output/playwright/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  macos:
+    name: macOS ${{ matrix.arch }} release
+    needs: [configure, verify]
+    runs-on: macos-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64]
+        # Intel builds stay available for a later support expansion.
+        # arch: [arm64, x64]
+    env:
+      RELEASE_VERSION: ${{ needs.configure.outputs.version }}
+      RELEASE_TAG: ${{ needs.configure.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.configure.outputs.commit }}
+      SYMPHONY_UPDATE_BASE_URL: ${{ needs.configure.outputs.update-base-url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-metadata
+          path: ${{ runner.temp }}/release-metadata
+      - name: Check out the exact prepared release
+        run: |
+          set -euo pipefail
+          git bundle verify "$RUNNER_TEMP/release-metadata/release.bundle"
+          git fetch --no-tags "$RUNNER_TEMP/release-metadata/release.bundle" "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          test "$(git rev-parse "${RELEASE_TAG}^{commit}")" = "$RELEASE_COMMIT"
+          git checkout --detach "$RELEASE_COMMIT"
+      - run: corepack enable
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - run: corepack prepare yarn@${YARN_VERSION} --activate
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: yarn install --immutable
+      - run: yarn release:version "$RELEASE_VERSION"
+      - run: yarn build
+      # Signing and notarization are independent optional capabilities. Secrets stay
+      # scoped to this step and reach Forge only when their complete group exists.
+      - name: Configure optional macOS signing and notarization
+        id: macos-signing
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          count_present() {
+            local count=0
+            for value in "$@"; do
+              if [ -n "$value" ]; then
+                count=$((count + 1))
+              fi
+            done
+            printf '%s' "$count"
+          }
+
+          signing_count="$(count_present \
+            "$APPLE_SIGNING_IDENTITY" \
+            "$MACOS_CERTIFICATE_BASE64" \
+            "$MACOS_CERTIFICATE_PASSWORD")"
+          notarization_count="$(count_present \
+            "$APPLE_API_KEY_BASE64" \
+            "$APPLE_API_KEY_ID" \
+            "$APPLE_API_ISSUER")"
+          signed=false
+
+          if [ "$signing_count" -eq 3 ]; then
+            certificate_path="$RUNNER_TEMP/symphony-signing.p12"
+            keychain_path="$RUNNER_TEMP/symphony-signing.keychain-db"
+            printf '%s' "$MACOS_CERTIFICATE_BASE64" | base64 --decode > "$certificate_path"
+            security create-keychain -p "$MACOS_CERTIFICATE_PASSWORD" "$keychain_path"
+            security set-keychain-settings -lut 21600 "$keychain_path"
+            security unlock-keychain -p "$MACOS_CERTIFICATE_PASSWORD" "$keychain_path"
+            security import "$certificate_path" -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain_path"
+            security set-key-partition-list -S apple-tool:,apple: -k "$MACOS_CERTIFICATE_PASSWORD" "$keychain_path"
+            security list-keychain -d user -s "$keychain_path"
+            echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY" >> "$GITHUB_ENV"
+            signed=true
+          elif [ "$signing_count" -eq 0 ]; then
+            echo '::warning title=Ad-hoc-signed macOS build::No signing credentials are configured. The release continues with a complete ad-hoc signature but without Apple trust or notarization.'
+          else
+            echo '::warning title=Incomplete macOS signing credentials::The partial signing secret set is ignored and the release continues with a complete ad-hoc signature but without Apple trust or notarization.'
+          fi
+
+          if [ "$signed" = true ] && [ "$notarization_count" -eq 3 ]; then
+            api_key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+            printf '%s' "$APPLE_API_KEY_BASE64" | base64 --decode > "$api_key_path"
+            echo "APPLE_API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
+            echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> "$GITHUB_ENV"
+            echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> "$GITHUB_ENV"
+          elif [ "$notarization_count" -gt 0 ]; then
+            echo '::warning title=Notarization disabled::The notarization secrets are incomplete or macOS signing is unavailable, so they are ignored.'
+          elif [ "$signed" = true ]; then
+            echo '::warning title=Unnotarized macOS build::The application will be signed but not notarized because no notarization credentials are configured.'
+          fi
+
+          echo "signed=$signed" >> "$GITHUB_OUTPUT"
+
+      - run: yarn electron-forge make --arch=${{ matrix.arch }}
+
+      # Every macOS app must be structurally sealed, even when no Developer ID is
+      # available. Otherwise Gatekeeper reports the downloaded bundle as damaged.
+      - name: Verify macOS application and disk image
+        run: |
+          set -euo pipefail
+          APP_PATH="out/Symphony-darwin-${{ matrix.arch }}/Symphony.app"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          DMG_PATH="out/make/Symphony-darwin-${{ matrix.arch }}-${RELEASE_VERSION}.dmg"
+          test -f "$DMG_PATH"
+          hdiutil verify "$DMG_PATH"
+
+      - name: Verify launchable ad-hoc signature
+        if: steps.macos-signing.outputs.signed != 'true'
+        run: |
+          set -euo pipefail
+          APP_PATH="out/Symphony-darwin-${{ matrix.arch }}/Symphony.app"
+          DETAILS_PATH="$RUNNER_TEMP/symphony-codesign-details.txt"
+          codesign -dvvv "$APP_PATH" 2> "$DETAILS_PATH"
+          cat "$DETAILS_PATH"
+          grep -q '^Signature=adhoc$' "$DETAILS_PATH"
+          if grep -q 'flags=.*runtime' "$DETAILS_PATH"; then
+            echo 'Ad-hoc macOS builds cannot enable Hardened Runtime without a stable Team ID.' >&2
+            exit 1
+          fi
+
+      - name: Verify Developer ID signature
+        if: steps.macos-signing.outputs.signed == 'true'
+        run: |
+          set -euo pipefail
+          APP_PATH="out/Symphony-darwin-${{ matrix.arch }}/Symphony.app"
+          codesign -dvvv "$APP_PATH" 2>&1 | grep -q '^Authority=Developer ID Application:'
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: update-darwin-${{ matrix.arch }}
+          path: out/make/Symphony-darwin-${{ matrix.arch }}-${{ env.RELEASE_VERSION }}.dmg
+          if-no-files-found: error
+          retention-days: 14
+
+  windows:
+    name: Windows arm64 release
+    needs: [configure, verify]
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      RELEASE_VERSION: ${{ needs.configure.outputs.version }}
+      RELEASE_TAG: ${{ needs.configure.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.configure.outputs.commit }}
+      SYMPHONY_UPDATE_BASE_URL: ${{ needs.configure.outputs.update-base-url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-metadata
+          path: ${{ runner.temp }}/release-metadata
+      - name: Check out the exact prepared release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git bundle verify "$RUNNER_TEMP/release-metadata/release.bundle"
+          git fetch --no-tags "$RUNNER_TEMP/release-metadata/release.bundle" "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          test "$(git rev-parse "${RELEASE_TAG}^{commit}")" = "$RELEASE_COMMIT"
+          git checkout --detach "$RELEASE_COMMIT"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: corepack enable
+
+      - run: corepack prepare yarn@${env:YARN_VERSION} --activate
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: yarn install --immutable
+      - run: yarn release:version "$env:RELEASE_VERSION"
+      - run: yarn build
+      # Squirrel can create an unsigned installer, so an absent certificate affects
+      # SmartScreen reputation without blocking the installer-only release.
+      - name: Import signing certificate when available
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if ($env:WINDOWS_CERTIFICATE_BASE64 -and $env:WINDOWS_CERTIFICATE_PASSWORD) {
+            $certificatePath = Join-Path $env:RUNNER_TEMP 'symphony-signing.pfx'
+            [IO.File]::WriteAllBytes($certificatePath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_BASE64))
+            "WINDOWS_CERTIFICATE_FILE=$certificatePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "WINDOWS_CERTIFICATE_PASSWORD=$env:WINDOWS_CERTIFICATE_PASSWORD" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "SYMPHONY_SIGNED=true" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            "SYMPHONY_SIGNED=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+            if ($env:WINDOWS_CERTIFICATE_BASE64 -or $env:WINDOWS_CERTIFICATE_PASSWORD) {
+              Write-Output "::warning title=Incomplete Windows signing credentials::The partial certificate secret set is ignored and the release continues unsigned."
+            } else {
+              Write-Output "::warning title=Unsigned Windows build::No code-signing certificate is configured. The release continues unsigned and Windows may show a SmartScreen warning."
+            }
+          }
+
+      # x64 packaging stays available for a later support expansion.
+      # - run: yarn electron-forge make --arch=x64
+      - run: yarn electron-forge make --arch=arm64
+
+      - name: Verify installer signature
+        if: env.SYMPHONY_SIGNED == 'true'
+        shell: pwsh
+        run: |
+          $installers = Get-ChildItem -Path out/make -Recurse -Filter *.exe
+          if (-not $installers) { throw 'No Windows installer was produced.' }
+          foreach ($installer in $installers) {
+            $signature = Get-AuthenticodeSignature $installer.FullName
+            if ($signature.Status -ne 'Valid') { throw "Invalid Authenticode signature: $($installer.FullName)" }
+          }
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: update-win32-arm64
+          path: out/make/**/SymphonySetup.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  linux:
+    name: Linux arm64 release
+    needs: [configure, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      RELEASE_VERSION: ${{ needs.configure.outputs.version }}
+      RELEASE_TAG: ${{ needs.configure.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.configure.outputs.commit }}
+      SYMPHONY_UPDATE_BASE_URL: ${{ needs.configure.outputs.update-base-url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-metadata
+          path: ${{ runner.temp }}/release-metadata
+      - name: Check out the exact prepared release
+        run: |
+          set -euo pipefail
+          git bundle verify "$RUNNER_TEMP/release-metadata/release.bundle"
+          git fetch --no-tags "$RUNNER_TEMP/release-metadata/release.bundle" "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          test "$(git rev-parse "${RELEASE_TAG}^{commit}")" = "$RELEASE_COMMIT"
+          git checkout --detach "$RELEASE_COMMIT"
+      - run: corepack enable
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+      - name: Report Linux package signing mode
+        run: echo '::warning title=Unsigned Linux build::The Debian artifact is published without a package signature. Verify the release manifest checksum before installing.'
+      - name: Install Debian packaging tools
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y fakeroot dpkg
+      - run: corepack prepare yarn@${YARN_VERSION} --activate
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: yarn install --immutable
+      - run: yarn release:version "$RELEASE_VERSION"
+      - run: yarn build
+      # x64 packaging stays available for a later support expansion.
+      # - run: yarn electron-forge make --arch=x64
+      - run: yarn electron-forge make --arch=arm64
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: update-linux-arm64
+          path: out/make/**/*.deb
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish installer-only ARM64 release
+    needs: [configure, macos, windows, linux]
+    environment: release-main
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: desktop-update-publication
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: write
+      pages: write
+    env:
+      SYMPHONY_RELEASE_VERSION: ${{ needs.configure.outputs.version }}
+      RELEASE_TAG: ${{ needs.configure.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.configure.outputs.commit }}
+      SYMPHONY_UPDATE_BASE_URL: ${{ needs.configure.outputs.update-base-url }}
+      SYMPHONY_UPDATE_ARTIFACT_BASE_URL: ${{ needs.configure.outputs.artifact-base-url }}
+      SYMPHONY_UPDATE_CHANNEL: all
+      SYMPHONY_UPDATE_INPUT: out/update-input
+      SYMPHONY_UPDATE_OUTPUT: out/update-publication
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-metadata
+          path: ${{ runner.temp }}/release-metadata
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: update-*
+          path: out/update-input
+
+      # A newer main commit gets its own queued release. Never attach the current
+      # artifacts or changelog to a source revision that main has already passed.
+      - name: Require the current main revision
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags
+          if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
+            echo "main moved beyond ${GITHUB_SHA}; the newer workflow run owns the next release." >&2
+            exit 1
+          fi
+
+      - name: Verify the exact prepared version, changelog, commit, and tag
+        run: |
+          set -euo pipefail
+          git bundle verify "$RUNNER_TEMP/release-metadata/release.bundle"
+          git fetch --no-tags "$RUNNER_TEMP/release-metadata/release.bundle" "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          test "$(git rev-parse "${RELEASE_TAG}^{commit}")" = "$RELEASE_COMMIT"
+          test "$(git rev-parse "${RELEASE_COMMIT}^")" = "$GITHUB_SHA"
+          test "$(git rev-list --count "${GITHUB_SHA}..${RELEASE_COMMIT}")" = 1
+          while IFS= read -r path; do
+            case "$path" in
+              package.json|yarn.lock|CHANGELOG.md) ;;
+              *) echo "Unexpected release change: $path" >&2; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$GITHUB_SHA" "$RELEASE_COMMIT")
+          git checkout --detach "$RELEASE_COMMIT"
+          actual_version="$(node -p "require('./package.json').version")"
+          if [ "$actual_version" != "$SYMPHONY_RELEASE_VERSION" ]; then
+            echo "Resolved ${actual_version}, expected ${SYMPHONY_RELEASE_VERSION}." >&2
+            exit 1
+          fi
+          if [ "$(git rev-parse "${RELEASE_TAG}^{commit}")" != "$(git rev-parse HEAD)" ]; then
+            echo "${RELEASE_TAG} does not point at the generated release commit." >&2
+            exit 1
+          fi
+
+      # Produces the flat asset store uploaded to the release plus the channel
+      # metadata and the version manifest served from the update origin.
+      - name: Prepare the release assets and channel metadata
+        run: node tools/prepare-update-publication.mjs
+
+      - name: Write the release notes
+        run: |
+          set -euo pipefail
+          {
+            echo "Symphony ${SYMPHONY_RELEASE_VERSION}, built from ${GITHUB_SHA}."
+            echo
+            echo "## Install"
+            echo
+            echo "| Platform | Download |"
+            echo "| --- | --- |"
+            echo "| macOS (Apple Silicon) | \`Symphony-darwin-arm64-${SYMPHONY_RELEASE_VERSION}.dmg\` |"
+            # echo "| macOS (Intel) | \`Symphony-darwin-x64-${SYMPHONY_RELEASE_VERSION}.dmg\` |"
+            echo "| Windows (ARM64) | \`SymphonySetup.exe\` |"
+            echo "| Linux (ARM64) | \`symphony_${SYMPHONY_RELEASE_VERSION}_arm64.deb\` |"
+            echo
+            echo "## Installation and signatures"
+            echo
+            echo "Platform signing is optional for this release. Without Apple credentials, the macOS app has a complete ad-hoc bundle signature but no Developer ID trust or notarization, so Gatekeeper still requires an explicit operator override. Windows SmartScreen may likewise warn for an unsigned installer; the Debian artifact is not package-signed. Install unsigned artifacts only if you trust this repository and have verified the SHA-256 values in the release manifest."
+            echo
+            echo "For an ad-hoc-signed macOS build, copy Symphony to Applications, try to open it once, then allow it under System Settings > Privacy & Security > Open Anyway. If macOS still reports the verified app as damaged, remove only its download quarantine with \`xattr -dr com.apple.quarantine /Applications/Symphony.app\`."
+            echo
+            echo "When this repository is private, downloads are available only to GitHub users who have access to it."
+            echo
+            echo "Installer-only ARM64 releases are updated manually. Native ZIP and NuGet update payloads remain disabled and are not published as GitHub Release assets."
+            echo
+            echo "## Changelog"
+            echo
+            awk -v heading="## ${SYMPHONY_RELEASE_VERSION} " '
+              index($0, heading) == 1 { found = 1 }
+              found && index($0, "## ") == 1 && index($0, heading) != 1 { exit }
+              found { print }
+              END { if (!found) exit 1 }
+            ' CHANGELOG.md
+            echo
+            echo "## Verification"
+            echo
+            echo "Checksums are listed in the version manifest at ${SYMPHONY_UPDATE_BASE_URL}/releases/${SYMPHONY_RELEASE_VERSION}/manifest.json."
+          } > out/release-notes.md
+
+      - name: Recheck the release publication preconditions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repositories/1440122208 --jq 'select(.id == 1440122208 and .full_name == "pixel-brewery/symphony" and .private == false and .default_branch == "main") | .full_name' | grep -Fx "$GITHUB_REPOSITORY"
+          git fetch origin main --tags
+          if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
+            echo 'main changed after verification; the newer release run owns publication.' >&2
+            exit 1
+          fi
+
+      - name: Require the release app configuration
+        env:
+          RELEASE_APP_ID: ${{ vars.RELEASE_APP_ID }}
+          HAS_RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY != '' }}
+        run: |
+          set -euo pipefail
+          if [ -z "$RELEASE_APP_ID" ] || [ "$HAS_RELEASE_APP_PRIVATE_KEY" != 'true' ]; then
+            echo '::error title=Release app is not configured::Set RELEASE_APP_ID and RELEASE_APP_PRIVATE_KEY for the dedicated release app before publishing.'
+            exit 1
+          fi
+
+      # Use the dedicated app only for this verified metadata push. Mint its token
+      # after verification and limit the installation token to this repository.
+      - name: Create the release push token
+        id: release-app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+
+      # Version, changelog, and tag become visible together only after every local
+      # release input is ready. The atomic push prevents either ref landing alone.
+      - name: Publish the release commit and tag
+        env:
+          RELEASE_PUSH_TOKEN: ${{ steps.release-app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          if [ -z "$RELEASE_PUSH_TOKEN" ]; then
+            echo '::error title=Release push token is missing::The dedicated release app did not provide a publication token.'
+            exit 1
+          fi
+          auth_header="$(printf 'x-access-token:%s' "$RELEASE_PUSH_TOKEN" | base64 -w0)"
+          echo "::add-mask::${auth_header}"
+          git -c "http.${GITHUB_SERVER_URL}/.extraheader=AUTHORIZATION: basic ${auth_header}" push --atomic origin "HEAD:refs/heads/main" "refs/tags/${RELEASE_TAG}"
+
+      # Release metadata commits carry [skip ci]. Refresh bot branches explicitly
+      # after the durable version change even if a later asset upload fails.
+      - name: Refresh Dependabot after the release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run rebase-dependabot.yml --ref main --repo "$GITHUB_REPOSITORY"
+
+      # Assets must exist at their advertised URLs before any channel points at them.
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "Symphony $SYMPHONY_RELEASE_VERSION" \
+            --notes-file out/release-notes.md \
+            out/update-publication/assets/*
+
+      - name: Confirm every advertised asset is published
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          manifest_path="out/update-publication/releases/${SYMPHONY_RELEASE_VERSION}/manifest.json"
+          release_path='out/published-release.json'
+          for attempt in 1 2 3 4 5; do
+            gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" > "$release_path"
+            if node tools/VerifyPublishedReleaseAssets.mjs "$manifest_path" "$release_path"; then
+              exit 0
+            fi
+            sleep "$((attempt * 5))"
+          done
+          echo "The published release does not match its version manifest." >&2
+          exit 1
+
+      # The origin accumulates every immutable version manifest. Installer channel
+      # manifests always move; native Squirrel feeds move only when their currently
+      # disabled ZIP/NuGet payloads exist.
+      - name: Publish the version manifest and update channels
+        id: update-origin
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin refs/heads/gh-pages:refs/remotes/origin/gh-pages
+          git worktree add --detach out/origin refs/remotes/origin/gh-pages
+          if [ -e "out/origin/releases/${SYMPHONY_RELEASE_VERSION}" ]; then
+            echo 'The immutable version manifest already exists.' >&2
+            exit 1
+          fi
+          mkdir -p out/origin/channels out/origin/releases
+          cp -R out/update-publication/releases/. out/origin/releases/
+          cp -R out/update-publication/channels/. out/origin/channels/
+          # Pages otherwise hides any path segment that begins with an underscore
+          # and applies Jekyll processing this site does not need.
+          touch out/origin/.nojekyll
+          git -C out/origin add --all
+          git -C out/origin commit -m "release: ${SYMPHONY_RELEASE_VERSION} (${GITHUB_SHA})"
+          auth_header="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -C out/origin -c "http.${GITHUB_SERVER_URL}/.extraheader=AUTHORIZATION: basic ${auth_header}" push origin HEAD:refs/heads/gh-pages
+          echo "commit=$(git -C out/origin rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # GITHUB_TOKEN branch pushes do not start Pages. Request the documented build
+      # explicitly and fail rather than report an unpublished feed as successful.
+      - name: Build and verify the update site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORIGIN_COMMIT: ${{ steps.update-origin.outputs.commit }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/pages/builds" --method POST > /dev/null
+          for attempt in {1..60}; do
+            build="$(gh api "repos/${GITHUB_REPOSITORY}/pages/builds/latest")"
+            status="$(jq -r '.status' <<< "$build")"
+            commit="$(jq -r '.commit' <<< "$build")"
+            if [ "$commit" = "$ORIGIN_COMMIT" ] && [ "$status" = built ]; then
+              exit 0
+            fi
+            if [ "$commit" = "$ORIGIN_COMMIT" ] && [ "$status" = errored ]; then
+              echo 'The update site build failed.' >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          echo 'The update site did not publish the expected metadata commit.' >&2
+          exit 1
+
+      - name: Confirm the public installer feeds
+        run: |
+          set -euo pipefail
+          for file in "out/update-publication/releases/${SYMPHONY_RELEASE_VERSION}/manifest.json" out/update-publication/channels/{canary,stable}/{darwin,win32,linux}/arm64/installer.json; do
+            relative="${file#out/update-publication/}"
+            matched=false
+            for attempt in {1..12}; do
+              if curl --fail --silent --show-error --max-time 15 "${SYMPHONY_UPDATE_BASE_URL}/${relative}" -o "$RUNNER_TEMP/published-feed.json" && cmp --silent "$file" "$RUNNER_TEMP/published-feed.json"; then
+                matched=true
+                break
+              fi
+              sleep 5
+            done
+            if [ "$matched" != true ]; then
+              echo "The public update feed does not match ${relative}." >&2
+              exit 1
+            fi
+          done

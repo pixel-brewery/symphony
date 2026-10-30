@@ -1,0 +1,25 @@
+{
+  "name": "ipc-contracts-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ipc-contracts/core/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:ipc"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/ipc-contracts/core/tsconfig.lib.json --noEmit",
+          "tsc -p libs/ipc-contracts/core/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/ipc-contracts/core/vitest.config.ts"
+      }
+    }
+  }
+}

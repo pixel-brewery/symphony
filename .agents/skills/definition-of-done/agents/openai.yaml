@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Definition of Done'
+  short_description: 'Run the complete local release-candidate gate'
+  default_prompt: 'Use $definition-of-done to verify the complete Symphony release candidate.'

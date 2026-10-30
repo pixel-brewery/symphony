@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Diagnose CI failure'
+  short_description: 'Classify failed CI evidence without source changes'
+  default_prompt: 'Use $diagnose-ci-failure to classify this failed CI run and recommend the smallest safe next action.'

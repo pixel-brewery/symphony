@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Manage Portable Skills'
+  short_description: 'Create, validate, package, and update portable skills'
+  default_prompt: 'Use $manage-portable-skills to manage ChatGPT- and Codex-compatible repository skills.'

@@ -1,0 +1,173 @@
+<mosaik-card test-id="mobile-access-card">
+  <mosaik-card-header
+    [text]="'Mobile access'"
+    [subText]="presenter.mobileAccess() ? (presenter.mobileAccess() | mobileAccessStatusLabel) : ''"
+  >
+    @if (!presenter.mobileAccess()) {
+    <div slot="subHeader" class="flex h-2.5 items-center">
+      <mosaik-skeleton [width]="'10rem'" [height]="'12px'" [shimmer]="true" />
+    </div>
+    }
+  </mosaik-card-header>
+  <mosaik-card-content>
+    <div class="flex min-w-0 flex-col gap-4">
+      <section class="flex min-w-0 flex-col gap-2" test-id="mobile-network-settings-group">
+        <symphony-headline
+          header="Local network access"
+          description="Choose whether paired phones may reach this Mac on the current private network."
+        />
+        @if (presenter.mobileAccess(); as mobileAccess) {
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="mobile-access-toggle"
+          [isChecked]="mobileAccess.enabled"
+          [disabled]="presenter.store.mobileAccessBusy()"
+          (checked)="presenter.toggleMobileAccessCommand.execute(true)"
+          (unchecked)="presenter.toggleMobileAccessCommand.execute(false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Allow mobile access'" [wrap]="true" />
+            <mosaik-hint
+              [text]="'Make Symphony available only to phones that you pair and approve.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        } @else {
+        <ng-container
+          *ngTemplateOutlet="
+                      toggleSkeleton;
+                      context: {
+                        $implicit: 'Allow mobile access',
+                        hint: 'Make Symphony available only to phones that you pair and approve.',
+                      }
+                    "
+        />
+        }
+        <mosaik-banner
+          test-id="mobile-network-guide"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'info'"
+          [iconName]="'info'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'The Mac remains the task owner'" />
+          <mosaik-banner-sub-header
+            [text]="'Your phone must use the same Wi-Fi network, and Symphony must remain running on this Mac.'"
+          />
+        </mosaik-banner>
+      </section>
+
+      @if (presenter.mobileAccess()?.state === 'available') {
+      <mosaik-divider />
+      <section class="flex min-w-0 flex-col gap-2" test-id="mobile-pairing-settings-group">
+        <div class="flex min-w-0 flex-wrap items-start justify-between gap-2">
+          <symphony-headline
+            header="Pair a phone"
+            description="Generate a short-lived QR code, then approve the verification request shown here."
+          />
+          <mosaik-button
+            test-id="create-mobile-pairing"
+            [label]="presenter.mobilePairingChallenge() ? 'Generate a new QR code' : 'Pair a phone'"
+            [appearance]="'solid'"
+            [variant]="'primary'"
+            [disabled]="presenter.store.mobileAccessBusy()"
+            (click)="presenter.createMobilePairingCommand.execute()"
+          />
+        </div>
+        @if (presenter.mobilePairingChallenge(); as challenge) {
+        <div
+          class="mx-auto flex w-full max-w-2xl min-w-0 flex-col gap-3"
+          test-id="mobile-pairing-code"
+        >
+          <div class="flex justify-center">
+            <mosaik-qrcode [text]="challenge.pairingUrl" [dimension]="220" />
+          </div>
+          <div class="flex min-w-0 flex-col gap-2">
+            <strong>Scan with your phone</strong>
+            <mosaik-text
+              [text]="'The code expires automatically. If the camera is unavailable, copy the pairing address into your phone browser.'"
+              [wrap]="true"
+            />
+            <mosaik-textbox
+              class="w-full min-w-0"
+              test-id="mobile-pairing-address"
+              [label]="'Pairing address'"
+              [value]="challenge.pairingUrl"
+              [readonly]="true"
+              [appearance]="'outline'"
+            />
+          </div>
+        </div>
+        } @for (pairing of presenter.mobileAccess()?.pendingPairings ?? []; track pairing.id) {
+        <mosaik-cell
+          [attr.test-id]="'mobile-pairing-request-' + pairing.id"
+          [label]="pairing.deviceName"
+          [subLabel]="'Verification code ' + pairing.verificationCode"
+        >
+          <mosaik-button
+            slot="end"
+            [label]="'Reject'"
+            [appearance]="'plain'"
+            [variant]="'danger'"
+            (click)="presenter.decideMobilePairingCommand.execute([pairing.id, false])"
+          />
+          <mosaik-button
+            slot="end"
+            [label]="'Approve'"
+            [appearance]="'solid'"
+            [variant]="'primary'"
+            (click)="presenter.decideMobilePairingCommand.execute([pairing.id, true])"
+          />
+        </mosaik-cell>
+        }
+      </section>
+      } @if ((presenter.mobileAccess()?.devices?.length ?? 0) > 0) {
+      <mosaik-divider />
+      <section class="flex min-w-0 flex-col gap-2" test-id="paired-phones-settings-group">
+        <symphony-headline
+          header="Paired phones"
+          description="Revoke a phone when it should no longer reach this Symphony Desktop."
+        />
+        @for (device of presenter.mobileAccess()?.devices ?? []; track device.id) {
+        <mosaik-cell
+          [attr.test-id]="'mobile-device-' + device.id"
+          [label]="device.name"
+          [subLabel]="device.connected ? 'Connected' : 'Last connected ' + (device.lastSeenAt ?? device.pairedAt)"
+        >
+          <mosaik-button
+            slot="end"
+            [label]="'Revoke'"
+            [appearance]="'plain'"
+            [variant]="'danger'"
+            (click)="presenter.revokeMobileDeviceCommand.execute(device.id)"
+          />
+        </mosaik-cell>
+        }
+      </section>
+      }
+    </div>
+  </mosaik-card-content>
+  @if ((presenter.mobileAccess()?.devices?.length ?? 0) > 1) {
+  <mosaik-card-footer>
+    <div class="flex w-full flex-wrap justify-end gap-2">
+      <mosaik-button
+        test-id="revoke-all-mobile-devices"
+        [label]="'Revoke all phones'"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        (click)="presenter.revokeAllMobileDevicesCommand.execute()"
+      />
+    </div>
+  </mosaik-card-footer>
+  }
+</mosaik-card>
+<ng-template #toggleSkeleton let-label let-hint="hint">
+  <div class="flex min-h-[52px] min-w-0 items-center gap-1" role="status" [attr.aria-label]="label">
+    <mosaik-skeleton class="flex-none" [width]="'32px'" [height]="'18px'" [shimmer]="true" />
+    <div class="flex min-w-0 flex-col gap-0.5">
+      <mosaik-text [text]="label" [wrap]="true" />
+      <mosaik-hint [text]="hint" [textOverflow]="'wrap'" />
+    </div>
+  </div>
+</ng-template>

@@ -1,0 +1,15 @@
+{
+  "name": "ipc-contracts-feedback",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ipc-contracts/features/feedback/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:ipc", "feature:feedback"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/ipc-contracts/features/feedback/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "providers-simulated",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/simulated/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:simulated"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/simulated/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/simulated/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/simulated/vitest.config.ts"
+      }
+    }
+  }
+}

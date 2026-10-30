@@ -1,0 +1,17 @@
+export { GitWorktreeWorkspace } from './lib/git-worktree-workspace/GitWorktreeWorkspace';
+export type { IGitWorktreeWorkspaceOptions } from './lib/git-worktree-workspace/IGitWorktreeWorkspaceOptions';
+export type { IManagedGitRepositoryOptions } from './lib/managed-git-repository/IManagedGitRepositoryOptions';
+export { ManagedGitRepository } from './lib/managed-git-repository/ManagedGitRepository';
+export { managedRepositoryDirectoryName } from './lib/managed-git-repository/managedRepositoryDirectoryName';
+export { assertWorktreeBelongsToRepository } from './lib/worktree-snapshot/assertWorktreeBelongsToRepository';
+export { assertWorktreePath } from './lib/worktree-snapshot/assertWorktreePath';
+export { createWorktreeSnapshot } from './lib/worktree-snapshot/createWorktreeSnapshot';
+export { isExcluded } from './lib/worktree-snapshot/isExcluded';
+export type { IWorktreeRepositoryIdentity } from './lib/worktree-snapshot/IWorktreeRepositoryIdentity';
+export type { IWorktreeSnapshot } from './lib/worktree-snapshot/IWorktreeSnapshot';
+export type { IWorktreeSnapshotEntry } from './lib/worktree-snapshot/IWorktreeSnapshotEntry';
+export type { IWorktreeSnapshotOptions } from './lib/worktree-snapshot/IWorktreeSnapshotOptions';
+export { normalizedRemote } from './lib/worktree-snapshot/normalizedRemote';
+export { worktreeSnapshotExcludedDirectories } from './lib/worktree-snapshot/WorktreeSnapshotExcludedDirectories';
+export { worktreeSnapshotExcludedFileNames } from './lib/worktree-snapshot/WorktreeSnapshotExcludedFileNames';
+export { worktreeSnapshotHash } from './lib/worktree-snapshot/worktreeSnapshotHash';

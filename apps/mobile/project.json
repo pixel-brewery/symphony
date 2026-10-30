@@ -1,0 +1,142 @@
+{
+  "name": "mobile",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/mobile/src",
+  "tags": ["scope:renderer", "type:application"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/resources/icons/**/*",
+        "{workspaceRoot}/resources/figures/**/*",
+        "{workspaceRoot}/resources/fonts/**/*"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/mobile",
+        "browser": "apps/mobile/src/main.ts",
+        "tsConfig": "apps/mobile/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/mobile/public"
+          },
+          {
+            "glob": "*.svg",
+            "input": "resources/icons",
+            "output": "icons"
+          },
+          {
+            "glob": "*.png",
+            "input": "resources/icons/png/app",
+            "output": "icons/png"
+          },
+          {
+            "glob": "symphony.webmanifest",
+            "input": "resources/icons"
+          },
+          {
+            "glob": "*.png",
+            "input": "resources/figures",
+            "output": "figures"
+          },
+          {
+            "glob": "LICENSE",
+            "input": "resources/figures",
+            "output": "figures"
+          },
+          {
+            "glob": "*.woff2",
+            "input": "resources/fonts",
+            "output": "fonts"
+          }
+        ],
+        "styles": ["apps/mobile/src/tailwind.css", "apps/mobile/src/styles.scss"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": {
+            "scripts": true,
+            "styles": {
+              "minify": true,
+              "inlineCritical": false
+            },
+            "fonts": true
+          },
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "16mb",
+              "maximumError": "18mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "defaultConfiguration": "development",
+      "configurations": {
+        "production": {
+          "buildTarget": "mobile:build:production"
+        },
+        "development": {
+          "buildTarget": "mobile:build:development"
+        }
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint apps/mobile"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p apps/mobile/tsconfig.app.json --noEmit"
+      }
+    },
+    "test": {
+      "executor": "@angular/build:unit-test",
+      "options": {
+        "watch": false,
+        "setupFiles": ["apps/mobile/src/test-setup.ts"],
+        "include": [
+          "../../../libs/frontend/features/mobile/src/lib/browser/state/MobileCompanionStore.spec.ts",
+          "../../../libs/frontend/features/mobile/src/lib/browser/theme/MobileThemeStore.spec.ts",
+          "../../../libs/frontend/features/work/src/lib/board/mobile/MobileHomeViewPresenter.spec.ts",
+          "../../../libs/frontend/features/work/src/lib/board/mobile/MobileTicketDetailViewPresenter.spec.ts",
+          "../../../libs/frontend/features/work/src/lib/board/mobile/MobileWorkItemCreateViewPresenter.spec.ts"
+        ]
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "mobile:build",
+        "staticFilePath": "dist/apps/mobile/browser",
+        "spa": true
+      }
+    }
+  }
+}

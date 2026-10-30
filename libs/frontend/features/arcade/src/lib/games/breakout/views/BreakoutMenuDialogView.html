@@ -1,0 +1,237 @@
+<ng-template mosaikDialogHeader>
+  <mosaik-dialog-header
+    [text]="presenter.screen() === 'setup' ? 'Breakout' : 'How to play'"
+    [subText]="
+      presenter.screen() === 'setup'
+        ? 'Atari 2600 · 1978'
+        : 'Choose from all twelve Atari 2600 variations.'
+    "
+  />
+</ng-template>
+
+<ng-template mosaikDialogContent>
+  <div
+    class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto py-1"
+    test-id="breakout-menu-dialog"
+  >
+    @if (presenter.screen() === 'setup') {
+    <div class="flex flex-col gap-5">
+      <mosaik-text
+        [text]="'Two walls. Five balls. Make every rebound count.'"
+        [wrap]="true"
+        [mosaikTypography]="'h4'"
+      />
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <mosaik-form-field [fieldState]="presenter.setupForm.variation()">
+          <mosaik-select
+            test-id="breakout-variation"
+            [label]="'Game variation'"
+            [formField]="presenter.setupForm.variation"
+          >
+            @for (variation of presenter.variations; track variation.id) {
+            <mosaik-select-item
+              [attr.test-id]="'breakout-variation-' + variation.id"
+              [label]="variation.id + '. ' + variation.label"
+              [value]="'' + variation.id"
+            />
+            }
+          </mosaik-select>
+        </mosaik-form-field>
+        <mosaik-form-field [fieldState]="presenter.setupForm.players()">
+          <mosaik-select
+            test-id="breakout-players"
+            [label]="'Players'"
+            [formField]="presenter.setupForm.players"
+          >
+            <mosaik-select-item test-id="breakout-players-1" [label]="'1 · Solo'" [value]="'1'" />
+            <mosaik-select-item
+              test-id="breakout-players-2"
+              [label]="'2 · One versus one'"
+              [value]="'2'"
+            />
+            <mosaik-select-item
+              test-id="breakout-players-3"
+              [label]="'3 · Two versus one'"
+              [value]="'3'"
+            />
+            <mosaik-select-item
+              test-id="breakout-players-4"
+              [label]="'4 · Two versus two'"
+              [value]="'4'"
+            />
+          </mosaik-select>
+        </mosaik-form-field>
+        <mosaik-form-field [fieldState]="presenter.setupForm.difficultyA()">
+          <mosaik-select
+            test-id="breakout-difficulty-a"
+            [label]="presenter.selectedPlayers() === 1 ? 'Paddle difficulty' : 'Team 1 difficulty'"
+            [formField]="presenter.setupForm.difficultyA"
+          >
+            <mosaik-select-item
+              test-id="breakout-team-a-difficulty-a"
+              [label]="'A · Wide paddle'"
+              [value]="'A'"
+            />
+            <mosaik-select-item
+              test-id="breakout-team-a-difficulty-b"
+              [label]="'B · Narrow paddle'"
+              [value]="'B'"
+            />
+          </mosaik-select>
+        </mosaik-form-field>
+        @if (presenter.selectedPlayers() > 1) {
+        <mosaik-form-field [fieldState]="presenter.setupForm.difficultyB()">
+          <mosaik-select
+            test-id="breakout-difficulty-b"
+            [label]="'Team 2 difficulty'"
+            [formField]="presenter.setupForm.difficultyB"
+          >
+            <mosaik-select-item
+              test-id="breakout-team-b-difficulty-a"
+              [label]="'A · Wide paddle'"
+              [value]="'A'"
+            />
+            <mosaik-select-item
+              test-id="breakout-team-b-difficulty-b"
+              [label]="'B · Narrow paddle'"
+              [value]="'B'"
+            />
+          </mosaik-select>
+        </mosaik-form-field>
+        }
+      </div>
+      <div
+        class="flex flex-col gap-2"
+        [mosaikTypography]="'body2'"
+        test-id="breakout-variation-rules"
+      >
+        @if (presenter.selectedVariation().breakthrough) {
+        <span>The ball passes through bricks. Clear a path through both walls.</span>
+        } @else {
+        <span>Rebound into the six rows of bricks. Clear both walls for 864 points.</span>
+        } @if (presenter.selectedVariation().steer) {
+        <span>Moving your paddle also bends the ball's flight.</span>
+        } @if (presenter.selectedVariation().catchBall) {
+        <span
+          >Hold the serve button as the ball reaches your paddle to catch it. Move into position,
+          then release to launch.</span
+        >
+        } @if (presenter.selectedVariation().invisible) {
+        <span>The wall appears briefly when a brick is hit. Remember the gaps.</span>
+        } @if (presenter.selectedVariation().timed) {
+        <span
+          >The clock counts upward while the ball is in play. Clear both walls in the shortest total
+          time.</span
+        >
+        } @if (presenter.selectedPlayers() > 1) {
+        <span
+          >Teams take turns after each lost ball. Each team keeps its own wall and five balls.</span
+        >
+        } @if (presenter.selectedPlayers() > 2) {
+        <span
+          >Players 1 and 2 share Team 1. Each partner controls half the field. @if
+          (presenter.selectedPlayers() === 4) { Players 3 and 4 share Team 2. } @else { Player 3
+          plays alone for Team 2. }</span
+        >
+        }
+      </div>
+    </div>
+    } @else {
+    <div class="flex flex-col gap-4" [mosaikTypography]="'body2'">
+      <div class="grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-3">
+        <div class="flex gap-1"><mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" /></div>
+        <span>Move the active paddle. A and D also work.</span>
+        <mosaik-kbd [value]="['Space']" /><span
+          >Serve a ball. In Catch games, hold to catch and release to launch.</span
+        >
+        <div class="flex gap-1">
+          <mosaik-kbd [value]="['J']" /><mosaik-kbd [value]="['L']" /><mosaik-kbd [value]="['K']" />
+        </div>
+        <span>Move and serve with the right partner paddle.</span>
+        <mosaik-kbd [value]="['P']" /><span>Pause or resume. Escape also works.</span>
+      </div>
+      <p>
+        Move the mouse to place a paddle directly. Click to serve; hold and release to catch and
+        relaunch. With partners, the pointer controls the paddle in its half of the field.
+      </p>
+      <p>
+        Each team has five balls and two walls to clear. Each wall has six rows of eighteen bricks.
+        From the bottom up, the rows score 1, 1, 4, 4, 7 and 7 points per brick: 432 per wall, 864
+        in total.
+      </p>
+      <p>
+        The part of the paddle you hit changes the rebound angle. The angle also changes as the
+        rally continues. The ball speeds up after twelve paddle hits or when it strikes a brick in
+        the top three rows.
+      </p>
+      <p>
+        Variations 1–4 are Breakout, Steerable, Catch and Invisible. Variations 5–8 add a cumulative
+        timer to the same four games. Variations 9–12 are their Breakthru versions: the ball travels
+        through bricks instead of bouncing off them.
+      </p>
+      <p>
+        In a timed game, the clock counts up during play, including a held catch; there is no time
+        limit. Clear both walls as quickly as possible. Untimed games reward the highest score; at
+        the maximum score, use the fewest balls.
+      </p>
+      <p>
+        One player plays alone. Two players oppose each other. Three players form a pair against
+        one; four players form two pairs. Opposing teams alternate after losing a ball. Partners
+        play together, with one paddle in each half of the field.
+      </p>
+      <p>
+        Difficulty A gives a wide paddle. Difficulty B reduces its width to three quarters. Choose
+        the two teams' difficulty switches separately.
+      </p>
+    </div>
+    }
+  </div>
+</ng-template>
+
+<ng-template mosaikDialogFooter>
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <mosaik-button
+      test-id="breakout-all-games"
+      [label]="'All games'"
+      [appearance]="'plain'"
+      [variant]="'neutral'"
+      [command]="{ click: presenter.allGamesCommand }"
+    />
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      @if (presenter.screen() === 'instructions') {
+      <mosaik-button
+        test-id="breakout-back-title"
+        [label]="'Back'"
+        [appearance]="'outline'"
+        [variant]="'neutral'"
+        [command]="{ click: presenter.showSetupCommand }"
+      />
+      } @else {
+      <mosaik-button
+        test-id="breakout-instructions"
+        [label]="'How to play'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: presenter.showInstructionsCommand }"
+      />
+      @if (presenter.canContinue) {
+      <mosaik-button
+        test-id="breakout-continue"
+        [label]="'Continue'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [command]="{ click: presenter.continueCommand }"
+      />
+      }
+      <mosaik-button
+        test-id="breakout-start"
+        [label]="presenter.canContinue ? 'New match' : 'Play'"
+        [iconName]="'play'"
+        [appearance]="presenter.canContinue ? 'outline' : 'solid'"
+        [variant]="'primary'"
+        [command]="{ click: presenter.playCommand }"
+      />
+      }
+    </div>
+  </div>
+</ng-template>

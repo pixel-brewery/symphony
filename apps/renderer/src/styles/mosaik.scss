@@ -1,0 +1,6 @@
+@use '@pixel-brewery/mosaik-themes/scss' as themes;
+@use './overrides/app';
+@use './overrides/app-header';
+@use './overrides/technical-value';
+
+@include themes.soho-style();

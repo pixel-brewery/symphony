@@ -1,0 +1,74 @@
+//
+// The header is the window's own title bar: a band in the flow at the top of the window that spans
+// the full width and carries workspace, search and primary navigation. Soho paints it as the
+// shadcn/ui site header - `bg-background`, the 1px `highlight` line drawn by the element's own
+// `[part='root']::after`, no shadow and no blur - so this sheet sets no colour and no border. The
+// band is exactly as light as the content below it.
+//
+// Three declarations survive from the floating variant and are still load-bearing. `AppHeaderElement`
+// wires `addHideOnScrollController({ hideOnScroll: true })` in its field initialiser with no property
+// to switch it off, and the theme parks the hidden state on `:host(:not([data-visible]))` as a
+// negative `top`, `opacity: 0` and `visibility: hidden`. A band that carries the navigation must not
+// vanish when the board scrolls, so `top` / `opacity` / `visibility` keep neutralising that
+// controller. Declarations from this sheet win over the element's own `:host` rules regardless of
+// specificity, which is what makes the neutralisation hold.
+mosaik-app > mosaik-app-header[part='header'] {
+  // Soho's App hands its own line thickness down to the header line, and `app.scss` zeroes the
+  // App's line to drop the view frame. The header keeps its 1px rule explicitly.
+  --app-header-line-thickness: var(--mosaik-layout-thickness);
+  --app-header-transition-property: none;
+
+  // Letting the host hug its toolbar is what makes the band exactly as tall as `--toolbar-height`.
+  // The App's `[part='body']` asks for the full view height and the header is a clipping flex item
+  // in the same column, so without `flex-shrink: 0` the band is squeezed below its toolbar and the
+  // clip cuts off the bottom rule Soho draws at the foot of `[part='root']`.
+  height: auto;
+  flex-shrink: 0;
+  top: 0;
+  opacity: 1;
+  visibility: visible;
+
+  // The `menu` slot carries a fallback navigation toggle whenever it is empty. This shell fills it
+  // with the workspace picker and the primary navigation, so the fallback never renders; the rule
+  // stays because it is the only guard if that group is ever conditioned away.
+  &::part(toggle) {
+    display: none;
+  }
+
+  // All strip geometry lives on the toolbar. Setting `--toolbar-*` on this host is inert, because
+  // `ToolbarElement`'s own `:host` re-declares every one of them. Soho's default toolbar is a
+  // framed `bg-background` bar; inside the header it is the header's content row, so the frame
+  // goes and the header's own background shows through.
+  &::part(toolbar) {
+    --toolbar-background-color: var(--mosaik-scheme-transparent);
+    --toolbar-border-radius: 0px;
+    --toolbar-border-width: 0px;
+    // The band carries the primary navigation and the native window controls. Its 78px height
+    // keeps the macOS traffic lights on its optical centre (`trafficLightPosition` in the desktop
+    // main process is tuned to it).
+    --toolbar-height: 78px;
+    --toolbar-padding-top: 0px;
+    --toolbar-padding-bottom: 0px;
+    --toolbar-padding-left: calc(
+      var(--mosaik-layout-space) * 3 + var(--window-controls-overlay-left, 0px)
+    );
+    // Only reserve native controls on their actual side. Mirroring the macOS traffic-light
+    // reserve here overlaps the centred navigation with search and update actions.
+    --toolbar-padding-right: calc(
+      var(--mosaik-layout-space) * 3 + var(--window-controls-overlay-right, 0px)
+    );
+  }
+
+  @media (max-width: 959.98px) {
+    // Segment items deliberately protect labelled desktop navigation with a 70px minimum and
+    // 16px inline button padding. The compact header has no labels, so release that intrinsic
+    // width and keep five icon targets visible beside the native controls and rail action.
+    mosaik-segment[slot='brand'] > mosaik-segment-item {
+      min-width: 0;
+    }
+
+    mosaik-segment[slot='brand'] > mosaik-segment-item::part(button) {
+      padding-inline: 8px;
+    }
+  }
+}

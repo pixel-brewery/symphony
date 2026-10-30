@@ -1,0 +1,25 @@
+{
+  "name": "persistence-automation",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/persistence/features/automation/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:persistence", "feature:automation"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/persistence/features/automation/tsconfig.lib.json --noEmit",
+          "tsc -p libs/persistence/features/automation/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/persistence/features/automation/vitest.config.ts"
+      }
+    }
+  }
+}

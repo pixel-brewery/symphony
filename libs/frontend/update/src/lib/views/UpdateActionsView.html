@@ -1,0 +1,29 @@
+<div class="flex w-full flex-wrap justify-end gap-2">
+  <mosaik-button
+    test-id="check-for-updates"
+    label="Check for updates"
+    appearance="outline"
+    [disabled]="!presenter.canCheckForUpdates()()"
+    [isBusy]="presenter.updates.busy() || presenter.updates.state()?.kind === 'checking'"
+    (click)="presenter.updates.check()"
+  />
+  @if (presenter.updates.state(); as updateState) { @if (updateState.kind === 'available') {
+  <mosaik-button
+    test-id="download-update-installer"
+    [label]="'Download ' + updateState.targetVersion"
+    appearance="solid"
+    variant="primary"
+    [isBusy]="presenter.updates.busy()"
+    (click)="presenter.updates.download()"
+  />
+  } @if (presenter.updates.state()?.kind === 'ready') {
+  <mosaik-button
+    test-id="restart-for-update"
+    label="Restart and update"
+    appearance="solid"
+    variant="primary"
+    [isBusy]="presenter.updates.busy()"
+    (click)="presenter.updates.install()"
+  />
+  } }
+</div>

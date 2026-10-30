@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["vitest/globals"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "../../libs/frontend/core/src/state/MobileCompanionStore.spec.ts",
+    "../../libs/frontend/core/src/theme/MobileThemeStore.spec.ts",
+    "../../libs/frontend/features/work/src/lib/board/mobile/MobileHomeViewPresenter.spec.ts",
+    "../../libs/frontend/features/work/src/lib/board/mobile/MobileTicketDetailViewPresenter.spec.ts",
+    "../../libs/frontend/features/work/src/lib/board/mobile/MobileWorkItemCreateViewPresenter.spec.ts"
+  ]
+}

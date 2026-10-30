@@ -1,0 +1,57 @@
+@if (presenter.workspace(); as item) {
+<mosaik-card class="w-full" [attr.test-id]="'workspace-card-' + item.id">
+  <mosaik-card-header
+    [text]="item.displayName"
+    [subText]="item.shortCode + ' · Connected services'"
+  />
+  <mosaik-card-content>
+    <div class="flex min-w-0 flex-col gap-4">
+      @if (presenter.hasBoards()) {
+      <mosaik-view-slot-outlet
+        class="contents"
+        [slot]="slots.WorkspaceServicesBoards"
+        [symphonySettingsSelection]="{workspaceId: item.id, sectionId: 'services'}"
+      />
+      <mosaik-divider />
+      } @if (presenter.hasAccounts()) {
+      <section class="flex min-w-0 flex-col gap-2">
+        <symphony-headline
+          header="Connected services"
+          description="Ticket sources, source-code accounts, and the AI accounts every agent in this workspace can run on."
+        />
+        <mosaik-cell-group [attr.test-id]="'configured-accounts-' + item.id">
+          @for (account of presenter.accounts(); track account.id) {
+          <mosaik-view-slot-outlet
+            class="contents"
+            [slot]="slots.WorkspaceServicesAccount"
+            [symphonySettingsSelection]="{workspaceId: item.id, sectionId: 'services', connectionId: account.id, connectionKind: account.kind}"
+          />
+          }
+        </mosaik-cell-group>
+      </section>
+      }
+      <mosaik-view-slot-outlet
+        class="contents"
+        [slot]="slots.WorkspaceServicesFeedback"
+        [symphonySettingsSelection]="{workspaceId: item.id, sectionId: 'services'}"
+      />
+      @if (presenter.hasAvailable()) {
+      <mosaik-divider />
+      <section class="flex min-w-0 flex-col gap-2">
+        <symphony-headline
+          header="Add a service"
+          description="Connect an AI account, another ticket source, or a source-code account."
+        />
+        <mosaik-cell-group [attr.test-id]="'available-connections-' + item.id">
+          <mosaik-view-slot-outlet
+            class="contents"
+            [slot]="slots.WorkspaceServicesAvailableConnections"
+            [symphonySettingsSelection]="{workspaceId: item.id, sectionId: 'services'}"
+          />
+        </mosaik-cell-group>
+      </section>
+      }
+    </div>
+  </mosaik-card-content>
+</mosaik-card>
+}

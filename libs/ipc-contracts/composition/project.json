@@ -1,0 +1,25 @@
+{
+  "name": "ipc-contracts-composition",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ipc-contracts/composition/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:composition"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/ipc-contracts/composition/tsconfig.lib.json --noEmit",
+          "tsc -p libs/ipc-contracts/composition/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/ipc-contracts/composition/vitest.config.ts"
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Review German and EU Compliance'
+  short_description: 'Perform scoped technical compliance reviews'
+  default_prompt: 'Use $review-german-eu-compliance when a German or EU compliance review is explicitly requested.'

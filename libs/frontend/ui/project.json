@@ -1,0 +1,16 @@
+{
+  "name": "frontend-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/ui/src",
+  "prefix": "symphony",
+  "projectType": "library",
+  "tags": ["scope:frontend", "type:ui"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/ui/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

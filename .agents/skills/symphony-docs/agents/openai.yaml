@@ -1,0 +1,4 @@
+interface:
+    display_name: 'Symphony Fachliche Dokumentation'
+    short_description: 'Fachliche Feature-Dokumentation synchronisieren'
+    default_prompt: 'Nutze $symphony-docs, um die verifizierte fachliche Dokumentation eines Symphony-Features aufzubauen oder zu synchronisieren.'

@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "analyze-change-request",
+      "source": ".agents/skills/analyze-change-request",
+      "archive": ".agents/packages/analyze-change-request.skill",
+      "claude": ".claude/skills/analyze-change-request/SKILL.md",
+      "sha256": "1c3a982d9625c1deb223f7f521dc3de9e45bfb691c4c60dee519d654d77e2af3"
+    },
+    {
+      "name": "architect-desktop-platform",
+      "source": ".agents/skills/architect-desktop-platform",
+      "archive": ".agents/packages/architect-desktop-platform.skill",
+      "claude": ".claude/skills/architect-desktop-platform/SKILL.md",
+      "sha256": "132d71f98cd2d864829fba33dfd2f82bb830f52d6f61f111d42ecd8f206f262f"
+    },
+    {
+      "name": "caveman",
+      "source": ".agents/skills/caveman",
+      "archive": ".agents/packages/caveman.skill",
+      "claude": ".claude/skills/caveman/SKILL.md",
+      "sha256": "5fb16cf62a0cf4dd698af7789579a59599b48e916f20a962e037eb21cca810eb"
+    },
+    {
+      "name": "commit-changes",
+      "source": ".agents/skills/commit-changes",
+      "archive": ".agents/packages/commit-changes.skill",
+      "claude": ".claude/skills/commit-changes/SKILL.md",
+      "sha256": "6c518b42ac8b0696e50166906836eb82645d75d593e2f70e26e27a9c8dfced61"
+    },
+    {
+      "name": "create-change-request",
+      "source": ".agents/skills/create-change-request",
+      "archive": ".agents/packages/create-change-request.skill",
+      "claude": ".claude/skills/create-change-request/SKILL.md",
+      "sha256": "74b5c4f8234ff7b01e1addee5909da943d9ed9c9b99204ec953b80bd4aa29549"
+    },
+    {
+      "name": "create-employee-figure",
+      "source": ".agents/skills/create-employee-figure",
+      "archive": ".agents/packages/create-employee-figure.skill",
+      "claude": ".claude/skills/create-employee-figure/SKILL.md",
+      "sha256": "575485f9b6a17c205f36d63c2d68deb3e67742609f502196490da6a96d55c3be"
+    },
+    {
+      "name": "definition-of-done",
+      "source": ".agents/skills/definition-of-done",
+      "archive": ".agents/packages/definition-of-done.skill",
+      "claude": ".claude/skills/definition-of-done/SKILL.md",
+      "sha256": "a1d0fc7ae3d572954fd0318527d09147a95824ee53007a03230dc31bd955f087"
+    },
+    {
+      "name": "diagnose-ci-failure",
+      "source": ".agents/skills/diagnose-ci-failure",
+      "archive": ".agents/packages/diagnose-ci-failure.skill",
+      "claude": ".claude/skills/diagnose-ci-failure/SKILL.md",
+      "sha256": "1fbbfa3367dcd1f3890287e6a6a74c46eaebcc36e3220054c911dc2fb367b5af"
+    },
+    {
+      "name": "inspect-reference-ui",
+      "source": ".agents/skills/inspect-reference-ui",
+      "archive": ".agents/packages/inspect-reference-ui.skill",
+      "claude": ".claude/skills/inspect-reference-ui/SKILL.md",
+      "sha256": "64271921ed60c077fe3f650ab762bcc62137d8bd18a1d9fa25499d271e0c211a"
+    },
+    {
+      "name": "link-workspace-packages",
+      "source": ".agents/skills/link-workspace-packages",
+      "archive": ".agents/packages/link-workspace-packages.skill",
+      "claude": ".claude/skills/link-workspace-packages/SKILL.md",
+      "sha256": "450440bc8e6c3ca77ab67002e10394ec0ec988d39047c5eafe7cbcb3cea24070"
+    },
+    {
+      "name": "maintain-documentation",
+      "source": ".agents/skills/maintain-documentation",
+      "archive": ".agents/packages/maintain-documentation.skill",
+      "claude": ".claude/skills/maintain-documentation/SKILL.md",
+      "sha256": "efc19462ee3ade62442b882ecc644ec3bcf47a3be24f04be35a706c065870136"
+    },
+    {
+      "name": "maintain-i18n",
+      "source": ".agents/skills/maintain-i18n",
+      "archive": ".agents/packages/maintain-i18n.skill",
+      "claude": ".claude/skills/maintain-i18n/SKILL.md",
+      "sha256": "66cc5a6d2931831fdd1332fbb76934543535b440beffb88a6babb24858971c7e"
+    },
+    {
+      "name": "manage-portable-skills",
+      "source": ".agents/skills/manage-portable-skills",
+      "archive": ".agents/packages/manage-portable-skills.skill",
+      "claude": ".claude/skills/manage-portable-skills/SKILL.md",
+      "sha256": "e5d9a80051ebd5c4e83cea1f8a7f2d076a33cdb3ebd740ee4ff287007ceb07f4"
+    },
+    {
+      "name": "monitor-ci",
+      "source": ".agents/skills/monitor-ci",
+      "archive": ".agents/packages/monitor-ci.skill",
+      "claude": ".claude/skills/monitor-ci/SKILL.md",
+      "sha256": "bfedc2163703846494abd9658b4b24f4dc911ac89f4c68442f4f207f27aa0fa7"
+    },
+    {
+      "name": "nx-cloud-api",
+      "source": ".agents/skills/nx-cloud-api",
+      "archive": ".agents/packages/nx-cloud-api.skill",
+      "claude": ".claude/skills/nx-cloud-api/SKILL.md",
+      "sha256": "0a853294af0ce30296ade94c9e30918a7aa05c9b7a6503dafbc84d1569b66a13"
+    },
+    {
+      "name": "nx-cloud-cache-investigator",
+      "source": ".agents/skills/nx-cloud-cache-investigator",
+      "archive": ".agents/packages/nx-cloud-cache-investigator.skill",
+      "claude": ".claude/skills/nx-cloud-cache-investigator/SKILL.md",
+      "sha256": "cfd6a9c17d777481eb65e7f5bb3f3ff5482e2e43a1eeae1e3ddcf2257655c8ff"
+    },
+    {
+      "name": "nx-cloud-ci-failure-review",
+      "source": ".agents/skills/nx-cloud-ci-failure-review",
+      "archive": ".agents/packages/nx-cloud-ci-failure-review.skill",
+      "claude": ".claude/skills/nx-cloud-ci-failure-review/SKILL.md",
+      "sha256": "2f47d8b52bbfe60d4608f44cf35af1d33fee87587faae63714f7fa8701809481"
+    },
+    {
+      "name": "nx-generate",
+      "source": ".agents/skills/nx-generate",
+      "archive": ".agents/packages/nx-generate.skill",
+      "claude": ".claude/skills/nx-generate/SKILL.md",
+      "sha256": "f3d66b85c99ce4bfbb8e9d57082d7ece20ffcb39e4d042d183463dd70580cf29"
+    },
+    {
+      "name": "nx-import",
+      "source": ".agents/skills/nx-import",
+      "archive": ".agents/packages/nx-import.skill",
+      "claude": ".claude/skills/nx-import/SKILL.md",
+      "sha256": "3a392352a8168d3878cf08a47a6b01a8d077e4c08962f83d548cba0df5c23a52"
+    },
+    {
+      "name": "nx-plugins",
+      "source": ".agents/skills/nx-plugins",
+      "archive": ".agents/packages/nx-plugins.skill",
+      "claude": ".claude/skills/nx-plugins/SKILL.md",
+      "sha256": "32d5363bc0e04c2518af5d4f6e2f811bc9fe22326a1b3e39713f794e67f2f3e7"
+    },
+    {
+      "name": "nx-run-tasks",
+      "source": ".agents/skills/nx-run-tasks",
+      "archive": ".agents/packages/nx-run-tasks.skill",
+      "claude": ".claude/skills/nx-run-tasks/SKILL.md",
+      "sha256": "156133fd3a68788e1f72be92ec54dbac986aebe75c4034e7f6cc5e516437ad4f"
+    },
+    {
+      "name": "nx-workspace",
+      "source": ".agents/skills/nx-workspace",
+      "archive": ".agents/packages/nx-workspace.skill",
+      "claude": ".claude/skills/nx-workspace/SKILL.md",
+      "sha256": "4c7bf6f5ffc4540e9721a86df80cdb2497d0fff03727dc8bc923dd708fd59ca7"
+    },
+    {
+      "name": "repair-ci-failure",
+      "source": ".agents/skills/repair-ci-failure",
+      "archive": ".agents/packages/repair-ci-failure.skill",
+      "claude": ".claude/skills/repair-ci-failure/SKILL.md",
+      "sha256": "b120d5787b3d0d523dd9fab17ef4bc790a8c8e3f6834d945e85424c8c9428580"
+    },
+    {
+      "name": "reuse-existing-patterns",
+      "source": ".agents/skills/reuse-existing-patterns",
+      "archive": ".agents/packages/reuse-existing-patterns.skill",
+      "claude": ".claude/skills/reuse-existing-patterns/SKILL.md",
+      "sha256": "1c4d71bab3b86be65143b2309503a44d56c64dabdfa9c19cd5db3629f8b5d6c0"
+    },
+    {
+      "name": "review-german-eu-compliance",
+      "source": ".agents/skills/review-german-eu-compliance",
+      "archive": ".agents/packages/review-german-eu-compliance.skill",
+      "claude": ".claude/skills/review-german-eu-compliance/SKILL.md",
+      "sha256": "6bbebc9868626739b7bd3eb7e88464b21ce842c4ecef81d2b3cf7a26530e608d"
+    },
+    {
+      "name": "solve-change-request",
+      "source": ".agents/skills/solve-change-request",
+      "archive": ".agents/packages/solve-change-request.skill",
+      "claude": ".claude/skills/solve-change-request/SKILL.md",
+      "sha256": "15be2052d6b29d8baf8df925d65a4b3e1698d3205d4a5691a6103135a304e075"
+    },
+    {
+      "name": "symphony-architect",
+      "source": ".agents/skills/symphony-architect",
+      "archive": ".agents/packages/symphony-architect.skill",
+      "claude": ".claude/skills/symphony-architect/SKILL.md",
+      "sha256": "9e9c77f596ec205bd9865021e0d369faaa64c664f9c835e1df7765003d3514c8"
+    },
+    {
+      "name": "symphony-docs",
+      "source": ".agents/skills/symphony-docs",
+      "archive": ".agents/packages/symphony-docs.skill",
+      "claude": ".claude/skills/symphony-docs/SKILL.md",
+      "sha256": "57c58ab22163964e55e0f3b62a53d13b90e6ccd24305dae86bcf6b0a9f52e205"
+    },
+    {
+      "name": "symphony-technical-docs",
+      "source": ".agents/skills/symphony-technical-docs",
+      "archive": ".agents/packages/symphony-technical-docs.skill",
+      "claude": ".claude/skills/symphony-technical-docs/SKILL.md",
+      "sha256": "48f7e5f87a010860284231e4b45501496704eeb445fc2e9a759a740baeba5b68"
+    }
+  ]
+}

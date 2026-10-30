@@ -1,0 +1,16 @@
+{
+  "name": "frontend-interaction",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/interaction/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["scope:frontend", "type:interaction"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/interaction/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

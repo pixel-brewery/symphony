@@ -1,0 +1,41 @@
+<mosaik-page class="flex h-full min-h-0 w-full flex-1 flex-col" test-id="home-view">
+  <mosaik-page-header [inset]="'all'">
+    <mosaik-text
+      test-id="home-greeting"
+      class="pr-40 max-sm:pr-16"
+      [mosaikTypography]="'headline4'"
+      [wrap]="true"
+      [text]="now | greeting"
+    />
+  </mosaik-page-header>
+
+  <mosaik-page-content class="flex min-h-0 flex-1 flex-col justify-center" [inset]="'all'">
+    <mosaik-scroll test-id="home-panorama" class="h-full min-h-0 w-full">
+      <div
+        class="my-auto flex w-max items-center gap-6 px-1 py-2"
+        [symphonyWidgetHost]="presenter.hasSnapshot()"
+        [attr.test-id]="presenter.hasSnapshot() ? null : 'home-loading-skeleton'"
+        [attr.role]="presenter.hasSnapshot() ? null : 'status'"
+        [attr.aria-label]="presenter.hasSnapshot() ? null : 'Loading the workspace summary'"
+      >
+        <mosaik-view-slot-outlet class="contents" [slot]="widgetSlot" />
+      </div>
+    </mosaik-scroll>
+    @if (presenter.hasSnapshot()) { @if (presenter.externalServiceIncident(); as incident) {
+    <div class="flex w-full justify-center px-1 pt-6">
+      <mosaik-banner
+        class="w-full max-w-3xl"
+        test-id="home-external-service-incident"
+        [isOpen]="true"
+        [appearance]="'soft'"
+        [variant]="incident.severity === 'outage' ? 'danger' : 'warning'"
+        [iconName]="'errorCircle'"
+        [iconSize]="'small'"
+      >
+        <mosaik-banner-header [text]="incident.providerName + ' is reporting service problems'" />
+        <mosaik-banner-sub-header [text]="incident | externalServiceIncidentImpact" />
+      </mosaik-banner>
+    </div>
+    } }
+  </mosaik-page-content>
+</mosaik-page>

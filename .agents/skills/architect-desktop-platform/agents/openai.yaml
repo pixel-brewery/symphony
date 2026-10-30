@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Architect Desktop Platform'
+  short_description: 'Open the complete Symphony architect guidance'
+  default_prompt: 'Use $architect-desktop-platform to apply the complete $symphony-architect guidance to this desktop platform.'

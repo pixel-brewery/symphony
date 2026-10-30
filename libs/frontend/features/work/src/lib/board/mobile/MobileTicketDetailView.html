@@ -1,0 +1,236 @@
+<mosaik-page
+  class="block min-h-full min-w-0"
+  [breakpoint]="'sm'"
+  test-id="mobile-ticket-detail-view"
+>
+  @if (presenter.ticket(); as ticket) {
+  <mosaik-page-header
+    [inset]="'all'"
+    [text]="'Ticket'"
+    [subText]="ticket.externalId + ' · ' + ticket.stateLabel"
+  >
+    <mosaik-button
+      slot="prefix"
+      [appearance]="'plain'"
+      [icon]="'back'"
+      [attr.aria-label]="'Back to tickets'"
+      (click)="presenter.backCommand.execute()"
+      test-id="mobile-ticket-back"
+    />
+    @if (ticket.remoteCommandsAvailable && ticket.externalUrl; as externalUrl) {
+    <mosaik-button
+      slot="suffix"
+      test-id="mobile-open-github-issue"
+      [iconName]="'github'"
+      [appearance]="'plain'"
+      [href]="externalUrl"
+      [target]="'_blank'"
+      [rel]="'noreferrer'"
+      [attr.aria-label]="'Open issue in GitHub'"
+    />
+    }
+  </mosaik-page-header>
+  <mosaik-page-content [inset]="'all'">
+    <article class="grid w-full min-w-0 gap-3">
+      <header class="grid min-w-0 gap-1">
+        <span>{{ ticket.externalId }}</span>
+        <h1>{{ ticket.title }}</h1>
+      </header>
+      @if (ticket.body) {
+      <p class="m-0 min-w-0 whitespace-pre-wrap break-words">{{ ticket.body }}</p>
+      } @if (ticket.externalCoordination; as coordination) {
+      <mosaik-banner
+        test-id="mobile-ticket-external-claim"
+        [isOpen]="true"
+        [appearance]="'soft'"
+        [variant]="'warning'"
+        [iconName]="'errorCircle'"
+        [iconSize]="'small'"
+        [orientation]="'vertical'"
+      >
+        <mosaik-banner-header
+          [text]="coordination.action === 'analyze' ? 'Analysis is running on another instance' : 'Solution is running on another instance'"
+        />
+        <mosaik-banner-sub-header
+          [text]="coordination.owner ? 'Locked by the Symphony instance connected as @' + coordination.owner + '.' : 'Locked by another Symphony instance.'"
+        />
+      </mosaik-banner>
+      } @if (ticket.health; as health) {
+      <mosaik-banner
+        test-id="mobile-ticket-health"
+        [isOpen]="true"
+        [appearance]="'soft'"
+        [variant]="health.severity === 'blocker' ? 'danger' : 'info'"
+        [iconName]="health.severity === 'blocker' ? 'errorCircle' : 'info'"
+        [iconSize]="'small'"
+        [orientation]="'vertical'"
+      >
+        <mosaik-banner-header
+          [text]="health.severity === 'blocker' ? 'This ticket cannot move forward yet' : 'This ticket is incomplete'"
+        />
+        <mosaik-banner-sub-header
+          [text]="health.issues.length + (health.issues.length === 1 ? ' finding' : ' findings')"
+        />
+      </mosaik-banner>
+      <mosaik-card [appearance]="'soft'" test-id="mobile-ticket-findings">
+        <mosaik-card-content>
+          <mosaik-cell-group>
+            @for (issue of health.issues; track issue.id) {
+            <mosaik-cell [attr.test-id]="'mobile-ticket-finding-' + issue.id">
+              <mosaik-text slot="label" [text]="issue.summary" [wrap]="true" />
+              <mosaik-text slot="subLabel" [text]="issue.remedy" [wrap]="true" />
+            </mosaik-cell>
+            }
+          </mosaik-cell-group>
+        </mosaik-card-content>
+      </mosaik-card>
+      }
+      <mosaik-card [appearance]="'soft'">
+        <mosaik-card-header [text]="'Ticket details'" />
+        <mosaik-card-content>
+          <mosaik-cell-group>
+            <mosaik-cell>
+              <mosaik-text slot="label" [text]="ticket.stateLabel" [wrap]="true" />
+              <mosaik-text slot="subLabel" [text]="'Status'" [wrap]="true" />
+            </mosaik-cell>
+            @if (ticket.repository) {
+            <mosaik-cell>
+              <mosaik-text slot="label" [text]="ticket.repository" [wrap]="true" />
+              <mosaik-text slot="subLabel" [text]="'Repository'" [wrap]="true" />
+            </mosaik-cell>
+            } @if (ticket.assignees.length) {
+            <mosaik-cell>
+              <mosaik-text slot="label" [text]="ticket.assignees.join(', ')" [wrap]="true" />
+              <mosaik-text slot="subLabel" [text]="'Assigned'" [wrap]="true" />
+            </mosaik-cell>
+            }
+          </mosaik-cell-group>
+        </mosaik-card-content>
+      </mosaik-card>
+      @if (ticket.activeExecutionId) {
+      <mosaik-button
+        class="w-full"
+        [variant]="'primary'"
+        [label]="'Open process'"
+        [disabled]="presenter.loading()"
+        (click)="presenter.openProcessCommand.execute(ticket)"
+        test-id="mobile-ticket-open-process"
+      />
+      } @if (presenter.decisions().length) {
+      <mosaik-card [appearance]="'outline'" test-id="mobile-ticket-decisions">
+        <mosaik-card-header
+          [text]="'Your decision'"
+          [subText]="'Nothing runs on this ticket until you decide how it continues.'"
+        />
+        <mosaik-card-content class="grid gap-2">
+          @for (decision of presenter.decisions(); track decision.id) {
+          <mosaik-button
+            class="w-full"
+            [attr.test-id]="'mobile-ticket-action-' + decision.id"
+            [label]="decision.label"
+            [variant]="decision | mobileTicketActionVariant"
+            [appearance]="decision.effect === 'advance' ? 'solid' : 'outline'"
+            [disabled]="!presenter.canRun()(decision)"
+            (click)="presenter.runCommand.execute(decision)"
+          />
+          }
+        </mosaik-card-content>
+      </mosaik-card>
+      } @for (action of presenter.runActions(); track action.id) {
+      <mosaik-card aiEnhanced [appearance]="'outline'" test-id="mobile-ticket-ai-action">
+        <mosaik-card-content class="grid gap-2">
+          <div class="flex min-w-0 items-start justify-between gap-2">
+            <div>
+              <span>AI WORKFLOW</span>
+              <h2>{{ action.label }}</h2>
+            </div>
+            <mosaik-badge aiEnhanced [label]="'AI'" [appearance]="'soft'" [variant]="'highlight'" />
+          </div>
+          @if (action.blockedReason) {
+          <mosaik-text
+            [attr.test-id]="'mobile-ticket-action-blocked-' + action.id"
+            [text]="action.blockedReason"
+            [wrap]="true"
+          />
+          } @else {
+          <mosaik-prompt-box
+            aiEnhanced
+            [label]="action | mobileTicketPromptLabel"
+            [placeholder]="action | mobileTicketPromptPlaceholder"
+            [value]="presenter.prompt()(action)"
+            [minRows]="4"
+            [maxRows]="10"
+            [maxlength]="50000"
+            [required]="!!action.requiresFeedback"
+            [showSubmitButton]="false"
+            [disabled]="presenter.loading()"
+            (input)="presenter.updatePromptCommand.execute([action, $event])"
+            [attr.test-id]="'mobile-ticket-prompt-' + action.id"
+          />
+          }
+          <mosaik-button
+            class="w-full"
+            [attr.test-id]="'mobile-ticket-action-' + action.id"
+            [variant]="action | mobileTicketActionVariant"
+            [label]="action.label"
+            [disabled]="!presenter.canRun()(action)"
+            (click)="presenter.runCommand.execute(action)"
+          />
+        </mosaik-card-content>
+      </mosaik-card>
+      } @for (action of presenter.directActions(); track action.id) {
+      <mosaik-button
+        class="w-full"
+        [attr.test-id]="'mobile-ticket-action-' + action.id"
+        [label]="action.label"
+        [variant]="action | mobileTicketActionVariant"
+        [disabled]="!presenter.canRun()(action)"
+        (click)="presenter.runCommand.execute(action)"
+      />
+      } @if (presenter.moveTargets().length) {
+      <mosaik-card [appearance]="'soft'" test-id="mobile-ticket-move">
+        <mosaik-card-header [text]="'Move'" [subText]="'Change the board column of this ticket.'" />
+        <mosaik-card-content class="grid gap-2">
+          <mosaik-button
+            class="w-full"
+            test-id="mobile-ticket-move-backward"
+            [label]="presenter.backwardLabel()"
+            [appearance]="'outline'"
+            [disabled]="!presenter.previousColumn() || presenter.loading()"
+            (click)="presenter.moveByOffsetCommand.execute(-1)"
+          />
+          <mosaik-button
+            class="w-full"
+            test-id="mobile-ticket-move-forward"
+            [label]="presenter.forwardLabel()"
+            [appearance]="'outline'"
+            [disabled]="!presenter.nextColumn() || presenter.loading()"
+            (click)="presenter.moveByOffsetCommand.execute(1)"
+          />
+          <mosaik-select
+            test-id="mobile-ticket-move-to"
+            [label]="'Move to'"
+            [value]="presenter.currentColumnId()"
+            [disabled]="presenter.loading()"
+            (selectionChanged)="presenter.moveToSelectionCommand.execute($event)"
+          >
+            @for (target of presenter.moveTargets(); track target.id) {
+            <mosaik-select-item
+              [attr.test-id]="'mobile-ticket-move-target-' + target.id"
+              [value]="target.id"
+              [label]="target.label"
+            />
+            }
+          </mosaik-select>
+        </mosaik-card-content>
+      </mosaik-card>
+      }
+    </article>
+  </mosaik-page-content>
+  } @else {
+  <mosaik-page-header [inset]="'all'" [text]="'Ticket not found'" />
+  <mosaik-page-content [inset]="'all'">
+    <mosaik-button [label]="'Back to tickets'" (click)="presenter.backCommand.execute()" />
+  </mosaik-page-content>
+  }
+</mosaik-page>

@@ -1,0 +1,25 @@
+{
+  "name": "domain-workflow",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/features/workflow/src",
+  "projectType": "library",
+  "tags": ["scope:domain", "type:domain", "feature:workflow"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/domain/features/workflow/tsconfig.lib.json --noEmit",
+          "tsc -p libs/domain/features/workflow/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/domain/features/workflow/vitest.config.ts"
+      }
+    }
+  }
+}

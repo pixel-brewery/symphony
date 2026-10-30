@@ -1,0 +1,299 @@
+@import '@pixel-brewery/mosaik-themes/tailwind/v4/soho';
+
+@source "../**/*.{html,ts}";
+@source "../../../libs/**/*.{html,ts}";
+
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  --spacing: 8px;
+  --radius: 10px;
+}
+
+@utility surface-input {
+  @apply border border-(--mosaik-scheme-highlight) rounded-(--mosaik-layout-radius) bg-(--mosaik-scheme-surface) px-3 py-2 shadow-(--mosaik-elevation-light);
+}
+
+@utility surface-input-text {
+  @apply text-(--mosaik-scheme-middlelight);
+  font-size: 12px;
+}
+
+@utility brand-wordmark {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+@utility settings-card-list {
+  --list-gap: 0;
+  --list-border-radius: 0;
+}
+
+@utility settings-card-list-item {
+  --list-item-border-radius: 0;
+  --list-item-padding-bottom: calc(var(--mosaik-layout-space) * 2);
+  --list-item-padding-top: calc(var(--mosaik-layout-space) * 2);
+
+  &::part(content)::part(inner) {
+    overflow: unset;
+  }
+}
+
+/*
+ * Choice groups whose options are cards. At most three per row, and a trailing option keeps
+ * the width of a single card instead of stretching across the remaining space, so a group of
+ * seven reads as 3 + 3 + 1 rather than 3 + 3 + one wide banner.
+ */
+@utility choice-cards {
+  &::part(root) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (width < 60rem) {
+    &::part(root) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (width < 40rem) {
+    &::part(root) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+@utility choice-card {
+  min-width: 0;
+}
+
+@utility tree-level {
+  position: relative;
+  margin-left: --spacing(4);
+  padding-left: --spacing(8);
+
+  &::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    content: '';
+    background-image: radial-gradient(circle, var(--color-zinc-300) 1px, transparent 1px);
+    background-repeat: repeat-y;
+    background-size: 1px 6px;
+  }
+}
+
+@utility tree-node {
+  position: relative;
+
+  &::before {
+    position: absolute;
+    top: --spacing(8);
+    left: calc(--spacing(8) * -1);
+    width: --spacing(8);
+    height: 1px;
+    content: '';
+    background-image: radial-gradient(circle, var(--color-zinc-300) 1px, transparent 1px);
+    background-repeat: repeat-x;
+    background-size: 6px 1px;
+  }
+}
+
+@utility safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility safe-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+@utility safe-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+@utility safe-x {
+  padding-right: env(safe-area-inset-right);
+  padding-left: env(safe-area-inset-left);
+}
+
+@utility safe-y {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+}
+
+@utility scrollbar-hidden {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility overflow-unset {
+  overflow: unset;
+}
+
+@utility scrollable-container {
+  @apply box-border flex h-full min-h-0 flex-col overflow-hidden;
+}
+
+@utility scrollable-content {
+  @apply box-border min-h-0 flex-1 overflow-y-auto;
+}
+
+@utility ai-border-spin {
+  position: relative;
+  z-index: 0;
+  border-color: transparent;
+  outline: none;
+  box-shadow: none;
+  --searchbox-focus-ring-color: var(--color-violet-500);
+  --searchbox-focus-ring-active-width: 2px;
+
+  &::before {
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    content: '';
+    background: conic-gradient(
+      from var(--ai-angle, 0deg),
+      transparent 0%,
+      var(--color-violet-500) 20%,
+      var(--color-blue-500) 40%,
+      var(--color-violet-500) 60%,
+      transparent 80%
+    );
+    border-radius: inherit;
+    animation: ai-spin 2s linear infinite;
+  }
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    content: '';
+    background: var(--mosaik-surface-color, #fff);
+    border-radius: inherit;
+  }
+}
+
+@property --ai-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ai-spin {
+  from {
+    --ai-angle: 0deg;
+  }
+  to {
+    --ai-angle: 360deg;
+  }
+}
+
+@utility recording-border-spin {
+  position: relative;
+  z-index: 0;
+  border-color: transparent;
+  outline: none;
+  box-shadow: none;
+
+  &::before {
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    content: '';
+    background: conic-gradient(
+      from var(--ai-angle, 0deg),
+      transparent 0%,
+      var(--color-red-500) 20%,
+      var(--color-red-400) 40%,
+      var(--color-red-500) 60%,
+      transparent 80%
+    );
+    border-radius: inherit;
+    animation: ai-spin 2s linear infinite;
+  }
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    content: '';
+    background: var(--mosaik-surface-color, #fff);
+    border-radius: inherit;
+  }
+}
+
+@utility animate-login-copy-one {
+  animation: login-copy-one 12s ease-in-out infinite;
+}
+
+@utility animate-login-copy-two {
+  animation: login-copy-two 12s ease-in-out infinite;
+}
+
+@utility animate-login-copy-three {
+  animation: login-copy-three 12s ease-in-out infinite;
+}
+
+@keyframes login-copy-one {
+  0%,
+  25% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  33%,
+  100% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes login-copy-two {
+  0%,
+  25%,
+  66%,
+  100% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  33%,
+  58% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes login-copy-three {
+  0%,
+  58% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  66%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

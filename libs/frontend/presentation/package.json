@@ -1,0 +1,56 @@
+{
+  "name": "@symphony/frontend-presentation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./mobile": {
+      "types": "./src/mobile.ts",
+      "import": "./src/mobile.ts",
+      "default": "./src/mobile.ts"
+    },
+    "./package.json": "./package.json",
+    "./context": {
+      "types": "./src/context.ts",
+      "import": "./src/context.ts",
+      "default": "./src/context.ts"
+    }
+  },
+  "dependencies": {
+    "@angular/common": "22.2.0",
+    "@angular/core": "22.2.0",
+    "@angular/router": "22.2.0",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.183",
+    "@pixel-brewery/mosaik-elements-foundation": "0.1.183",
+    "@symphony/domain-core": "workspace:*",
+    "@symphony/domain-execution": "workspace:*",
+    "@symphony/frontend-core": "workspace:*",
+    "@symphony/frontend-feature-ci": "workspace:*",
+    "@symphony/frontend-feature-execution": "workspace:*",
+    "@symphony/frontend-feature-mobile": "workspace:*",
+    "@symphony/frontend-interaction": "workspace:*",
+    "@symphony/frontend-notification": "workspace:*",
+    "@symphony/frontend-search": "workspace:*",
+    "@symphony/frontend-ui": "workspace:*",
+    "@symphony/frontend-update": "workspace:*",
+    "@symphony/ipc-contracts-composition": "workspace:*",
+    "@symphony/mobile-contracts": "workspace:*",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@angular/compiler": "22.2.0",
+    "@angular/platform-browser": "22.2.0",
+    "@symphony/configuration-composition": "workspace:*",
+    "@symphony/frontend-feature-automation": "workspace:*",
+    "@symphony/frontend-feature-workspace": "workspace:*",
+    "@symphony/ipc-contracts-desktop": "workspace:*",
+    "vitest": "4.1.11"
+  }
+}

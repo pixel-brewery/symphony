@@ -1,0 +1,63 @@
+<mosaik-card test-id="theme-settings-card">
+  <mosaik-card-header [text]="'Appearance'" [subText]="'Choose how Symphony appears.'" />
+  <mosaik-card-content>
+    <div class="flex min-w-0 flex-col gap-4">
+      <mosaik-banner
+        test-id="theme-guide"
+        is-open
+        appearance="soft"
+        variant="info"
+        iconName="info"
+        iconSize="small"
+      >
+        <mosaik-banner-header text="System follows the Mac appearance" />
+        <mosaik-banner-sub-header
+          text="Choose System to switch between light and dark automatically when macOS changes."
+        />
+      </mosaik-banner>
+      <section class="flex min-w-0 flex-col gap-2" test-id="appearance-theme-settings-group">
+        <symphony-headline
+          header="Color theme"
+          description="Select a fixed appearance or follow the current macOS preference."
+        />
+        <mosaik-select
+          test-id="theme-select"
+          [label]="'Theme'"
+          [value]="presenter.theme()"
+          (selectionChanged)="presenter.updateThemeCommand.execute($event)"
+        >
+          <mosaik-select-item
+            test-id="theme-light"
+            [label]="'Light'"
+            [value]="'light'"
+            (click)="presenter.updateThemeCommand.execute('light')"
+          />
+          <mosaik-select-item
+            test-id="theme-dark"
+            [label]="'Dark'"
+            [value]="'dark'"
+            (click)="presenter.updateThemeCommand.execute('dark')"
+          />
+          <mosaik-select-item
+            test-id="theme-system"
+            [label]="'System'"
+            [value]="'system'"
+            (click)="presenter.updateThemeCommand.execute('system')"
+          />
+        </mosaik-select>
+      </section>
+    </div>
+  </mosaik-card-content>
+  <mosaik-card-footer>
+    <div class="flex w-full flex-wrap justify-end gap-2">
+      <mosaik-button
+        test-id="save-theme"
+        [label]="'Save'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        (click)="presenter.saveThemeCommand.execute()"
+      />
+    </div>
+  </mosaik-card-footer>
+</mosaik-card>
+<mosaik-view-slot-outlet class="contents" [slot]="appearanceSlot" />

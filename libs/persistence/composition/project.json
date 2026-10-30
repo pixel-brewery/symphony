@@ -1,0 +1,25 @@
+{
+  "name": "persistence-composition",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/persistence/composition/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:persistence", "feature:composition"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/persistence/composition/tsconfig.lib.json --noEmit",
+          "tsc -p libs/persistence/composition/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/persistence/composition/vitest.config.ts"
+      }
+    }
+  }
+}

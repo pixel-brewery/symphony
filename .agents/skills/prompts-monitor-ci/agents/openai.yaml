@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Monitor Ci'
+  short_description: 'Apply repository prompts guidance'
+  default_prompt: 'Use $prompts-monitor-ci for the applicable repository guidance.'

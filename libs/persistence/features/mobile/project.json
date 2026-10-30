@@ -1,0 +1,15 @@
+{
+  "name": "persistence-mobile",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/persistence/features/mobile/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:persistence", "feature:mobile"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/persistence/features/mobile/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

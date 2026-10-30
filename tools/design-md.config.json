@@ -1,0 +1,19 @@
+{
+  "name": "Symphony on Mosaik Soho",
+  "description": "Light-mode value snapshot of the effective Mosaik Soho theme Symphony renders. Consume the matching --mosaik-* CSS variables, never these literals.",
+  "base": "soho",
+  "overrides": {
+    "kind": "module",
+    "path": "libs/frontend/ui/src/lib/theme/ApplicationThemeOverrides.ts",
+    "export": "applicationThemeOverrides"
+  },
+  "tailwindEntries": ["apps/renderer/src/tailwind.css", "apps/mobile/src/tailwind.css"],
+  "icons": {
+    "source": "apps/renderer/src/configuration/ShellConfig.ts",
+    "call": "provideIcons"
+  },
+  "overrideStyles": {
+    "entry": "apps/renderer/src/styles/mosaik.scss",
+    "directory": "apps/renderer/src/styles/overrides"
+  }
+}

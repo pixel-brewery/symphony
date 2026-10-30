@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc/renderer",
+    "types": [],
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "rootDir": "../.."
+  },
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "strictInjectionParameters": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../libs/frontend/*/src/**/*.ts",
+    "../../libs/frontend/features/*/src/**/*.ts"
+  ]
+}

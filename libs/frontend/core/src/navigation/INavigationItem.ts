@@ -1,0 +1,27 @@
+/**
+ * Describes a feature-owned destination contributed to one navigation region.
+ *
+ * @public
+ */
+export interface INavigationItem {
+  /** Stable destination identifier. @public @readonly */
+  readonly key: string;
+  /** User-facing destination label. @public @readonly */
+  readonly label: string;
+  /** Registered application icon name. @public @readonly */
+  readonly icon: string;
+  /** Existing application route opened by the destination. @public @readonly */
+  readonly route: string;
+  /** Position within the owning region. @public @readonly */
+  readonly order: number;
+  /** Navigation surface that renders the destination. @public @readonly */
+  readonly region: string;
+
+  /**
+   * Optional reactive visibility condition, such as the saved Arcade preference.
+   *
+   * @public
+   * @readonly
+   */
+  readonly isVisible?: () => boolean;
+}

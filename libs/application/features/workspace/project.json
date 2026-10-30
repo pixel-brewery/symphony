@@ -1,0 +1,25 @@
+{
+  "name": "application-workspace",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/application/features/workspace/src",
+  "projectType": "library",
+  "tags": ["scope:application", "type:application", "feature:workspace"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/application/features/workspace/tsconfig.lib.json --noEmit",
+          "tsc -p libs/application/features/workspace/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/application/features/workspace/vitest.config.ts"
+      }
+    }
+  }
+}

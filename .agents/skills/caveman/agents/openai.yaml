@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Caveman'
+  short_description: 'Ultra-compressed communication mode'
+  default_prompt: 'Use $caveman to answer in ultra-compressed caveman mode.'

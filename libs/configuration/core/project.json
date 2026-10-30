@@ -1,0 +1,15 @@
+{
+  "name": "configuration-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/configuration/core/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:configuration"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/configuration/core/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

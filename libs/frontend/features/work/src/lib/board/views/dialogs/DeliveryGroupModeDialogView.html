@@ -1,0 +1,51 @@
+<ng-template mosaikDialogHeader>
+  <mosaik-dialog-header
+    [text]="'Group selected tickets'"
+    [subText]="'Choose whether Symphony should analyze the relationship first.'"
+  />
+</ng-template>
+
+<ng-template mosaikDialogContent>
+  <div class="flex min-w-0 flex-col gap-4 py-1">
+    <mosaik-text
+      [text]="'Direct grouping is intended for an explicit operator decision. It skips the AI assessment but keeps repository, revision, claim, and overlap boundaries.'"
+      [wrap]="true"
+    />
+    <mosaik-radio-group
+      [attr.test-id]="'delivery-group-mode'"
+      [name]="'delivery-group-mode'"
+      [orientation]="'vertical'"
+      [value]="presenter.mode()"
+      (radioChanged)="presenter.changeMode($event)"
+    >
+      <mosaik-radio
+        [attr.test-id]="'delivery-group-mode-direct'"
+        [value]="'direct'"
+        [label]="'Copy directly without AI analysis'"
+      />
+      <mosaik-radio
+        [attr.test-id]="'delivery-group-mode-analyzer'"
+        [value]="'analyzer'"
+        [label]="'Analyze relationship with AI first'"
+      />
+    </mosaik-radio-group>
+  </div>
+</ng-template>
+
+<ng-template mosaikDialogFooter>
+  <div class="flex items-center justify-end gap-2">
+    <mosaik-button
+      [attr.test-id]="'delivery-group-mode-cancel'"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      (click)="presenter.cancel()"
+    />
+    <mosaik-button
+      [attr.test-id]="'delivery-group-mode-continue'"
+      [label]="'Continue'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      (click)="presenter.continue()"
+    />
+  </div>
+</ng-template>

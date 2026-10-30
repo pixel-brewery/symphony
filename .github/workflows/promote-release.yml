@@ -1,0 +1,146 @@
+name: Select Stable Desktop Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Numeric Symphony version already published by the continuous release workflow
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-stable-selection
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Point Stable at exact published bytes
+    if: github.repository_id == '1440122208' && github.repository == 'pixel-brewery/symphony' && github.event.repository.private == false && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: stable
+    concurrency:
+      group: desktop-update-publication
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pages: write
+    env:
+      SYMPHONY_RELEASE_VERSION: ${{ inputs.version }}
+      SYMPHONY_UPDATE_CHANNEL: stable
+      SYMPHONY_UPDATE_INPUT: out/update-input
+      SYMPHONY_UPDATE_OUTPUT: out/update-publication
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.15.0
+
+      - name: Resolve the update origin and validate the requested version
+        id: origin
+        env:
+          CONFIGURED_BASE_URL: ${{ vars.SYMPHONY_UPDATE_BASE_URL }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$SYMPHONY_RELEASE_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
+          gh api repositories/1440122208 --jq 'select(.id == 1440122208 and .full_name == "pixel-brewery/symphony" and .private == false and .default_branch == "main") | .full_name' | grep -Fx "$GITHUB_REPOSITORY"
+          base_url="${CONFIGURED_BASE_URL:-https://pixel-brewery.github.io/symphony}"
+          while [[ "$base_url" == */ ]]; do base_url="${base_url%/}"; done
+          gh api "repos/${GITHUB_REPOSITORY}/pages" > "$RUNNER_TEMP/release-pages.json"
+          UPDATE_BASE_URL="$base_url" node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const pages = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/release-pages.json`, 'utf8'));
+          const baseUrl = process.env.UPDATE_BASE_URL;
+          const parsed = new URL(baseUrl);
+          if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search || parsed.hash || pages.build_type !== 'legacy' || pages.source?.branch !== 'gh-pages' || pages.source?.path !== '/' || pages.html_url?.replace(/\/+$/u, '') !== baseUrl) {
+            throw new Error('The configured HTTPS update origin must match GitHub Pages served from gh-pages /.');
+          }
+          NODE
+          echo "update-base-url=${base_url%/}" >> "$GITHUB_OUTPUT"
+          gh release view "v${SYMPHONY_RELEASE_VERSION}" --repo "$GITHUB_REPOSITORY" > /dev/null
+
+      # Nothing is rebuilt or re-signed. The published bytes are downloaded and
+      # matched against the checksums their original release recorded.
+      - name: Download and verify the published release
+        env:
+          SYMPHONY_UPDATE_BASE_URL: ${{ steps.origin.outputs.update-base-url }}
+        run: node tools/fetch-published-release.mjs
+
+      - name: Regenerate the Stable channel without rebuilding
+        env:
+          SYMPHONY_UPDATE_BASE_URL: ${{ steps.origin.outputs.update-base-url }}
+          SYMPHONY_UPDATE_ARTIFACT_BASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/download/v${{ inputs.version }}
+        run: node tools/prepare-update-publication.mjs
+
+      # Only the Stable channel moves. Version manifests stay as their publishing
+      # run wrote them, and the Canary channel keeps pointing at the newest release.
+      - name: Move the Stable channel
+        id: update-origin
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin refs/heads/gh-pages:refs/remotes/origin/gh-pages
+          git worktree add --detach out/origin refs/remotes/origin/gh-pages
+          mkdir -p out/origin/channels/stable
+          cp -R out/update-publication/channels/stable/. out/origin/channels/stable/
+          git -C out/origin add channels/stable
+          if ! git -C out/origin diff --cached --quiet; then
+            git -C out/origin commit -m "release: select ${SYMPHONY_RELEASE_VERSION} for stable"
+            auth_header="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            git -C out/origin -c "http.${GITHUB_SERVER_URL}/.extraheader=AUTHORIZATION: basic ${auth_header}" push origin HEAD:refs/heads/gh-pages
+          fi
+          echo "commit=$(git -C out/origin rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and verify the update site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORIGIN_COMMIT: ${{ steps.update-origin.outputs.commit }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/pages/builds" --method POST > /dev/null
+          for attempt in {1..60}; do
+            build="$(gh api "repos/${GITHUB_REPOSITORY}/pages/builds/latest")"
+            status="$(jq -r '.status' <<< "$build")"
+            commit="$(jq -r '.commit' <<< "$build")"
+            if [ "$commit" = "$ORIGIN_COMMIT" ] && [ "$status" = built ]; then
+              exit 0
+            fi
+            if [ "$commit" = "$ORIGIN_COMMIT" ] && [ "$status" = errored ]; then
+              echo 'The update site build failed.' >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          echo 'The update site did not publish the expected Stable metadata commit.' >&2
+          exit 1
+
+      - name: Confirm the public Stable installer feeds
+        env:
+          SYMPHONY_UPDATE_BASE_URL: ${{ steps.origin.outputs.update-base-url }}
+        run: |
+          set -euo pipefail
+          for file in out/update-publication/channels/stable/{darwin,win32,linux}/arm64/installer.json; do
+            relative="${file#out/update-publication/}"
+            matched=false
+            for attempt in {1..12}; do
+              if curl --fail --silent --show-error --max-time 15 "${SYMPHONY_UPDATE_BASE_URL}/${relative}" -o "$RUNNER_TEMP/published-feed.json" && cmp --silent "$file" "$RUNNER_TEMP/published-feed.json"; then
+                matched=true
+                break
+              fi
+              sleep 5
+            done
+            if [ "$matched" != true ]; then
+              echo "The public Stable feed does not match ${relative}." >&2
+              exit 1
+            fi
+          done

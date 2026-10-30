@@ -1,0 +1,25 @@
+{
+  "name": "domain-delivery",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/features/delivery/src",
+  "projectType": "library",
+  "tags": ["scope:domain", "type:domain", "feature:delivery"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/domain/features/delivery/tsconfig.lib.json --noEmit",
+          "tsc -p libs/domain/features/delivery/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/domain/features/delivery/vitest.config.ts"
+      }
+    }
+  }
+}

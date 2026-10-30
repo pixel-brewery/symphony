@@ -1,0 +1,15 @@
+{
+  "name": "domain-work",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/features/work/src",
+  "projectType": "library",
+  "tags": ["scope:domain", "type:domain", "feature:work"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/domain/features/work/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}
