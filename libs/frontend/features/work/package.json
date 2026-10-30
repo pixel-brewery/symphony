@@ -29,11 +29,11 @@
     }
   },
   "dependencies": {
-    "@angular/cdk": "22.2.0",
-    "@angular/common": "22.2.0",
-    "@angular/core": "22.2.0",
-    "@angular/forms": "22.2.0",
-    "@angular/router": "22.2.0",
+    "@angular/cdk": "22.2.4",
+    "@angular/common": "22.2.3",
+    "@angular/core": "22.2.3",
+    "@angular/forms": "22.2.3",
+    "@angular/router": "22.2.3",
     "@pixel-brewery/mosaik-elements-angular": "0.1.183",
     "@symphony/configuration-composition": "workspace:*",
     "@symphony/domain-ci": "workspace:*",
@@ -61,8 +61,8 @@
     "rxjs": "7.8.2"
   },
   "devDependencies": {
-    "@angular/compiler": "22.2.0",
-    "@angular/platform-browser": "22.2.0",
+    "@angular/compiler": "22.2.3",
+    "@angular/platform-browser": "22.2.3",
     "@symphony/frontend-feature-execution": "workspace:*",
     "vitest": "4.1.11"
   }

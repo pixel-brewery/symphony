@@ -14,7 +14,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@angular/core": "22.2.0",
+    "@angular/core": "22.2.3",
     "@pixel-brewery/mosaik-elements-angular": "0.1.183",
     "@symphony/frontend-core": "workspace:*",
     "@symphony/frontend-notification": "workspace:*",
@@ -23,7 +23,7 @@
     "@symphony/ipc-contracts-desktop": "workspace:*"
   },
   "devDependencies": {
-    "@angular/platform-browser": "22.2.0",
+    "@angular/platform-browser": "22.2.3",
     "vitest": "4.1.11"
   }
 }
