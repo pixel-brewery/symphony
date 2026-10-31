@@ -21,6 +21,6 @@
   "devDependencies": {
     "@symphony/ipc-contracts-delivery": "workspace:*",
     "@types/node": "26.6.3",
-    "vitest": "4.1.11"
+    "vitest": "5.0.5"
   }
 }
