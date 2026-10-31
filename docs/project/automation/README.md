@@ -1,6 +1,6 @@
 # Automation
 
-Der Bereich **Automation** im [Einstellungsfenster](../window-and-navigation/settings-window.md) legt fest, wie weit das AI-Team ohne dein Zutun arbeiten darf. Die Einstellungen gelten für alle Workspaces auf diesem Mac: ob Symphony den Backlog selbstständig abarbeitet, wie es auf fehlgeschlagene Checks seiner eigenen Pull Requests reagiert, ob GitHub-Kommentare Aufgaben starten dürfen und wo und wie lange Arbeitsbereiche erhalten bleiben.
+Der Bereich **Automation** in den [Einstellungen](../window-and-navigation/settings.md) legt fest, wie weit das AI-Team ohne dein Zutun arbeiten darf. Die Einstellungen gelten für alle Workspaces auf diesem Mac: ob Symphony den Backlog selbstständig abarbeitet, wie es auf fehlgeschlagene Checks seiner eigenen Pull Requests reagiert, ob GitHub-Kommentare Aufgaben starten dürfen und wo und wie lange Arbeitsbereiche erhalten bleiben.
 
 ## Was der Bereich bietet
 
@@ -16,9 +16,9 @@ Speichergrenzen und virtuelle Maschinen gehören zu diesem Mac und stehen unter 
 
 | Weg                                                                                                             | Ergebnis                                                                                                                      |
 | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Automation** unter **Symphony** in der Seitenleiste des Einstellungsfensters                                  | Der Bereich öffnet sich; die Werkzeugleiste beschreibt ihn mit `How far the AI team may work on its own, in every workspace.` |
+| **Automation** unter **Symphony** in der Seitenleiste der Einstellungen                                         | Der Bereich öffnet sich; die Werkzeugleiste beschreibt ihn mit `How far the AI team may work on its own, in every workspace.` |
 | Ein Treffer in **Search settings**, etwa `Level` oder `Daily token budget`, und **Open**                        | Der Bereich **Automation** öffnet sich.                                                                                       |
-| **Open Automation settings** in der Diagnose eines fehlgeschlagenen Laufs unter [Actions](../actions/README.md) | Das Einstellungsfenster öffnet sich bei **Automation**.                                                                       |
+| **Open Automation settings** in der Diagnose eines fehlgeschlagenen Laufs unter [Actions](../actions/README.md) | Die Einstellungen öffnen sich bei **Automation**.                                                                             |
 
 Der Schalter **Autonomous work** im [Menüleistenpanel](../notifications-and-tray/README.md#menüleistenpanel-macos) ändert dieselbe Einstellung wie **Run autonomous work** in diesem Bereich.
 
@@ -176,7 +176,7 @@ Scheitert das Aufräumen ganz, meldet Symphony **Unable to clear managed workspa
 
 ## Verwandte Features
 
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md)
+- [Einstellungen](../window-and-navigation/settings.md)
 - [Actions](../actions/README.md)
 - [Pull Requests](../pull-requests/README.md)
 - [Mitteilungszentrale und Menüleistenpanel](../notifications-and-tray/README.md)

@@ -4,7 +4,7 @@
 
 ## Ziel und Garantien
 
-Der Workspace-Bereich **AI team** des Einstellungsfensters projiziert die Agentenorganisation eines Workspace – Positionen, Agentenprofile, Ausführungswege (Route Policies), Lieferteam und Provider-Manifeste – in einen Lieferablauf je Schritt, Agentenkarten und eine nur lesbare technische Übersicht. Er besitzt das Sheet zum Anlegen und Bearbeiten eines Agenten und das Entfernen eines Agenten. Das funktionale Verhalten steht unter [AI-Team](../../project/ai-team/README.md).
+Der Workspace-Bereich **AI team** der Einstellungen projiziert die Agentenorganisation eines Workspace – Positionen, Agentenprofile, Ausführungswege (Route Policies), Lieferteam und Provider-Manifeste – in einen Lieferablauf je Schritt, Agentenkarten und eine nur lesbare technische Übersicht. Er besitzt das Sheet zum Anlegen und Bearbeiten eines Agenten und das Entfernen eines Agenten. Das funktionale Verhalten steht unter [AI-Team](../../project/ai-team/README.md).
 
 Garantien:
 
@@ -18,7 +18,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Abschnittsbeitrag `team`, Suchbeiträge, Routen-Initialisierer für `agent`, Lieferablauf, Agentenkarten mit Verfügbarkeit und Intelligenzwert, Agenten-Sheet mit Vorschau, Entfernen mit Sperrregeln, technische Übersicht.
-- Nicht enthalten: Verbinden und Anmelden von AI-Konten (Bereich **Connected services**, siehe [Workspaces](../workspaces/README.md)), die Einrichtung **Build your project team** ([Einstellungsfenster](../window-and-navigation/settings-window.md)), Sheet-, Rückfrage- und Suchmechanik des Fensters ([Einstellungsfenster](../window-and-navigation/settings-window.md)), Prozessrollen und Skill-Pakete ([Skills](../skills/README.md)), Richtlinien der Selbstständigkeit ([Automation](../automation/README.md)), Kontoauswahl und Failover zur Laufzeit ([Provider-Modell](../provider-model.md)).
+- Nicht enthalten: Verbinden und Anmelden von AI-Konten (Bereich **Connected services**, siehe [Workspaces](../workspaces/README.md)), die Einrichtung **Build your project team** ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md#einrichtung-als-sheet)), Sheet-, Rückfrage- und Suchmechanik der Einstellungen ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)), Prozessrollen und Skill-Pakete ([Skills](../skills/README.md)), Richtlinien der Selbstständigkeit ([Automation](../automation/README.md)), Kontoauswahl und Failover zur Laufzeit ([Provider-Modell](../provider-model.md)).
 
 ## Verantwortungsgrenzen
 
@@ -177,12 +177,12 @@ Backups werden immer auf erlaubte, eindeutige und vom Primär-Agenten verschiede
 | `Agents`                   | `Configure the AI agents in this workspace, their positions, responsibilities, and skills.` |
 | `Technical AI setup`       | `Positions, providers, models, and automatic backup routes`                                 |
 
-| Parameter der Route `/settings` | Wirkung                                                      |
-| ------------------------------- | ------------------------------------------------------------ |
-| `workspace`, `section=team`     | wählt den Bereich (Auswertung durch das Einstellungsfenster) |
-| `agent`                         | öffnet zusätzlich das Sheet dieses Agenten, siehe oben       |
+| Parameter der Route `/settings` | Wirkung                                                         |
+| ------------------------------- | --------------------------------------------------------------- |
+| `workspace`, `section=team`     | wählt den Bereich (Auswertung durch die Einstellungsoberfläche) |
+| `agent`                         | öffnet zusätzlich das Sheet dieses Agenten, siehe oben          |
 
-**Open AI team** im Laufpanel des Hauptfensters sendet `settings.open` mit `section: 'team'` und, falls vorhanden, dem aktiven Workspace.
+**Open AI team** im Laufpanel des Hauptfensters navigiert nach `/main/settings` mit `section=team` und, falls vorhanden, `workspace=<aktive ID>`.
 
 ## Rückfragen
 
@@ -237,5 +237,5 @@ Backups werden immer auf erlaubte, eindeutige und vom Primär-Agenten verschiede
 - [Skills-Einstellungen](../skills/README.md)
 - [Automation](../automation/README.md)
 - [Workspaces](../workspaces/README.md)
-- [Einstellungsfenster](../window-and-navigation/settings-window.md)
+- [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [Provider-Modell](../provider-model.md)

@@ -12,7 +12,7 @@ Die Befehlspalette findet Work Items, Pull Requests und Actions-Läufe und start
 
 ## Voraussetzungen
 
-- Die Befehlspalette gehört zum Hauptfenster. Im Einstellungsfenster gibt es sie nicht.
+- Die Befehlspalette gehört zum Hauptfenster und steht auch in den Einstellungen zur Verfügung. Im Menüleisten-Menü gibt es sie nicht.
 - Ergebnisse stammen aus den Daten, die Symphony bereits geladen hat. Was noch lädt, erscheint, sobald es da ist, auch während die Palette offen ist.
 
 ## Öffnen und schließen
@@ -73,10 +73,10 @@ Die Fußzeile nennt `↑↓ to move · ↵ to open`. Mit der Maus wählt das Üb
 | `Sync now`                        | Ohne Suchtext und bei passender Eingabe (etwa `sync`, `refresh`, `github`)                                     | Lädt die Pull Requests und die GitHub-Actions-Läufe neu. Der Stand erscheint in der Statusleiste.            |
 | `Run workflow…`                   | Solange mindestens ein Workflow von Hand gestartet werden kann                                                 | Öffnet **Actions**; dort startet **Run on GitHub** oder **Run locally** den Workflow mit seiner Bestätigung. |
 | `Run <Workflow> on GitHub`        | Bei passender Eingabe für jeden aktiven Workflow, der von Hand gestartet werden kann, höchstens drei           | Öffnet **Actions**; gestartet wird der Workflow erst dort nach der Bestätigung von Revision und Eingaben.    |
-| `Settings…` mit ⌘, / Ctrl+,       | Ohne Suchtext und bei passender Eingabe, auch für die Bereiche der Einstellungen (etwa `skills`, `appearance`) | Öffnet das Einstellungsfenster.                                                                              |
+| `Settings…` mit ⌘, / Ctrl+,       | Ohne Suchtext und bei passender Eingabe, auch für die Bereiche der Einstellungen (etwa `skills`, `appearance`) | Öffnet die Einstellungen.                                                                                    |
 | `Go to <Ziel>`                    | Für jedes Ziel, das die Seitenleiste gerade zeigt, in ihrer Reihenfolge                                        | Wechselt zu diesem Bildschirm.                                                                               |
 | `Play <Spiel>`                    | Nur bei passender Eingabe und nur, wenn **Arcade** eingeschaltet ist                                           | Öffnet den Titelbildschirm des Spiels.                                                                       |
-| `Open <Skill> in Settings`        | Bei passender Eingabe für installierte Skills, höchstens drei                                                  | Öffnet das Einstellungsfenster bei **Skills**.                                                               |
+| `Open <Skill> in Settings`        | Bei passender Eingabe für installierte Skills, höchstens drei                                                  | Öffnet die Einstellungen bei **Skills**.                                                                     |
 
 Ohne Suchtext stehen die Befehle in dieser Reihenfolge: das Aufheben eines aktiven Filters, `New work item…`, `Sync now`, `Run workflow…`, `Settings…`, dann `Go to …` für jedes Ziel der Seitenleiste.
 

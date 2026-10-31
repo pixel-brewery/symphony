@@ -4,7 +4,8 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { openSettingsWindow } from './openSettingsWindow';
+import { closeSettings } from './closeSettings';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -38,8 +39,7 @@ test('keeps a Claude sign-in owned by its workspace account', async () => {
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
     await expect(page.getByTestId('navigation-settings')).toBeVisible();
-    const settings = await openSettingsWindow(app, page);
-    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    const settings = await openSettings(page);
     await settings.getByTestId('workspace-navigation-item-personal').click();
     // The Claude account is connected once under Connected services …
     await settings.getByTestId('workspace-settings-section-services').click();
@@ -89,7 +89,7 @@ test('keeps a Claude sign-in owned by its workspace account', async () => {
       .locator('[test-id^="configured-account-claude-"]');
     await expect(claudeRow).toHaveCount(1);
     await claudeRow.locator('[test-id^="remove-account-"]').click();
-    // Removing an account is confirmed in an alert sheet of the Settings window.
+    // Removing an account is confirmed in an alert sheet of Settings.
     const removal = settings.locator(
       '[test-id^="settings-alert-remove-ai-account-"]:not([test-id$="-confirm"]):not([test-id$="-cancel"])',
     );
@@ -180,6 +180,7 @@ test('keeps a Claude sign-in owned by its workspace account', async () => {
     await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
     await expect(agentGroup.locator('[test-id^="workspace-agent-"]')).toHaveCount(3);
 
+    await closeSettings(page);
     await page.getByTestId('navigation-orbit').click();
     await expect(page.getByTestId('orbit-view')).toBeVisible();
     await expect(page.getByTestId('workspace-ai-banner')).toHaveCount(0);

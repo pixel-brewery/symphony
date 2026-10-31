@@ -4,7 +4,8 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { openSettingsWindow } from './openSettingsWindow';
+import { closeSettings } from './closeSettings';
+import { openSettings } from './openSettings';
 
 // #endregion
 
@@ -109,7 +110,7 @@ test('keeps exhausted GitHub Actions usage in Settings and out of navigation', a
       path: resolve(outputDirectory, 'github-actions-usage-navigation.png'),
       fullPage: true,
     });
-    const settings = await openSettingsWindow(app, page);
+    const settings = await openSettings(page);
     await settings.getByTestId('workspace-navigation-item-personal').click();
     // A GitHub connection that only carries a repository is managed with that repository under
     // Repositories, not as a separate connected service.
@@ -122,6 +123,9 @@ test('keeps exhausted GitHub Actions usage in Settings and out of navigation', a
       path: resolve(outputDirectory, 'github-actions-usage-settings.png'),
       fullPage: true,
     });
+    await settings.keyboard.press('Escape');
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await closeSettings(page);
     await expect(page.getByTestId('navigation-actions')).toBeVisible();
 
     expect(rendererErrors).toEqual([]);

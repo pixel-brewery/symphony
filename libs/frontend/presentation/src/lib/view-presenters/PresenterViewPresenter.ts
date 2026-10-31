@@ -11,9 +11,9 @@ import {
   Clock,
   Command,
   NavigationRegistry,
+  WindowSidebar,
   type INavigationItem,
 } from '@symphony/frontend-core';
-import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { filter } from 'rxjs';
 import {
@@ -26,6 +26,7 @@ import { buildRailRuns, type IRailRun } from '@symphony/frontend-feature-executi
 import { CommandPalette } from '@symphony/frontend-search';
 import { DesktopUpdateStore } from '@symphony/frontend-update';
 import { PRESENTATION_CONTEXT } from '../ports/PresentationContextToken';
+import { LastScreenMemory } from '../routing/LastScreenMemory';
 
 // #endregion
 
@@ -70,9 +71,10 @@ export class PresenterViewPresenter {
   private readonly _store = inject(PRESENTATION_CONTEXT);
   private readonly _navigation = inject(NavigationRegistry);
   private readonly _drawerService = inject(DrawerService);
-  private readonly _desktop = inject(DESKTOP_CLIENT);
   private readonly _palette = inject(CommandPalette);
   private readonly _clock = inject(Clock);
+  private readonly _sidebar = inject(WindowSidebar);
+  private readonly _lastScreen = inject(LastScreenMemory);
   private readonly _routeState = signal(this._router.url);
   private readonly _history = signal<{ readonly ids: readonly number[]; readonly index: number }>({
     ids: [],
@@ -187,8 +189,16 @@ export class PresenterViewPresenter {
     );
   });
 
-  /** Whether toolbar back navigation is available. @public @readonly */
-  public readonly canGoBack = computed(() => this._history().index > 0);
+  /**
+   * Whether toolbar back navigation is available. A screen with its own sidebar navigation, such
+   * as Settings, can always be left this way, even when it was the first screen shown.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly canGoBack = computed(
+    () => this._history().index > 0 || this._sidebar.isReplaced(),
+  );
 
   /** Whether toolbar forward navigation is available. @public @readonly */
   public readonly canGoForward = computed(() => {
@@ -385,10 +395,10 @@ export class PresenterViewPresenter {
   private readonly _toggleSidebarCommand: Command<void> = new Command(() =>
     this.setSidebarCollapsed(!this.isSidebarCollapsed()),
   );
-  private readonly _goBackCommand: Command<void> = new Command(
-    () => this._location.back(),
-    this.canGoBack,
-  );
+  private readonly _goBackCommand: Command<void> = new Command(() => {
+    if (this._history().index > 0) this._location.back();
+    else void this._router.navigateByUrl(this._lastScreen.read() ?? '/main/home');
+  }, this.canGoBack);
   private readonly _goForwardCommand: Command<void> = new Command(
     () => this._location.forward(),
     this.canGoForward,
@@ -400,7 +410,7 @@ export class PresenterViewPresenter {
     void this._store.selectWorkspaceScope(workspaceId);
   });
   private readonly _openSettingsCommand: Command<void> = new Command(
-    () => void this._desktop.request('settings.open', {}),
+    () => void this._router.navigateByUrl('/main/settings'),
   );
   private readonly _openPaletteCommand: Command<void> = new Command(() => this._palette.open());
   private readonly _openRailRunCommand: Command<IRailRun> = new Command(
@@ -469,6 +479,7 @@ export class PresenterViewPresenter {
       )
       .subscribe((event) => {
         this._routeState.set(event.urlAfterRedirects);
+        this._lastScreen.remember(event.urlAfterRedirects);
         this.recordHistory(event.id);
       });
   }

@@ -22,7 +22,13 @@
     />
   </div>
 
-  @if (presenter.activeWorkspace(); as workspace) {
+  @if (navigationOverride(); as navigation) {
+  <!-- A screen with its own navigation, such as Settings, replaces the destinations while it is
+       open; the toolbar's back navigation leads out of it again. -->
+  <div class="flex min-h-0 flex-1 flex-col" test-id="window-sidebar-override">
+    <ng-container [ngTemplateOutlet]="navigation" />
+  </div>
+  } @else { @if (presenter.activeWorkspace(); as workspace) {
   <div class="flex-none px-[10px] pb-[10px]">
     <div
       part="workspace-switcher"
@@ -100,7 +106,7 @@
   <nav
     aria-label="Main"
     test-id="presenter-navigation"
-    class="flex min-h-0 flex-none flex-col gap-px overflow-y-auto px-[10px]"
+    class="flex min-h-0 flex-initial flex-col gap-px overflow-y-auto overscroll-contain px-[10px]"
   >
     @for (group of presenter.navigationGroups(); track group.key) { @if (group.label) {
     <mosaik-text
@@ -166,4 +172,5 @@
       (click)="presenter.openSettingsCommand.execute()"
     />
   </div>
+  }
 </aside>

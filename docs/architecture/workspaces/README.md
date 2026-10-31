@@ -4,7 +4,7 @@
 
 ## Ziel und Garantien
 
-Das Einstellungsfenster verwaltet Workspaces über einen globalen Bereich `workspaces` (Verzeichnis, Anlegen, Import) und fünf workspace-gebundene Bereiche, die verschiedene Features beitragen: `services`, `repositories`, `delivery`, `local-ci` und `administration`. Der sechste Workspace-Bereich `team` gehört dem [AI-Team](../ai-team/README.md). Das funktionale Verhalten beschreibt das Produkthandbuch unter [Workspaces](../../project/workspaces/README.md).
+Die Einstellungen verwalten Workspaces über einen globalen Bereich `workspaces` (Verzeichnis, Anlegen, Import) und fünf workspace-gebundene Bereiche, die verschiedene Features beitragen: `services`, `repositories`, `delivery`, `local-ci` und `administration`. Der sechste Workspace-Bereich `team` gehört dem [AI-Team](../ai-team/README.md). Das funktionale Verhalten beschreibt das Produkthandbuch unter [Workspaces](../../project/workspaces/README.md).
 
 Garantien:
 
@@ -18,19 +18,19 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Abschnittsregistrierung, Workspace-Verzeichnis, Workspace-Sheet, Export, Import und Löschen, Administration, die Workspace-Seite der lokalen GitHub Actions sowie die Vertiefungen [Connected services](connected-services.md) und [Repositories und Auslieferungsziele](repositories-and-destinations.md).
-- Nicht enthalten: der Fensterrahmen mit Seitenleiste, Suche, Sheets, Alert-Sheets, Sofortspeichern und fensterübergreifendem Abgleich ([Einstellungsfenster](../window-and-navigation/settings-window.md)); der Bereich `team` ([AI-Team](../ai-team/README.md)); das Speicherbild und die virtuellen Maschinen dieses Mac ([System](../system/README.md)); die Laufzeit lokaler CI ([Managed Local CI](../managed-local-ci.md)); die Teams-Feedback-Aufnahme im Hintergrund ([Teams-Feedback-Intake](../teams-feedback-intake.md)); Isolation und Ausführungsgrenzen eines Workspace ([Workspace-Modell](../workspace-model.md)); Auslieferungsnachweise im Orbit ([Production orbit](../production-orbit.md)).
+- Nicht enthalten: die gemeinsame Mechanik der Einstellungen mit Seitenleiste, Suche, Sheets, Alert-Sheets, Sofortspeichern und Abgleich zwischen Renderer-Fenstern ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)); der Bereich `team` ([AI-Team](../ai-team/README.md)); das Speicherbild und die virtuellen Maschinen dieses Mac ([System](../system/README.md)); die Laufzeit lokaler CI ([Managed Local CI](../managed-local-ci.md)); die Teams-Feedback-Aufnahme im Hintergrund ([Teams-Feedback-Intake](../teams-feedback-intake.md)); Isolation und Ausführungsgrenzen eines Workspace ([Workspace-Modell](../workspace-model.md)); Auslieferungsnachweise im Orbit ([Production orbit](../production-orbit.md)).
 
 ## Verantwortungsgrenzen
 
 | Verantwortung                                                  | Kanonischer Eigentümer  | Öffentlicher Vertrag                                                                                                                        | Verbraucher                            |
 | -------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | Bereichskatalog, Slots, Editor-Registry, Routen-Initialisierer | Setting-Paket           | `withSettingsViews`, `withSettingsEditor`, `withSettingsRouteInitializer`, `SettingsViewSlot`, `SettingsEditorService.open`                 | alle hier beschriebenen Features       |
-| Verzeichnis, Workspace-Sheet, Administration, Transfer         | Workspace-Feature       | Bereiche `workspaces`, `services` (Rahmen), `administration`; Editor `workspace`; `WorkspaceStore`                                          | Einstellungsfenster                    |
+| Verzeichnis, Workspace-Sheet, Administration, Transfer         | Workspace-Feature       | Bereiche `workspaces`, `services` (Rahmen), `administration`; Editor `workspace`; `WorkspaceStore`                                          | Einstellungen                          |
 | Boards, Azure DevOps, nicht verwendete GitHub-Konten           | Work-Feature            | Slot-Beiträge in `services`; Editoren `github-projects`, `azure-devops`                                                                     | Bereich `services`                     |
 | KI-Konten                                                      | AI-Feature              | Slot-Beiträge in `services`; Editor `ai-account`                                                                                            | Bereich `services`, AI-Team            |
 | Feedback aus Microsoft Teams                                   | Feedback-Feature        | Slot-Beitrag in `services`; Editor `teams-feedback`                                                                                         | Bereich `services`                     |
-| Repositories, Auslieferungsziele                               | Delivery-Feature        | Bereiche `repositories`, `delivery`; Editoren `repository`, `delivery-target`; Initialisierer `delivery-settings-route`                     | Einstellungsfenster, Orbit             |
-| Lokale GitHub Actions je Workspace                             | CI-Feature              | Bereich `local-ci`                                                                                                                          | Einstellungsfenster                    |
+| Repositories, Auslieferungsziele                               | Delivery-Feature        | Bereiche `repositories`, `delivery`; Editoren `repository`, `delivery-target`; Initialisierer `delivery-settings-route`                     | Einstellungen, Orbit                   |
+| Lokale GitHub Actions je Workspace                             | CI-Feature              | Bereich `local-ci`                                                                                                                          | Einstellungen                          |
 | Validierung und Persistenz                                     | Orchestrator            | `settings.save` mit dem Anwendungseinstellungsschema; `workspaces.export`, `workspaces.import`, `workspaces.delete`, `repositories.prepare` | alle Features                          |
 | Lieferumfang und Team eines Workspace angleichen               | Team-Feature (optional) | `synchronizeDeliveryContext(settings, workspaceId)`                                                                                         | Repository-, Board- und Konto-Editoren |
 
@@ -50,11 +50,11 @@ Ein Feature registriert einen Bereich mit `withSettingsViews({ id, slot, views }
 | `local-ci`       | `workspace` | **Local GitHub Actions**  | Run eligible workflows of this workspace in a disposable Linux virtual machine on this Mac. | 50      | CI         |
 | `administration` | `workspace` | **Administration**        | Workspace storage, export, and deletion.                                                    | 60      | Workspace  |
 
-Die gültigen Workspace-Bereichskennungen sind die geschlossene Liste `team`, `services`, `repositories`, `delivery`, `local-ci`, `administration`. Ein Zielort ist `?workspace=<id>&section=<Bereich>`; die Auswertung beschreibt das [Einstellungsfenster](../window-and-navigation/settings-window.md#auswahl-und-zielort). Auslöser im Hauptfenster: die Mitteilungsquelle der KI-Konten (`section=services`), die Speicherdruck-Quelle (`section=administration`, sonst `section=system`), das Orbit (`section=delivery` mit Editor-Schlüsseln) und das Einrichtungs-Sheet (`section=services`).
+Die gültigen Workspace-Bereichskennungen sind die geschlossene Liste `team`, `services`, `repositories`, `delivery`, `local-ci`, `administration`. Ein Zielort ist `?workspace=<id>&section=<Bereich>`; die Auswertung beschreibt [Einstellungen im Hauptfenster](../window-and-navigation/settings.md#auswahl-und-zielort). Auslöser im Hauptfenster: die Mitteilungsquelle der KI-Konten (`section=services`), die Speicherdruck-Quelle (`section=administration`, sonst `section=system`), das Orbit (`section=delivery` mit Editor-Schlüsseln) und das Einrichtungs-Sheet (`section=services`).
 
 ### Sucheinträge
 
-Die folgenden Einträge sind statisch und werden daher einmal je Workspace indiziert. Keiner trägt `loadControl`; jeder Treffer öffnet seinen Bereich. Dazu kommen datenabhängige Einträge je Objekt mit dessen `workspaceId` und einem Editor-Schlüssel in `parameters`, der zusätzlich das Sheet öffnet: Workspaces (`workspaces`, `{ edit }`), Repositories (`repositories`, `{ repository }`), Lieferziele (`delivery`, `{ repository, target }`), AI-Konten, Boards, GitHub- und Azure-DevOps-Konten sowie Teams-Intakes (`services`, `{ account }`, `{ board }`, `{ intake }`). Beiträge, Werte und Routen beschreibt das [Einstellungsfenster](../window-and-navigation/settings-window.md#suche).
+Die folgenden Einträge sind statisch und werden daher einmal je Workspace indiziert. Keiner trägt `loadControl`; jeder Treffer öffnet seinen Bereich. Dazu kommen datenabhängige Einträge je Objekt mit dessen `workspaceId` und einem Editor-Schlüssel in `parameters`, der zusätzlich das Sheet öffnet: Workspaces (`workspaces`, `{ edit }`), Repositories (`repositories`, `{ repository }`), Lieferziele (`delivery`, `{ repository, target }`), AI-Konten, Boards, GitHub- und Azure-DevOps-Konten sowie Teams-Intakes (`services`, `{ account }`, `{ board }`, `{ intake }`). Beiträge, Werte und Routen beschreibt [Einstellungen im Hauptfenster](../window-and-navigation/settings.md#suche).
 
 | Bereich          | Einträge (`label`)                                                                                                                                                                     |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -216,7 +216,7 @@ Der Bereich `local-ci` teilt sich den Presenter mit der Karte **Virtual machines
 
 ## Verifikation und Akzeptanzkriterien
 
-- Das Einstellungsfenster öffnet auf `workspaces`; **Open** zeigt die sechs Workspace-Bereiche als eingerückte Zeilen, wählt `team` und schreibt `?workspace=<id>&section=team`.
+- Die Einstellungen öffnen auf `workspaces`; **Open** zeigt die sechs Workspace-Bereiche als eingerückte Zeilen, wählt `team` und schreibt `?workspace=<id>&section=team`.
 - Die Zusammenfassung zählt Agenten, KI-Konten und Repositories je Workspace, nennt nicht vorbereitete Repositories erst mit bekanntem Laufzeitstatus und zeigt `—` ohne Messung; deaktivierte Workspaces stehen getrennt.
 - Ein Workspace-Sheet mit leerem Namen, leerem Kürzel oder ungültiger Farbe schreibt nichts und bleibt offen; ein Speicherfehler behält den Entwurf; Umbenennen ändert weder Speichergrenze noch lokale CI, Bündelung oder aktiven Umfang.
 - Import und Löschen schreiben erst nach Bestätigung; ein abgebrochener Import ändert nichts.
@@ -229,6 +229,6 @@ Der Bereich `local-ci` teilt sich den Presenter mit der Karte **Virtual machines
 - [Workspaces (Produkthandbuch)](../../project/workspaces/README.md)
 - [Connected services](connected-services.md)
 - [Repositories und Auslieferungsziele](repositories-and-destinations.md)
-- [Einstellungsfenster](../window-and-navigation/settings-window.md)
+- [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [Workspace-Modell](../workspace-model.md)
 - [Managed Local CI](../managed-local-ci.md)

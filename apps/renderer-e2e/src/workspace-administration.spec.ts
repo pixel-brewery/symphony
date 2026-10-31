@@ -4,7 +4,7 @@ import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -76,8 +76,7 @@ for (const enabled of [false, true]) {
       const readGrouping = async () => (await readWorkspace())?.automaticDeliveryGroupingEnabled;
 
       // act
-      const settings = await openSettingsWindow(app, page);
-      settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+      const settings = await openSettings(page);
       await settings.getByTestId(`workspace-navigation-item-${workspaceId}`).click();
       await settings.getByTestId('workspace-settings-section-administration').click();
       const grouping = settings.getByTestId(`workspace-automatic-delivery-grouping-${workspaceId}`);

@@ -37,15 +37,15 @@ Garantien:
 
 Alle Auslöser außerhalb des Boards navigieren zu `/main/board?create=true`, weil eine Feature-Bibliothek keine andere importiert und die Absicht so von jedem Ort und Prozess formulierbar ist:
 
-| Auslöser                                                           | Weg                                                                                                                                                                        |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **New work item** im Board                                         | `createTaskCommand()` → `NewWorkItemSheet.open({})`                                                                                                                        |
-| **+** im Spaltenkopf                                               | `createTaskCommand(column)` → `open({ columnId, stageId? })`                                                                                                               |
-| ⌘N / Ctrl+N im Hauptfenster                                        | Tastenbehandlung der Shell schließt die Befehlspalette und navigiert                                                                                                       |
-| ⌘N / Ctrl+N im Einstellungsfenster, Menü **File › New Work Item…** | Anwendungsmenü in Electron Main zeigt das Hauptfenster und sendet `/main/board?create=true` ([Anwendungsmenü](../window-and-navigation/settings-window.md#anwendungsmenü)) |
-| Befehlspalette `New work item…`                                    | Ergebnis mit Aktion `navigate` ([Befehlspalette](../command-palette/README.md))                                                                                            |
-| Overview **New work item**                                         | Navigation aus dem Home-Feature                                                                                                                                            |
-| Menüleistenpanel **New work item…** (⌘N im Panel)                  | `window.show { route: 'new-work-item' }`; Main zeigt das Hauptfenster und sendet `/main/board?create=true` ([Menüleistenpanel](../notifications-and-tray/README.md))       |
+| Auslöser                                                                   | Weg                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **New work item** im Board                                                 | `createTaskCommand()` → `NewWorkItemSheet.open({})`                                                                                                                                                                    |
+| **+** im Spaltenkopf                                                       | `createTaskCommand(column)` → `open({ columnId, stageId? })`                                                                                                                                                           |
+| ⌘N / Ctrl+N im Hauptfenster                                                | Tastenbehandlung der Shell schließt die Befehlspalette und navigiert                                                                                                                                                   |
+| Menü **File › New Work Item…** (`CmdOrCtrl+N`), auch aus den Einstellungen | Anwendungsmenü in Electron Main zeigt das Hauptfenster und sendet `/main/board?create=true` ([Anwendungsmenü](../window-and-navigation/README.md#anwendungsmenü)); aus den Einstellungen verlässt die Navigation diese |
+| Befehlspalette `New work item…`                                            | Ergebnis mit Aktion `navigate` ([Befehlspalette](../command-palette/README.md))                                                                                                                                        |
+| Overview **New work item**                                                 | Navigation aus dem Home-Feature                                                                                                                                                                                        |
+| Menüleistenpanel **New work item…** (⌘N im Panel)                          | `window.show { route: 'new-work-item' }`; Main zeigt das Hauptfenster und sendet `/main/board?create=true` ([Menüleistenpanel](../notifications-and-tray/README.md))                                                   |
 
 `watchCreateIntent` beobachtet die Abfrageparameter der Board-Route. Bei `create=true` entfernt es den Parameter sofort mit `replaceUrl` (die Absicht ist einmalig; Neuladen, Lesezeichen und **Back** öffnen das Sheet nicht erneut) und meldet die Absicht. Der Board-Presenter merkt sie sich (`_createIntent`) und wertet sie erst aus, sobald die Einstellungen geladen sind (`settings()` gesetzt), damit `canCreateWorkItem` während der Hydratisierung nicht fälschlich falsch ist. `canCreateWorkItem` ist wahr, wenn es ein Erstellungs-Board gibt oder genau ein Workspace gewählt ist und noch kein Board hat; dann öffnet der Presenter das Sheet ohne Spaltenvorgabe. Sonst meldet er eine Warnung (`NotificationService.showWarning`) mit dem Titel `Select one board to create a work item` und dem Grund in dieser Reihenfolge:
 
@@ -95,7 +95,7 @@ Die Mutation (`toMutation()` ohne bestehendes Work Item) enthält Workspace, Que
 
 Erstellungsagenten sind aktive Profile des Erstellungs-Workspace, die in der Teamzuweisung der Rolle `work-item-creation` primär oder als Ersatz stehen; ohne Wahl entscheidet das Team. Die Anfrage `work-items.draft` trägt eine Operations-Id, Workspace, Quelle, Repository, Prompt, optional Agent, vorhandenen Titel und Beschreibung sowie die Projektfelder. `Cancel generation` ruft `work-items.draft.cancel` mit dieser Id auf; ein abgebrochener Entwurf meldet keinen Fehler. Das Übernehmen ersetzt Titel, Beschreibung, Projektfelder, Labels und Zuweisungen und setzt danach die gewählte Spalte erneut.
 
-`Open Skills` schließt das Sheet und navigiert nach `/main/settings?section=skills`, was das Einstellungsfenster öffnet. Spracheingabe in den Prompt steht zur Verfügung, wenn die Desktop-Spracherkennung vorhanden ist; sie wird beim Schließen abgebrochen.
+`Open Skills` schließt das Sheet und navigiert nach `/main/settings?section=skills`, also in die Einstellungen des Hauptfensters bei **Skills**. Spracheingabe in den Prompt steht zur Verfügung, wenn die Desktop-Spracherkennung vorhanden ist; sie wird beim Schließen abgebrochen.
 
 ## Anlegen
 
@@ -155,5 +155,5 @@ Erstellungsagenten sind aktive Profile des Erstellungs-Workspace, die in der Tea
 - [Board](README.md)
 - [Work-Item-Bildschirm](work-item.md)
 - [Befehlspalette](../command-palette/README.md)
-- [Einstellungsfenster](../window-and-navigation/settings-window.md)
+- [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [Mitteilungszentrale und Menüleistenpanel](../notifications-and-tray/README.md)

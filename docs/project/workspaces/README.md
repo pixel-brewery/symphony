@@ -1,6 +1,6 @@
 # Workspaces
 
-Ein Workspace ist die feste Grenze für ein Unternehmen oder ein Projekt. Er besitzt seine eigenen KI-Konten, Boards, Repositories, Auslieferungsziele, Ausführungen und seinen Speicher; nichts davon teilt er mit einem anderen Workspace. Workspaces verwaltest du im [Einstellungsfenster](../window-and-navigation/settings-window.md): Es öffnet sich auf der Liste **Workspaces**, und jeder Workspace hat dort seine eigenen Bereiche.
+Ein Workspace ist die feste Grenze für ein Unternehmen oder ein Projekt. Er besitzt seine eigenen KI-Konten, Boards, Repositories, Auslieferungsziele, Ausführungen und seinen Speicher; nichts davon teilt er mit einem anderen Workspace. Workspaces verwaltest du in den [Einstellungen](../window-and-navigation/settings.md): Sie öffnen sich auf der Liste **Workspaces**, und jeder Workspace hat dort seine eigenen Bereiche.
 
 ## Was das Feature bietet
 
@@ -11,7 +11,7 @@ Ein Workspace ist die feste Grenze für ein Unternehmen oder ein Projekt. Er bes
 
 ## Die Liste „Workspaces“
 
-Das Einstellungsfenster öffnet sich auf **Workspaces**. Die Gruppe **Workspaces** trägt rechts **Import workspace** und **Add workspace**. Jede Zeile zeigt das Kürzel des Workspace als Kachel, seinen Namen und eine Zusammenfassung, etwa:
+Die Einstellungen öffnen sich auf **Workspaces**. Die Gruppe **Workspaces** trägt rechts **Import workspace** und **Add workspace**. Jede Zeile zeigt das Kürzel des Workspace als Kachel, seinen Namen und eine Zusammenfassung, etwa:
 
 `2 agents · 1 AI account · 3 repositories, 1 not prepared locally · 4.2 GB of 20 GB`
 
@@ -82,7 +82,7 @@ Exportieren und Löschen beschreibt [Administration](administration.md).
 | **Local GitHub Actions**  | lokale Läufe einschalten, Gastabbild und Einrichtungsskripte je Repository                   | [Local GitHub Actions](local-github-actions.md)   |
 | **Administration**        | Speicher und Grenze, automatische Bündelung, Bearbeiten, Fokus, Export und Löschen           | [Administration](administration.md)               |
 
-Die Werkzeugleiste nennt den Bereich mit dem Namen des Workspace davor, etwa `Personal · Ticket sources, source control, and feedback intake.`. Einstellungen in den Bereichen gelten sofort; Bearbeiten und Anlegen öffnen Sheets, Entfernen fragt in einem Alert-Sheet nach. Beides beschreibt [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md#ändern-und-bestätigen).
+Die Werkzeugleiste nennt den Bereich mit dem Namen des Workspace davor, etwa `Personal · Ticket sources, source control, and feedback intake.`. Einstellungen in den Bereichen gelten sofort; Bearbeiten und Anlegen öffnen Sheets, Entfernen fragt in einem Alert-Sheet nach. Beides beschreibt [Einstellungen](../window-and-navigation/settings.md#ändern-und-bestätigen).
 
 ### Wege in einen Bereich
 
@@ -100,7 +100,7 @@ Die Suche findet die Einstellungen dieser Bereiche je Workspace, etwa **Boards**
 
 ## Verwandte Features
 
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md)
+- [Einstellungen](../window-and-navigation/settings.md)
 - [AI-Team](../ai-team/README.md)
 - [Mitteilungszentrale und Menüleistenpanel](../notifications-and-tray/README.md)
 - [System](../system/README.md)

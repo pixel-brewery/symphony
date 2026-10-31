@@ -1,9 +1,3 @@
-// The inspector is a pane of the screen, divided from the content by a hairline (artboard
-// `WorkItem`: a 300px aside with a 1px highlight border on its left).
-[part~='work-item-inspector'] {
-  border-left: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
-}
-
 // Framed groups of the artboard - the stepper, the checks table, the criteria and the activity -
 // are plain surfaces with a hairline frame; lists inside them divide their rows the same way.
 [part~='framed'] {

@@ -34,8 +34,6 @@ export type { ISettingsEditorRoute } from './routing/ISettingsEditorRoute';
 export { withSettingsSearch } from './provider/withSettingsSearch';
 export type { ISettingsSearchContribution } from './search/ISettingsSearchContribution';
 export { settingsRoutes } from './routing/SettingsRoutes';
-export { settingsWindowRoutes } from './routing/SettingsWindowRoutes';
-export { openSettingsWindowGuard } from './routing/openSettingsWindowGuard';
 export { SettingsGroupComponent } from './components/SettingsGroupComponent';
 export { SettingsRowComponent } from './components/SettingsRowComponent';
 export { SettingsConditionalComponent } from './components/SettingsConditionalComponent';

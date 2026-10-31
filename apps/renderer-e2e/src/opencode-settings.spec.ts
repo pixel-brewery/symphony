@@ -4,7 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron, type ElectronApplication } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 
 // #endregion
 
@@ -41,8 +41,7 @@ test('adds and projects a workspace-owned OpenCode account', async () => {
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
     await expect(page.getByTestId('navigation-settings')).toBeVisible();
-    const settings = await openSettingsWindow(app, page);
-    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    const settings = await openSettings(page);
     await settings.getByTestId('workspace-navigation-item-personal').click();
     await settings.getByTestId('workspace-settings-section-services').click();
     await expect(settings.getByTestId('workspace-card-personal')).toBeVisible();
@@ -101,8 +100,7 @@ test('adds and projects a workspace-owned OpenCode account', async () => {
 });
 
 async function mainWindow(app: ElectronApplication) {
-  const isMainWindow = (page: { url(): string }): boolean =>
-    !page.url().includes('#/menu-bar') && !page.url().includes('#/settings');
+  const isMainWindow = (page: { url(): string }): boolean => !page.url().includes('#/menu-bar');
   const existing = app.windows().find(isMainWindow);
   return existing ?? (await app.waitForEvent('window', { predicate: isMainWindow }));
 }

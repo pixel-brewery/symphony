@@ -139,7 +139,7 @@ Das Orbit sendet `target` als konfigurierte Id, `new` für ein nicht konfigurier
 - Entfernen eines Repositories verlangt eine positive Bestätigung und lässt Ziele anderer Projekte bestehen.
 - Ein Ziel mit leerem Namen, ohne Versionseingang bei gewähltem Workflow oder als Duplikat derselben Art und desselben Namens im Projekt ist nicht speicherbar.
 - Nur aktive, manuell startbare Workflows des bearbeiteten Repositories sind wählbar; ein Workflowwechsel leert die Eingangsnamen.
-- **Configure destination** im Orbit öffnet das Einstellungsfenster beim Projekt mit dem Ziel-Sheet und Orbitvorschau; **Cancel** schreibt nichts; dieselbe Anforderung öffnet das Sheet erneut.
+- **Configure destination** im Orbit öffnet die Einstellungen beim Projekt mit dem Ziel-Sheet und Orbitvorschau; **Cancel** schreibt nichts; dieselbe Anforderung öffnet das Sheet erneut.
 - Ein Repository außerhalb des angeforderten Workspace öffnet kein Ziel-Sheet.
 
 ## Verwandte Dokumentation

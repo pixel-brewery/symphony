@@ -73,8 +73,7 @@ test('collapses Backlog, Qualified and Done by default and keeps every toggle ac
   const second = await launch();
   try {
     const page = await second.firstWindow();
-    await expect(page.getByTestId('home-view')).toBeVisible();
-    await page.getByTestId('navigation-board').click();
+    // The restarted window reopens the Board, the screen it showed last.
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
 

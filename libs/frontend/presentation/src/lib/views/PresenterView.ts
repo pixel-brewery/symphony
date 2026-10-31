@@ -8,11 +8,12 @@ import {
   ButtonComponent,
   IconNameDirective,
   SearchBoxComponent,
+  SplitComponent,
   TextComponent,
   TooltipDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { WindowToolbar } from '@symphony/frontend-core';
+import { PaneSizeDirective, WindowToolbar } from '@symphony/frontend-core';
 import { CommandPalette } from '@symphony/frontend-search';
 import { CommandPaletteView } from '@symphony/frontend-search/views';
 import { PRESENTATION_CONTEXT } from '../ports/PresentationContextToken';
@@ -39,8 +40,10 @@ import { WindowStatusBarView } from './WindowStatusBarView';
     IconNameDirective,
     CommandPaletteView,
     NgTemplateOutlet,
+    PaneSizeDirective,
     RouterOutlet,
     SearchBoxComponent,
+    SplitComponent,
     TextComponent,
     TooltipDirective,
     TypographyDirective,

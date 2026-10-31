@@ -19,7 +19,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Ergebnisvertrag, Beitrag der Features über ihre Suchanbieter, Bewertung von Treffern, Gruppierung und Begrenzung, Navigationsbefehle aus der Seitenleistenregistrierung, Kontextfilter, Tastatur- und Zeigerbedienung, Fokusführung, Leer- und Trefferlos-Zustand.
-- Nicht enthalten: das Kürzel ⌘K/Ctrl+K und das Suchfeld der Werkzeugleiste (Fensterrahmen), der Erstellungsdialog für Work Items, die Bestätigung eines Workflow-Starts (Actions), das Einstellungsfenster.
+- Nicht enthalten: das Kürzel ⌘K/Ctrl+K und das Suchfeld der Werkzeugleiste (Fensterrahmen), der Erstellungsdialog für Work Items, die Bestätigung eines Workflow-Starts (Actions), die Einstellungen selbst.
 
 ## Verantwortungsgrenzen
 
@@ -104,7 +104,7 @@ Innerhalb einer Gruppe stabil absteigend nach `rank`; leere Gruppen entfallen. J
 
 1. **Kontextfilter**, nur wenn die beim Öffnen aktive Route einem `contextualPaths`-Eintrag eines Anbieters entspricht und ein `SearchManager` existiert. Mit Eingabe: `Filter <Ziel> by “<Eingabe>”` mit höchstem Rang, Ausführung `SearchManager.search(Eingabe)`. Ohne Eingabe und mit gesetztem `q`: `Clear the <Ziel> filter` mit `Filtered by “<q>”`, Ausführung `SearchManager.search('')`. `<Ziel>` ist die Bezeichnung des Seitenleistenziels mit genau dieser Route.
 2. **Feature-Anbieter** (siehe nächste Tabelle).
-3. **Seitenleiste**: `Settings…` (Kürzel `,`, Route `/main/settings`, die das Einstellungsfenster öffnet; zusätzlich gefunden über die Bereichsnamen) und `Go to <Bezeichnung>` je sichtbarem Ziel der Region `desktop-main` in deren Reihenfolge.
+3. **Seitenleiste**: `Settings…` (Kürzel `,`, Route `/main/settings`, also die Einstellungen im Hauptfenster; zusätzlich gefunden über die Bereichsnamen) und `Go to <Bezeichnung>` je sichtbarem Ziel der Region `desktop-main` in deren Reihenfolge.
 
 ### Beiträge der Features
 

@@ -9,7 +9,7 @@ Die Mitteilungszentrale zeigt im Hauptfenster, was an Einrichtung und System Auf
 Garantien:
 
 - Jedes Problem stammt aus dem Feature, das den zugrunde liegenden Zustand besitzt. Die Mitteilungsbibliothek kennt keine Features; Features tragen Quellen über einen Multi-Provider bei.
-- Eine Behebung ruft den bestehenden Befehl des Features mit dessen bestehender Bestätigung auf oder öffnet den Ort in den Einstellungen (`settings.open` mit `workspace`/`section`). Keine Behebung umgeht eine Bestätigung.
+- Eine Behebung ruft den bestehenden Befehl des Features mit dessen bestehender Bestätigung auf oder öffnet den Ort in den Einstellungen des Hauptfensters (`settings.open` mit `workspace`/`section`; Main sendet das Ziel `/main/settings?…` zurück). Keine Behebung umgeht eine Bestätigung.
 - Ein Problem bleibt sichtbar, solange der Zustand besteht; „gelesen“ entfernt nur die Markierung.
 - Der Toast-Verlauf liegt nur im Speicher des jeweiligen Fensters, gilt nur für den laufenden Tag (höchstens 50 Einträge) und wird nicht persistiert.
 - Quellen laden ihren Zustand still (Fehler erzeugen keinen Toast); eine fehlschlagende Quelle behält ihre letzten Einträge.
@@ -87,7 +87,7 @@ Das Popover ist ein CDK-Overlay (`cdkConnectedOverlay`) am Ursprung der Glocke: 
 ## Offene Integrationspunkte
 
 - `INBOX_SUMMARY` wird noch von keinem Feature bereitgestellt; bis dahin entfällt die Zeile **Inbox** im Panel.
-- Der Toast-Verlauf ist fensterlokal; Hinweise des Einstellungsfensters erscheinen nicht in der Zentrale des Hauptfensters.
+- Der Toast-Verlauf ist fensterlokal. Weil die Einstellungen im Hauptfenster liegen, erscheinen ihre Hinweise (etwa `Settings saved.`) im Verlauf der Zentrale; Hinweise des Menüleisten-Panels erscheinen dort nicht.
 
 ## Implementierungskarte
 
@@ -99,4 +99,4 @@ Das Popover ist ein CDK-Overlay (`cdkConnectedOverlay`) am Ursprung der Glocke: 
 ## Verifikation
 
 - Unit-Tests neben jeder Produktionsdatei (Zentrale, Verlauf, Pipes, Glocken-Presenter, jede Quelle, Panel-Presenter).
-- E2E: `apps/renderer-e2e/src/notification-centre.spec.ts` (Glocke, Popover-Lage, Probleme, Toast-Verlauf, gelesen/aufräumen, Escape, URL-Öffnung, Behebung) und `apps/renderer-e2e/src/menu-bar.spec.ts` (Panel-Bereiche, Erscheinungsbild hell/dunkel, Segmentumschaltung, Größe, `Notifications` öffnet die Zentrale, `Settings…` öffnet das Einstellungsfenster).
+- E2E: `apps/renderer-e2e/src/notification-centre.spec.ts` (Glocke, Popover-Lage, Probleme, Toast-Verlauf, gelesen/aufräumen, Escape, URL-Öffnung, Behebung) und `apps/renderer-e2e/src/menu-bar.spec.ts` (Panel-Bereiche, Erscheinungsbild hell/dunkel, Segmentumschaltung, Größe, `Notifications` öffnet die Zentrale, `Settings…` öffnet die Einstellungen im Hauptfenster).

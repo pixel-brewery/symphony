@@ -1,6 +1,6 @@
 # System: dieser Mac
 
-Der Bereich **System** im [Einstellungsfenster](../window-and-navigation/settings-window.md) beschreibt den Mac, auf dem Symphony läuft. Was hier steht, gilt für alle Workspaces zugleich: wie viel Speicher Symphony belegen darf, welche Programme bereitstehen, wie die virtuellen Maschinen für Local GitHub Actions ausgestattet sind, welche Versionen Symphony anbietet und ob der Mac während laufender Arbeit wach bleibt. Die Werkzeugleiste beschreibt den Bereich mit `This Mac: tools, storage, virtual machines, updates and sleep.`
+Der Bereich **System** in den [Einstellungen](../window-and-navigation/settings.md) beschreibt den Mac, auf dem Symphony läuft. Was hier steht, gilt für alle Workspaces zugleich: wie viel Speicher Symphony belegen darf, welche Programme bereitstehen, wie die virtuellen Maschinen für Local GitHub Actions ausgestattet sind, welche Versionen Symphony anbietet und ob der Mac während laufender Arbeit wach bleibt. Die Werkzeugleiste beschreibt den Bereich mit `This Mac: tools, storage, virtual machines, updates and sleep.`
 
 ## Aufbau
 
@@ -14,7 +14,7 @@ Der Bereich zeigt untereinander:
 | **Updates**          | installierte Version, Zustand der Updateprüfung, **Check for updates** und **Release channel**           |
 | **Sleep**            | **Keep this Mac awake while tasks run** mit dem aktuellen Zustand                                        |
 
-Jede Einstellung gilt sofort; Zahlen gelten, sobald du das Feld verlässt oder Enter drückst (siehe [Ändern und bestätigen](../window-and-navigation/settings-window.md#ändern-und-bestätigen)).
+Jede Einstellung gilt sofort; Zahlen gelten, sobald du das Feld verlässt oder Enter drückst (siehe [Ändern und bestätigen](../window-and-navigation/settings.md#ändern-und-bestätigen)).
 
 ## Storage
 
@@ -120,7 +120,7 @@ Escape antwortet wie die zweite Schaltfläche; es wird nichts geändert.
 
 ## Verwandte Features
 
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md)
+- [Einstellungen](../window-and-navigation/settings.md)
 - [Mobile access](mobile-access.md) und [Appearance](appearance.md)
 - [Entwicklerwerkzeuge](../developer-tools/README.md)
 - [Symphony aktualisieren](../application-updates/README.md)

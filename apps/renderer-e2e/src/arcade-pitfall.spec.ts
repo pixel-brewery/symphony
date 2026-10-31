@@ -86,10 +86,10 @@ test('selects Pitfall, navigates its menu and plays across the full area in both
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => rendererErrors.push(error.message));
-    await enableArcade(app, page);
+    await enableArcade(page);
 
     // act
-    await selectArcadeTheme(app, page, 'light');
+    await selectArcadeTheme(page, 'light');
     await page.getByTestId('navigation-arcade').click();
 
     // assert
@@ -284,7 +284,7 @@ test('selects Pitfall, navigates its menu and plays across the full area in both
     await expect(page.getByTestId('pitfall-resume')).toHaveCount(0);
 
     // act
-    await selectArcadeTheme(app, page, 'dark');
+    await selectArcadeTheme(page, 'dark');
     await page.getByTestId('navigation-arcade').click();
     await expect(page.getByTestId('arcade-view')).toBeVisible();
     await page.screenshot({
@@ -327,8 +327,8 @@ test('finishes a real expedition and keeps it in the Arcade leaderboard after re
   try {
     let page = await prepareMainWindow(app);
     page.on('pageerror', (error) => rendererErrors.push(error.message));
-    await enableArcade(app, page);
-    await selectArcadeTheme(app, page, 'light');
+    await enableArcade(page);
+    await selectArcadeTheme(page, 'light');
     await openPitfall(page);
     await startExpedition(page);
     const screen = page.getByTestId('arcade-screen');
@@ -405,7 +405,7 @@ test('finishes a real expedition and keeps it in the Arcade leaderboard after re
       animations: 'disabled',
     });
     await page.getByTestId('arcade-leaderboard-close').click();
-    await selectArcadeTheme(app, page, 'dark');
+    await selectArcadeTheme(page, 'dark');
     await page.getByTestId('navigation-arcade').click();
     await page.getByTestId('arcade-open-leaderboard').click();
     await expect(page.getByTestId('leaderboard-pitfall-result')).toHaveCount(1);

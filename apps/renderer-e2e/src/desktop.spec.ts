@@ -13,9 +13,10 @@ import { resolve } from 'node:path';
 import { expect, test, _electron as electron, type Page } from '@playwright/test';
 import { desktopChannels, type UpdateState } from '@symphony/ipc-contracts-desktop';
 import { type IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { closeSettingsWindow } from './closeSettingsWindow';
+import { closeSettings } from './closeSettings';
 import { expandBoardColumn } from './expandBoardColumn';
-import { openSettingsWindow } from './openSettingsWindow';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -75,7 +76,8 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
             .width ?? 0,
       }));
       expect(widths.page).toBeCloseTo(widths.route, 0);
-      // The 1040 px window minus the 240 px sidebar leaves 800 px for the routed screen.
+      // The 1040 px window minus the 240 px sidebar and its 1 px divider leaves 799 px for the
+      // routed screen.
       expect(widths.page).toBeGreaterThanOrEqual(799);
     };
     const dismissNotifications = async (target: Page = page): Promise<void> => {
@@ -136,8 +138,9 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(page).toHaveURL(/\/main\/home/);
     await expect(page.getByTestId('window-title-text')).toHaveJSProperty('text', 'Overview');
 
-    // Window chrome: a 240px source-list sidebar, a 52px unified toolbar and a 28px status bar
-    // along the whole bottom edge, the routed screen between them.
+    // Window chrome: a 240px source-list sidebar beside the window split's 1px divider, a 52px
+    // unified toolbar and a 28px status bar along the whole bottom edge, the routed screen
+    // between them.
     const chrome = await page.evaluate(() => {
       const rect = (selector: string) => {
         const box = document.querySelector(selector)?.getBoundingClientRect();
@@ -160,7 +163,9 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     expect(chrome.theme).toBe('soho');
     expect(chrome.themeMode).toBe('light');
     expect(chrome.nativeVibrancy).toBe('true');
-    expect(chrome.sidebar?.width).toBe(240);
+    // The drawn 240px sidebar is 239px of source list and the 1px split divider; the toolbar
+    // starts right after the divider.
+    expect(chrome.sidebar?.width).toBe(239);
     expect(chrome.toolbar?.height).toBe(52);
     expect(chrome.toolbar?.x).toBe(240);
     expect(chrome.statusBar?.height).toBe(28);
@@ -168,6 +173,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     expect(chrome.statusBar?.width).toBe(chrome.window.width);
     expect((chrome.statusBar?.y ?? 0) + (chrome.statusBar?.height ?? 0)).toBe(chrome.window.height);
     expect(chrome.route?.y).toBe((chrome.toolbar?.y ?? 0) + (chrome.toolbar?.height ?? 0));
+    expect((chrome.route?.y ?? 0) + (chrome.route?.height ?? 0)).toBeLessThanOrEqual(
+      chrome.statusBar?.y ?? 0,
+    );
+    expect((chrome.settings?.y ?? 0) + (chrome.settings?.height ?? 0)).toBeLessThanOrEqual(
+      chrome.statusBar?.y ?? 0,
+    );
     expect(chrome.overview?.height).toBe(32);
     expect(chrome.settings?.y ?? 0).toBeGreaterThan(chrome.overview?.y ?? 0);
     expect(chrome.horizontalOverflow).toBe(false);
@@ -369,21 +380,18 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(page.getByTestId('board-column-backlog')).toBeVisible();
     await expect(filterMenu).toHaveJSProperty('isDropDownOpen', false);
 
-    // `Manage workspaces…` in the workspace menu opens Settings, which is its own window; the
-    // main window keeps its route.
+    // `Manage workspaces…` in the workspace menu opens Settings inside the main window, whose
+    // navigation replaces the sidebar's destinations.
     await page.getByTestId('global-workspace-filter').click();
     await page.getByTestId('workspace-menu-settings').click();
-    const isSettingsWindow = (candidate: Page): boolean => candidate.url().includes('#/settings');
-    await expect.poll(() => app.windows().some(isSettingsWindow)).toBe(true);
-    await expect(page).not.toHaveURL(/\/main\/settings/u);
-    await expect(page.getByTestId('settings-view')).toHaveCount(0);
-    const settings = await openSettingsWindow(app, page);
-    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    await expectSettingsInMainWindow(app, page);
+    await expect(page.getByTestId('global-workspace-filter')).toHaveCount(0);
+    const settings = await openSettings(page);
     await expect(settings.getByTestId('workspace-directory')).toBeVisible();
     await settings.getByTestId('global-settings-section-workspaces').click();
     await settings.getByTestId('open-workspace-settings-personal').click();
     await expect(settings.getByTestId('workspace-card-personal')).toBeVisible();
-    await expect(settings.getByTestId('settings-title')).toContainText('AI team');
+    await expect(settings.getByTestId('window-title')).toContainText('AI team');
     await settings.getByTestId('workspace-settings-section-services').click();
     await expect(settings.getByTestId('workspace-card-personal')).toContainText('Azure DevOps');
     await expect(settings.getByTestId('add-repository-personal')).toHaveCount(0);
@@ -427,7 +435,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(settings.getByTestId('import-workspace')).toBeVisible();
     await setDialogPaths([exportedWorkspacePath]);
     await settings.getByTestId('import-workspace').click();
-    // Importing is confirmed in an alert sheet of the Settings window.
+    // Importing is confirmed in an alert sheet of Settings.
     const importConfirmation = settings.getByTestId('settings-alert-workspace-import');
     await expect(importConfirmation).toContainText('Import workspace configuration?');
     await settings.getByTestId('settings-alert-workspace-import-confirm').click();
@@ -453,8 +461,8 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       )?.id;
     });
     expect(temporaryWorkspaceId).toBeTruthy();
-    // The new workspace joins the directory and the Settings sidebar, and the main window's
-    // workspace menu switches to it; there is no `All workspaces` scope.
+    // The new workspace joins the directory and the Settings sidebar, and, once Settings is
+    // left, the main window's workspace menu switches to it; there is no `All workspaces` scope.
     await settings.getByTestId('global-settings-section-workspaces').click();
     await expect(
       settings.getByTestId(`workspace-directory-item-${temporaryWorkspaceId!}`),
@@ -463,6 +471,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       `workspace-navigation-item-${temporaryWorkspaceId!}`,
     );
     await expect(temporaryWorkspaceNavigation).toBeVisible();
+    await closeSettings(page);
     await page.getByTestId('global-workspace-filter').click();
     await expect(page.getByTestId('global-workspace-filter-all')).toHaveCount(0);
     await page.getByTestId(`global-workspace-filter-${temporaryWorkspaceId!}`).click();
@@ -482,6 +491,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await page.getByTestId('global-workspace-filter').click();
     await page.getByTestId('global-workspace-filter-personal').click();
     await expect(page.getByTestId('workspace-switcher-name')).toHaveJSProperty('text', 'Personal');
+    await openSettings(page);
     await settings.getByTestId(`open-workspace-settings-${temporaryWorkspaceId!}`).click();
     await settings.getByTestId('workspace-settings-section-administration').click();
     const temporaryStorageDirectory = await expect
@@ -505,7 +515,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     mkdirSync(orphanedExecution, { recursive: true });
     writeFileSync(resolve(orphanedExecution, 'workspace-owned.txt'), 'delete me');
     await settings.getByTestId(`delete-workspace-${temporaryWorkspaceId!}`).click();
-    // Deleting is confirmed in an alert sheet of the Settings window.
+    // Deleting is confirmed in an alert sheet of Settings.
     const deleteConfirmation = settings.getByTestId(
       `settings-alert-delete-workspace-confirmation-${temporaryWorkspaceId!}`,
     );
@@ -901,20 +911,22 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       fullPage: true,
     });
 
-    // The former Projects route leads to the same Settings window instead of a main-window page.
+    // The former Projects route leads to Settings inside the main window instead of a page of
+    // its own.
+    await closeSettings(page);
     await page.evaluate(() => {
       window.location.hash = '/main/projects';
     });
-    await expect(page).not.toHaveURL(/\/main\/settings/u);
-    await expect(page.getByTestId('settings-view')).toHaveCount(0);
-    expect(app.windows().filter(isSettingsWindow)).toHaveLength(1);
+    await expectSettingsInMainWindow(app, page);
+    await closeSettings(page);
 
     // Skills are built-in process roles now, configured from settings instead of a browsable
     // package catalog, so they must no longer own a main navigation entry.
+    await expect(page.getByTestId('navigation-home')).toBeVisible();
     await expect(page.getByTestId('navigation-skills')).toHaveCount(0);
     await page.getByTestId('global-workspace-filter').click();
     await page.getByTestId('workspace-menu-settings').click();
-    expect(app.windows().filter(isSettingsWindow)).toHaveLength(1);
+    await expectSettingsInMainWindow(app, page);
     await settings.getByTestId('global-settings-section-skills').click();
     await expect(settings.getByTestId('builtin-skills')).toBeVisible();
     await expect(settings.getByTestId('builtin-skill-analyze')).toContainText('Analyze');
@@ -956,7 +968,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       path: resolve(outputDirectory, 'skills-management.png'),
       fullPage: true,
     });
-    await closeSettingsWindow(app);
+    await closeSettings(page);
 
     await page.getByTestId('navigation-pull-requests').click();
     await expect(page.getByTestId('pull-requests-view')).toBeVisible();
@@ -1878,12 +1890,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         (entry) => entry.isDirectory() && /^execution-[a-zA-Z0-9._-]+$/u.test(entry.name),
       );
     expect(managedExecutions()).not.toHaveLength(0);
-    // Clearing inactive workspaces is an Automation action of the Settings window, confirmed in
-    // its alert sheet.
+    // Clearing inactive workspaces is an Automation action of Settings, confirmed in its alert
+    // sheet.
     await page.getByTestId('global-workspace-filter').click();
     await page.getByTestId('workspace-menu-settings').click();
-    const cleanupSettings = await openSettingsWindow(app, page);
-    cleanupSettings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    await expectSettingsInMainWindow(app, page);
+    const cleanupSettings = await openSettings(page);
     await cleanupSettings.getByTestId('global-settings-section-automation').click();
     await expect(cleanupSettings.getByTestId('clear-workspaces')).toBeVisible();
     await expect(cleanupSettings.getByTestId('clear-workspaces')).toHaveAttribute(
@@ -1903,7 +1915,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       'Workspaces cleared',
     );
     await expect.poll(managedExecutions).toHaveLength(0);
-    await closeSettingsWindow(app);
+    await closeSettings(page);
     expect(rendererErrors).toEqual([]);
     expect(
       await page.evaluate(async () => {

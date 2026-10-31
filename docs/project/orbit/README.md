@@ -27,7 +27,7 @@ Rechts liegen bei mehreren Repositories die Projektauswahl (**Project**) und dan
 
 - jedes Auslieferungsziel des Projekts, Production-Ziele zuerst, mit seiner Art (`Environment`, `Release channel` oder `Installation`) und gegebenenfalls `Production ·` davor. Die Wahl eines Ziels wählt es im Orbit aus und richtet die Ansicht darauf. Ohne Ziele steht dort **No delivery destinations are configured for this project.**
 - **Refresh evidence**: ruft die Auslieferungsnachweise neu ab; während eines Abrufs gesperrt.
-- **Delivery destinations in Settings**: öffnet das Einstellungsfenster bei den Auslieferungszielen des gezeigten Projekts, ohne ein Ziel zu bearbeiten.
+- **Delivery destinations in Settings**: öffnet die Einstellungen bei den Auslieferungszielen des gezeigten Projekts, ohne ein Ziel zu bearbeiten.
 
 ### Diagramm
 
@@ -92,7 +92,7 @@ Ist dem Ziel ein Auslieferungs-Workflow zugeordnet, kannst du eine genaue Versio
 
 Ein gestarteter Lauf bestätigt keine Auslieferung; erst der Nachweis des Ziels tut das. Ist der Ausgang eines Starts ungewiss, steht dort **The dispatch outcome is unconfirmed. Reconcile before starting again.** mit **Reconcile**, das den Lauf erneut prüft.
 
-**Configure destination** öffnet das Einstellungsfenster mit dem Editor dieses Ziels. Bestehen kein oder mehrere Production-Ziele, zeigt die Auswahl der Mitte stattdessen den Production-Zustand, je Production-Ziel eine Schaltfläche und **Configure production**: Ohne Production-Ziel öffnet es einen vorausgefüllten, noch nicht gespeicherten Entwurf, bei mehreren die Liste der Ziele zur Wahl. Das Einrichten eines Ziels bestätigt nie eine Auslieferung.
+**Configure destination** öffnet die Einstellungen mit dem Editor dieses Ziels. Bestehen kein oder mehrere Production-Ziele, zeigt die Auswahl der Mitte stattdessen den Production-Zustand, je Production-Ziel eine Schaltfläche und **Configure production**: Ohne Production-Ziel öffnet es einen vorausgefüllten, noch nicht gespeicherten Entwurf, bei mehreren die Liste der Ziele zur Wahl. Das Einrichten eines Ziels bestätigt nie eine Auslieferung.
 
 ## Zustände der Mitte
 

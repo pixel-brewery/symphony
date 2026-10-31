@@ -1,6 +1,6 @@
 # Mobile access
 
-Mit **Mobile access** im [Einstellungsfenster](../window-and-navigation/settings-window.md) machst du Symphony für Telefone im selben privaten Netzwerk erreichbar. Nur Telefone, die du koppelst und auf dem Mac bestätigst, erhalten Zugang. Der Mac bleibt dabei der Ort, an dem die Arbeit läuft: Das Telefon zeigt und steuert sie nur. Die Werkzeugleiste beschreibt den Bereich mit `Pair phones on the local network.`
+Mit **Mobile access** in den [Einstellungen](../window-and-navigation/settings.md) machst du Symphony für Telefone im selben privaten Netzwerk erreichbar. Nur Telefone, die du koppelst und auf dem Mac bestätigst, erhalten Zugang. Der Mac bleibt dabei der Ort, an dem die Arbeit läuft: Das Telefon zeigt und steuert sie nur. Die Werkzeugleiste beschreibt den Bereich mit `Pair phones on the local network.`
 
 ## Voraussetzungen
 
@@ -59,5 +59,5 @@ Die Kopplung weist nach, dass das Telefon den QR-Code dieses Mac kannte und du e
 ## Verwandte Features
 
 - [System: dieser Mac](README.md)
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md)
+- [Einstellungen](../window-and-navigation/settings.md)
 - [Mitteilungszentrale und Menüleistenpanel](../notifications-and-tray/README.md)

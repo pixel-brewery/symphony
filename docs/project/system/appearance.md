@@ -1,6 +1,6 @@
 # Appearance
 
-Unter **Appearance** im [Einstellungsfenster](../window-and-navigation/settings-window.md) legst du fest, wie Symphony aussieht und ob die optionale **Arcade** in der Navigation erscheint. Die Werkzeugleiste beschreibt den Bereich mit `Choose how Symphony looks.`
+Unter **Appearance** in den [Einstellungen](../window-and-navigation/settings.md) legst du fest, wie Symphony aussieht und ob die optionale **Arcade** in der Navigation erscheint. Die Werkzeugleiste beschreibt den Bereich mit `Choose how Symphony looks.`
 
 ## Farbschema
 
@@ -12,7 +12,7 @@ Die Gruppe **Color theme** enthält **Theme** mit den Segmenten **Light**, **Dar
 | **Dark**   | Symphony erscheint immer dunkel.                                                                                |
 | **System** | Symphony folgt der Einstellung von macOS und wechselt sofort mit, wenn macOS zwischen hell und dunkel wechselt. |
 
-Die Wahl gilt sofort im Hauptfenster und im Einstellungsfenster, ohne dass etwas neu geladen wird, und bleibt über einen Neustart erhalten. Die nativen Fensterhintergründe und unter Windows und Linux die Farben der Fensterbedienelemente folgen dagegen der Hell-dunkel-Einstellung des Betriebssystems. Schlägt das Speichern fehl, meldet Symphony `Unable to save settings.` und zeigt wieder das bisherige Farbschema. Das Farbschema lässt sich auch direkt in einem Treffer von **Search settings** ändern, etwa nach der Suche `dark`.
+Die Wahl gilt sofort im ganzen Hauptfenster, die geöffneten Einstellungen eingeschlossen, ohne dass etwas neu geladen wird, und bleibt über einen Neustart erhalten. Die nativen Fensterhintergründe und unter Windows und Linux die Farben der Fensterbedienelemente folgen dagegen der Hell-dunkel-Einstellung des Betriebssystems. Schlägt das Speichern fehl, meldet Symphony `Unable to save settings.` und zeigt wieder das bisherige Farbschema. Das Farbschema lässt sich auch direkt in einem Treffer von **Search settings** ändern, etwa nach der Suche `dark`.
 
 ## Arcade einblenden
 
@@ -26,5 +26,5 @@ Die Gruppe **Navigation** enthält **Show Arcade** (`Add all 8 bundled games to 
 ## Verwandte Features
 
 - [System: dieser Mac](README.md)
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md)
+- [Einstellungen](../window-and-navigation/settings.md)
 - [Arcade](../arcade/README.md)

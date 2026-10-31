@@ -21,16 +21,16 @@ Garantien:
 
 ## Verantwortungsgrenzen
 
-| Verantwortung                         | Kanonischer Eigentümer                                                     | Öffentlicher Vertrag                                                                                                                                                                                                                   | Verbraucher                     |
-| ------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| Schrittdefinition                     | UI-Bibliothek (`deliveryFlowSteps`, `deliveryFlowStepOf`)                  | siehe [AI-Team-Einstellungen](../ai-team/README.md#schritte-des-lieferablaufs)                                                                                                                                                         | Schrittprojektion, Rollen-Sheet |
-| Zustand und Operationen               | `SkillStore` im Skills-Feature                                             | `skillCatalog`, `builtinSkills`, `activeSkill`, `skillsBusy`; `refreshSkills`, `customizeBuiltinSkill`, `activateSkill`, `assignSkillToFlow`, `deactivateSkill`, `loadSkill`, `saveSkill`, `importSkill`, `exportSkill`, `deleteSkill` | Presenter, Sheets, Suche        |
-| Workspace-Teams                       | `SkillsContext`                                                            | `workspaceTeams: { workspaceId, workspaceName, team }[]` – das AI-Team jedes eingeschalteten Workspace, je Team einmal                                                                                                                 | `SkillStore`                    |
-| Zuordnungen und Ergänzungen schreiben | `SkillsAssignments`                                                        | `saveAssignments(changes: { teamId, assignments }[])` in einem Schreibvorgang über den einzigen Settings-Schreiber; `customizeBuiltinSkill(role, text)`                                                                                | `SkillStore`                    |
-| Schrittprojektion                     | `projectSkillSteps`                                                        | reine Funktion                                                                                                                                                                                                                         | `SkillsSettingsViewPresenter`   |
-| Werkzeugleiste                        | `SkillsSettingsHeaderActionView`                                           | Slot `SettingsViewSlot.HeaderActions` bei `workspaceId === null` und `sectionId === 'skills'`                                                                                                                                          | Einstellungsfenster             |
-| Paketkatalog, Pakete, Rollen          | Orchestrator (Skills-Feature, `SkillCatalogService`, Dateisystem-Provider) | Anfragen `skills.list`, `skills.builtin.list`, `skills.builtin.customize`, `skills.get`, `skills.save`, `skills.import`, `skills.export`, `skills.delete`                                                                              | `SkillStore`                    |
-| Ordnerauswahl                         | Desktop über den Orchestrierungsclient                                     | `selectPath({ kind: 'directory', title, defaultPath })`                                                                                                                                                                                | Import-Sheet, Paket-Sheet       |
+| Verantwortung                         | Kanonischer Eigentümer                                                     | Öffentlicher Vertrag                                                                                                                                                                                                                   | Verbraucher                      |
+| ------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Schrittdefinition                     | UI-Bibliothek (`deliveryFlowSteps`, `deliveryFlowStepOf`)                  | siehe [AI-Team-Einstellungen](../ai-team/README.md#schritte-des-lieferablaufs)                                                                                                                                                         | Schrittprojektion, Rollen-Sheet  |
+| Zustand und Operationen               | `SkillStore` im Skills-Feature                                             | `skillCatalog`, `builtinSkills`, `activeSkill`, `skillsBusy`; `refreshSkills`, `customizeBuiltinSkill`, `activateSkill`, `assignSkillToFlow`, `deactivateSkill`, `loadSkill`, `saveSkill`, `importSkill`, `exportSkill`, `deleteSkill` | Presenter, Sheets, Suche         |
+| Workspace-Teams                       | `SkillsContext`                                                            | `workspaceTeams: { workspaceId, workspaceName, team }[]` – das AI-Team jedes eingeschalteten Workspace, je Team einmal                                                                                                                 | `SkillStore`                     |
+| Zuordnungen und Ergänzungen schreiben | `SkillsAssignments`                                                        | `saveAssignments(changes: { teamId, assignments }[])` in einem Schreibvorgang über den einzigen Settings-Schreiber; `customizeBuiltinSkill(role, text)`                                                                                | `SkillStore`                     |
+| Schrittprojektion                     | `projectSkillSteps`                                                        | reine Funktion                                                                                                                                                                                                                         | `SkillsSettingsViewPresenter`    |
+| Werkzeugleiste                        | `SkillsSettingsHeaderActionView`                                           | Slot `SettingsViewSlot.HeaderActions` bei `workspaceId === null` und `sectionId === 'skills'`                                                                                                                                          | Werkzeugleiste der Einstellungen |
+| Paketkatalog, Pakete, Rollen          | Orchestrator (Skills-Feature, `SkillCatalogService`, Dateisystem-Provider) | Anfragen `skills.list`, `skills.builtin.list`, `skills.builtin.customize`, `skills.get`, `skills.save`, `skills.import`, `skills.export`, `skills.delete`                                                                              | `SkillStore`                     |
+| Ordnerauswahl                         | Desktop über den Orchestrierungsclient                                     | `selectPath({ kind: 'directory', title, defaultPath })`                                                                                                                                                                                | Import-Sheet, Paket-Sheet        |
 
 ## Verträge
 
@@ -124,11 +124,11 @@ Alle Sheets öffnet `SettingsEditorService` über die registrierten Editoren; es
 
 | Einstieg                             | Verhalten                                                                                                                                                       |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Route `/main/skills` im Hauptfenster | `redirectTo: '/main/settings?section=skills'`; der Guard der früheren Einstellungsroute öffnet das Einstellungsfenster bei `section=skills`                     |
+| Route `/main/skills` im Hauptfenster | `redirectTo: '/main/settings?section=skills'`; die Einstellungen öffnen sich im Hauptfenster bei `section=skills`                                               |
 | `section=skills` in `/settings`      | wählt den globalen Bereich                                                                                                                                      |
 | Kontextsuche                         | passt ein Paket (Name, Anzeigename, Beschreibung, Herkunft) zum Suchtext, ist das Ziel `/main/settings?section=skills`                                          |
 | Befehlspalette                       | höchstens drei Paket-Treffer `Open <Skill> in Settings`, nur mit Eingabe, Ziel `/main/settings?section=skills` ([Befehlspalette](../command-palette/README.md)) |
-| Suche im Einstellungsfenster         | Einträge `Edit instructions`, `Add skills`, `New skill`, `Import skill`                                                                                         |
+| Suche in den Einstellungen           | Einträge `Edit instructions`, `Add skills`, `New skill`, `Import skill`                                                                                         |
 
 Das Hauptfenster hat keinen Navigationsbeitrag `skills`.
 
@@ -171,7 +171,7 @@ Das Hauptfenster hat keinen Navigationsbeitrag `skills`.
 - `Activate` für eine Rolle, die in keinem Workspace-Team besetzt ist, schreibt nichts, lädt nicht neu und warnt `Nobody works on <Schritt>` statt Erfolg zu melden.
 - `Move to trash` verwirft erst nach Bestätigung; abgebrochen bleibt das Paket bestehen.
 - Das Import-Sheet ist ohne gewählten Ordner gesperrt und schließt nur nach erfolgreichem Import.
-- `#/main/skills` im Hauptfenster verlässt die Route und zeigt im Einstellungsfenster den Titel `Skills`; das Hauptfenster hat keinen Eintrag `navigation-skills`.
+- `#/main/skills` im Hauptfenster leitet in die Einstellungen um, deren Werkzeugleiste den Titel `Skills` zeigt; das Hauptfenster hat keinen Eintrag `navigation-skills`.
 
 ## Verwandte Dokumentation
 
@@ -180,5 +180,5 @@ Das Hauptfenster hat keinen Navigationsbeitrag `skills`.
 - [Skill-Auflösung](../skill-resolution.md)
 - [AI-Team-Einstellungen](../ai-team/README.md)
 - [Automation](../automation/README.md)
-- [Einstellungsfenster](../window-and-navigation/settings-window.md)
+- [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [Befehlspalette](../command-palette/README.md)

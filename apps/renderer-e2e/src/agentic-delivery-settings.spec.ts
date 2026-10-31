@@ -3,7 +3,7 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -58,8 +58,7 @@ test('keeps agentic delivery off until a level is chosen and enforces the switch
     const page = await prepareMainWindow(app);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    const settings = await openSettingsWindow(app, page);
-    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    const settings = await openSettings(page);
     await settings.getByTestId('global-settings-section-automation').click();
 
     const group = settings.getByTestId('agentic-delivery-settings-group');

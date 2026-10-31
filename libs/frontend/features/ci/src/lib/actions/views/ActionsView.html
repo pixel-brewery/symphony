@@ -54,17 +54,25 @@
   />
 </ng-template>
 
-<section
+<!-- The workflow source list sits on a neutral-50 pane; the split divider is the hairline to the
+     content and resizes the list. Each pane scrolls on its own. -->
+<mosaik-split
+  part="pane-split"
   test-id="actions-view"
-  class="flex min-h-0 min-w-0 flex-1"
+  class="min-h-0 min-w-0 flex-1"
+  symphonyPaneSize="actions.workflows"
+  [paneSize]="220"
+  [lock]="'start'"
+  [min]="'180px'"
+  [max]="'40%'"
   [attr.aria-busy]="presenter.isHydrating()"
 >
-  <!-- The workflow source list sits on a neutral-50 pane with a hairline to the content. -->
   <nav
+    slot="start"
     part="actions-workflow-pane"
     aria-label="Workflows"
     test-id="actions-workflow-list"
-    class="flex w-[220px] flex-none flex-col gap-[2px] overflow-y-auto px-[10px] py-2"
+    class="flex h-full min-h-0 min-w-0 flex-col gap-[2px] overflow-y-auto overscroll-contain px-[10px] py-2"
   >
     <div class="mb-1 flex min-w-0">
       <mosaik-button
@@ -125,7 +133,11 @@
     } }
   </nav>
 
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto" test-id="actions-content">
+  <div
+    slot="end"
+    class="flex h-full min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain"
+    test-id="actions-content"
+  >
     <div class="flex min-w-0 flex-col gap-2.5 px-3.5 py-3">
       @if (!presenter.isHydrating()) { @if (presenter.remoteData(); as remoteData) { @if
       (remoteData.state !== 'current') {
@@ -208,4 +220,4 @@
       }
     </div>
   </div>
-</section>
+</mosaik-split>

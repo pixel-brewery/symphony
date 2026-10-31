@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import { expandBoardColumn } from './expandBoardColumn';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -117,10 +118,8 @@ test('opens the notification centre upwards from the status bar with problems, t
       await expect(confirmation).toContainText(/Install .+\?/u);
       await confirmation.getByText('Cancel', { exact: true }).click();
     } else {
-      const settingsOpened = app.waitForEvent('window', { timeout: 30_000 });
       await fix.click();
-      const settings = await settingsOpened;
-      await expect.poll(() => settings.url()).toContain('#/settings');
+      await expectSettingsInMainWindow(app, page);
     }
     await expect(centre).toHaveCount(0);
     expect(rendererErrors).toEqual([]);

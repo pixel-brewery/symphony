@@ -20,7 +20,7 @@ describe('desktopResponseSchemas', () => {
     ).toThrow();
   });
 
-  it('acknowledges an opened Settings window without returning window details', () => {
+  it('acknowledges opened Settings without returning window details', () => {
     // arrange
     const response = { completed: true };
 

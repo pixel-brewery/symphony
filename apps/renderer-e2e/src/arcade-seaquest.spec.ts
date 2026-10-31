@@ -18,10 +18,10 @@ test('dives, fires, surfaces empty and hands the rescue to player two with nativ
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(app, page);
+    await enableArcade(page);
     for (const theme of ['light', 'dark'] as const) {
       // act
-      await selectArcadeTheme(app, page, theme);
+      await selectArcadeTheme(page, theme);
       await page.getByTestId('navigation-arcade').click();
       await page.getByTestId('arcade-play-seaquest').click();
       await expect(page.getByTestId('seaquest-view')).toHaveAttribute('data-screen', 'intro');

@@ -100,9 +100,6 @@ const pending = new Map<
   }
 >();
 let mainWindow: BrowserWindow | undefined;
-let settingsWindow: BrowserWindow | undefined;
-/** The Settings window's first renderer load; later navigation waits for it. */
-let settingsWindowLoad: Promise<void> | undefined;
 let menuBarWindow: BrowserWindow | undefined;
 let menuBarTray: Tray | undefined;
 let menuBarStatus: DesktopRequestPayload<'menu-bar.status.set'>['status'] = 'idle';
@@ -150,10 +147,8 @@ const KEEP_AWAKE_REFRESH_INTERVAL_MS = 15_000;
 const ORCHESTRATOR_LOG_MAX_BYTES = 5 * 1024 * 1024;
 const MENU_BAR_WINDOW_WIDTH = 328;
 const MENU_BAR_WINDOW_HEIGHT = 420;
-const SETTINGS_WINDOW_WIDTH = 1000;
-const SETTINGS_WINDOW_HEIGHT = 760;
-const SETTINGS_WINDOW_MIN_WIDTH = 720;
-const SETTINGS_WINDOW_MIN_HEIGHT = 520;
+/** Settings is a route of the main window; `settings.open` adds its location as query parameters. */
+const SETTINGS_NAVIGATION_PATH = '/main/settings' satisfies DesktopNavigationPath;
 // Soho's `background` scheme role in each mode. Native windows paint it before the renderer's
 // first frame, so startup and resizing never flash a colour the theme does not use.
 const SOHO_LIGHT_BACKGROUND_COLOR = '#ffffff';
@@ -162,8 +157,8 @@ const SOHO_DARK_BACKGROUND_COLOR = '#0a0a0a';
 // on the toolbar's background.
 const SOHO_LIGHT_FOREGROUND_COLOR = '#0a0a0a';
 const SOHO_DARK_FOREGROUND_COLOR = '#fafafa';
-// Height of the renderer's unified toolbar and of the sidebar header row beside it, in the main
-// and the Settings window alike.
+// Height of the renderer's unified toolbar and of the sidebar header row beside it in the main
+// window.
 const WINDOW_TOOLBAR_HEIGHT = 52;
 // AppKit's window buttons are 16 px tall, so a 18 px top inset centres them in the 52 px sidebar
 // header row; 20 px matches the sidebar's leading inset.
@@ -310,7 +305,7 @@ function applyMenuBarStatus(status: DesktopRequestPayload<'menu-bar.status.set'>
 }
 
 function rendererWindows(): readonly BrowserWindow[] {
-  return [mainWindow, settingsWindow, menuBarWindow].filter((window): window is BrowserWindow =>
+  return [mainWindow, menuBarWindow].filter((window): window is BrowserWindow =>
     Boolean(window && !window.isDestroyed()),
   );
 }
@@ -767,18 +762,14 @@ async function handleDesktopRequest(
       return coordinateUpdateInstall();
     case 'window.show': {
       const request = desktopRequestSchemas[method].parse(payload);
-      menuBarWindow?.hide();
-      if (request.route === 'settings') await showSettingsWindow();
-      else
-        await showMainWindowAt(
-          request.route === 'current' ? undefined : mainWindowDestination(request.route),
-        );
+      await showMainWindowAt(
+        request.route === 'current' ? undefined : mainWindowDestination(request.route),
+      );
       return { completed: true };
     }
     case 'settings.open': {
       const request = desktopRequestSchemas[method].parse(payload);
-      menuBarWindow?.hide();
-      await showSettingsWindow(settingsNavigationPath(request.parameters));
+      await showMainWindowAt(settingsNavigationPath(request.parameters));
       return { completed: true };
     }
     case 'menu-bar.resize': {
@@ -871,9 +862,8 @@ async function createMenuBarWindow(): Promise<void> {
 }
 
 /**
- * Loads the one renderer bundle into a window, optionally at a hash route such as `/menu-bar` or
- * `/settings`: from the development server when `SYMPHONY_RENDERER_URL` is set, otherwise from the
- * packaged files.
+ * Loads the one renderer bundle into a window, optionally at a hash route such as `/menu-bar`: from
+ * the development server when `SYMPHONY_RENDERER_URL` is set, otherwise from the packaged files.
  */
 async function loadRendererRoute(window: BrowserWindow, hash?: string): Promise<void> {
   const developmentUrl = process.env['SYMPHONY_RENDERER_URL'];
@@ -953,7 +943,7 @@ function windowControlsOverlay(): TitleBarOverlay {
 }
 
 /**
- * Platform chrome of the main and the Settings window. macOS keeps its traffic lights inside the
+ * Platform chrome of the main window. macOS keeps its traffic lights inside the
  * sidebar's header row over a vibrant sidebar material; Windows and Linux keep their native
  * window controls as a Window Controls Overlay at the right of the toolbar, which reserves
  * `env(titlebar-area-*)` for them. Frameless windows never draw a menu bar there.
@@ -986,12 +976,9 @@ function applyNativeThemeToWindows(): void {
   if (menuBarWindow && !menuBarWindow.isDestroyed()) {
     menuBarWindow.setBackgroundColor(themeBackgroundColor());
   }
-  if (process.platform === 'darwin') return;
-  for (const window of [mainWindow, settingsWindow]) {
-    if (!window || window.isDestroyed()) continue;
-    window.setBackgroundColor(themeBackgroundColor());
-    window.setTitleBarOverlay(windowControlsOverlay());
-  }
+  if (process.platform === 'darwin' || !mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.setBackgroundColor(themeBackgroundColor());
+  mainWindow.setTitleBarOverlay(windowControlsOverlay());
 }
 
 function positionMenuBarWindow(): void {
@@ -1091,9 +1078,11 @@ async function showMainWindowAt(destination?: DesktopNavigationPath): Promise<vo
 }
 
 function mainWindowDestination(
-  route: Exclude<DesktopRequestPayload<'window.show'>['route'], 'current' | 'settings'>,
+  route: Exclude<DesktopRequestPayload<'window.show'>['route'], 'current'>,
 ): DesktopNavigationPath {
   switch (route) {
+    case 'settings':
+      return SETTINGS_NAVIGATION_PATH;
     case 'actions':
       return '/main/actions';
     case 'inbox':
@@ -1106,79 +1095,28 @@ function mainWindowDestination(
 }
 
 /**
- * The Settings route for a requested location, or `undefined` when no location was requested or
- * it is not a destination the renderer accepts. The contract restricts keys and values to URL
+ * The main-window Settings route for a requested location: `/main/settings` without parameters,
+ * otherwise `/main/settings?<key>=<value>&…`. The contract restricts keys and values to URL
  * unreserved characters; `encodeURIComponent` keeps `~` literal where `URLSearchParams` would not.
+ * A composed path the navigation allowlist rejects falls back to the Settings route itself, so
+ * Settings still opens.
  */
 function settingsNavigationPath(
   parameters: Readonly<Record<string, string>> | undefined,
-): DesktopNavigationPath | undefined {
+): DesktopNavigationPath {
   const query = Object.entries(parameters ?? {})
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join('&');
-  if (!query) return undefined;
-  const path = `/settings?${query}`;
-  return isDesktopNavigationPath(path) ? path : undefined;
-}
-
-function createSettingsWindow(): BrowserWindow {
-  const window = new BrowserWindow({
-    width: SETTINGS_WINDOW_WIDTH,
-    height: SETTINGS_WINDOW_HEIGHT,
-    show: false,
-    minWidth: SETTINGS_WINDOW_MIN_WIDTH,
-    minHeight: SETTINGS_WINDOW_MIN_HEIGHT,
-    title: 'Settings',
-    icon: resolveApplicationIconPath(),
-    ...applicationWindowChrome(),
-    webPreferences: rendererWebPreferences(),
-  });
-  settingsWindow = window;
-  guardRendererNavigation(window);
-  recoverRendererFileLoads(window);
-  // The renderer document is titled after the application; this window keeps the name of its role.
-  window.on('page-title-updated', (event) => event.preventDefault());
-  window.on('closed', () => {
-    if (settingsWindow !== window) return;
-    settingsWindow = undefined;
-    settingsWindowLoad = undefined;
-  });
-  return window;
-}
-
-/**
- * Opens the single Settings window, or focuses it when it is already open. A requested location
- * becomes the first route of a new window and is sent as navigation to an open one; without a
- * location an open window keeps its current section.
- */
-async function showSettingsWindow(destination?: DesktopNavigationPath): Promise<void> {
-  let window = settingsWindow && !settingsWindow.isDestroyed() ? settingsWindow : undefined;
-  if (window) {
-    await settingsWindowLoad;
-    if (destination && !window.isDestroyed()) {
-      window.webContents.send(desktopChannels.navigate, destination);
-    }
-  } else {
-    window = createSettingsWindow();
-    // A failed first load stays recoverable through `recoverRendererFileLoads`, as in the main
-    // window, so opening Settings still shows the window.
-    settingsWindowLoad = loadRendererRoute(window, destination ?? '/settings').catch(
-      () => undefined,
-    );
-    await settingsWindowLoad;
-  }
-  if (window.isDestroyed() || hidesWindowsForE2E) return;
-  await activateApplication();
-  if (window.isMinimized()) window.restore();
-  window.show();
-  window.focus();
+  if (!query) return SETTINGS_NAVIGATION_PATH;
+  const path = `${SETTINGS_NAVIGATION_PATH}?${query}`;
+  return isDesktopNavigationPath(path) ? path : SETTINGS_NAVIGATION_PATH;
 }
 
 function configureApplicationMenu(): void {
   const settings: MenuItemConstructorOptions = {
     label: 'Settings…',
     accelerator: 'CmdOrCtrl+,',
-    click: () => void showSettingsWindow(),
+    click: () => void showMainWindowAt(SETTINGS_NAVIGATION_PATH),
   };
   const newWorkItem: MenuItemConstructorOptions = {
     label: 'New Work Item…',
@@ -1232,14 +1170,7 @@ function confirmQuit(): void {
 }
 
 function showLifecycleMessageBox(options: MessageBoxOptions): Promise<MessageBoxReturnValue> {
-  // A decision started from the Settings window (such as `Restart to update`) attaches there.
-  const focused = BrowserWindow.getFocusedWindow();
-  const parent =
-    focused && focused === settingsWindow
-      ? focused
-      : mainWindow && !mainWindow.isDestroyed()
-        ? mainWindow
-        : undefined;
+  const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined;
   return parent ? dialog.showMessageBox(parent, options) : dialog.showMessageBox(options);
 }
 
@@ -1302,7 +1233,6 @@ async function coordinateQuit(): Promise<void> {
 
     if (result.response === 0) {
       mainWindow?.hide();
-      settingsWindow?.hide();
       return;
     }
     if (canQuitAndResume && result.response === 1) {
@@ -1458,10 +1388,11 @@ app.whenReady().then(async () => {
     }
   });
   ipcMain.handle(channels.selectPath, async (event, request: unknown) => {
-    // Repository and workspace folders are chosen in the main and the Settings window alike.
-    const owner = [mainWindow, settingsWindow].find(
-      (window) => window && !window.isDestroyed() && event.sender === window.webContents,
-    );
+    // Repository and workspace folders are chosen in the main window, Settings included.
+    const owner =
+      mainWindow && !mainWindow.isDestroyed() && event.sender === mainWindow.webContents
+        ? mainWindow
+        : undefined;
     if (!owner) {
       throw new Error('Path selection did not originate from the app window.');
     }

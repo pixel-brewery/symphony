@@ -44,11 +44,11 @@ test('plays the Pitfall II expedition with native menus, input, pause and a full
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(app, page);
+    await enableArcade(page);
     for (const theme of ['light', 'dark'] as const) {
       // act
       await resize(app, page, 1440, 900);
-      await selectArcadeTheme(app, page, theme);
+      await selectArcadeTheme(page, theme);
       await openGame(page);
       await page.getByTestId('pitfall-ii-instructions').click();
       await expect(page.getByTestId('pitfall-ii-view')).toHaveAttribute(

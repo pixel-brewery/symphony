@@ -1,6 +1,5 @@
 // #region Imports
 
-import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -8,12 +7,13 @@ import {
   effect,
   inject,
 } from '@angular/core';
+import { ViewSlotOutletComponent } from '@pixel-brewery/mosaik-elements-angular';
 import {
-  TextComponent,
-  TypographyDirective,
-  ViewSlotOutletComponent,
-} from '@pixel-brewery/mosaik-elements-angular';
-import { View, VIEW_PRESENTER, WindowToolbar } from '@symphony/frontend-core';
+  View,
+  VIEW_PRESENTER,
+  WindowSidebarDirective,
+  WindowToolbarDirective,
+} from '@symphony/frontend-core';
 import { SettingsHostSession } from '../context/SettingsHostSession';
 import { SettingsSelectionDirective } from '../context/SettingsSelectionDirective';
 import { SettingsViewSlot } from '../constants/SettingsViewSlot';
@@ -26,23 +26,23 @@ import { SettingsSidebarView } from './SettingsSidebarView';
 // #endregion
 
 /**
- * The Settings window's body: the sidebar, a 52px toolbar with the section's name and one-line
- * description, and the selected section's feature-contributed cards or the search results.
+ * Settings inside the main window: it replaces the sidebar's destinations with the Settings
+ * navigation, hands the section's name, description and actions to the window toolbar, and shows
+ * the selected section's feature-contributed cards or the search results.
  *
  * @public
  */
 @Component({
   selector: 'symphony-settings-view',
-  host: { class: 'block' },
+  host: { class: 'flex min-h-0 flex-1 flex-col' },
   imports: [
-    NgTemplateOutlet,
     SettingsSearchView,
     SettingsSelectionDirective,
     SettingsSidebarView,
     SettingsWorkspaceContextDirective,
-    TextComponent,
-    TypographyDirective,
     ViewSlotOutletComponent,
+    WindowSidebarDirective,
+    WindowToolbarDirective,
   ],
   providers: [
     SettingsHostSession,
@@ -58,14 +58,6 @@ export class SettingsView extends View<SettingsViewPresenter> {
   // #region Fields
 
   private readonly _changeDetector = inject(ChangeDetectorRef);
-
-  /**
-   * Contextual actions a section registered through `WindowToolbarDirective`.
-   *
-   * @protected
-   * @readonly
-   */
-  protected readonly toolbar = inject(WindowToolbar);
 
   /**
    * Global feature-card extension point.

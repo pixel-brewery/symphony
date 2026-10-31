@@ -481,7 +481,7 @@ export class SetupViewPresenter extends ViewPresenter {
   public readonly openExpertSettingsCommand = new Command<void>(() => {
     this._sheet?.close();
     const workspace = this.workspaceId();
-    void this._router.navigate(['/settings'], {
+    void this._router.navigate(['/main/settings'], {
       queryParams: workspace ? { workspace, section: 'services' } : { section: 'workspaces' },
     });
   });

@@ -1,31 +1,34 @@
 # Hauptfenster und Navigation
 
-Das Hauptfenster von Symphony ist wie eine macOS-Anwendung aufgebaut: links eine Seitenleiste mit Workspace-Umschalter, Zielen und laufender Arbeit, oben eine einheitliche Werkzeugleiste und unten eine Statusleiste über die volle Fensterbreite. So bleiben das gewählte Ziel, der Stand der GitHub-Synchronisierung und verfügbare Updates sichtbar, ohne dass ein Bildschirm diese Hinweise selbst anzeigen muss. Die Einstellungen öffnen sich in einem [eigenen Fenster](settings-window.md).
+Das Hauptfenster von Symphony ist wie eine macOS-Anwendung aufgebaut: links eine Seitenleiste mit Workspace-Umschalter, Zielen und laufender Arbeit, oben eine einheitliche Werkzeugleiste und unten eine Statusleiste über die volle Fensterbreite. So bleiben das gewählte Ziel, der Stand der GitHub-Synchronisierung und verfügbare Updates sichtbar, ohne dass ein Bildschirm diese Hinweise selbst anzeigen muss. Die [Einstellungen](settings.md) öffnen sich im selben Fenster; solange sie offen sind, zeigt die Seitenleiste ihre Bereiche. Die Breite der Seitenleiste und der Listen kannst du selbst anpassen ([Bereiche anpassen und scrollen](resizable-panes.md)).
 
 ## Was das Feature bietet
 
-- Symphony startet auf **Overview** und führt alle Bereiche in einer Seitenleiste mit 240 px Breite zusammen.
+- Symphony startet auf **Overview** und führt alle Bereiche in einer Seitenleiste zusammen, die 240 px breit beginnt und sich zwischen 200 und 360 px anpassen lässt.
 - Zahlen in der Seitenleiste zeigen, wo etwas auf dich wartet, ohne dass du den Bereich öffnen musst.
 - Das Laufpanel zeigt wahlweise, woran deine Agents arbeiten (**Agents**), oder welche GitHub-Actions-Läufe gerade laufen (**Actions**).
 - Die 52 px hohe Werkzeugleiste bietet **Back** und **Forward**, den Titel des Bildschirms, dessen Aktionen und das Suchfeld für die Befehlspalette.
 - Die 28 px hohe Statusleiste zeigt den GitHub-Synchronisierungsstand, die installierte Version und die Updateschaltfläche.
 - Die Seitenleiste lässt sich ausblenden; die Wahl bleibt nach einem Neustart erhalten.
 - Tastenkürzel und Menüeinträge öffnen die Befehlspalette, das Anlegen eines Work Items und die Einstellungen.
+- Werkzeugleiste, Seitenleiste und Statusleiste bleiben beim Scrollen stehen; jeder Bereich scrollt für sich.
 
 ## Aufbau des Fensters
 
 | Bereich        | Lage                                      | Inhalt                                                                                                |
 | -------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Seitenleiste   | links, 240 px breit                       | **Hide sidebar**, Workspace-Umschalter, Ziele mit Zahlen, Laufpanel, unten fest **Settings**          |
+| Seitenleiste   | links, 240 px breit, anpassbar            | **Hide sidebar**, Workspace-Umschalter, Ziele mit Zahlen, Laufpanel, unten fest **Settings**          |
 | Werkzeugleiste | oben über dem Inhalt, 52 px hoch          | **Back**, **Forward**, Titel und Untertitel, Aktionen des Bildschirms, Suchfeld                       |
 | Inhalt         | zwischen Werkzeugleiste und Statusleiste  | der geöffnete Bildschirm, zum Beispiel Overview oder Board                                            |
 | Statusleiste   | unten über die gesamte Breite, 28 px hoch | GitHub-Synchronisierung links; **Notifications**, `Symphony v<Version>` und Updateschaltfläche rechts |
 
-Die Werkzeugleiste und die Kopfzeile der Seitenleiste dienen zugleich als Titelleiste: Du kannst das Fenster dort verschieben, die Schaltflächen bleiben bedienbar.
+Die Werkzeugleiste und die Kopfzeile der Seitenleiste dienen zugleich als Titelleiste: Du kannst das Fenster dort verschieben, die Schaltflächen bleiben bedienbar. Zwischen Seitenleiste und Inhalt liegt eine feine Linie; ziehst du sie, ändert sich die Breite der Seitenleiste, und Symphony merkt sich die neue Breite ([Bereiche anpassen und scrollen](resizable-panes.md)).
+
+Solange die [Einstellungen](settings.md) offen sind, zeigt die Seitenleiste unter ihrer Kopfzeile nur deren Bereiche; Workspace-Umschalter, Ziele, Laufpanel und **Settings** erscheinen wieder, sobald du die Einstellungen mit **Back** verlässt.
 
 ## Start und frühere Adressen
 
-Symphony öffnet nach dem Start **Overview**. Ein früheres Lesezeichen auf das Dashboard und jede unbekannte Adresse im Hauptfenster führen ebenfalls zu Overview. Verweise auf die frühere Einstellungsseite des Hauptfensters öffnen das [Einstellungsfenster](settings-window.md); das Hauptfenster bleibt dabei auf seinem aktuellen Bildschirm.
+Symphony öffnet nach dem Start den Bildschirm, den du zuletzt offen hattest, etwa **Inbox**, **Board**, **Pull requests** oder einen geöffneten Work Item. Die Einstellungen zählen dabei nicht: Beendest du Symphony in den Einstellungen, öffnet es beim nächsten Start den Bildschirm, von dem du in die Einstellungen gewechselt bist. Geöffnete Blätter wie **New work item** oder die Benachrichtigungen öffnen sich nicht erneut. Beim allerersten Start, oder wenn der gemerkte Bildschirm nicht mehr angeboten wird, öffnet Symphony **Overview**. Ein früheres Lesezeichen auf das Dashboard und jede unbekannte Adresse im Hauptfenster führen ebenfalls zu Overview. Verweise auf die Einstellungsseite, auf **Projects** oder **Skills** öffnen die [Einstellungen](settings.md) im Hauptfenster.
 
 ## Seitenleiste
 
@@ -37,20 +40,20 @@ Die Karte oben in der Seitenleiste zeigt den aktiven Workspace: sein Kürzel als
 2. Das Menü listet alle aktivierten Workspaces mit Namen und Kürzel; der aktive Workspace ist markiert.
 3. Wähle einen Workspace. Alle Bildschirme und das Laufpanel zeigen danach dessen Arbeit. Die Auswahl wird gespeichert und gilt auch nach einem Neustart.
 
-Der letzte Menüeintrag **Manage workspaces…** öffnet das Einstellungsfenster. Solange kein Workspace aktiv ist, zeigt die Seitenleiste keine Karte.
+Der letzte Menüeintrag **Manage workspaces…** öffnet die Einstellungen. Solange kein Workspace aktiv ist, zeigt die Seitenleiste keine Karte.
 
 ### Ziele
 
-| Eintrag           | Gruppe     | Öffnet                                        | Zahl rechts in der Zeile                                                                     |
-| ----------------- | ---------- | --------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Overview**      | –          | die Startseite                                | keine                                                                                        |
-| **Inbox**         | `Delivery` | die Inbox                                     | Entscheidungen, die in der Inbox auf dich warten, als rotes Hinweisabzeichen                 |
-| **Board**         | `Delivery` | das Board                                     | Work Items, die dich brauchen, als ruhige Zahl                                               |
-| **Pull requests** | `Delivery` | die Pull-Request-Liste                        | offene Pull Requests als ruhige Zahl                                                         |
-| **Actions**       | `Delivery` | die GitHub-Actions-Übersicht                  | Workflows, deren letzter abgeschlossener Lauf fehlgeschlagen ist, als rotes Hinweisabzeichen |
-| **Orbit**         | `Delivery` | Orbit                                         | keine                                                                                        |
-| **Arcade**        | `More`     | Arcade                                        | keine; Eintrag und Gruppe erscheinen nur, wenn Arcade in den Einstellungen eingeschaltet ist |
-| **Settings**      | unten fest | das [Einstellungsfenster](settings-window.md) | keine                                                                                        |
+| Eintrag           | Gruppe     | Öffnet                           | Zahl rechts in der Zeile                                                                     |
+| ----------------- | ---------- | -------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Overview**      | –          | die Startseite                   | keine                                                                                        |
+| **Inbox**         | `Delivery` | die Inbox                        | Entscheidungen, die in der Inbox auf dich warten, als rotes Hinweisabzeichen                 |
+| **Board**         | `Delivery` | das Board                        | Work Items, die dich brauchen, als ruhige Zahl                                               |
+| **Pull requests** | `Delivery` | die Pull-Request-Liste           | offene Pull Requests als ruhige Zahl                                                         |
+| **Actions**       | `Delivery` | die GitHub-Actions-Übersicht     | Workflows, deren letzter abgeschlossener Lauf fehlgeschlagen ist, als rotes Hinweisabzeichen |
+| **Orbit**         | `Delivery` | Orbit                            | keine                                                                                        |
+| **Arcade**        | `More`     | Arcade                           | keine; Eintrag und Gruppe erscheinen nur, wenn Arcade in den Einstellungen eingeschaltet ist |
+| **Settings**      | unten fest | die [Einstellungen](settings.md) | keine                                                                                        |
 
 Die Zeile des geöffneten Bereichs ist hervorgehoben. **Skills** ist kein Eintrag der Hauptnavigation mehr; installierte Skill-Pakete werden in den Einstellungen im Bereich **Skills** verwaltet.
 
@@ -67,10 +70,14 @@ Ein Work Item zählt auf **Board**, wenn sein letzter Lauf fehlgeschlagen ist od
 ### Seitenleiste ausblenden
 
 1. Wähle **Hide sidebar** oben rechts in der Seitenleiste.
-2. Die Seitenleiste verschwindet; die Werkzeugleiste zeigt am Anfang **Show sidebar**.
-3. **Show sidebar** blendet sie wieder ein.
+2. Die Seitenleiste und die Linie daneben verschwinden; die Werkzeugleiste zeigt am Anfang **Show sidebar**.
+3. **Show sidebar** blendet sie in der zuletzt gewählten Breite wieder ein.
 
 Symphony merkt sich die Wahl auf diesem Rechner und stellt sie nach einem Neustart wieder her.
+
+### Ziele scrollen
+
+Ist das Fenster so niedrig, dass nicht alle Ziele Platz haben, scrollt die Liste der Ziele für sich. Workspace-Umschalter, Laufpanel und **Settings** bleiben dabei sichtbar.
 
 ## Laufpanel
 
@@ -93,7 +100,7 @@ Jede aktivierte Agent-Zeile des aktiven Workspace zeigt Avatar, Namen, die aktue
 
 Ein Klick auf einen Agent mit laufender oder zuletzt bearbeiteter Ausführung öffnet deren Ausführungsdetails. Unter den Agents stehen Schritte, die auf einen freien Ausführungsplatz warten, mit dem Hinweis `Queued · waiting for a free slot`. **Remove from the queue** zieht einen solchen Schritt zurück, bevor er startet.
 
-Hat der aktive Workspace keinen aktivierten Agent, zeigt das Panel **No agent in this workspace** mit dem Hinweis, ein AI-Konto zu verbinden und unter **Settings › AI team** einen Agent anzulegen. **Open AI team** öffnet das Einstellungsfenster an dieser Stelle.
+Hat der aktive Workspace keinen aktivierten Agent, zeigt das Panel **No agent in this workspace** mit dem Hinweis, ein AI-Konto zu verbinden und unter **Settings › AI team** einen Agent anzulegen. **Open AI team** öffnet die Einstellungen an dieser Stelle.
 
 ### Actions
 
@@ -103,7 +110,7 @@ Läuft nichts und ist kein Lauf fehlgeschlagen, zeigt das Panel **No action is r
 
 ## Werkzeugleiste
 
-- **Back** und **Forward** folgen der Navigationsgeschichte dieses Fensters. Am Anfang beziehungsweise Ende der Geschichte sind sie gesperrt.
+- **Back** und **Forward** folgen der Navigationsgeschichte dieses Fensters. Am Anfang beziehungsweise Ende der Geschichte sind sie gesperrt. In den Einstellungen ist **Back** immer bedienbar und der Weg zurück zu deiner Arbeit; ohne vorherigen Bildschirm führt es zu **Overview**.
 - Der Titel ist der Name des geöffneten Bildschirms. Ein Bildschirm kann einen eigenen Titel, einen einzeiligen Untertitel und eigene Aktionen in die Werkzeugleiste stellen; ohne eigene Angabe erscheint der Name des Seitenleisteneintrags.
 - Das Suchfeld **Search ⌘K** (unter Windows und Linux **Search Ctrl+K**) nimmt selbst keinen Text auf. Ein Klick, der Fokus oder ein getipptes Zeichen öffnet die [Befehlspalette](../command-palette/README.md); ein getipptes Zeichen wird dabei als Suchanfang übernommen.
 
@@ -135,9 +142,9 @@ Rechts stehen die Glocke **Notifications**, die installierte Version als `Sympho
 | ------------ | ------------------------ | --------------------------------------------------------------------------------------------------- |
 | ⌘K           | Ctrl+K                   | Öffnet die [Befehlspalette](../command-palette/README.md) oder schließt sie wieder.                 |
 | ⌘N           | Ctrl+N                   | Holt das Hauptfenster nach vorn, öffnet **Board** und dort den Dialog zum Anlegen eines Work Items. |
-| ⌘,           | Ctrl+,                   | Öffnet das [Einstellungsfenster](settings-window.md).                                               |
+| ⌘,           | Ctrl+,                   | Holt das Hauptfenster nach vorn und öffnet die [Einstellungen](settings.md).                        |
 
-Auf macOS stehen **Settings…** im Programmmenü und **New Work Item…** im Menü **File**. Unter Windows und Linux zeigt Symphony keine Menüleiste; die Kürzel funktionieren trotzdem, weil dieselben Einträge im unsichtbaren Menü **File** liegen. ⌘N und ⌘, wirken auch, wenn gerade das Einstellungsfenster vorn ist.
+Auf macOS stehen **Settings…** im Programmmenü und **New Work Item…** im Menü **File**. Unter Windows und Linux zeigt Symphony keine Menüleiste; die Kürzel funktionieren trotzdem, weil dieselben Einträge im unsichtbaren Menü **File** liegen. ⌘K und ⌘N wirken auch in den Einstellungen; ⌘N verlässt sie dabei und öffnet das Board.
 
 ## Plattformen
 
@@ -161,7 +168,7 @@ Der Aufbau ist auf allen Plattformen gleich; nur die Fensterbedienelemente folge
 
 - Ausgangslage: Der aktive Workspace hat keinen aktivierten Agent.
 - Systemverhalten: Das Laufpanel zeigt **No agent in this workspace**.
-- Verfügbare Aktion: **Open AI team** öffnet die Einstellungen des Workspace.
+- Verfügbare Aktion: **Open AI team** öffnet die Einstellungen des Workspace bei **AI team**.
 
 ### Bildschirme ohne Seitenleisteneintrag
 
@@ -170,5 +177,6 @@ Der Aufbau ist auf allen Plattformen gleich; nur die Fensterbedienelemente folge
 
 ## Verwandte Features
 
-- [Einstellungen im eigenen Fenster](settings-window.md)
+- [Einstellungen](settings.md)
+- [Bereiche anpassen und scrollen](resizable-panes.md)
 - [Symphony aktualisieren](../application-updates/README.md)

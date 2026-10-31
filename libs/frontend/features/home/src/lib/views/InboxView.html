@@ -7,104 +7,114 @@
 
 @let now = presenter.now(); @let filter = presenter.filter(); @let selected =
 presenter.selectedEntry();
-<section test-id="inbox-view" class="flex min-h-0 min-w-0 flex-1">
-  <aside
+<!-- The list and the detail are resizable panes. Only the entries scroll in the list, below the
+     fixed filter, and the detail scrolls on its own. -->
+<mosaik-split
+  part="pane-split"
+  test-id="inbox-view"
+  class="min-h-0 min-w-0 flex-1"
+  symphonyPaneSize="inbox.list"
+  [paneSize]="400"
+  [lock]="'start'"
+  [min]="'300px'"
+  [max]="'60%'"
+>
+  <mosaik-list
+    slot="start"
     part="list-pane"
-    class="flex w-[400px] flex-none flex-col overflow-y-auto"
-    aria-label="Decisions and updates"
+    class="h-full min-h-0"
+    test-id="inbox-list"
+    [selectionMode]="'none'"
+    [attr.aria-label]="'Decisions and updates'"
   >
-    <div class="flex min-w-0 flex-col gap-0.5 px-1.5 py-2">
-      <div class="flex min-w-0 items-center gap-1 px-0.5 pb-[6px]">
-        <div
-          part="filter"
-          role="group"
-          aria-label="Show"
-          class="flex min-w-0 items-center gap-[2px] p-[2px]"
-          test-id="inbox-filter"
-        >
-          <mosaik-button
-            test-id="inbox-filter-all"
-            [label]="'All ' + (presenter.decisionCount() + presenter.updateCount())"
-            [appearance]="filter === 'all' ? 'outline' : 'plain'"
-            [attr.aria-pressed]="filter === 'all'"
-            (click)="presenter.selectFilterCommand.execute('all')"
-          />
-          <mosaik-button
-            test-id="inbox-filter-decisions"
-            [label]="'Decisions ' + presenter.decisionCount()"
-            [appearance]="filter === 'decisions' ? 'outline' : 'plain'"
-            [attr.aria-pressed]="filter === 'decisions'"
-            (click)="presenter.selectFilterCommand.execute('decisions')"
-          />
-          <mosaik-button
-            test-id="inbox-filter-updates"
-            [label]="'Updates ' + presenter.updateCount()"
-            [appearance]="filter === 'updates' ? 'outline' : 'plain'"
-            [attr.aria-pressed]="filter === 'updates'"
-            (click)="presenter.selectFilterCommand.execute('updates')"
-          />
-        </div>
-      </div>
-
-      @if (!presenter.hasSnapshot()) {
-      <div class="flex flex-col gap-1 px-0.5" role="status" aria-label="Loading the Inbox">
-        @for (row of [0, 1, 2, 3]; track row) {
-        <mosaik-skeleton [height]="'64px'" [width]="'100%'" [shimmer]="true" />
-        }
-      </div>
-      } @else if (!presenter.decisions().length && !presenter.updates().length) {
-      <mosaik-empty-state
-        test-id="inbox-empty"
-        [iconName]="'checkmarkCircle'"
-        [header]="filter === 'updates' ? 'No updates' : 'Nothing to decide'"
-        [content]="filter === 'updates' ? 'Agent runs and merged pull requests of the last seven days appear here.' : 'Analysed work items, delivered work and failing workflows that need you appear here.'"
-      />
-      } @else { @if (presenter.decisions().length) {
-      <mosaik-text
-        class="px-1.5 pt-1 pb-[2px]"
-        test-id="inbox-group-decisions"
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [text]="'NEEDS YOUR DECISION'"
-      />
-      <div role="list" aria-label="Needs your decision" class="flex min-w-0 flex-col gap-0.5">
-        @for (entry of presenter.decisions(); track entry.id) {
-        <ng-container
-          [ngTemplateOutlet]="entryRow"
-          [ngTemplateOutletContext]="{ $implicit: entry }"
+    <div slot="header" class="flex min-w-0 items-center gap-1 px-2 pt-2 pb-[6px]">
+      <div
+        part="filter"
+        role="group"
+        aria-label="Show"
+        class="flex min-w-0 items-center gap-[2px] p-[2px]"
+        test-id="inbox-filter"
+      >
+        <mosaik-button
+          test-id="inbox-filter-all"
+          [label]="'All ' + (presenter.decisionCount() + presenter.updateCount())"
+          [appearance]="filter === 'all' ? 'outline' : 'plain'"
+          [attr.aria-pressed]="filter === 'all'"
+          (click)="presenter.selectFilterCommand.execute('all')"
         />
-        }
-      </div>
-      } @if (presenter.updates().length) {
-      <mosaik-text
-        class="px-1.5 pt-[14px] pb-[2px]"
-        test-id="inbox-group-updates"
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [text]="'UPDATES'"
-      />
-      <div role="list" aria-label="Updates" class="flex min-w-0 flex-col gap-0.5">
-        @for (entry of presenter.updates(); track entry.id) {
-        <ng-container
-          [ngTemplateOutlet]="entryRow"
-          [ngTemplateOutletContext]="{ $implicit: entry }"
+        <mosaik-button
+          test-id="inbox-filter-decisions"
+          [label]="'Decisions ' + presenter.decisionCount()"
+          [appearance]="filter === 'decisions' ? 'outline' : 'plain'"
+          [attr.aria-pressed]="filter === 'decisions'"
+          (click)="presenter.selectFilterCommand.execute('decisions')"
         />
-        }
+        <mosaik-button
+          test-id="inbox-filter-updates"
+          [label]="'Updates ' + presenter.updateCount()"
+          [appearance]="filter === 'updates' ? 'outline' : 'plain'"
+          [attr.aria-pressed]="filter === 'updates'"
+          (click)="presenter.selectFilterCommand.execute('updates')"
+        />
       </div>
-      } }
     </div>
-  </aside>
+
+    @if (!presenter.hasSnapshot()) {
+    <div class="flex flex-col gap-1 px-0.5" role="status" aria-label="Loading the Inbox">
+      @for (row of [0, 1, 2, 3]; track row) {
+      <mosaik-skeleton [height]="'64px'" [width]="'100%'" [shimmer]="true" />
+      }
+    </div>
+    } @else if (!presenter.decisions().length && !presenter.updates().length) {
+    <mosaik-empty-state
+      test-id="inbox-empty"
+      [iconName]="'checkmarkCircle'"
+      [header]="filter === 'updates' ? 'No updates' : 'Nothing to decide'"
+      [content]="filter === 'updates' ? 'Agent runs and merged pull requests of the last seven days appear here.' : 'Analysed work items, delivered work and failing workflows that need you appear here.'"
+    />
+    } @else { @if (presenter.decisions().length) {
+    <mosaik-text
+      class="px-1.5 pt-1 pb-[2px]"
+      test-id="inbox-group-decisions"
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [text]="'NEEDS YOUR DECISION'"
+    />
+    <div role="group" aria-label="Needs your decision" class="flex min-w-0 flex-col gap-0.5">
+      @for (entry of presenter.decisions(); track entry.id) {
+      <ng-container
+        [ngTemplateOutlet]="entryRow"
+        [ngTemplateOutletContext]="{ $implicit: entry }"
+      />
+      }
+    </div>
+    } @if (presenter.updates().length) {
+    <mosaik-text
+      class="px-1.5 pt-[14px] pb-[2px]"
+      test-id="inbox-group-updates"
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [text]="'UPDATES'"
+    />
+    <div role="group" aria-label="Updates" class="flex min-w-0 flex-col gap-0.5">
+      @for (entry of presenter.updates(); track entry.id) {
+      <ng-container
+        [ngTemplateOutlet]="entryRow"
+        [ngTemplateOutletContext]="{ $implicit: entry }"
+      />
+      }
+    </div>
+    } }
+  </mosaik-list>
 
   <main
+    slot="end"
     part="detail"
-    class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+    class="flex h-full min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain"
     aria-label="Selected entry"
   >
     @if (selected; as entry) {
-    <div
-      class="flex w-full max-w-[760px] min-w-0 flex-col gap-2.5 px-[36px] py-[28px]"
-      test-id="inbox-detail"
-    >
+    <div class="flex w-full min-w-0 flex-col gap-2.5 px-[36px] py-[28px]" test-id="inbox-detail">
       <div class="flex min-w-0 flex-wrap items-center gap-1">
         @if (entry.group === 'decision') {
         <mosaik-badge
@@ -499,65 +509,65 @@ presenter.selectedEntry();
     </div>
     }
   </main>
-</section>
+</mosaik-split>
 
 <ng-template #entryRow let-entry>
   @let isSelected = entry.id === selected?.id;
-  <div
-    role="listitem"
-    tabindex="0"
-    class="flex min-w-0 gap-1.5 p-1.5"
+  <mosaik-list-item
     [attr.part]="isSelected ? 'entry selected' : 'entry'"
     [attr.test-id]="'inbox-entry-' + entry.id"
     [attr.aria-current]="isSelected ? 'true' : null"
+    [isSelected]="isSelected"
     (click)="presenter.selectEntryCommand.execute(entry.id)"
     (keydown.enter)="presenter.selectEntryCommand.execute(entry.id)"
   >
-    <span class="flex-none pt-[2px]">
-      <mosaik-icon
-        [iconName]="entry | inboxEntryIcon"
-        [size]="'small'"
-        [variant]="entry | inboxEntryVariant"
-      />
-    </span>
-    <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-      <div class="flex min-w-0 items-center gap-1">
-        <mosaik-text
-          class="min-w-0 flex-1"
-          [mosaikTypography]="'subtitle2'"
-          [wrap]="true"
-          [text]="entry | inboxEntryTitle"
+    <div class="flex w-full min-w-0 gap-1.5">
+      <span class="flex-none pt-[2px]">
+        <mosaik-icon
+          [iconName]="entry | inboxEntryIcon"
+          [size]="'small'"
+          [variant]="entry | inboxEntryVariant"
         />
+      </span>
+      <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div class="flex min-w-0 items-center gap-1">
+          <mosaik-text
+            class="min-w-0 flex-1"
+            [mosaikTypography]="'subtitle2'"
+            [wrap]="true"
+            [text]="entry | inboxEntryTitle"
+          />
+          <mosaik-text
+            class="flex-none"
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [text]="entry.at | relativeTime: now"
+          />
+        </div>
         <mosaik-text
-          class="flex-none"
-          [mosaikTypography]="'caption'"
+          [mosaikTypography]="'body2'"
           [variant]="'neutral'"
-          [text]="entry.at | relativeTime: now"
+          [wrap]="true"
+          [text]="entry | inboxEntrySubtitle"
         />
+        @if (entry | inboxAcceptOption; as accept) {
+        <div class="flex min-w-0 items-center gap-[6px] pt-[6px]">
+          <mosaik-button
+            [attr.test-id]="'inbox-accept-' + entry.id"
+            [label]="accept.kind === 'decide' ? accept.label : 'Accept'"
+            [appearance]="'outline'"
+            [disabled]="presenter.busy() || !(accept.kind === 'decide' ? presenter.availability.workflow : presenter.availability.execution)"
+            (click)="$event.stopPropagation(); presenter.acceptCommand.execute(entry)"
+          />
+          <mosaik-button
+            [attr.test-id]="'inbox-request-changes-' + entry.id"
+            [label]="'Request changes'"
+            [appearance]="'plain'"
+            (click)="$event.stopPropagation(); presenter.requestChangesCommand.execute(entry)"
+          />
+        </div>
+        }
       </div>
-      <mosaik-text
-        [mosaikTypography]="'body2'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="entry | inboxEntrySubtitle"
-      />
-      @if (entry | inboxAcceptOption; as accept) {
-      <div class="flex min-w-0 items-center gap-[6px] pt-[6px]">
-        <mosaik-button
-          [attr.test-id]="'inbox-accept-' + entry.id"
-          [label]="accept.kind === 'decide' ? accept.label : 'Accept'"
-          [appearance]="'outline'"
-          [disabled]="presenter.busy() || !(accept.kind === 'decide' ? presenter.availability.workflow : presenter.availability.execution)"
-          (click)="$event.stopPropagation(); presenter.acceptCommand.execute(entry)"
-        />
-        <mosaik-button
-          [attr.test-id]="'inbox-request-changes-' + entry.id"
-          [label]="'Request changes'"
-          [appearance]="'plain'"
-          (click)="$event.stopPropagation(); presenter.requestChangesCommand.execute(entry)"
-        />
-      </div>
-      }
     </div>
-  </div>
+  </mosaik-list-item>
 </ng-template>

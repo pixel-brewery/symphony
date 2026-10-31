@@ -5,11 +5,12 @@ separate sidebar entries: Overview leads the sidebar, Orbit closes its `Delivery
 group after Inbox, Board, Pull requests and Actions
 ([window chrome and navigation](window-and-navigation/README.md)). The product
 behaviour of the Orbit screen is described in [Orbit](../project/orbit/README.md).
-Settings opens as a separate window; project setup has no sidebar entry, and
-`/main/setup` opens the `Build your project team` sheet in that window
-([Settings window](window-and-navigation/settings-window.md#einrichtung-als-sheet)). Dedicated Stages and
+Settings is a route of the main window whose navigation replaces the sidebar destinations
+while it is open; project setup has no sidebar entry, and `/main/setup` opens the
+`Build your project team` sheet in Settings
+([Settings in the main window](window-and-navigation/settings.md#einrichtung-als-sheet)). Dedicated Stages and
 Employees views are retired: `/main/stages` redirects to Board and `/main/team`
-redirects to the former Settings route, which opens the Settings window. Orbit has
+redirects to `/main/settings`. Orbit has
 no duplicate route toolbar, setup control or lower ticket catalogue. The former
 Runs rail is replaced by the sidebar run panel, which belongs to the sidebar on
 every main route. Existing bookmarks, task/process links and Actions drawers remain valid. These surfaces reuse the
@@ -127,7 +128,7 @@ delivery targets become an empty list.
 
 Existing projects configure targets under **Settings → Workspaces → workspace →
 Delivery destinations**. The project selector scopes the list and every editor to
-one repository. Add/Edit open the destination sheet of the separate Settings window and
+one repository. Add/Edit open the destination sheet of Settings and
 save the destination name, evidence kind and Production assignment together. While the
 draft represents Production, an orbit preview at the top of the sheet shows the chosen body
 at the centre and the project's other destinations on two rings; the body picker is a compact
@@ -168,8 +169,8 @@ when anything needs attention, else the first cluster); without work items it sa
 no tickets exist or that none match the filters, with `Clear filters`. Selecting the
 Production body or another destination exposes its project, configuration and evidence
 state; its configuration button opens Settings › Delivery destinations
-(`/main/settings?workspace=…&section=delivery&repository=…&target=…`, which opens the
-Settings window) with the matching editor; unconfigured Production opens a prefilled,
+(`/main/settings?workspace=…&section=delivery&repository=…&target=…`, Settings in the
+main window) with the matching editor; unconfigured Production opens a prefilled,
 unsaved Production draft. With multiple Production destinations, the button opens the
 scoped list so the operator chooses which target to edit. Selecting the single
 Production destination (centre or menu) shows its destination state; the separate

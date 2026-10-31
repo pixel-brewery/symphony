@@ -6,8 +6,8 @@ import { expect, test, type ElectronApplication, type Page } from '@playwright/t
 import { enableArcade } from './enableArcade';
 import { expectArcadePlayfield } from './expectArcadePlayfield';
 import { launchArcadeApp } from './launchArcadeApp';
-import { closeSettingsWindow } from './closeSettingsWindow';
-import { openSettingsWindow } from './openSettingsWindow';
+import { closeSettings } from './closeSettings';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 import { selectArcadeTheme } from './selectArcadeTheme';
 
@@ -128,9 +128,9 @@ test('loads all eight bundled game covers and opens every game in light and dark
     });
     await expect(page).toHaveURL(/#\/main\/home$/);
     await expect(page.getByTestId('home-view')).toBeVisible();
-    await enableArcade(app, page);
-    // God mode is shown and entered in the Arcade card of the Settings window.
-    const settings = await openSettingsWindow(app, page);
+    await enableArcade(page);
+    // God mode is shown and entered in the Arcade card of Settings.
+    const settings = await openSettings(page);
     await settings.getByTestId('global-settings-section-appearance').click();
     const godModeKeys = Array.from({ length: 10 }, (_, index) =>
       settings.getByTestId(`arcade-god-mode-key-${index}`),
@@ -158,11 +158,11 @@ test('loads all eight bundled game covers and opens every game in light and dark
     await settings.keyboard.press('KeyX');
     for (const key of godModeKeys) await expect(key).toHaveJSProperty('variant', 'success');
     await settings.screenshot({ path: resolve(outputDirectory, 'arcade-settings-enabled.png') });
-    await closeSettingsWindow(app);
+    await closeSettings(page);
     for (const theme of ['light', 'dark'] as const) {
       // act
       await resizeGame(app, page, 1440, 900);
-      await selectArcadeTheme(app, page, theme);
+      await selectArcadeTheme(page, theme);
       await page.getByTestId('navigation-arcade').click();
 
       // assert
@@ -252,7 +252,7 @@ test('restores new-game results beside existing Arcade history after restarting 
   try {
     let page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(app, page);
+    await enableArcade(page);
     await page.evaluate(() => {
       localStorage.setItem(
         'symphony.arcade.leaderboard.v1',
@@ -305,7 +305,7 @@ test('restores new-game results beside existing Arcade history after restarting 
     page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
     for (const theme of ['light', 'dark'] as const) {
-      await selectArcadeTheme(app, page, theme);
+      await selectArcadeTheme(page, theme);
       await page.getByTestId('navigation-arcade').click();
       await page.getByTestId('arcade-open-leaderboard').click();
 
@@ -355,7 +355,7 @@ test('plays Breakout with mouse and keys through a full match and configures par
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(app, page);
+    await enableArcade(page);
     await openGame(page, 'breakout');
     await expect(page.getByTestId('breakout-menu-dialog')).toBeVisible();
     await expect(page.locator('.cdk-overlay-backdrop').last()).toBeVisible();
@@ -549,7 +549,7 @@ test('plays RealSports Boxing with two people through a TKO, rematch and compute
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(app, page);
+    await enableArcade(page);
     await openGame(page, 'realsports-boxing');
     await page.getByTestId('boxing-instructions').click();
     await expect(page.getByTestId('realsports-boxing-view')).toHaveAttribute(

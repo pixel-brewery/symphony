@@ -16,14 +16,14 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Präferenz und ihr Einstellungsbeitrag, Navigationsbeitrag, Routenschutz, Spielauswahl, Bestenlisten-Dialog und -Speicher, God mode, Palettenbeiträge, gemeinsame Pausensteuerung der Spiele.
-- Nicht enthalten: Regeln, Simulation, Rendering und Audio der einzelnen Spiele. Jedes Spiel besitzt sie in seinem eigenen Verzeichnis samt README mit Quellen und Treue-Checkliste; die Referenz- und Treueentscheidungen stehen im [FLAMOX365-Referenzvertrag](../frontend-reference-flamox.md). Der Fensterrahmen gehört zu [Fensterrahmen und Navigation](../window-and-navigation/README.md), die Palette zur [Befehlspalette](../command-palette/README.md), das Einstellungsfenster zum [Einstellungsfenster](../window-and-navigation/settings-window.md).
+- Nicht enthalten: Regeln, Simulation, Rendering und Audio der einzelnen Spiele. Jedes Spiel besitzt sie in seinem eigenen Verzeichnis samt README mit Quellen und Treue-Checkliste; die Referenz- und Treueentscheidungen stehen im [FLAMOX365-Referenzvertrag](../frontend-reference-flamox.md). Der Fensterrahmen gehört zu [Fensterrahmen und Navigation](../window-and-navigation/README.md), die Palette zur [Befehlspalette](../command-palette/README.md), die Einstellungsoberfläche zu den [Einstellungen im Hauptfenster](../window-and-navigation/settings.md).
 
 ## Verantwortungsgrenzen
 
 | Verantwortung                     | Kanonischer Eigentümer                         | Öffentlicher Vertrag                                                                                    | Verbraucher                                          |
 | --------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | Präferenz                         | Anwendungseinstellungen (`user.arcadeEnabled`) | `enabled: Signal<boolean>`, `setEnabled(boolean): Promise<boolean>` über den Arcade-Einstellungskontext | Navigation, Routenschutz, Palette, Einstellungskarte |
-| Einstellungsbeitrag               | Arcade-Feature im Slot `Appearance`            | Karte `Navigation` mit `Show Arcade` und `God mode`, Sucheinträge                                       | Einstellungsfenster                                  |
+| Einstellungsbeitrag               | Arcade-Feature im Slot `Appearance`            | Karte `Navigation` mit `Show Arcade` und `God mode`, Sucheinträge                                       | Einstellungen                                        |
 | Navigation                        | Arcade-Feature                                 | Eintrag `arcade` mit `isVisible`                                                                        | Seitenleiste                                         |
 | Routen                            | Arcade-Feature                                 | `/main/arcade` und acht Kindrouten hinter einem `canMatch`-Schutz                                       | Router, Palette, Spielauswahl                        |
 | Katalog und Bestenlisten-Aufruf   | Presenter der Spielauswahl                     | `games: readonly IArcadeGame[]`, `showLeaderboardCommand`                                               | Spielauswahl                                         |
@@ -36,7 +36,7 @@ Garantien:
 - Persistiert als `user.arcadeEnabled: boolean` in den Anwendungseinstellungen. Das Schema setzt für fehlende Werte `false`; die Standardeinstellungen enthalten `false`. Ältere Konfigurationen ohne das Feld bleiben daher gültig und zeigen keine Arcade.
 - Lesen: `enabled = settings()?.user.arcadeEnabled ?? false`.
 - Schreiben: `setEnabled(next)` schreibt die vollständigen aktuellen Einstellungen mit geändertem `user.arcadeEnabled` über den einzigen Einstellungsschreiber zurück, der `Settings saved.` beziehungsweise `Unable to save settings.` meldet. Sind die Einstellungen noch nicht geladen, wirft der Aufruf, ohne zu schreiben.
-- Der Schalter verwendet das Sofortspeichern des Einstellungsfensters (`createImmediateSetting`): Er zeigt den neuen Wert sofort und stellt bei `false` oder einem Fehler den gespeicherten Wert wieder her. Der fensterübergreifende Abgleich der Einstellungen macht die Änderung ohne Neuladen im Hauptfenster wirksam.
+- Der Schalter verwendet das Sofortspeichern der Einstellungen (`createImmediateSetting`): Er zeigt den neuen Wert sofort und stellt bei `false` oder einem Fehler den gespeicherten Wert wieder her. Weil die Einstellungen im Hauptfenster liegen, liest die Seitenleiste denselben gespeicherten Stand; die Änderung wirkt ohne Neuladen.
 
 ## Einstellungsbeitrag
 
@@ -114,7 +114,7 @@ Die Spiele schreiben nur beendete Partien; nicht beendete Expeditionen und Match
 - Ein App-Initialisierer startet die Erkennung in jedem Renderer-Fenster außer dem Menüleistenfenster (`#/menu-bar`), unabhängig von der Präferenz. Ein `keydown`-Listener in der Capture-Phase des Dokuments verbraucht die Ereignisse nicht.
 - Ignoriert werden Tastenwiederholungen und Ereignisse mit Alt, Ctrl, Meta oder Shift sowie jede Taste nach der Aktivierung. Eine passende Taste erhöht `progress` und startet einen Zwei-Sekunden-Timer neu, nach dessen Ablauf `progress` auf 0 fällt. Eine falsche Taste setzt `progress` auf 1, wenn sie der ersten Taste der Folge entspricht, sonst auf 0.
 - Nach der zehnten Taste: `enabled = true`, Erfolgsmeldung `God mode activated`, Nachricht `{ kind: 'enabled' }` auf `BroadcastChannel('symphony.arcade-god-mode')`. Ein neu verbundenes Fenster sendet `{ kind: 'query' }`; aktive Fenster antworten mit `enabled`. Empfänger setzen `enabled` und `progress` auf vollständig, ohne erneut zu melden.
-- Der Zustand lebt nur im Speicher der Fenster. Spiele außer Pong lesen `enabled` und schalten ihre Simulation entsprechend um.
+- Der Zustand lebt nur im Speicher der Fenster. Spiele außer Pong lesen `enabled` und schalten ihre Simulation entsprechend um. Seit die Einstellungen kein eigenes Fenster mehr haben, ist das Hauptfenster das einzige Fenster mit Erkennung; der Kanal verbindet dann keine zwei Fenster mehr, bleibt aber unschädlich.
 
 ## Palette und Pausensteuerung
 
@@ -130,7 +130,7 @@ Die Spiele schreiben nur beendete Partien; nicht beendete Expeditionen und Match
 | Gespeicherte Bestenliste beschädigt         | Länge, JSON, Schema            | ungültige Einträge fehlen                              | keine Reparatur beim Lesen           | neue Ergebnisse überschreiben die Liste |
 | Speicher nicht verfügbar oder Schreibfehler | `add` liefert `false`          | Ergebnis bleibt bis zum Beenden sichtbar               | nichts persistiert                   | –                                       |
 | Titelbild lädt nicht                        | Mosaik Image                   | Fehlerdarstellung statt Titelbild; `Play` funktioniert | keine                                | –                                       |
-| Kein `BroadcastChannel`                     | Feature-Prüfung                | God mode gilt nur im aktivierenden Fenster             | keine                                | Folge im anderen Fenster eingeben       |
+| Kein `BroadcastChannel`                     | Feature-Prüfung                | God mode gilt nur im aktivierenden Fenster             | keine                                | –                                       |
 
 ## Implementierungsabbildung in Symphony
 
@@ -159,6 +159,6 @@ Die Spiele schreiben nur beendete Partien; nicht beendete Expeditionen und Match
 
 - [Arcade](../../project/arcade/README.md)
 - [Fensterrahmen und Navigation](../window-and-navigation/README.md)
-- [Einstellungsfenster](../window-and-navigation/settings-window.md)
+- [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [Befehlspalette](../command-palette/README.md)
 - [FLAMOX365-Referenzvertrag](../frontend-reference-flamox.md)

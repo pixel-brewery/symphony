@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -66,7 +66,7 @@ test('breaks measured storage into named shares and never reports an unmeasured 
   // assert
   try {
     const main = await prepareMainWindow(app);
-    const page = await openSettingsWindow(app, main);
+    const page = await openSettings(main);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
     await page.getByTestId('global-settings-section-system').click();

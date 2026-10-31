@@ -13,11 +13,11 @@ Im Bereich **AI team** eines Workspace legst du fest, welche AI-Agenten in diese
 | Weg                                                                  | Ergebnis                                                                                                   |
 | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | In den Einstellungen einen Workspace öffnen                          | **AI team** ist der erste Bereich, der sich zeigt.                                                         |
-| **Open AI team** im Laufpanel des Hauptfensters                      | Das Einstellungsfenster öffnet sich beim **AI team** des aktiven Workspace.                                |
+| **Open AI team** im Laufpanel des Hauptfensters                      | Die Einstellungen öffnen sich beim **AI team** des aktiven Workspace.                                      |
 | Suche nach **Delivery flow**, **Agents** oder **Technical AI setup** | Der Treffer öffnet den Bereich des jeweiligen Workspace.                                                   |
 | Link mit `?workspace=<Workspace>&section=team&agent=<Agent>`         | Das Fenster öffnet den Bereich und zusätzlich das Sheet dieses Agenten, sofern er zu dem Workspace gehört. |
 
-Das Öffnen des Fensters selbst beschreibt [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md).
+Das Öffnen der Einstellungen selbst beschreibt [Einstellungen](../window-and-navigation/settings.md).
 
 ## Lieferablauf
 
@@ -119,7 +119,7 @@ Eine Position mit **Read only** kann nicht implementieren und keine fehlgeschlag
 
 ## Verwandte Features
 
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md) – Fenster, Suche, Sheets und das Sheet **Build your project team**
+- [Einstellungen](../window-and-navigation/settings.md) – Öffnen und Verlassen, Suche, Sheets und das Sheet **Build your project team**
 - [Skills](../skills/README.md) – wie jeder Schritt arbeitet
 - [Automation](../automation/README.md) – wie weit jeder Schritt selbstständig läuft
 - [Workspaces](../workspaces/README.md) – AI-Konten unter **Connected services**

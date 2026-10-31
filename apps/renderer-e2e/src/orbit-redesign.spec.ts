@@ -4,7 +4,9 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { openSettingsWindow } from './openSettingsWindow';
+import { closeSettings } from './closeSettings';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -324,42 +326,31 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
       ).orchestration.request('settings.get', {});
       return settings.agentProfiles.find((agent) => agent.displayName === 'Employee 0')!;
     });
-    // Settings is its own window.
-    const settingsWindow = await openSettingsWindow(app, page);
-    await settingsWindow
-      .getByTestId('open-workspace-settings-' + agentBeforeEditing.workspaceId)
-      .click();
-    await settingsWindow.getByTestId('workspace-settings-section-team').click();
-    await settingsWindow.getByTestId('edit-agent-account-' + agentBeforeEditing.id).click();
-    await expect(settingsWindow.getByTestId('settings-editor-drawer')).toBeVisible();
-    await expect(settingsWindow.getByTestId('ai-display-name').locator('input')).toHaveValue(
+    // Settings opens inside the main window.
+    const settings = await openSettings(page);
+    await settings.getByTestId('open-workspace-settings-' + agentBeforeEditing.workspaceId).click();
+    await settings.getByTestId('workspace-settings-section-team').click();
+    await settings.getByTestId('edit-agent-account-' + agentBeforeEditing.id).click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toBeVisible();
+    await expect(settings.getByTestId('ai-display-name').locator('input')).toHaveValue(
       'Employee 0',
     );
-    const characterPicker = settingsWindow.getByTestId('agent-character-picker');
+    const characterPicker = settings.getByTestId('agent-character-picker');
     await expect(
-      settingsWindow.getByTestId(/^agent-character-(blue|mint|coral|violet|gold|rose)$/u),
+      settings.getByTestId(/^agent-character-(blue|mint|coral|violet|gold|rose)$/u),
     ).toHaveCount(6);
     // The sheet previews the agent card being built, figure included.
-    await expect(settingsWindow.getByTestId('agent-appearance-preview')).toHaveCount(1);
+    await expect(settings.getByTestId('agent-appearance-preview')).toHaveCount(1);
     await expect(characterPicker).toHaveJSProperty('value', 'mint');
-    await expect(settingsWindow.getByTestId('agent-character-mint')).toHaveJSProperty(
-      'isChecked',
-      true,
-    );
-    await settingsWindow.getByTestId('agent-character-blue').focus();
-    await settingsWindow.getByTestId('agent-character-blue').press('Space');
+    await expect(settings.getByTestId('agent-character-mint')).toHaveJSProperty('isChecked', true);
+    await settings.getByTestId('agent-character-blue').focus();
+    await settings.getByTestId('agent-character-blue').press('Space');
     await expect(characterPicker).toHaveJSProperty('value', 'blue');
-    await expect(settingsWindow.getByTestId('agent-character-blue')).toHaveJSProperty(
-      'isChecked',
-      true,
-    );
-    await expect(settingsWindow.getByTestId('agent-character-mint')).toHaveJSProperty(
-      'isChecked',
-      false,
-    );
-    await settingsWindow.getByTestId('ai-display-name').locator('input').fill('Unsaved name');
-    await settingsWindow.getByTestId('cancel-settings-editor').click();
-    await expect(settingsWindow.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await expect(settings.getByTestId('agent-character-blue')).toHaveJSProperty('isChecked', true);
+    await expect(settings.getByTestId('agent-character-mint')).toHaveJSProperty('isChecked', false);
+    await settings.getByTestId('ai-display-name').locator('input').fill('Unsaved name');
+    await settings.getByTestId('cancel-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
     expect(
       await page.evaluate(async (id) => {
         const settings = await (
@@ -369,15 +360,10 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
       }, agentBeforeEditing.id),
     ).toEqual(agentBeforeEditing);
 
-    await settingsWindow.getByTestId('edit-agent-account-' + agentBeforeEditing.id).click();
+    await settings.getByTestId('edit-agent-account-' + agentBeforeEditing.id).click();
     await expect(characterPicker).toHaveJSProperty('value', 'mint');
-    await expect(settingsWindow.getByTestId('agent-character-mint')).toHaveJSProperty(
-      'isChecked',
-      true,
-    );
-    await expect(
-      settingsWindow.getByTestId('agent-wizard').locator('input[type=file]'),
-    ).toHaveCount(0);
+    await expect(settings.getByTestId('agent-character-mint')).toHaveJSProperty('isChecked', true);
+    await expect(settings.getByTestId('agent-wizard').locator('input[type=file]')).toHaveCount(0);
     for (const [colour, character] of [
       ['mint', 'mint'],
       ['coral', 'orange'],
@@ -386,25 +372,23 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
       ['rose', 'rose'],
       ['blue', 'blue'],
     ]) {
-      const choice = settingsWindow.getByTestId('agent-character-' + colour);
+      const choice = settings.getByTestId('agent-character-' + colour);
       await choice.click();
       await expect(characterPicker).toHaveJSProperty('value', colour);
       await expect(choice).toHaveJSProperty('isChecked', true);
       await expect(
-        settingsWindow
-          .getByTestId('agent-character-preview-' + colour)
-          .locator('[data-figure-image]'),
+        settings.getByTestId('agent-character-preview-' + colour).locator('[data-figure-image]'),
       ).toHaveAttribute('src', new RegExp('figures/' + character + '\\.png', 'u'));
     }
-    await settingsWindow.getByTestId('agent-character-picker').screenshot({
+    await settings.getByTestId('agent-character-picker').screenshot({
       path: resolve(root, 'original-character-picker.png'),
     });
-    await settingsWindow.screenshot({
+    await settings.screenshot({
       path: resolve(root, 'agent-identity-appearance.png'),
       fullPage: true,
     });
-    await settingsWindow.getByTestId('save-settings-editor').click();
-    await expect(settingsWindow.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await settings.getByTestId('save-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
     expect(
       await page.evaluate(async (id) => {
         const settings = await (
@@ -451,12 +435,12 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
     app = await electron.launch(launchOptions);
     page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    const restartedSettings = await openSettingsWindow(app, page);
-    await restartedSettings.getByTestId('open-workspace-settings-personal').click();
-    await restartedSettings.getByTestId('workspace-settings-section-team').click();
+    await openSettings(page);
+    await page.getByTestId('open-workspace-settings-personal').click();
+    await page.getByTestId('workspace-settings-section-team').click();
     // The AI team card draws the persisted character as the agent's still figure.
     await expect(
-      restartedSettings.getByTestId('agent-avatar-' + persisted.id).locator('[data-figure-image]'),
+      page.getByTestId('agent-avatar-' + persisted.id).locator('[data-figure-image]'),
     ).toHaveAttribute('src', 'figures/blue.png');
     expect(
       await page.evaluate(async () => {
@@ -588,14 +572,12 @@ test('keeps a setup draft unsaved and applies one CLI account before a real read
       ),
     );
     // act
-    // `/main/setup` opens the `Build your project team` sheet in the Settings window.
+    // `/main/setup` opens the `Build your project team` sheet in Settings inside the main window.
     await page.evaluate(() => {
       location.hash = '/main/setup';
     });
-    const isSettings = (candidate: { url(): string }) => candidate.url().includes('#/settings');
-    await expect.poll(() => app.windows().some(isSettings)).toBe(true);
-    const setupWindow = app.windows().find(isSettings)!;
-    await expect(setupWindow.getByTestId('setup-apply')).toHaveJSProperty('disabled', false);
+    await expectSettingsInMainWindow(app, page);
+    await expect(page.getByTestId('setup-apply')).toHaveJSProperty('disabled', false);
     const draft = await page.evaluate(async () =>
       JSON.stringify(
         await (window as unknown as { orchestration: IOrchestrationApi }).orchestration.request(
@@ -605,11 +587,11 @@ test('keeps a setup draft unsaved and applies one CLI account before a real read
       ),
     );
     expect(draft).toBe(before);
-    await setupWindow.getByTestId('setup-apply').click();
-    await expect(setupWindow.getByTestId('setup-first-analysis')).toBeVisible();
-    await setupWindow.getByTestId('setup-analyse').click();
-    // The started analysis closes the sheet and brings the main window forward.
-    await expect(setupWindow.getByTestId('setup-apply')).toHaveCount(0);
+    await page.getByTestId('setup-apply').click();
+    await expect(page.getByTestId('setup-first-analysis')).toBeVisible();
+    await page.getByTestId('setup-analyse').click();
+    // The started analysis closes the sheet.
+    await expect(page.getByTestId('setup-apply')).toHaveCount(0);
     const activeAnalysis = await page.evaluate(async () => {
       const snapshot = await (
         window as unknown as { orchestration: IOrchestrationApi }
@@ -626,6 +608,7 @@ test('keeps a setup draft unsaved and applies one CLI account before a real read
       };
     });
     await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await closeSettings(page);
     await page.getByTestId('navigation-orbit').click();
     const orbit = page.getByTestId('orbit-canvas');
     await expect(orbit).toHaveAttribute('data-render-state', 'ready');

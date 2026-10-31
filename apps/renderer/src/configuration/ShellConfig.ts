@@ -116,7 +116,7 @@ import { presentationRoutes } from '@symphony/frontend-presentation';
 import { provideSearch } from '@symphony/frontend-search';
 import { provideQuickCreate } from '@symphony/frontend-quick-create';
 import { provideWidget } from '@symphony/frontend-widget';
-import { provideSettings, settingsRoutes, settingsWindowRoutes } from '@symphony/frontend-setting';
+import { provideSettings, settingsRoutes } from '@symphony/frontend-setting';
 import { withPowerSettings } from '@symphony/frontend-interaction';
 import { provideUpdate, withUpdateSettings } from '@symphony/frontend-update';
 import { applicationThemeOverrides } from '@symphony/frontend-ui';
@@ -154,10 +154,10 @@ export const shellConfig: ApplicationConfig = {
     provideSearch(),
     provideNavigation(),
     provideRouter(
-      presentationRoutes(
-        [...applicationProductComposition.flatMap((feature) => feature.routes), ...settingsRoutes],
-        settingsWindowRoutes,
-      ),
+      presentationRoutes([
+        ...applicationProductComposition.flatMap((feature) => feature.routes),
+        ...settingsRoutes,
+      ]),
       withHashLocation(),
       withComponentInputBinding(),
     ),

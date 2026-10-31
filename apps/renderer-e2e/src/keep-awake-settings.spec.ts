@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -54,7 +54,7 @@ test('holds system sleep only while Symphony has background work', async () => {
   // assert
   try {
     const main = await prepareMainWindow(app);
-    const page = await openSettingsWindow(app, main);
+    const page = await openSettings(main);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
     await page.getByTestId('global-settings-section-system').click();

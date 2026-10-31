@@ -4,7 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron, type Page } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 
 // #endregion
 
@@ -37,23 +37,22 @@ test('configures several repositories in one workspace without a second AI appro
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
     await expect(page.getByTestId('navigation-settings')).toBeVisible();
-    const settingsWindow = await openSettingsWindow(app, page);
-    settingsWindow.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await settingsWindow.getByTestId('workspace-navigation-item-personal').click();
-    await settingsWindow.getByTestId('workspace-settings-section-repositories').click();
+    const settings = await openSettings(page);
+    await settings.getByTestId('workspace-navigation-item-personal').click();
+    await settings.getByTestId('workspace-settings-section-repositories').click();
 
-    await expect(settingsWindow.getByTestId('add-repository-personal')).toBeVisible();
-    await expect(settingsWindow.getByText('Plan and run tests', { exact: true })).toHaveCount(0);
-    await expect(settingsWindow.getByText('Allow AI tasks', { exact: true })).toHaveCount(0);
+    await expect(settings.getByTestId('add-repository-personal')).toBeVisible();
+    await expect(settings.getByText('Plan and run tests', { exact: true })).toHaveCount(0);
+    await expect(settings.getByText('Allow AI tasks', { exact: true })).toHaveCount(0);
 
-    await addRepository(settingsWindow, 'FLAMOX365 Web', 'ruederennes', 'web-app');
-    await addRepository(settingsWindow, 'FLAMOX365 API', 'ruederennes', 'platform-api');
+    await addRepository(settings, 'FLAMOX365 Web', 'ruederennes', 'web-app');
+    await addRepository(settings, 'FLAMOX365 API', 'ruederennes', 'platform-api');
 
-    const repositoryGroup = settingsWindow.getByTestId('workspace-repositories-personal');
+    const repositoryGroup = settings.getByTestId('workspace-repositories-personal');
     await expect(repositoryGroup.locator('[test-id^="local-repository-"]')).toHaveCount(2);
     await expect(repositoryGroup).toContainText('FLAMOX365 Web');
     await expect(repositoryGroup).toContainText('FLAMOX365 API');
-    await expect(settingsWindow.getByTestId('add-repository-personal')).toBeVisible();
+    await expect(settings.getByTestId('add-repository-personal')).toBeVisible();
     const configured = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const settings = await api.request('settings.get', {});
@@ -75,7 +74,7 @@ test('configures several repositories in one workspace without a second AI appro
       new Set(configured.repositories.map((repository) => repository.sourceControlConnectionId)),
     ).toHaveProperty('size', 1);
     expect(configured.githubConnections).toHaveLength(1);
-    await settingsWindow.screenshot({
+    await settings.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'settings-multi-repository.png'),
       fullPage: true,
@@ -87,15 +86,15 @@ test('configures several repositories in one workspace without a second AI appro
 });
 
 async function addRepository(
-  settingsWindow: Page,
+  settings: Page,
   displayName: string,
   owner: string,
   name: string,
 ): Promise<void> {
-  await settingsWindow.getByTestId('add-repository-personal').click();
-  await settingsWindow.getByTestId('repository-display-name').locator('input').fill(displayName);
-  await settingsWindow.getByTestId('repository-owner').locator('input').fill(owner);
-  await settingsWindow.getByTestId('repository-name').locator('input').fill(name);
-  await settingsWindow.getByTestId('save-settings-editor').click();
-  await expect(settingsWindow.getByTestId('settings-editor-drawer')).toHaveCount(0);
+  await settings.getByTestId('add-repository-personal').click();
+  await settings.getByTestId('repository-display-name').locator('input').fill(displayName);
+  await settings.getByTestId('repository-owner').locator('input').fill(owner);
+  await settings.getByTestId('repository-name').locator('input').fill(name);
+  await settings.getByTestId('save-settings-editor').click();
+  await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
 }

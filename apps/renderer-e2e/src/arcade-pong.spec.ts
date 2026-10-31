@@ -44,11 +44,11 @@ test('plays original two-player Pong with native menus, independent controls and
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(app, page);
+    await enableArcade(page);
     for (const theme of ['light', 'dark'] as const) {
       // act
       await resize(app, page, 1440, 900);
-      await selectArcadeTheme(app, page, theme);
+      await selectArcadeTheme(page, theme);
       await openGame(page);
       await page.getByTestId('pong-instructions').click();
       await expect(page.getByTestId('pong-view')).toHaveAttribute('data-screen', 'instructions');
@@ -132,7 +132,7 @@ test('finishes a Pong match through real pointer controls and saves its result e
     const page = await prepareMainWindow(app);
     // Install before entering the lazy game route so every game frame uses this clock.
     await page.clock.install({ time: new Date('2026-09-18T12:00:00Z') });
-    await enableArcade(app, page);
+    await enableArcade(page);
     await openGame(page);
     await page.getByTestId('pong-start').click();
     await page.clock.pauseAt(new Date('2026-09-18T12:00:30Z'));

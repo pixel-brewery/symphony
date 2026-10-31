@@ -15,11 +15,17 @@ import {
   ProgressBarComponent,
   SelectComponent,
   SelectItemComponent,
+  SplitComponent,
   TextBoxComponent,
   TextComponent,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { View, VIEW_PRESENTER, WindowToolbarDirective } from '@symphony/frontend-core';
+import {
+  PaneSizeDirective,
+  View,
+  VIEW_PRESENTER,
+  WindowToolbarDirective,
+} from '@symphony/frontend-core';
 import { OrbitCanvasComponent } from '@symphony/frontend-ui';
 import { OrbitViewPresenter } from '../view-presenters/OrbitViewPresenter';
 
@@ -38,25 +44,27 @@ import { OrbitViewPresenter } from '../view-presenters/OrbitViewPresenter';
     '(keydown.escape)': 'presenter.dismissOverlayCommand.execute()',
   },
   imports: [
-    FormsModule,
-    DatePipe,
-    DecimalPipe,
-    RouterLink,
     ButtonComponent,
     CardComponent,
+    DatePipe,
+    DecimalPipe,
     DividerComponent,
     DropDownButtonComponent,
+    FormsModule,
     HintComponent,
     MenuComponent,
     MenuItemComponent,
+    OrbitCanvasComponent,
+    PaneSizeDirective,
     ProgressBarComponent,
+    RouterLink,
     SelectComponent,
     SelectItemComponent,
+    SplitComponent,
     TextBoxComponent,
     TextComponent,
     TypographyDirective,
     WindowToolbarDirective,
-    OrbitCanvasComponent,
   ],
   providers: [OrbitViewPresenter, { provide: VIEW_PRESENTER, useExisting: OrbitViewPresenter }],
   templateUrl: './OrbitView.html',

@@ -3,7 +3,7 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 
 // #endregion
 
@@ -65,8 +65,7 @@ test('configures bounded managed local CI before exposing the backend capability
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
     await expect(page.getByTestId('navigation-settings')).toBeVisible();
-    const settings = await openSettingsWindow(app, page);
-    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    const settings = await openSettings(page);
     await settings.getByTestId('workspace-navigation-item-personal').click();
     await settings.getByTestId('workspace-settings-section-administration').click();
     // Workspace Administration keeps its own storage bar and limit.
@@ -86,7 +85,7 @@ test('configures bounded managed local CI before exposing the backend capability
     await settings.getByTestId('workspace-settings-section-local-ci').click();
     const workspaceCard = settings.getByTestId('workspace-local-ci-card');
     await expect(workspaceCard).toBeVisible();
-    await expect(settings.getByTestId('settings-title')).toContainText('Local GitHub Actions');
+    await expect(settings.getByTestId('window-title')).toContainText('Local GitHub Actions');
     await expect(settings.getByTestId('local-ci-activation-settings-group')).toContainText(
       'Enable local runs',
     );

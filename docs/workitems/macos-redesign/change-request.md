@@ -1,6 +1,6 @@
 ## Problem
 
-Symphony now renders Mosaik 0.1.183 in Soho, but its window is still the original shell: a top navigation header, a workspace rail and routed pages. The "Symphony Redesign" canvas defines a macOS-native layout for the desktop app — a source-list sidebar, a unified toolbar, inspector panes, a command palette, a work-item sheet and a separate Settings window — built only from Mosaik components and `--mosaik-*` tokens. Nothing of that layout exists in the app yet, and the canvas cannot be implemented from a cloud session because it needs the real Electron app, its data and its tests.
+Symphony now renders Mosaik 0.1.183 in Soho, but its window is still the original shell: a top navigation header, a workspace rail and routed pages. The "Symphony Redesign" canvas defines a macOS-native layout for the desktop app — a source-list sidebar, a unified toolbar, inspector panes, a command palette, a work-item sheet and a redesigned Settings — built only from Mosaik components and `--mosaik-*` tokens. Nothing of that layout exists in the app yet, and the canvas cannot be implemented from a cloud session because it needs the real Electron app, its data and its tests.
 
 ## Current behavior
 
@@ -16,7 +16,7 @@ Symphony now renders Mosaik 0.1.183 in Soho, but its window is still the origina
 
 ## Expected behavior
 
-The app matches the artboards in `screens/`: thirteen main-window screens (1440 × 900), the tray (`Tray-*`, 520 px with the menu bar) and the Settings window with every section, sheet and confirmation dialog (1000 px wide; drawn at full scroll length, the window itself opens at 1000 × 760). Light mode as drawn, dark mode through the same tokens; `screens/Overview-dark.png` shows the dark mode of the start page.
+The app matches the artboards in `screens/`: thirteen main-window screens (1440 × 900), the tray (`Tray-*`, 520 px with the menu bar) and Settings with every section, sheet and confirmation dialog (1000 px wide; drawn at full scroll length as a 1000 × 760 window — since the decision of 2026-10-31 Settings opens inside the main window, see `DECISIONS.md`). Light mode as drawn, dark mode through the same tokens; `screens/Overview-dark.png` shows the dark mode of the start page.
 
 ### Window chrome (every main screen)
 
@@ -43,7 +43,7 @@ The app matches the artboards in `screens/`: thirteen main-window screens (1440 
 - `Command palette`: ⌘K opens a centred overlay over the dimmed window with a search field, results grouped into `WORK ITEMS`, `PULL REQUESTS` and `COMMANDS`, shortcuts on the right and the hint row `↑↓ to move · ↵ to open · ⌘↵ to open in a new window`.
 - `New work item sheet`: a modal with `Write it myself` / `Draft with AI`, `Title`, `Description` (`Markdown is rendered when the work item is viewed.`), `Repository`, `Column`, `Labels` with `Add label`, `Analyze with Codex after creating`, `Cancel` and `Create work item`.
 - `Arcade`: `Choose a game` with the shipped games as cards (cover, player count, `Play`) and `Leaderboard` in the toolbar.
-- `Settings window`: always its own window, on every platform; see the Settings window section below.
+- `Settings`: opens inside the main window on every platform (decision of 2026-10-31, superseding the separate window); see the Settings section below.
 - `Overview` (`screens/Overview.png`): the start page that shows the whole delivery at a glance without opening a sub-area. Toolbar title `Overview` with the workspace and the date. A greeting with a one-line summary of what needs attention, and the quick actions `Sync now`, `Run workflow` and `New work item` (primary). Below it three cards, each with an `Open` link to its screen:
   - `Waiting for you`: the four oldest inbox decisions with icon, title, work item and age, and `Open inbox`.
   - `Pull requests`: open pull requests by state — `Waiting for your review`, `Checks failing`, `Ready to merge`, `Checks running`, `Drafts` — with counts.
@@ -68,13 +68,13 @@ The tray uses the main window's language (canvas page `Tray`, `screens/Tray-*.pn
 - Commands with their shortcuts: `Open Symphony ⌘O`, `New work item… ⌘N`, `Settings… ⌘,`, `Quit Symphony ⌘Q`.
 - The menu-bar icon keeps its three template images and tooltips: idle (`Symphony`), running (`Symphony — Run in progress`), failed (`Symphony — Latest run failed`). `Actions unavailable` and the waiting-step message are drawn on `Tray-States`.
 
-### Settings window
+### Settings
 
-Every current section and dialog of Settings, redesigned for the separate window (canvas page `Settings`, `screens/Settings-*.png`, `screens/Sheet-*.png`). Copy is the current app's unless noted; no setting is dropped.
+Every current section and dialog of Settings, redesigned (canvas page `Settings`, `screens/Settings-*.png`, `screens/Sheet-*.png`). The canvas draws a separate window; since the decision of 2026-10-31 Settings opens inside the main window instead: while it is open, the whole side navigation switches to the Settings area, the normal navigation entries are not shown, and the toolbar's `Back` is the only way back. Copy is the current app's unless noted; no setting is dropped.
 
 The redesign has one thread: the delivery flow. A work item passes five steps — `Create`, `Plan`, `Implement and verify`, `Fix failed checks`, `Address reviews` — before a person accepts it. The steps follow the board stages and the skill flow roles (`work-item-creation`, `analysis`, `solution`, `ci-diagnosis` and `ci-repair`, `pull-request-review`). `AI team` shows who does each step, `Skills` how each step is done and `Automation` how far each step may run on its own. All three use the same step names and icons, so a step reads the same wherever it appears.
 
-- Window: 1000 × 760 by default, resizable, with a 232 px sidebar and a 52 px toolbar showing the section name and a one-line description (prefixed with the workspace name for workspace sections).
+- Window: the main window. The Settings navigation fills the main window's sidebar below its title-bar row, and the main window's 52 px toolbar shows the section name and a one-line description (prefixed with the workspace name for workspace sections) and the section's actions. (Superseded: a separate 1000 × 760 window with a 232 px sidebar.)
 - Sidebar: `Search settings`; `Workspaces` (the list, where Settings opens) with each workspace (short-code tile and name) and, under the selected workspace, its six sections as nested rows (`AI team`, `Connected services`, `Repositories`, `Delivery destinations`, `Local GitHub Actions`, `Administration`); the heading `Symphony` with `Automation`, `Skills`, `System`, `Mobile access` and `Appearance`. The workspace segment of the current page goes away.
 - Saving: every control applies when it changes (numbers on commit), with the existing `Settings saved.` / `Unable to save settings.` notices; the per-card `Save` buttons go away.
 - States that appear only in some situations are drawn in dashed frames labelled with the condition.
@@ -95,7 +95,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
   - `Updates` and `Sleep`.
 - `Search settings` (`Settings-Search`, new): typing in the sidebar search lists matching settings from every section, grouped by breadcrumb, with the match highlighted. Each result can be changed in place or opened.
 - `Connected services`, `Repositories`, `Delivery destinations`, `Local GitHub Actions`, `Administration`, `Mobile access`, `Appearance`: as before, in the shared group-and-row layout (see their screens).
-- Sheets: the editor drawers become sheets attached to the Settings window, with `Cancel` / `Save` at the bottom right and a destructive action at the bottom left. Account, model, effort, provider, figure and orbit-body pickers are Mosaik `ChoiceGroup` / `Choice` cards in at most three equal columns, as the app's `choice-cards` utility. On the canvas each sheet sits under the section that opens it.
+- Sheets: the editor drawers become sheets over the window, with `Cancel` / `Save` at the bottom right and a destructive action at the bottom left. Account, model, effort, provider, figure and orbit-body pickers are Mosaik `ChoiceGroup` / `Choice` cards in at most three equal columns, as the app's `choice-cards` utility. On the canvas each sheet sits under the section that opens it.
   - `Sheet-AIAgent` (920 px): the four questions as numbered sections, with a live preview beside them. The preview shows the agent card being built: figure, name, job title, account, model and effort, its steps in the delivery flow, the backup, and a warning when the chosen account cannot run. Responsibilities are check-box cards labelled with their step.
   - `Sheet-DeliveryDestination`: an orbit preview at the top shows the chosen body at the centre and the project's other destinations on their rings. The body picker is a compact grid of the nine planet previews.
   - The others as before: `Sheet-Workspace`, `Sheet-Setup` (`Build your project team`), `Sheet-AIAccount`, `Sheet-GitHubProjects`, `Sheet-AzureDevOps`, `Sheet-TeamsIntake`, `Sheet-RepositoryAdd`, `Sheet-Repository`, `Sheet-DeliveryDestinationAdd`, `Sheet-RoleInstructions`, `Sheet-SkillCatalog`, `Sheet-SkillEditor`, `Sheet-SkillImport`.
@@ -104,7 +104,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 ## Navigation and reproduction
 
 - Reference: open the [screenshots](screens/) beside this file and their [artboard sources](artboards/). No canvas account or older branch is required.
-- Screen names: `Overview` is the start page, `Notifications` the open notification popover, `Main` is `Inbox`, `ActionsOverview` is `Actions` with `All runs` selected, `Palette` the command palette, `NewItem` the new-work-item sheet; `Settings-<Section>` are the Settings window sections, `Sheet-<Name>` its sheets and `Settings-Dialogs` its confirmation dialogs; `Settings` is the window at its default size; the others carry their screen's name.
+- Screen names: `Overview` is the start page, `Notifications` the open notification popover, `Main` is `Inbox`, `ActionsOverview` is `Actions` with `All runs` selected, `Palette` the command palette, `NewItem` the new-work-item sheet; `Settings-<Section>` are the Settings sections, `Sheet-<Name>` its sheets and `Settings-Dialogs` its confirmation dialogs; `Settings` is Settings drawn as a window at its former default size; the others carry their screen's name.
 - Exact copy, spacing and token use: the artboard sources in `artboards/` (`<Name>.dc.html`); `x-import component-from-global-scope="Mosaik.<Name>"` names the Mosaik component each element maps to, and `macos-chrome.css` holds the only component overrides the design needs.
 - Current app: start the desktop app locally, select a workspace and open `/main/home`, `/main/board`, `/main/pull-requests`, `/main/actions`, `/main/orbit`, `/main/arcade` and `/main/settings`.
 
@@ -118,7 +118,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 6. Render Board, Work item, Pull requests, Actions, Orbit and Arcade with the layouts, inspectors and actions listed under Expected behavior, wired to the existing data and commands.
 7. Open the command palette with ⌘K (Ctrl+K off macOS) and from the toolbar search field; search work items, pull requests and commands; open with Enter, close with Esc.
 8. Open the new-work-item sheet from `New work item`, the palette and ⌘N; validate the title; create the item in the chosen repository and column; optionally start the analysis.
-9. Open Settings in its own window on every platform, from the sidebar and the application menu, on `Workspaces`, with the drawn sidebar: `Workspaces` with each workspace and its nested sections, then `Automation`, `Skills`, `System`, `Mobile access`, `Appearance`. Every current setting, editor and confirmation stays available. `Skills` leaves the main navigation, and the installed skill packages join Settings › `Skills`.
+9. Open Settings inside the main window on every platform, from the sidebar and the application menu, on `Workspaces`, with the drawn Settings navigation in place of the sidebar destinations and `Back` as the way out: `Workspaces` with each workspace and its nested sections, then `Automation`, `Skills`, `System`, `Mobile access`, `Appearance`. Every current setting, editor and confirmation stays available. `Skills` leaves the main navigation, and the installed skill packages join Settings › `Skills`.
 10. Collapse and restore the sidebar with `Hide sidebar` and persist the choice.
 11. Use only Mosaik components and `--mosaik-*` tokens; render correctly in light and dark mode.
 12. Keep ids, hashes, branches and paths in the technical-value monospace style.
@@ -129,7 +129,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 17. Open `Actions` on `All runs`: the runs in progress across all workflows with their controls, and the run history across all workflows; selecting a workflow narrows to it.
 18. Open Symphony on `Overview` and render it as drawn: greeting and summary, the quick actions, `Waiting for you`, `Pull requests`, `Production`, and `Reporting` with the period segment, the four stat tiles and the three charts; every card links to its screen.
 19. Compute the reporting figures for the selected period and the previous period of the same length from the workspace's own data; switching the period updates every tile and chart below the segment.
-20. Apply each setting when it changes, without per-card `Save` buttons; open editors as sheets of the Settings window and confirmations as alert sheets.
+20. Apply each setting when it changes, without per-card `Save` buttons; open editors as sheets and confirmations as alert sheets.
 21. Order `AI team`, `Skills` and `Automation` by the five delivery-flow steps; enforce the agentic switch dependencies in the UI (a switch whose prerequisite is off is disabled and says which one it needs) and offer the levels; search all settings from the sidebar.
 22. Add the notification centre to the status bar of every main view: a bell with the count of what needs attention opens a popover upwards with `Needs attention` (setup and system problems from every workspace and this Mac, each with where it lives and its fix) and `Earlier today` (the notices the app shows as toasts today, kept as history), with `Mark all as read` and `Clear read`. Work-item decisions and updates stay in the `Inbox`. Register Reicon's bell (`reiconBell`) as the `bell` icon.
 23. Redesign the tray as drawn: header with status and open/settings buttons, the `Agents | Actions` switch with live runs (pause and resume for agent executions), execution slots, `Needs you` with Inbox and notification counts, the autonomy switch, the update row and the commands with shortcuts; keep the three menu-bar icon states.
@@ -146,27 +146,27 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 - `Orbit` keeps its existing messages for missing or unconfirmed destinations.
 - The command palette shows a no-results state and never runs a command without the same confirmation the command needs elsewhere.
 - The new-work-item sheet keeps the entered text when creation fails and shows the error inline.
-- A Settings change that fails to save is reported in the Settings window and leaves the previous value visible.
+- A Settings change that fails to save is reported in Settings and leaves the previous value visible.
 - A sheet keeps its entered values when saving fails and shows the error in the sheet; the existing loading skeletons stay in place of the controls they stand for.
 
 ## Security and data implications
 
-- The Settings window is a new Electron window and must use the same security settings and typed IPC boundary as the main window.
+- Settings runs inside the main window and therefore under its security settings and typed IPC boundary; no further Electron window is added (the separate Settings window of the original plan is retired).
 - Palette commands and the `… with AI` actions start existing agent and CI flows only; they must respect the current automation policy and permissions.
 - No new persistence beyond the sidebar collapse state; no credentials or tokens are shown in the inbox, palette or inspectors.
 
 ## Scope and exclusions
 
-- In scope: the desktop renderer shell, the eleven drawn main-window screens including the redesigned `Overview` start page, the Settings window with every section, sheet and confirmation dialog, light and dark, and removing voice input from the shell.
+- In scope: the desktop renderer shell, the eleven drawn main-window screens including the redesigned `Overview` start page, Settings with every section, sheet and confirmation dialog, light and dark, and removing voice input from the shell.
 - Out of scope: the mobile app, new games, new providers or backend capabilities the drawn data implies but Symphony does not have yet (record them as follow-ups), and changes to Mosaik or the design system.
 - The work-item ids, names, numbers and times in the artboards are sample data, not requirements.
 
 ## Dependencies and consequences
 
 - Depends on Mosaik 0.1.183 in Soho, already installed, and on the Symphony Design System artifact for component contracts.
-- Navigation changes (`Pull Requests` → `Pull requests`, `Overview` first and the launch screen, `Inbox` added, `Skills` moved into the Settings window, voice input removed); end-to-end tests and documentation that name them must move with the change.
-- The traffic-light area exists only on macOS; on Windows and Linux the toolbar reserves room for the native window controls at the right. The separate Settings window applies to every platform.
-- Large enough to deliver in slices: shell and navigation first, then the screens, then palette, sheet and Settings window.
+- Navigation changes (`Pull Requests` → `Pull requests`, `Overview` first and the launch screen, `Inbox` added, `Skills` moved into Settings, voice input removed); end-to-end tests and documentation that name them must move with the change.
+- The traffic-light area exists only on macOS; on Windows and Linux the toolbar reserves room for the native window controls at the right. Settings inside the main window applies to every platform.
+- Large enough to deliver in slices: shell and navigation first, then the screens, then palette, sheet and Settings.
 - `Overview` reuses what `HomeViewPresenter` reads today (`OrchestrationStore`: scoped work items, board columns, executions, pull requests, CI runs). The current-state cards need no new data except `Waiting for your review`, because Symphony never reads `requested_reviewers` from GitHub, and `Ready to merge`, which has no approval data.
 - `Reporting` needs history the app keeps only partly:
   - Agent runs are persisted with their outcome (`executions` table) and are sufficient.
@@ -198,7 +198,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 - Board, Work item, Pull requests, Actions, Orbit and Arcade match their screenshots in structure and wording.
 - ⌘K (Ctrl+K off macOS) opens the command palette, Esc closes it, arrow keys move, Enter opens the selection.
 - `New work item` opens the sheet; an empty title blocks `Create work item`; a created item appears on the board in the chosen column.
-- Settings opens in its own window on macOS, Windows and Linux, with the drawn sidebar, and saves changes immediately.
+- Settings opens inside the main window on macOS, Windows and Linux, its navigation replaces the sidebar destinations, `Back` leads out of it, and it saves changes immediately.
 - Every section, sheet and confirmation in `screens/Settings-*.png` and `screens/Sheet-*.png` exists with the same groups, controls and copy; no current setting is lost.
 - Opening a workspace in the Settings sidebar shows its six sections as nested rows, and `AI team` is selected first.
 - Editors open as sheets and close with `Cancel`, `Save` or Escape; confirmations open as alert sheets.
@@ -209,7 +209,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 - In `Automation` › `Fix failed checks`, choosing a level sets the switches as listed; switching one switch sets the level to `Custom`; a switch whose prerequisite is off is disabled with `Needs “…”`.
 - The agent sheet's preview updates as each field changes; the destination sheet's orbit preview shows the chosen body and the project's destinations.
 - Typing in `Search settings` lists matching settings from every section with their breadcrumb.
-- `Skills` is reachable from the Settings window and no longer from the main navigation; installed skill packages are managed there.
+- `Skills` is reachable from Settings and no longer from the main navigation; installed skill packages are managed there.
 - `Hide sidebar` collapses the sidebar and the state survives a restart.
 - Both light and dark mode render every screen without hard-coded colours.
 - No feature code introduces colours, radii or shadows outside Mosaik tokens.
@@ -217,8 +217,8 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 ## Verification expectations
 
 - `yarn verify` passes.
-- End-to-end tests cover launching on `Overview`, the reporting period switch, sidebar navigation, back and forward, the run panel switch, the command palette keyboard flow, creating a work item from the sheet, and opening the Settings window with `Skills`.
-- Screenshots of each screen at 1440 × 900 (Settings 1000 × 760) in light and dark mode are compared side by side with `screens/`.
+- End-to-end tests cover launching on `Overview`, the reporting period switch, sidebar navigation, back and forward, the run panel switch, the command palette keyboard flow, creating a work item from the sheet, and opening Settings with `Skills`.
+- Screenshots of each screen at 1440 × 900 in light and dark mode are compared side by side with `screens/` (for Settings, the section content against `Settings-*` and `Sheet-*`).
 - `yarn design:md-check` and `yarn ui:check` stay green.
 
 ## Evidence and open questions
@@ -237,7 +237,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 - `Skills` is reachable only through Settings.
 - The sidebar panel where the canvas lists the agents also shows the action runs; it switches between `Agents` and `Actions`.
 - Voice input is no longer needed.
-- Settings is always a separate window.
+- Settings is always a separate window. (Superseded on 2026-10-31: Settings opens inside the main window; see `DECISIONS.md`.)
 - Every current Settings section and dialog is part of the redesign and drawn on the canvas page `Settings`.
 - Settings is organised around the delivery flow: `AI team`, `Skills` and `Automation` follow the same five steps; Settings opens on `Workspaces`; `System` is this Mac and holds the single storage picture and the virtual machines; the agentic switches become a dependency ladder with levels; search covers all settings; the agent and destination sheets preview what they create.
 - What needs attention (missing CLIs, accounts that are not signed in, unprepared repositories, pairing requests, storage pressure) is a notification centre behind a bell in the status bar of the main window, not a Settings page.

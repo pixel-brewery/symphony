@@ -6,11 +6,6 @@ mosaik-card[part~='orbit-card'] {
   --card-border-color: var(--mosaik-scheme-highlight);
 }
 
-// The inspector pane beside the orbit diagram, separated by the hairline the artboard draws.
-[part~='orbit-inspector'] {
-  border-left: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
-}
-
 // The cluster's work items: one row per item with a hairline between rows, as drawn.
 [part~='orbit-cluster-rows'] > mosaik-button {
   --button-height: auto;

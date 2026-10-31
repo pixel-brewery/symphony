@@ -4,22 +4,24 @@
 
 ## Ziel und Garantien
 
-Der Fensterrahmen des Hauptfensters (Window Chrome) besteht aus einer Seitenleiste (Source List), einer einheitlichen Werkzeugleiste und einer Statusleiste. Er gehört der Präsentationsschicht des Renderers; die Bildschirme liefern nur Inhalte in klar begrenzte Verträge. Das funktionale Verhalten steht im Produkthandbuch unter [Hauptfenster und Navigation](../../project/window-and-navigation/README.md); das separate Einstellungsfenster beschreibt [Einstellungsfenster](settings-window.md).
+Der Fensterrahmen des Hauptfensters (Window Chrome) besteht aus einer Seitenleiste (Source List), einer einheitlichen Werkzeugleiste und einer Statusleiste. Er gehört der Präsentationsschicht des Renderers; die Bildschirme liefern nur Inhalte in klar begrenzte Verträge. Das funktionale Verhalten steht im Produkthandbuch unter [Hauptfenster und Navigation](../../project/window-and-navigation/README.md). Die Einstellungen sind eine Route dieses Fensters und ersetzen solange die Ziele der Seitenleiste; das beschreibt [Einstellungen im Hauptfenster](settings.md). Größenänderung der Bereiche und Scroll-Eingrenzung beschreibt [Größenveränderbare Bereiche und Scroll-Eingrenzung](resizable-panes.md).
 
 Garantien:
 
 - Jedes Hauptfensterziel stammt aus einem feature-eigenen Navigationsbeitrag. Der Rahmen kennt keine festen Ziele außer **Settings**.
+- Ein gerouteter Bildschirm kann die Ziele der Seitenleiste durch eine eigene Navigation ersetzen, solange er lebt (derzeit nur Settings). Dann zeigt die Seitenleiste unter ihrer Kopfzeile nur diese Navigation, und ein Bildschirm, der zerstört wird, kann die Navigation seines Nachfolgers nicht entfernen.
 - Eine Seitenleistenzahl ist entweder eine positive ganze Zahl aus der Datenquelle des Zielbereichs oder fehlt. Laden, Nichtverfügbarkeit und null erzeugen nie eine sichtbare `0`.
 - Titel, Untertitel und Aktionen der Werkzeugleiste gehören dem aktuell aktiven Bildschirm. Ein Bildschirm, der zerstört wird, kann die Registrierung seines Nachfolgers nicht entfernen.
-- **Back** und **Forward** spiegeln die tatsächliche Router-Historie des Fensters; sie sind gesperrt, wenn in die jeweilige Richtung kein Eintrag existiert.
+- **Back** und **Forward** spiegeln die tatsächliche Router-Historie des Fensters; sie sind gesperrt, wenn in die jeweilige Richtung kein Eintrag existiert. Einzige Ausnahme: Solange ein Bildschirm die Seitenleiste ersetzt, ist **Back** immer bedienbar und führt ohne vorherigen Eintrag zum zuletzt gemerkten Bildschirm, ohne einen solchen nach `/main/home`.
 - Der Synchronisierungshinweis der Statusleiste meldet nie einen besseren Stand als die schwächste der beiden GitHub-Datenquellen.
-- Der Renderer sendet für Fenster- und Einstellungsaktionen nur benannte, schemavalidierte Desktop-Anfragen; er erhält keine Electron-Objekte, Fensteroptionen oder freien Routen.
-- Der Rahmen selbst speichert nur zwei lokale Darstellungspräferenzen und keine fachlichen Daten; die Workspace-Auswahl speichert das Workspace-Feature über den Einstellungsschreiber.
+- Der Renderer sendet für Fensteraktionen nur benannte, schemavalidierte Desktop-Anfragen; er erhält keine Electron-Objekte, Fensteroptionen oder freien Routen. Seitenleiste, Workspace-Umschalter und Laufpanel öffnen die Einstellungen als Route des Hauptfensters ohne Desktop-Anfrage.
+- Seitenleiste und Inhalt sind eine größenveränderbare Teilung; Werkzeugleiste, Seitenleiste und Statusleiste können weder durch Scrollen noch durch eine gezogene Textauswahl aus dem Bild geschoben werden.
+- Der Rahmen selbst speichert nur lokale Darstellungspräferenzen (ausgeblendete Seitenleiste, Segment des Laufpanels, Breite der Seitenleiste) und keine fachlichen Daten; die Workspace-Auswahl speichert das Workspace-Feature über den Einstellungsschreiber.
 
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Aufbau des Hauptfensters, Navigationsbeitragsvertrag, Seitenleistenzahlen, Workspace-Umschalter, Laufpanel, Werkzeugleistenregistrierung, Historie, Tastenkürzel, Statusleiste, Plattformrahmen (macOS-Ampelknöpfe, Window Controls Overlay unter Windows und Linux), Startziel und persistierte Darstellungspräferenzen.
-- Nicht enthalten: Inhalte von Overview, Inbox, Board und weiteren Bildschirmen; Suche und Ergebnisse der [Befehlspalette](../../project/command-palette/README.md) (der Rahmen öffnet, schaltet und schließt sie nur); das Benachrichtigungscenter hinter der Glocke der Statusleiste; das Menüleisten-Menü (Tray); der innere Aufbau des Einstellungsfensters. Der Downloadablauf des Updates gehört zu [Anwendungsupdates](../application-updates/README.md); der Rahmen stellt nur dessen Zustand dar.
+- Nicht enthalten: Inhalte von Overview, Inbox, Board und weiteren Bildschirmen; Suche und Ergebnisse der [Befehlspalette](../../project/command-palette/README.md) (der Rahmen öffnet, schaltet und schließt sie nur); das Benachrichtigungscenter hinter der Glocke der Statusleiste; das Menüleisten-Menü (Tray); der innere Aufbau der Einstellungen ([Einstellungen im Hauptfenster](settings.md)); die Teilungen innerhalb der Bildschirme ([Größenveränderbare Bereiche und Scroll-Eingrenzung](resizable-panes.md)). Der Downloadablauf des Updates gehört zu [Anwendungsupdates](../application-updates/README.md); der Rahmen stellt nur dessen Zustand dar.
 
 ## Verantwortungsgrenzen
 
@@ -29,9 +31,11 @@ Garantien:
 | Ziele der Seitenleiste                         | jeweiliges Produktfeature                                             | `INavigationItem` in Region `desktop-main`                       | Seitenleiste                            |
 | Zahlen der Seitenleiste                        | Feature des Ziels                                                     | `count`-Funktion und `countTone` am Navigationsbeitrag           | Seitenleiste                            |
 | Titel, Untertitel, Aktionen der Werkzeugleiste | jeweiliger Bildschirm                                                 | `WindowToolbarDirective` auf einem `ng-template`                 | Werkzeugleiste                          |
+| Ersatz der Seitenleistennavigation             | jeweiliger Bildschirm (derzeit Settings), Dienst `WindowSidebar`      | `WindowSidebarDirective` auf einem `ng-template`                 | Seitenleiste, Rückweg über **Back**     |
+| Breite der Seitenleiste                        | Frontend Core (`PaneSizeDirective`, `PaneSizeMemory`)                 | Teilung `window.sidebar`                                         | Fensterteilung                          |
 | Laufprojektion                                 | Execution-Feature (`buildRailRuns`), Agent-Aktivität im Domänenmodell | lesende Projektion über Snapshot und CI-Läufe                    | Laufpanel, Menüleisten-Menü             |
 | Updatezustand                                  | Electron Main (Update-Koordinator), im Renderer `DesktopUpdateStore`  | `UpdateState` über die Desktop-Bridge                            | Statusleiste, Einstellungen, Menüleiste |
-| Plattformrahmen                                | Electron Main                                                         | `BrowserWindow`-Optionen, CSS-`env(titlebar-area-*)`             | Haupt- und Einstellungsfenster          |
+| Plattformrahmen                                | Electron Main                                                         | `BrowserWindow`-Optionen, CSS-`env(titlebar-area-*)`             | Hauptfenster                            |
 | Gemeinsame Uhr für relative Zeiten             | Frontend Core (`Clock`, `formatRelativeTime`)                         | Signal `now`, Pipe `relativeTime`                                | Statusleiste, Listen mit Altersangaben  |
 
 Abhängigkeiten zeigen vom Rahmen zu den öffentlichen Verträgen der Features. Der Rahmen importiert keine Feature-Interna; Features importieren den Rahmen nicht.
@@ -40,22 +44,24 @@ Abhängigkeiten zeigen vom Rahmen zu den öffentlichen Verträgen der Features. 
 
 ```text
 mosaik-app (hasHeader=false, hasNav=false)
-└── Fensterinhalt (Spalte, volle Höhe)
-    ├── Zeile
-    │   ├── Seitenleiste 240 px            (nur wenn nicht ausgeblendet)
-    │   │   ├── Kopfzeile 52 px            Ziehbereich, Platz für macOS-Ampelknöpfe, „Hide sidebar“
-    │   │   ├── Workspace-Umschalter       (nur mit aktivem Workspace)
-    │   │   ├── Navigation                 Gruppen und Ziele aus Region desktop-main
-    │   │   ├── Laufpanel                  (nur wenn Execution- oder CI-Feature enthalten)
-    │   │   └── „Settings“                 öffnet das Einstellungsfenster
-    │   └── Inhaltsspalte
+└── Fensterinhalt (Spalte, volle Höhe, overflow: clip)
+    ├── mosaik-split „window.sidebar“      fester Startbereich 240 px (200–360 px, gemerkt); Trenner = 1 px Haarlinie
+    │   ├── Startbereich: Seitenleiste     (nur wenn nicht ausgeblendet; sonst Bereich und Trenner 0 px)
+    │   │   ├── Kopfzeile 52 px            Ziehbereich, Platz für macOS-Ampelknöpfe, „Hide sidebar“ – bleibt immer
+    │   │   ├── solange ersetzt:           Navigation des Bildschirms (Settings)
+    │   │   └── sonst:
+    │   │       ├── Workspace-Umschalter   (nur mit aktivem Workspace)
+    │   │       ├── Navigation             Gruppen und Ziele aus Region desktop-main, scrollt für sich
+    │   │       ├── Laufpanel              (nur wenn Execution- oder CI-Feature enthalten)
+    │   │       └── „Settings“             öffnet die Route /main/settings
+    │   └── Endbereich: Inhaltsspalte
     │       ├── Werkzeugleiste 52 px       Ziehbereich: Show sidebar?, Back, Forward, Titel/Untertitel, Aktionen, Suchfeld
     │       └── main                       Router-Outlet, eigener Scrollbereich, aria-busy beim Laden
     ├── Statusleiste 28 px                 volle Fensterbreite
     └── Befehlspalette                     nur während sie geöffnet ist
 ```
 
-Die Bereiche sind einfache Elemente mit `part`-Namen (`window-sidebar`, `window-toolbar`, `window-content`, `window-status-bar`, `workspace-switcher`, `run-switch`, `window-drag-region`, `window-no-drag`). Ein einziges globales Stylesheet ordnet ihnen Flächen, Linien und kompakte Steuerelementdichte zu; siehe [Gestaltungsvertrag](#gestaltungsvertrag).
+Die Bereiche sind einfache Elemente mit `part`-Namen (`window`, `pane-split`, `window-sidebar`, `window-toolbar`, `window-content`, `window-status-bar`, `workspace-switcher`, `run-switch`, `window-drag-region`, `window-no-drag`). Ein einziges globales Stylesheet ordnet ihnen Flächen, Linien und kompakte Steuerelementdichte zu; siehe [Gestaltungsvertrag](#gestaltungsvertrag).
 
 ## Verträge
 
@@ -92,7 +98,7 @@ Aktuelle Beiträge der Desktopkomposition:
 
 Jede `count`-Funktion gibt für den Wert `0` ebenfalls `undefined` zurück. Die Board-Zahl verwendet dieselbe Auswahl wie die Aufmerksamkeitskachel und der Kartenhinweis des Boards: ein Work Item zählt, wenn seine neueste Ausführung fehlgeschlagen ist oder wenn die Supervisor-Prüfung es nicht weiterbewegen würde (fehlende oder nicht bereite Analyse, kritische Risikoklasse, offene harte Abhängigkeit). Die Actions-Zahl gruppiert Läufe nach Repository-Bindung und Workflow-ID, ersatzweise Workflow-Namen, berücksichtigt nur abgeschlossene Läufe (`succeeded`, `failed`, `cancelled`), wählt je Gruppe den Lauf mit dem jüngsten `finishedAt`, ersatzweise `startedAt`, und zählt die Gruppen, deren gewählter Lauf `failed` ist.
 
-Die Region `workspace-menu` existiert weiterhin in der Registrierung (Beitrag `setup` → `/main/setup`), wird aber von keiner Oberfläche des neuen Rahmens dargestellt. **Skills** hat keinen Navigationsbeitrag; die frühere Route `/main/skills` leitet auf `/main/settings?section=skills` um und öffnet damit das Einstellungsfenster im Bereich **Skills**.
+Die Region `workspace-menu` existiert weiterhin in der Registrierung (Beitrag `setup` → `/main/setup`), wird aber von keiner Oberfläche des neuen Rahmens dargestellt. **Skills** hat keinen Navigationsbeitrag; die frühere Route `/main/skills` leitet auf `/main/settings?section=skills` um und öffnet damit die Einstellungen im Bereich **Skills**.
 
 ### Workspace-Umschalter
 
@@ -100,7 +106,7 @@ Die Region `workspace-menu` existiert weiterhin in der Registrierung (Beitrag `s
 - Zeigt das Kürzel als Avatar (die ersten zwei Zeichen, in Großbuchstaben), den Anzeigenamen und `owner/name` der ersten aktivierten Repository-Bindung dieses Workspace; ohne solche Bindung entfällt die Zeile.
 - Das Menü listet alle aktivierten Workspaces (Name, Kürzel als Unterzeile, aktiver markiert), sofern das Workspace-Feature den Umfang ändern darf (`workspaceScopeAvailable`), gefolgt von einem Trenner und **Manage workspaces…**.
 - Die Auswahl schließt das Menü und ruft `selectWorkspaceScope(workspaceId)` des Workspace-Features auf. Dieses ignoriert unbekannte, deaktivierte und bereits aktive Workspaces und speichert sonst über den einzigen Einstellungsschreiber `activeViewScope.workspaceIds = [workspaceId]`; eine gespeicherte Ansicht wird verworfen, eine Board-Auswahl bleibt nur, wenn sie zum neuen Workspace gehört. Der Rahmen wählt damit immer genau einen Workspace.
-- **Manage workspaces…** sendet `settings.open` ohne Parameter.
+- **Manage workspaces…** navigiert wie **Settings** nach `/main/settings`.
 
 ### Werkzeugleistenregistrierung
 
@@ -124,7 +130,7 @@ Der ViewPresenter führt eine eigene Liste der Router-Navigations-IDs mit aktuel
 | Navigation mit `replaceUrl`                                                | Die ID an der aktuellen Position wird ersetzt; der Index bleibt.                         |
 | jede andere Navigation                                                     | Alle Einträge hinter dem Index werden verworfen, die neue ID wird angehängt und aktuell. |
 
-`canGoBack` gilt bei Index > 0, `canGoForward` bei Index < letzter Position. Die Befehle rufen `Location.back()` und `Location.forward()` auf. Entfernt ein Zielbildschirm eine Einmalabsicht wie `?create=true` per `replaceUrl`, ersetzt das den aktuellen Eintrag, statt einen zusätzlichen anzulegen.
+`canGoBack` gilt bei Index > 0 oder solange `WindowSidebar.isReplaced()` gilt, `canGoForward` bei Index < letzter Position. **Back** ruft bei Index > 0 `Location.back()` auf, sonst `Router.navigateByUrl('/main/home')`; **Forward** ruft `Location.forward()` auf. Damit bleiben Bildschirme mit eigener Seitenleistennavigation verlassbar, auch wenn sie der erste Eintrag des Fensters sind (siehe [Rückweg über Back](settings.md#rückweg-über-back)). Entfernt ein Zielbildschirm eine Einmalabsicht wie `?create=true` per `replaceUrl`, ersetzt das den aktuellen Eintrag, statt einen zusätzlichen anzulegen.
 
 ### Laufpanel
 
@@ -141,7 +147,7 @@ Das Laufpanel liest die gemeinsame Laufprojektion (`buildRailRuns`) aus Ausführ
 | Aktuelle Action-Läufe | Einträge mit `kind ≠ agent`, die `active` sind (GitHub-Status `in-progress` oder der aktive lokale Lauf), danach der erste nicht aktive Eintrag mit Zustand `failed` (der jüngste Fehlschlag)                                                                                    |
 | Segmentzahl           | Anzahl aktiver Action-Läufe; `Actions · <n>` nur bei n > 0                                                                                                                                                                                                                       |
 | Lauf öffnen           | Eintrag mit Ausführungs-ID öffnet den Ausführungs-Drawer, sonst den Action-Drawer; ein bereits offener Drawer derselben Art wird nur hervorgehoben                                                                                                                               |
-| Leer                  | Agents: `No agent in this workspace` und **Open AI team** (`settings.open` mit `workspace=<aktive ID>`, `section=team`); Actions: `No action is running`, `Runs appear here as soon as one starts.`                                                                              |
+| Leer                  | Agents: `No agent in this workspace` und **Open AI team** (Navigation nach `/main/settings` mit `section=team` und, falls vorhanden, `workspace=<aktive ID>`); Actions: `No action is running`, `Runs appear here as soon as one starts.`                                        |
 
 Ein Actions-Deep-Link `/main/actions?run=<ciRunId>` öffnet den Action-Drawer des passenden Projektionseintrags genau einmal je Lauf-ID, sobald der Eintrag existiert; ein Verlassen der Route oder ein Link ohne `run` setzt das zurück.
 
@@ -176,47 +182,68 @@ Zwischen Synchronisierungshinweis und Version sitzt die Glocke **Notifications**
 - Fensterweit im Renderer: Primärmodifikator (⌘ auf macOS, sonst Ctrl) ohne Alt und Shift. `K` schaltet die Befehlspalette um; `N` schließt die Palette und navigiert nach `/main/board?create=true`. Das Board öffnet daraufhin seinen Erstellungsdialog und entfernt den Parameter per `replaceUrl`.
 - macOS wird über `navigator.platform` erkannt; davon hängen Kürzeltext und Ampelreserve ab.
 - Das Suchfeld (`Search  ⌘K` beziehungsweise `Search  Ctrl+K`, `aria-haspopup="dialog"`) verhindert Fokus und Zeigerereignis, entfernt den Fokus und öffnet die Palette. Ein druckbares Zeichen ohne Modifikator öffnet sie mit diesem Zeichen als Startanfrage; `Enter` und `ArrowDown` öffnen sie leer.
-- Das Anwendungsmenü von Electron Main trägt dieselben Kürzel als Accelerator (siehe [Einstellungsfenster](settings-window.md#anwendungsmenü)).
+- Das Anwendungsmenü von Electron Main trägt dieselben Kürzel als Accelerator (siehe [Anwendungsmenü](#anwendungsmenü)).
+
+### Anwendungsmenü
+
+| Plattform         | Menü                                                                                                                                                                                                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| macOS             | Programmmenü: About, Trenner, **Settings…** (`CmdOrCtrl+,`), Trenner, Hide, Hide Others, Show All, Trenner, Quit. **File**: **New Work Item…** (`CmdOrCtrl+N`), Trenner, Close. Danach Edit, View, Window, Help.                                                               |
+| Windows und Linux | **File**: **New Work Item…** (`CmdOrCtrl+N`), **Settings…** (`CmdOrCtrl+,`), Trenner, Quit. Danach Edit, View, Window. Das Menü ersetzt Electrons Standardmenü und wird wegen der rahmenlosen Fenster nicht als Menüleiste gezeichnet; Accelerator und Rollen bleiben wirksam. |
+
+**Settings…** zeigt das Hauptfenster und sendet `/main/settings` (siehe [Einstellungen im Hauptfenster](settings.md#öffnen-von-außerhalb-des-renderers)). **New Work Item…** zeigt das Hauptfenster und sendet `/main/board?create=true`.
 
 ### Persistierte Darstellungspräferenzen
 
-| Schlüssel im `localStorage` des Renderers | Werte                   | Standard                  | Wirkung                          |
-| ----------------------------------------- | ----------------------- | ------------------------- | -------------------------------- |
-| `presentation.isSidebarCollapsed`         | `'true'`, `'false'`     | `false`                   | Seitenleiste ausgeblendet        |
-| `presentation.runView`                    | `'agents'`, `'actions'` | siehe Laufpanel-Startwert | gewähltes Segment des Laufpanels |
+| Schlüssel im `localStorage` des Renderers | Werte                    | Standard                  | Wirkung                          |
+| ----------------------------------------- | ------------------------ | ------------------------- | -------------------------------- |
+| `presentation.isSidebarCollapsed`         | `'true'`, `'false'`      | `false`                   | Seitenleiste ausgeblendet        |
+| `presentation.runView`                    | `'agents'`, `'actions'`  | siehe Laufpanel-Startwert | gewähltes Segment des Laufpanels |
+| `symphony.pane.window.sidebar`            | positive ganze Pixelzahl | 240                       | Breite der Seitenleiste          |
+| `symphony.window.last-screen`             | Pfad unter `/main/…`     | nicht gesetzt             | Bildschirm beim nächsten Start   |
 
-Andere Werte gelten als nicht gesetzt. Ist der Speicher nicht zugreifbar, gelten die Standards, und Änderungen werden nicht gespeichert. Es gibt keine weitere Persistenz für den Rahmen.
+Andere Werte gelten als nicht gesetzt. Ist der Speicher nicht zugreifbar, gelten die Standards, und Änderungen werden nicht gespeichert. Die Breite der Seitenleiste folgt dem gemeinsamen Vertrag aller Teilungen ([Größe merken](resizable-panes.md#größe-merken-panesizedirective)). Den zuletzt gezeigten Bildschirm beschreibt [Letzten Bildschirm wieder öffnen](#letzten-bildschirm-wieder-öffnen). Es gibt keine weitere Persistenz für den Rahmen.
 
 ## Startziel und Routing
 
-`presentationRoutes(children, windows)` ordnet die Feature-Seiten unter `main` und verwendet die erste konkrete Kindroute (mit Pfad, nicht `**`, ohne `redirectTo`) als Start- und Rückfallziel. Die Home-Routen beginnen mit `home`, sodass `''`, `main` und jede unbekannte Adresse nach `/main/home` führen; `/main/dashboard` leitet ebenfalls dorthin. Weitere Fenster wie `settings` sind Routen der obersten Ebene neben `main` und `menu-bar` und laden den Rahmen des Hauptfensters nicht. Eine Komposition ohne konkrete Seite wird beim Start abgewiesen.
+`presentationRoutes(children)` ordnet die Feature-Seiten unter `main` und verwendet die erste konkrete Kindroute (mit Pfad, nicht `**`, ohne `redirectTo`) als Start- und Rückfallziel. Die Home-Routen beginnen mit `home`, sodass `''` und `main` ohne gemerkten Bildschirm sowie jede unbekannte Adresse nach `/main/home` führen; `/main/dashboard` leitet ebenfalls dorthin. Neben `main` gibt es auf oberster Ebene nur `menu-bar` für das Menüleisten-Panel, das den Rahmen des Hauptfensters nicht lädt. Die Einstellungen sind die Kindroute `main/settings` (siehe [Routen](settings.md#routen)); der frühere Fensterpfad `/settings` führt wie jede unbekannte Adresse nach `/main/home`. Eine Komposition ohne konkrete Seite wird beim Start abgewiesen.
+
+### Letzten Bildschirm wieder öffnen
+
+Das Hauptfenster öffnet beim Start den Bildschirm, den es zuletzt gezeigt hat.
+
+- **Merken:** `PresenterViewPresenter` übergibt bei jedem `NavigationEnd` die `urlAfterRedirects` an `LastScreenMemory.remember` (`libs/frontend/presentation/src/lib/routing/LastScreenMemory.ts`, `providedIn: 'root'`). Gespeichert wird nur der Pfad ohne Query und Fragment im `localStorage`-Schlüssel `symphony.window.last-screen` (über `BROWSER_STORAGE`). Gültig ist nur ein Pfad `/main/<segment>(/<segment>)*` mit Segmenten aus `[A-Za-z0-9._~-]`, ohne `.`- und `..`-Segmente. `/main/settings…` und `/main/projects…` werden nie gespeichert; während die Einstellungen offen sind, bleibt der Bildschirm davor gespeichert.
+- **Öffnen:** Die Weiterleitungen von `''` auf oberster Ebene und von `''` unter `main` sind eine `RedirectFunction`, die `LastScreenMemory.read() ?? '/main/<Startseite>'` liefert. Das Hauptfenster lädt ohne Hash und landet so auf dem gemerkten Bildschirm. Ein Pfad, den die Komposition nicht mehr enthält, fällt über `**` auf die Startseite. Navigationsziele des Desktop-Prozesses (`desktop:navigate`, etwa `/main/board?create=true`) folgen nach dem Laden und überschreiben ihn.
+- **Back ohne Verlauf:** Solange ein Bildschirm die Seitenleiste ersetzt und das Fenster keinen vorherigen Eintrag hat, führt **Back** zu `LastScreenMemory.read()`, sonst nach `/main/home`.
+- **Fehler:** Ein nicht lesbarer oder voller Speicher, ein ungültiger Wert oder ein fremder Pfad gelten als nicht gesetzt; das Fenster öffnet die Startseite. Transiente Zustände aus Query-Parametern (`create=true`, `notifications=open`, Actions-Deep-Links) werden nicht wiederhergestellt.
+- **Belege:** `LastScreenMemory.spec.ts`, `presentationRoutes.spec.ts` (gemerkter und nicht mehr enthaltener Bildschirm), `PresenterViewPresenter.spec.ts` (Merken, Back ohne Verlauf).
 
 ## Plattformrahmen
 
-Haupt- und Einstellungsfenster verwenden dieselben Fensteroptionen aus Electron Main:
+Das Hauptfenster verwendet diese Fensteroptionen aus Electron Main:
 
 | Plattform         | Optionen                                                                                                                                                                                                                                            | Renderer-Seite                                                                                                                                           |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | macOS             | `frame: false`, `titleBarStyle: hiddenInset`, `titleBarOverlay: true`, transparenter Hintergrund, `vibrancy: sidebar`, `visualEffectState: followWindow`, `trafficLightPosition { x: 20, y: 18 }` (16 px hohe Knöpfe mittig in der 52 px Kopfzeile) | Preload setzt `data-native-vibrancy="true"`; Dokumenthintergrund transparent. Bei ausgeblendeter Seitenleiste 80 px linke Reserve in der Werkzeugleiste. |
 | Windows und Linux | `frame: false`, `titleBarStyle: hidden`, `titleBarOverlay { color: Hintergrund, symbolColor: Vordergrund, height: 52 }`, `autoHideMenuBar: true`, Hintergrund nach Systemerscheinungsbild                                                           | Die Werkzeugleiste reserviert rechts `12px + (100vw − titlebar-area-x − titlebar-area-width)`.                                                           |
 
-Die Farben sind Sohos Rollen `background` (`#ffffff` hell, `#0a0a0a` dunkel) und `foreground` (`#0a0a0a` hell, `#fafafa` dunkel). Bei einer Änderung des Systemerscheinungsbilds setzt Main unter Windows und Linux Hintergrund und Overlay beider Fenster neu; das Menüleistenfenster erhält den neuen Hintergrund auf jeder Plattform, auf der es existiert. Werkzeugleiste und Seitenleistenkopf sind `app-region: drag`; Schaltflächen, Suchfeld, Dropdown-Schaltflächen und `window-no-drag`-Bereiche sind davon ausgenommen. Das Hauptfenster öffnet in 1440 × 940 px und lässt sich bis 400 × 270 px verkleinern.
+Die Farben sind Sohos Rollen `background` (`#ffffff` hell, `#0a0a0a` dunkel) und `foreground` (`#0a0a0a` hell, `#fafafa` dunkel). Bei einer Änderung des Systemerscheinungsbilds setzt Main unter Windows und Linux Hintergrund und Overlay des Hauptfensters neu; das Menüleistenfenster erhält den neuen Hintergrund auf jeder Plattform, auf der es existiert. Werkzeugleiste und Seitenleistenkopf sind `app-region: drag`; Schaltflächen, Suchfeld, Dropdown-Schaltflächen und `window-no-drag`-Bereiche sind davon ausgenommen. Das Hauptfenster öffnet in 1440 × 940 px und lässt sich bis 400 × 270 px verkleinern.
 
 ## Gestaltungsvertrag
 
 Alle Werte stammen aus Mosaik-Tokens; der Rahmen führt keine eigenen Farben, Radien oder Schatten ein.
 
-| Bereich                          | Gestaltung                                                                                                                    |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Seitenleiste                     | Fläche `--mosaik-color-neutral-100`, rechte Linie `--mosaik-layout-thickness` in `--mosaik-scheme-highlight`                  |
-| Fuß der Seitenleiste (Laufpanel) | obere Linie in `--mosaik-scheme-highlight`                                                                                    |
-| Werkzeugleiste                   | untere Linie in `--mosaik-scheme-highlight`                                                                                   |
-| Inhalt                           | Fläche `--mosaik-scheme-background`                                                                                           |
-| Statusleiste                     | Fläche `--mosaik-color-neutral-100`, obere Linie, Text `--mosaik-scheme-lowlight` in `--mosaik-typography-caption`            |
-| Workspace-Umschalter             | Fläche `--mosaik-scheme-surface`, Linie, Radius `--mosaik-layout-radius`                                                      |
-| Laufschalter                     | Spur `--mosaik-color-neutral-200`; gewähltes Segment `--mosaik-scheme-surface` mit `--mosaik-elevation-light`; Segmente 24 px |
-| Steuerelemente                   | Seitenleiste und Werkzeugleiste 32 px hoch, Suchfeld 32 px; Statusleiste 24 px                                                |
-| Ausgewählte Zeile                | Darstellung `soft` mit Hintergrund `--mosaik-color-neutral-200`                                                               |
+| Bereich                          | Gestaltung                                                                                                                                                                                                                             |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Seitenleiste                     | Fläche `--mosaik-color-neutral-100`; die Linie zum Inhalt ist der Trenner der Fensterteilung (`--mosaik-layout-thickness` in `--mosaik-scheme-highlight`, siehe [Gestaltung des Trenners](resizable-panes.md#gestaltung-des-trenners)) |
+| Fuß der Seitenleiste (Laufpanel) | obere Linie in `--mosaik-scheme-highlight`                                                                                                                                                                                             |
+| Werkzeugleiste                   | untere Linie in `--mosaik-scheme-highlight`                                                                                                                                                                                            |
+| Inhalt                           | Fläche `--mosaik-scheme-background`                                                                                                                                                                                                    |
+| Statusleiste                     | Fläche `--mosaik-color-neutral-100`, obere Linie, Text `--mosaik-scheme-lowlight` in `--mosaik-typography-caption`                                                                                                                     |
+| Workspace-Umschalter             | Fläche `--mosaik-scheme-surface`, Linie, Radius `--mosaik-layout-radius`                                                                                                                                                               |
+| Laufschalter                     | Spur `--mosaik-color-neutral-200`; gewähltes Segment `--mosaik-scheme-surface` mit `--mosaik-elevation-light`; Segmente 24 px                                                                                                          |
+| Steuerelemente                   | Seitenleiste und Werkzeugleiste 32 px hoch, Suchfeld 32 px; Statusleiste 24 px                                                                                                                                                         |
+| Ausgewählte Zeile                | Darstellung `soft` mit Hintergrund `--mosaik-color-neutral-200`                                                                                                                                                                        |
 
 Die Dichte wird ausschließlich über öffentliche Custom Properties der Mosaik-Steuerelemente gesetzt.
 
@@ -229,7 +256,8 @@ Die Dichte wird ausschließlich über öffentliche Custom Properties der Mosaik-
 | Execution- und CI-Feature fehlen       | kein Laufpanel                                                                |
 | Nur eines der beiden Features          | kein Schalter; das vorhandene Segment wird gezeigt                            |
 | GitHub-Lauf nur eingereiht (`queued`)  | erscheint nicht unter den aktuellen Action-Läufen und zählt nicht             |
-| `settings.open` schlägt fehl           | keine Änderung am Rahmen und keine eigene Fehlermeldung des Rahmens           |
+| Seitenleiste durch Settings ersetzt    | keine Workspace-Auswahl, keine Ziele, kein Laufpanel; **Back** führt zurück   |
+| Seitenleiste ausgeblendet und ersetzt  | weder Ziele noch Ersatznavigation sichtbar; **Show sidebar** oder **Back**    |
 | Speicher nicht verfügbar               | Standardwerte, keine Persistenz                                               |
 
 ## Implementierungsabbildung in Symphony
@@ -243,6 +271,8 @@ Die Dichte wird ausschließlich über öffentliche Custom Properties der Mosaik-
 | Navigationsvertrag und Registrierung         | `libs/frontend/core/src/navigation/{INavigationItem,NavigationRegistry}.ts`                                                     | `NavigationRegistry.spec.ts`                                    |
 | Navigationsbeiträge                          | `libs/frontend/features/{home,work,delivery,ci,arcade}/src/lib/provider/with*Navigation.ts`                                     | `countFailingWorkflows.spec.ts`, `withArcadeNavigation.spec.ts` |
 | Werkzeugleistenregistrierung                 | `libs/frontend/core/src/presentation/WindowToolbar{,Directive}.ts`                                                              | –                                                               |
+| Ersatz der Seitenleistennavigation           | `libs/frontend/core/src/presentation/WindowSidebar{,Directive}.ts`, `WindowSidebarView.{ts,html}`                               | `WindowSidebar.spec.ts`                                         |
+| Fensterteilung und gemerkte Breite           | `PresenterView.html` (`mosaik-split`), `libs/frontend/core/src/presentation/{PaneSizeDirective,PaneSizeMemory}.ts`              | `PaneSizeMemory.spec.ts`                                        |
 | Uhr und relative Zeit                        | `libs/frontend/core/src/time/{Clock,formatRelativeTime}.ts`, `libs/frontend/ui/src/lib/pipes/RelativeTimePipe.ts`               | `formatRelativeTime.spec.ts`                                    |
 | Start- und Rückfallroute                     | `libs/frontend/presentation/src/lib/routing/presentationRoutes.ts`, `libs/frontend/features/home/src/lib/routing/HomeRoutes.ts` | `presentationRoutes.spec.ts`                                    |
 | Gestaltung                                   | `apps/renderer/src/styles/overrides/window-chrome.scss`, `apps/renderer/src/styles.scss`                                        | –                                                               |
@@ -256,7 +286,8 @@ Die Dichte wird ausschließlich über öffentliche Custom Properties der Mosaik-
 - Eine Zahl erscheint nur für positive Werte und nie während des Ladens; ein Workflow, dessen jüngster abgeschlossener Lauf erfolgreich ist, zählt nicht, auch wenn ältere Läufe fehlgeschlagen sind.
 - Ungruppierte Ziele führen die Seitenleiste an; Gruppen behalten die Reihenfolge ihres ersten Ziels.
 - **Back** und **Forward** folgen der Historie; eine `replaceUrl`-Navigation erzeugt keinen neuen Eintrag.
-- **Hide sidebar** entfernt die Seitenleiste, zeigt **Show sidebar** und bleibt nach einem Neustart erhalten.
+- **Hide sidebar** entfernt die Seitenleiste samt Trennlinie, zeigt **Show sidebar** und bleibt nach einem Neustart erhalten; **Show sidebar** zeigt sie in der zuletzt gezogenen Breite.
+- **Settings** öffnet `/main/settings` im Hauptfenster; die Seitenleiste zeigt danach nur die Einstellungsnavigation, **Back** ist aktiv und stellt die Ziele wieder her.
 - Der Laufschalter wechselt die Segmente; `Actions · <n>` nennt nur aktive Läufe; der jüngste Fehlschlag folgt den aktiven Läufen; ohne beide erscheint der Leerzustand.
 - Der Synchronisierungshinweis meldet den schwächsten Zustand und die älteste Aktualisierung beider Quellen; **Retry** erscheint nur außerhalb von `current`.
 - Ohne verfügbares Update zeigt die Statusleiste nur die Version; bei `downloading` mit `progress = 0.5` meldet der Ring `aria-valuenow = 50`.
@@ -271,6 +302,7 @@ Die Dichte wird ausschließlich über öffentliche Custom Properties der Mosaik-
 ## Verwandte Dokumentation
 
 - [Hauptfenster und Navigation](../../project/window-and-navigation/README.md)
-- [Einstellungsfenster](settings-window.md)
+- [Einstellungen im Hauptfenster](settings.md)
+- [Größenveränderbare Bereiche und Scroll-Eingrenzung](resizable-panes.md)
 - [Anwendungsupdates](../application-updates/README.md)
-- [FLAMOX365-Referenzabgleich](../frontend-reference-flamox.md#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download)
+- [FLAMOX365-Referenzabgleich](../frontend-reference-flamox.md#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download) und [Einstellungen im Hauptfenster, größenveränderbare Bereiche](../frontend-reference-flamox.md#2026-10-31-settings-in-the-main-window-and-resizable-panes)

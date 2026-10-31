@@ -59,13 +59,25 @@ repositories.length > 1 ? repositories.length + ' repositories' : '';
   />
 </ng-template>
 
-<section
-  class="flex min-h-0 min-w-0 flex-1"
+<!-- The list and the inspector are resizable panes; the inspector pane is collapsed while no pull
+     request is selected. -->
+@let inspectorOpen = !presenter.isHydrating() && !!presenter.selectedRow();
+<mosaik-split
+  part="pane-split"
+  role="region"
+  class="min-h-0 min-w-0 flex-1"
   test-id="pull-requests-view"
   aria-label="Pull requests"
+  symphonyPaneSize="pull-requests.inspector"
+  [paneSize]="360"
+  [lock]="'end'"
+  [min]="inspectorOpen ? '300px' : '0px'"
+  [max]="inspectorOpen ? '60%' : '0px'"
+  [disabled]="!inspectorOpen"
+  [style.--split-divider-width]="inspectorOpen ? null : '0px'"
   [attr.aria-busy]="presenter.isHydrating()"
 >
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+  <div slot="start" class="flex h-full min-h-0 min-w-0 flex-col">
     <div
       part="pull-requests-bar"
       class="flex min-w-0 flex-none items-center gap-1 px-2.5 py-[14px]"
@@ -148,7 +160,7 @@ repositories.length > 1 ? repositories.length + ' repositories' : '';
     </div>
     } } }
 
-    <div class="flex min-h-0 flex-1 flex-col overflow-auto px-1.5 py-1">
+    <div class="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain px-1.5 py-1">
       @if (presenter.isHydrating()) {
       <mosaik-table
         test-id="pull-requests-loading-skeleton"
@@ -455,136 +467,137 @@ repositories.length > 1 ? repositories.length + ' repositories' : '';
     </div>
   </div>
 
-  @if (!presenter.isHydrating()) { @if (presenter.selectedRow(); as row) { @let pullRequest =
-  row.pullRequest;
-  <aside
-    part="pull-request-inspector"
-    class="flex w-[360px] min-h-0 flex-none flex-col overflow-auto"
-    test-id="pull-request-inspector"
-    [attr.aria-label]="'Pull request #' + pullRequest.number"
-  >
-    <div class="flex min-w-0 flex-col gap-2.5 p-3">
-      <div class="flex min-w-0 flex-col gap-0.5">
-        @if (presenter.selectedRepository(); as repository) {
-        <mosaik-text
-          part="technical-caption"
-          class="technical-value"
-          [text]="repository.owner + '/' + repository.name + ' #' + pullRequest.number"
-          [variant]="'neutral'"
-          [truncate]="true"
-        />
-        } @else {
-        <mosaik-text
-          part="technical-caption"
-          class="technical-value"
-          [text]="'#' + pullRequest.number"
-          [variant]="'neutral'"
-        />
-        }
-        <mosaik-text
-          test-id="pull-request-inspector-title"
-          role="heading"
-          aria-level="2"
-          [text]="pullRequest.title"
-          [mosaikTypography]="'headline6'"
-          [wrap]="true"
-        />
-        <mosaik-text
-          part="technical-caption"
-          class="technical-value"
-          [text]="pullRequest.sourceBranch + ' → ' + pullRequest.targetBranch"
-          [variant]="'neutral'"
-          [wrap]="true"
-        />
-      </div>
+  <div slot="end" class="flex h-full min-h-0 min-w-0">
+    @if (!presenter.isHydrating()) { @if (presenter.selectedRow(); as row) { @let pullRequest =
+    row.pullRequest;
+    <aside
+      part="pull-request-inspector"
+      class="flex h-full min-h-0 w-full min-w-0 flex-col overflow-auto overscroll-contain"
+      test-id="pull-request-inspector"
+      [attr.aria-label]="'Pull request #' + pullRequest.number"
+    >
+      <div class="flex min-w-0 flex-col gap-2.5 p-3">
+        <div class="flex min-w-0 flex-col gap-0.5">
+          @if (presenter.selectedRepository(); as repository) {
+          <mosaik-text
+            part="technical-caption"
+            class="technical-value"
+            [text]="repository.owner + '/' + repository.name + ' #' + pullRequest.number"
+            [variant]="'neutral'"
+            [truncate]="true"
+          />
+          } @else {
+          <mosaik-text
+            part="technical-caption"
+            class="technical-value"
+            [text]="'#' + pullRequest.number"
+            [variant]="'neutral'"
+          />
+          }
+          <mosaik-text
+            test-id="pull-request-inspector-title"
+            role="heading"
+            aria-level="2"
+            [text]="pullRequest.title"
+            [mosaikTypography]="'headline6'"
+            [wrap]="true"
+          />
+          <mosaik-text
+            part="technical-caption"
+            class="technical-value"
+            [text]="pullRequest.sourceBranch + ' → ' + pullRequest.targetBranch"
+            [variant]="'neutral'"
+            [wrap]="true"
+          />
+        </div>
 
-      @if (row.checksSummary.state === 'failing') { @let repair = row.delivery.repairExecution;
-      <mosaik-message
-        test-id="pull-request-failing-checks"
-        [variant]="'danger'"
-        [icon]="'errorCircle'"
-        [header]="row.checksSummary.failing + (row.checksSummary.failing === 1 ? ' check failing' : ' checks failing')"
-        [content]="repair && (repair.state === 'queued' || repair.state === 'running' || repair.state === 'waiting')
+        @if (row.checksSummary.state === 'failing') { @let repair = row.delivery.repairExecution;
+        <mosaik-message
+          test-id="pull-request-failing-checks"
+          [variant]="'danger'"
+          [icon]="'errorCircle'"
+          [header]="row.checksSummary.failing + (row.checksSummary.failing === 1 ? ' check failing' : ' checks failing')"
+          [content]="repair && (repair.state === 'queued' || repair.state === 'running' || repair.state === 'waiting')
           ? (repair.skillFlowRole === 'ci-diagnosis' ? 'AI is diagnosing the failure.' : 'AI is repairing the failure.')
           : repair && (repair.state === 'failed' || repair.state === 'cancelled')
             ? 'CI repair stopped' + (repair.error ? ': ' + repair.error : '.')
             : row.checksSummary.failingNames.join(', ') + ' failed on ' + pullRequest.sourceBranch + '.'"
-      />
-      } @if (row.mergeState === 'behind') {
-      <mosaik-message
-        test-id="pull-request-behind-base"
-        [variant]="'warning'"
-        [icon]="'warning'"
-        [header]="'Behind base'"
-        [content]="pullRequest.targetBranch + ' has moved on. Update the branch before merging.'"
-      />
-      } @else if (row.mergeState === 'conflict') {
-      <mosaik-message
-        test-id="pull-request-conflict"
-        [variant]="'danger'"
-        [icon]="'errorCircle'"
-        [header]="'Conflicts with ' + pullRequest.targetBranch"
-        [content]="'Resolve the conflicts in GitHub or on the branch before merging.'"
-      />
-      } @if (row.checks.length) {
-      <div class="flex min-w-0 flex-col gap-[10px]">
-        <mosaik-text part="section-heading" [text]="'Checks'" [mosaikTypography]="'subtitle2'" />
-        <div part="checks-list" class="flex min-w-0 flex-col" test-id="pull-request-checks">
-          @for (check of row.checks; track check.run.id) {
-          <div
-            class="flex min-w-0 items-center gap-1 px-[14px] py-[10px]"
-            [attr.test-id]="'pull-request-check-' + check.run.id"
-          >
-            @if (check.state === 'in-progress') {
-            <mosaik-progress-ring
-              class="flex-none"
-              [attr.aria-label]="check.state | ciRunStatusLabel"
-              [isIndeterminate]="true"
-              [variant]="'info'"
-              [radius]="8"
-              [thickness]="2"
-            />
-            } @else {
-            <mosaik-icon
-              class="flex-none"
-              [icon]="check.state | pullRequestCheckIcon"
-              [size]="'small'"
-              [variant]="check.state === 'failed' ? 'danger' : 'default'"
-              [label]="check.state | ciRunStatusLabel"
-            />
-            }
-            <mosaik-text
-              class="min-w-0 flex-1"
-              [text]="check.run.name"
-              [mosaikTypography]="'body2'"
-              [truncate]="true"
-            />
-            <mosaik-text
-              class="flex-none"
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="(check.source === 'local' ? 'Local runner · ' : '') +
+        />
+        } @if (row.mergeState === 'behind') {
+        <mosaik-message
+          test-id="pull-request-behind-base"
+          [variant]="'warning'"
+          [icon]="'warning'"
+          [header]="'Behind base'"
+          [content]="pullRequest.targetBranch + ' has moved on. Update the branch before merging.'"
+        />
+        } @else if (row.mergeState === 'conflict') {
+        <mosaik-message
+          test-id="pull-request-conflict"
+          [variant]="'danger'"
+          [icon]="'errorCircle'"
+          [header]="'Conflicts with ' + pullRequest.targetBranch"
+          [content]="'Resolve the conflicts in GitHub or on the branch before merging.'"
+        />
+        } @if (row.checks.length) {
+        <div class="flex min-w-0 flex-col gap-[10px]">
+          <mosaik-text part="section-heading" [text]="'Checks'" [mosaikTypography]="'subtitle2'" />
+          <div part="checks-list" class="flex min-w-0 flex-col" test-id="pull-request-checks">
+            @for (check of row.checks; track check.run.id) {
+            <div
+              class="flex min-w-0 items-center gap-1 px-[14px] py-[10px]"
+              [attr.test-id]="'pull-request-check-' + check.run.id"
+            >
+              @if (check.state === 'in-progress') {
+              <mosaik-progress-ring
+                class="flex-none"
+                [attr.aria-label]="check.state | ciRunStatusLabel"
+                [isIndeterminate]="true"
+                [variant]="'info'"
+                [radius]="8"
+                [thickness]="2"
+              />
+              } @else {
+              <mosaik-icon
+                class="flex-none"
+                [icon]="check.state | pullRequestCheckIcon"
+                [size]="'small'"
+                [variant]="check.state === 'failed' ? 'danger' : 'default'"
+                [label]="check.state | ciRunStatusLabel"
+              />
+              }
+              <mosaik-text
+                class="min-w-0 flex-1"
+                [text]="check.run.name"
+                [mosaikTypography]="'body2'"
+                [truncate]="true"
+              />
+              <mosaik-text
+                class="flex-none"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="(check.source === 'local' ? 'Local runner · ' : '') +
                 ((check.startedAt | checkDuration: check.finishedAt) || (check.state | ciRunStatusLabel))"
-            />
+              />
+            </div>
+            }
           </div>
-          }
         </div>
-      </div>
-      }
+        }
 
-      <div class="flex min-w-0 flex-col gap-1">
-        @if (row.checksSummary.state === 'failing') { @let repairBlock = presenter.repairBlock();
-        <mosaik-button
-          test-id="pull-request-repair-with-ai"
-          [label]="'Repair with AI'"
-          [iconName]="'sparkle'"
-          [iconSize]="'small'"
-          [appearance]="'solid'"
-          [variant]="'primary'"
-          [fit]="'width'"
-          [isBusy]="presenter.repairingPullRequestId() === pullRequest.id"
-          [disabled]="!!repairBlock || presenter.repairingPullRequestId() !== undefined"
-          [mosaikTooltip]="repairBlock === 'policy'
+        <div class="flex min-w-0 flex-col gap-1">
+          @if (row.checksSummary.state === 'failing') { @let repairBlock = presenter.repairBlock();
+          <mosaik-button
+            test-id="pull-request-repair-with-ai"
+            [label]="'Repair with AI'"
+            [iconName]="'sparkle'"
+            [iconSize]="'small'"
+            [appearance]="'solid'"
+            [variant]="'primary'"
+            [fit]="'width'"
+            [isBusy]="presenter.repairingPullRequestId() === pullRequest.id"
+            [disabled]="!!repairBlock || presenter.repairingPullRequestId() !== undefined"
+            [mosaikTooltip]="repairBlock === 'policy'
             ? 'Allow AI to repair failed checks for this repository in Settings › Automation.'
             : repairBlock === 'not-delivered'
               ? 'Only pull requests Symphony delivered from a work item can be repaired by AI.'
@@ -593,56 +606,57 @@ repositories.length > 1 ? repositories.length + ' repositories' : '';
                 : repairBlock === 'unavailable'
                   ? 'This window cannot start AI runs.'
                   : 'Ask the agent to fix the failed checks on this branch.'"
-          (click)="presenter.repairWithAiCommand.execute(row)"
-        />
-        } @if (presenter.selectedChecksRun(); as checksRun) { @if
-        (presenter.localCiEnabled()(checksRun)) { @if (presenter.isRunningLocally()(checksRun)) {
-        <mosaik-button
-          test-id="pull-request-stop-local-checks"
-          [label]="'Stop local run'"
-          [iconName]="'clear'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          [variant]="'danger'"
-          [fit]="'width'"
-          (click)="presenter.stopLocalRunCommand.execute(checksRun)"
-        />
-        } @else {
-        <mosaik-button
-          test-id="pull-request-run-checks-locally"
-          [label]="'Run checks locally'"
-          [iconName]="'play'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          [fit]="'width'"
-          [disabled]="presenter.localRunnerBusy()"
-          [mosaikTooltip]="presenter.localRunnerBusy() ? 'The local runner is busy with another run.' : checksRun.name"
-          (click)="presenter.runLocallyCommand.execute(checksRun)"
-        />
-        } } } @if (row.mergeState === 'behind') {
-        <mosaik-button
-          test-id="pull-request-update-branch"
-          [label]="presenter.branchUpdating(pullRequest) ? 'Updating branch…' : 'Update branch'"
-          [iconName]="'sync'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          [fit]="'width'"
-          [isBusy]="presenter.branchUpdating(pullRequest)"
-          [disabled]="presenter.pullRequestBranchUpdatingId() !== undefined"
-          (click)="presenter.updateBranch(pullRequest)"
-        />
-        }
-        <mosaik-button
-          test-id="pull-request-open-in-github"
-          [label]="'Open in GitHub'"
-          [iconName]="'open'"
-          [iconSize]="'small'"
-          [appearance]="'plain'"
-          [fit]="'width'"
-          (click)="presenter.openInGitHubCommand.execute(pullRequest)"
-        />
+            (click)="presenter.repairWithAiCommand.execute(row)"
+          />
+          } @if (presenter.selectedChecksRun(); as checksRun) { @if
+          (presenter.localCiEnabled()(checksRun)) { @if (presenter.isRunningLocally()(checksRun)) {
+          <mosaik-button
+            test-id="pull-request-stop-local-checks"
+            [label]="'Stop local run'"
+            [iconName]="'clear'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            [variant]="'danger'"
+            [fit]="'width'"
+            (click)="presenter.stopLocalRunCommand.execute(checksRun)"
+          />
+          } @else {
+          <mosaik-button
+            test-id="pull-request-run-checks-locally"
+            [label]="'Run checks locally'"
+            [iconName]="'play'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            [fit]="'width'"
+            [disabled]="presenter.localRunnerBusy()"
+            [mosaikTooltip]="presenter.localRunnerBusy() ? 'The local runner is busy with another run.' : checksRun.name"
+            (click)="presenter.runLocallyCommand.execute(checksRun)"
+          />
+          } } } @if (row.mergeState === 'behind') {
+          <mosaik-button
+            test-id="pull-request-update-branch"
+            [label]="presenter.branchUpdating(pullRequest) ? 'Updating branch…' : 'Update branch'"
+            [iconName]="'sync'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            [fit]="'width'"
+            [isBusy]="presenter.branchUpdating(pullRequest)"
+            [disabled]="presenter.pullRequestBranchUpdatingId() !== undefined"
+            (click)="presenter.updateBranch(pullRequest)"
+          />
+          }
+          <mosaik-button
+            test-id="pull-request-open-in-github"
+            [label]="'Open in GitHub'"
+            [iconName]="'open'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [fit]="'width'"
+            (click)="presenter.openInGitHubCommand.execute(pullRequest)"
+          />
+        </div>
       </div>
-    </div>
-  </aside>
-  } }
-</section>
+    </aside>
+    } }
+  </div>
+</mosaik-split>

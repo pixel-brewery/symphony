@@ -8,7 +8,7 @@ Im Bereich **Delivery destinations** legst du je Projekt fest, welche Umgebungen
 
 ## Aufbau
 
-Die Gruppe **Delivery destinations** trägt **Add destination**. Darunter wählt **Project** das Repository, dessen Ziele angezeigt und bearbeitet werden; die Wahl bleibt erhalten, solange das Einstellungsfenster offen ist. Jede Zeile zeigt den Namen und `Environment · production · Production` (Art, Name beim Anbieter, gegebenenfalls Production), bei einem Auslieferungs-Workflow `Workflow: <Workflow>`, das Abzeichen **Production** sowie **Edit** und **Remove**.
+Die Gruppe **Delivery destinations** trägt **Add destination**. Darunter wählt **Project** das Repository, dessen Ziele angezeigt und bearbeitet werden; die Wahl bleibt erhalten, solange die Einstellungen offen sind. Jede Zeile zeigt den Namen und `Environment · production · Production` (Art, Name beim Anbieter, gegebenenfalls Production), bei einem Auslieferungs-Workflow `Workflow: <Workflow>`, das Abzeichen **Production** sowie **Edit** und **Remove**.
 
 Hat das Projekt noch kein Ziel, steht unter **A project without destinations**: „No destinations are configured for this project. Add one and mark it as Production to configure the centre of the orbit.“
 
@@ -52,7 +52,7 @@ Der aufklappbare Abschnitt **Deployment workflow (optional)** („Enable startin
 
 ## Aus dem Orbit konfigurieren
 
-**Configure destination** an einem Ziel und **Configure production** im Orbit öffnen das Einstellungsfenster in diesem Bereich beim Projekt:
+**Configure destination** an einem Ziel und **Configure production** im Orbit öffnen die Einstellungen in diesem Bereich beim Projekt:
 
 - Ein konfiguriertes Ziel öffnet sich zum Bearbeiten.
 - Ein im Orbit gezeigtes, aber noch nicht konfiguriertes Ziel öffnet sich als neues Ziel, vorbelegt mit Name, Art und Zielname aus dem Orbit.

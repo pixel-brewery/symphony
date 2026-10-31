@@ -11,7 +11,7 @@ Use the current Symphony repository checkout. The complete handoff is committed 
 ```text
 Implement the macOS redesign of Symphony described in docs/workitems/macos-redesign/.
 Read START-HERE.md, DECISIONS.md and change-request.md first; screens/ shows every
-screen as drawn (1440 × 900 main window, Settings window 1000 px wide at full length),
+screen as drawn (1440 × 900 main window, Settings sections 1000 px wide at full length),
 artboards/ holds the exact copy, spacing and Mosaik components of each screen.
 
 Work in the slices listed in START-HERE.md, one slice at a time: run the
@@ -31,7 +31,7 @@ handoff. Start with slice 1.
 5. **Command palette and new-work-item sheet**. Screens: `Palette`, `NewItem`.
 6. **Notification centre**: bell with count in the status bar, popover upwards with `Needs attention` and `Earlier today`; register `reiconBell` as `bell`. Screen: `Notifications`.
 7. **Tray**: header, `Agents | Actions` switch with live runs, execution slots, `Needs you`, autonomy, update row and commands with shortcuts. Screens: `Tray-Agents`, `Tray-Actions`, `Tray-Quiet`, `Tray-States`.
-8. **Settings window**: separate Electron window on every platform, sidebar with the workspaces and their nested sections, every section, sheet and confirmation dialog, search, the automation level ladder, immediate saving. Screens: `Settings`, `Settings-*`, `Sheet-*`.
+8. **Settings**: inside the main window (decided on 2026-10-31, see `DECISIONS.md`; the earlier separate Electron window is retired): the Settings navigation replaces the sidebar destinations while Settings is open and `Back` leads out of it; the workspaces and their nested sections, every section, sheet and confirmation dialog, search, the automation level ladder, immediate saving. Screens: `Settings`, `Settings-*`, `Sheet-*` (section content; the drawn window frame is not built).
 9. **Reporting** on `Overview`, once the history it needs is recorded (see the dependencies in `change-request.md`).
 
 ## 4. What else is in this folder

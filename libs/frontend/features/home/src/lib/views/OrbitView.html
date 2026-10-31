@@ -95,10 +95,21 @@
   </mosaik-dropdown-button>
 </ng-template>
 
-<div class="flex min-h-0 min-w-0 flex-1" test-id="orbit-view">
+<!-- The canvas and the inspector are resizable panes; the inspector scrolls on its own. -->
+<mosaik-split
+  part="pane-split"
+  class="min-h-0 min-w-0 flex-1"
+  test-id="orbit-view"
+  symphonyPaneSize="orbit.inspector"
+  [paneSize]="340"
+  [lock]="'end'"
+  [min]="'280px'"
+  [max]="'50%'"
+>
   <main
+    slot="start"
     aria-label="Release orbit"
-    class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+    class="relative flex h-full min-h-0 min-w-0 flex-col overflow-clip"
   >
     <symphony-orbit-canvas
       #orbitCanvas
@@ -192,10 +203,11 @@
   </main>
 
   <aside
+    slot="end"
     part="orbit-inspector"
     test-id="orbit-inspector"
     aria-label="Orbit inspector"
-    class="flex w-[340px] flex-none flex-col overflow-y-auto overflow-x-hidden"
+    class="flex h-full min-h-0 min-w-0 flex-col overflow-x-clip overflow-y-auto overscroll-contain"
   >
     <div class="flex min-w-0 flex-col gap-[18px] p-3">
       @if (presenter.deliveryError()) {
@@ -785,4 +797,4 @@
       } }
     </div>
   </aside>
-</div>
+</mosaik-split>

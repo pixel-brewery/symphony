@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron, type Locator } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
 
 // #endregion
 
@@ -195,11 +196,9 @@ test('shows the macOS menu-bar panel with runs, slots, what needs the user and i
     await mainPage.keyboard.press('Escape');
     await expect(mainPage.getByTestId('notification-centre')).toHaveCount(0);
 
-    // `Settings…` opens the separate Settings window.
-    const settingsOpened = app.waitForEvent('window', { timeout: 30_000 });
+    // `Settings…` opens Settings inside the main window.
     await panelPage.getByTestId('menu-bar-open-settings').click();
-    const settings = await settingsOpened;
-    await expect.poll(() => settings.url()).toContain('#/settings');
+    await expectSettingsInMainWindow(app, mainPage);
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();

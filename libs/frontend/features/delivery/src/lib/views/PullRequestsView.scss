@@ -8,10 +8,6 @@
   border-bottom: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
 }
 
-[part~='pull-request-inspector'] {
-  border-left: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
-}
-
 // The `Open · Needs action · Drafts` segment sits on a neutral track.
 [part~='segment-track'] {
   background-color: var(--mosaik-color-neutral-100);

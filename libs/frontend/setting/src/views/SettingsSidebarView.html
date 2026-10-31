@@ -1,13 +1,10 @@
-<aside
-  part="window-sidebar"
+<!-- The Settings navigation inside the main window's sidebar, below its title-bar row. -->
+<div
   test-id="settings-sidebar"
+  role="navigation"
   aria-label="Settings sections"
   class="box-border flex h-full w-full min-w-0 flex-col"
 >
-  <!-- The 52px header row is the title bar above the sidebar: macOS draws its traffic lights
-       here, so the row stays empty and is a drag region. -->
-  <div part="window-drag-region" class="h-[52px] flex-none"></div>
-
   <div class="flex-none px-[10px] pb-1">
     <mosaik-searchbox
       test-id="settings-search"
@@ -100,4 +97,4 @@
     />
     }
   </nav>
-</aside>
+</div>

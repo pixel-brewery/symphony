@@ -3,12 +3,13 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import { openSettingsWindow } from './openSettingsWindow';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
-test('opens Settings in its own window on the workspace list and navigates its nested sections', async () => {
+test('opens Settings in the main window on the workspace list and navigates its nested sections', async () => {
   // arrange
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
@@ -49,15 +50,12 @@ test('opens Settings in its own window on the workspace list and navigates its n
     await expect(menuSettings).toBeVisible();
     await page.keyboard.press('Escape');
 
-    // Settings opens in its own window on the workspace list, with the drawn sidebar.
-    const settings = await openSettingsWindow(app, page);
-    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('settings-view')).toHaveCount(0);
-    await expect(settings.getByTestId('settings-sidebar')).toBeVisible();
-    await expect(settings.getByTestId('settings-title-text')).toHaveJSProperty(
-      'text',
-      'Workspaces',
-    );
+    // Settings opens in the main window on the workspace list; its navigation replaces the
+    // sidebar's destinations.
+    const settings = await openSettings(page);
+    await expectSettingsInMainWindow(app, settings);
+    await expect(settings.getByTestId('workspace-switcher')).toHaveCount(0);
+    await expect(settings.getByTestId('window-title-text')).toHaveJSProperty('text', 'Workspaces');
     await expect(settings.getByTestId('workspace-directory')).toBeVisible();
     await expect(settings.getByTestId('workspace-navigation-item-personal')).toBeVisible();
 
@@ -79,13 +77,13 @@ test('opens Settings in its own window on the workspace list and navigates its n
     await expect
       .poll(() =>
         settings
-          .getByTestId('settings-subtitle')
+          .getByTestId('window-subtitle')
           .evaluate((element) => (element as { text?: string }).text ?? ''),
       )
       .toMatch(/^Personal · /u);
-    await expect(settings).toHaveURL(/#\/settings\?workspace=personal&section=team/u);
+    await expect(settings).toHaveURL(/#\/main\/settings\?workspace=personal&section=team/u);
 
-    // A location requested by the main window opens there in the same Settings window.
+    // A location requested through the desktop opens in the same main window.
     await page.evaluate(async () => {
       const desktop = (
         window as unknown as {
@@ -101,7 +99,9 @@ test('opens Settings in its own window on the workspace list and navigates its n
     await settings.screenshot({
       path: resolve(outputDirectory, 'workspace-settings-navigation.png'),
     });
-    expect(app.windows().filter((window) => window.url().includes('#/settings'))).toHaveLength(1);
+    await expect(settings).toHaveURL(/#\/main\/settings\?section=system/u);
+    await expect(settings.getByTestId('window-title-text')).toHaveJSProperty('text', 'System');
+    await expectSettingsInMainWindow(app, settings);
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();

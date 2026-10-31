@@ -1,6 +1,6 @@
 //
-// macOS window chrome for the main window and the Settings window: a source-list sidebar, a 52px
-// unified toolbar and a 28px status bar along the bottom edge. The chrome regions are plain
+// macOS window chrome for the main window: a resizable source-list sidebar, a 52px unified toolbar
+// and a 28px status bar along the bottom edge. The chrome regions are plain
 // elements marked with `part` names, so this sheet owns their surfaces in one countable place, and
 // the Mosaik controls inside them get the compact macOS density through their public custom
 // properties only. Every value is a Mosaik token; nothing here introduces a colour of its own.
@@ -8,9 +8,9 @@
 
 // --- Surfaces ---------------------------------------------------------------------------------
 
+// The hairline between the sidebar and the content is the divider of the window's split.
 [part~='window-sidebar'] {
   background-color: var(--mosaik-color-neutral-100);
-  border-right: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
 }
 
 [part~='window-sidebar-footer'] {
@@ -116,6 +116,55 @@
   --button-background-color: var(--mosaik-color-neutral-200);
   --button-padding-left: 8px;
   --button-padding-right: 8px;
+}
+
+// The chrome is not text: like a native title bar, source list and status bar, its labels cannot
+// be selected, so a selection dragged out of a pane never highlights them. Text fields stay
+// editable and selectable.
+[part~='window-sidebar'],
+[part~='window-toolbar'],
+[part~='window-status-bar'] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+// --- Resizable panes --------------------------------------------------------------------------
+
+// Every split between the sidebar and the content, and between a list and its detail, is drawn as
+// the hairline the artboards show. The user drags it anywhere within 4px of the line; the grip is
+// not drawn. While the pointer is over it or it has keyboard focus, the line darkens one step.
+mosaik-split[part~='pane-split'] {
+  --split-divider-width: var(--mosaik-layout-thickness);
+  --split-divider-background-color: var(--mosaik-scheme-highlight);
+  --split-divider-hit-area: 9px;
+
+  // The single row fills the split. The panes clip instead of hiding overflow, so a text selection
+  // dragged past their edge can never scroll the window chrome away; each pane brings its own
+  // scroll container. A clipping pane is not a scroll container, so it gets an explicit minimum
+  // size of zero; otherwise the row would grow to the tallest pane's content.
+  grid-template-rows: minmax(0, 1fr);
+
+  &::part(panel) {
+    overflow: clip;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  &::part(thumb) {
+    display: none;
+  }
+
+  &::part(divider)::after {
+    top: 0;
+    left: calc(var(--split-divider-hit-area) / -2 + var(--split-divider-width) / 2);
+    width: var(--split-divider-hit-area);
+    height: 100%;
+  }
+
+  &::part(divider):hover,
+  &::part(divider):focus-visible {
+    --split-divider-background-color: var(--mosaik-color-neutral-300);
+  }
 }
 
 // --- Window dragging --------------------------------------------------------------------------

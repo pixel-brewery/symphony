@@ -3,7 +3,7 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -40,7 +40,7 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
   // act
   try {
     const main = await prepareMainWindow(app);
-    const desktop = await openSettingsWindow(app, main);
+    const desktop = await openSettings(main);
     const desktopErrors: string[] = [];
     desktop.on('pageerror', (error) => desktopErrors.push(error.stack ?? error.message));
     await desktop.getByTestId('global-settings-section-mobile').click();

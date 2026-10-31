@@ -4,12 +4,12 @@ Der Bereich **Skills** zeigt, wie jeder Schritt des Lieferablaufs arbeitet. Jede
 
 ## Bereich öffnen
 
-**Skills** steht im Einstellungsfenster unter der Überschrift **Symphony** und gilt nicht für einen einzelnen Workspace. Wege dorthin:
+**Skills** steht in den Einstellungen unter der Überschrift **Symphony** und gilt nicht für einen einzelnen Workspace. Wege dorthin:
 
 - die Zeile **Skills** in der Seitenleiste der Einstellungen;
 - die Suche in den Einstellungen nach **Edit instructions**, **Add skills**, **New skill** oder **Import skill**;
 - in der [Befehlspalette](../command-palette/README.md) der Eintrag `Open <Skill> in Settings` zu einem installierten Paket;
-- ein früheres Lesezeichen auf die Seite **Skills** des Hauptfensters oder ein Link mit `section=skills`: Das Hauptfenster bleibt auf seinem Bildschirm, das Einstellungsfenster öffnet sich bei **Skills**.
+- ein früheres Lesezeichen auf die Seite **Skills** des Hauptfensters oder ein Link mit `section=skills`: Die Einstellungen öffnen sich bei **Skills**.
 
 Im Hauptfenster gibt es keinen eigenen Eintrag **Skills** mehr.
 
@@ -112,5 +112,5 @@ Schlägt Speichern oder Import fehl, meldet Symphony **Unable to save skill.** b
 
 - [AI-Team](../ai-team/README.md) – wer jeden Schritt erledigt
 - [Automation](../automation/README.md) – wann AI-Schritte selbstständig laufen
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md)
+- [Einstellungen](../window-and-navigation/settings.md)
 - [Befehlspalette](../command-palette/README.md)

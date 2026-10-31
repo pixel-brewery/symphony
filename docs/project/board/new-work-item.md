@@ -10,16 +10,16 @@ Neue Work Items entstehen im Sheet **New work item** über dem Board. Du schreib
 
 ## Sheet öffnen
 
-| Auslöser                                                                                    | Ergebnis                                                                                                    |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **New work item** in der Werkzeugleiste des [Boards](README.md)                             | Das Sheet öffnet sich mit der Anfangsspalte des Workflows.                                                  |
-| **+** im Kopf einer Board-Spalte (**New work item in <Spalte>**)                            | Das Sheet öffnet sich mit dieser Spalte.                                                                    |
-| ⌘N beziehungsweise Ctrl+N im Hauptfenster oder im Einstellungsfenster                       | Das Hauptfenster kommt nach vorn, wechselt zum Board und öffnet das Sheet.                                  |
-| **New Work Item…** im Menü **File** (macOS)                                                 | wie oben                                                                                                    |
-| `New work item…` in der [Befehlspalette](../command-palette/README.md)                      | wie oben                                                                                                    |
-| **New work item** unter den Schnellaktionen von [Overview](../overview-and-inbox/README.md) | wie oben                                                                                                    |
-| **New work item…** im [Menüleistenpanel](../notifications-and-tray/README.md)               | wie oben                                                                                                    |
-| die Adresse `/main/board?create=true`                                                       | wie oben; der Parameter wird danach aus der Adresse entfernt, damit **Back** das Sheet nicht erneut öffnet. |
+| Auslöser                                                                                    | Ergebnis                                                                                                              |
+| ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **New work item** in der Werkzeugleiste des [Boards](README.md)                             | Das Sheet öffnet sich mit der Anfangsspalte des Workflows.                                                            |
+| **+** im Kopf einer Board-Spalte (**New work item in <Spalte>**)                            | Das Sheet öffnet sich mit dieser Spalte.                                                                              |
+| ⌘N beziehungsweise Ctrl+N im Hauptfenster, auch in den Einstellungen                        | Das Hauptfenster kommt nach vorn, wechselt zum Board und öffnet das Sheet; offene Einstellungen schließen sich dabei. |
+| **New Work Item…** im Menü **File** (macOS)                                                 | wie oben                                                                                                              |
+| `New work item…` in der [Befehlspalette](../command-palette/README.md)                      | wie oben                                                                                                              |
+| **New work item** unter den Schnellaktionen von [Overview](../overview-and-inbox/README.md) | wie oben                                                                                                              |
+| **New work item…** im [Menüleistenpanel](../notifications-and-tray/README.md)               | wie oben                                                                                                              |
+| die Adresse `/main/board?create=true`                                                       | wie oben; der Parameter wird danach aus der Adresse entfernt, damit **Back** das Sheet nicht erneut öffnet.           |
 
 Es ist immer höchstens ein Sheet offen. Ein weiterer Auslöser hebt das offene Sheet hervor, statt ein zweites zu öffnen.
 
@@ -106,4 +106,4 @@ Ohne Skill für **Create** ist die Beschreibung gesperrt; das Sheet nennt **Assi
 - [Work-Item-Bildschirm](work-item.md)
 - [Skills](../skills/README.md)
 - [Hauptfenster und Navigation](../window-and-navigation/README.md#tastenkürzel-und-menü)
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md)
+- [Einstellungen](../window-and-navigation/settings.md)

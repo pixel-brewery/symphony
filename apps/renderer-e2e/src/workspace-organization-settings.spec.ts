@@ -4,7 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -37,9 +37,8 @@ test('opens exactly one workspace organization and projects its delivery routing
     const page = await prepareMainWindow(app);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    // Settings is its own window.
-    const settings = await openSettingsWindow(app, page);
-    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    // Settings opens inside the main window.
+    const settings = await openSettings(page);
 
     const stored = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -151,7 +150,7 @@ test('opens exactly one workspace organization and projects its delivery routing
       .locator('[test-id^="edit-account-"]')
       .click();
     await settings.getByTestId('import-opencode-credentials').click();
-    // The import is confirmed in an alert sheet of the Settings window.
+    // The import is confirmed in an alert sheet of Settings.
     const importConfirmation = settings.locator(
       '[test-id^="settings-alert-import-opencode-credentials-"]:not([test-id$="-confirm"]):not([test-id$="-cancel"])',
     );
@@ -291,7 +290,7 @@ test('opens exactly one workspace organization and projects its delivery routing
     // An account that an agent runs on cannot be removed; the dialog names the agent.
     await settings.getByTestId('workspace-settings-section-services').click();
     await settings.getByTestId(`remove-account-${delegated.connection!.id}`).click();
-    // The notice is an alert sheet of the Settings window.
+    // The notice is an alert sheet of Settings.
     const removalBlocked = settings.getByTestId(
       `settings-alert-remove-ai-account-blocked-${delegated.connection!.id}`,
     );
@@ -357,7 +356,7 @@ test('opens exactly one workspace organization and projects its delivery routing
 
     // Removing an agent hands its responsibility to an agent whose position allows that role.
     await settings.getByTestId(`remove-agent-${delegated.agent!.id}`).click();
-    // Removing an agent is confirmed in an alert sheet of the Settings window.
+    // Removing an agent is confirmed in an alert sheet of Settings.
     const agentRemoval = settings.getByTestId(`settings-alert-remove-agent-${delegated.agent!.id}`);
     await expect(agentRemoval).toContainText('Remove Free implementer?');
     await settings

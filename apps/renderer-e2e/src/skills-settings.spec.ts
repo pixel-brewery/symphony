@@ -3,7 +3,7 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -15,7 +15,7 @@ interface ISkillCustomizationsApi {
   ): Promise<{ skillCustomizations: Array<{ role: string; additionalInstructions: string }> }>;
 }
 
-test('manages the delivery-flow skills in the Settings window instead of a main-window page', async () => {
+test('manages the delivery-flow skills in Settings instead of a main-window page', async () => {
   // arrange
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
@@ -48,8 +48,7 @@ test('manages the delivery-flow skills in the Settings window instead of a main-
     // Skills has no entry of its own in the main window any more.
     await expect(page.getByTestId('navigation-skills')).toHaveCount(0);
 
-    const settings = await openSettingsWindow(app, page);
-    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    const settings = await openSettings(page);
     await settings.getByTestId('global-settings-section-skills').click();
     await expect(settings.getByTestId('builtin-skills')).toBeVisible();
 
@@ -77,8 +76,10 @@ test('manages the delivery-flow skills in the Settings window instead of a main-
       'Built-in instructions only',
     );
 
-    // The section's actions sit in the toolbar.
-    const toolbar = settings.getByTestId('settings-toolbar-actions');
+    // The section's actions sit in the window toolbar.
+    const toolbar = settings
+      .getByTestId('window-toolbar-actions')
+      .getByTestId('settings-toolbar-actions');
     for (const testId of [
       'refresh-skills',
       'open-skill-import',
@@ -135,11 +136,16 @@ test('manages the delivery-flow skills in the Settings window instead of a main-
     });
 
     // The retired main-window route opens Settings at Skills instead.
+    await settings.getByTestId('global-settings-section-workspaces').click();
+    await expect(settings.getByTestId('window-title-text')).toHaveJSProperty('text', 'Workspaces');
     await page.evaluate(() => {
       window.location.hash = '/main/skills';
     });
-    await expect(page).not.toHaveURL(/\/main\/skills/u);
-    await expect(settings.getByTestId('settings-title-text')).toHaveJSProperty('text', 'Skills');
+    await expect(page).toHaveURL(/#\/main\/settings\?section=skills/u);
+    await expect(page.getByTestId('window-title-text')).toHaveJSProperty('text', 'Skills');
+    await expect(
+      page.getByTestId('window-sidebar-override').getByTestId('settings-sidebar'),
+    ).toBeVisible();
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();

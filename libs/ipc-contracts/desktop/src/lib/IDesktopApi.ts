@@ -23,7 +23,7 @@ export interface IDesktopApi {
   onSpeechRecognitionEvent(listener: (event: SpeechRecognitionEvent) => void): () => void;
   /**
    * Receives in-app destinations the main process asks this window to open, such as the Inbox
-   * from the menu-bar extra or a Settings section in the Settings window.
+   * from the menu-bar extra or a Settings section requested through `settings.open`.
    */
   onNavigate(listener: (path: DesktopNavigationPath) => void): () => void;
 }

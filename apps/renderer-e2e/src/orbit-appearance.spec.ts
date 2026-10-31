@@ -4,8 +4,9 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { closeSettingsWindow } from './closeSettingsWindow';
-import { openSettingsWindow } from './openSettingsWindow';
+import { closeSettings } from './closeSettings';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -92,11 +93,9 @@ test('keeps employee identities in workspace settings and follows the page Soho 
     await page.evaluate(() => {
       location.hash = '/main/team';
     });
-    // The former Team route leads to Settings, which is its own window.
-    await expect
-      .poll(() => app.windows().some((window) => window.url().includes('#/settings')))
-      .toBe(true);
-    await closeSettingsWindow(app);
+    // The former Team route leads to Settings inside the main window.
+    await expectSettingsInMainWindow(app, page);
+    await closeSettings(page);
     await page.getByTestId('navigation-orbit').click();
     await expect(canvas).toHaveAttribute('data-render-state', 'ready');
     await expect(page.getByTestId('employee-details')).toHaveCount(0);
@@ -178,22 +177,20 @@ test('keeps employee identities in workspace settings and follows the page Soho 
       expect(pixel).toEqual(mode === 'light' ? [250, 250, 250, 255] : [23, 23, 23, 255]);
       await page.screenshot({ path: resolve(root, `soho-${mode}-selected.png`), fullPage: true });
     }
-    const settingsWindow = await openSettingsWindow(app, page);
-    await settingsWindow
-      .getByTestId(`open-workspace-settings-${employees[0]!.workspaceId}`)
-      .click();
-    await settingsWindow.getByTestId('workspace-settings-section-team').click();
+    const settings = await openSettings(page);
+    await settings.getByTestId(`open-workspace-settings-${employees[0]!.workspaceId}`).click();
+    await settings.getByTestId('workspace-settings-section-team').click();
     // Each AI team card draws the agent's own, still character figure in its colour beside the
     // agent's name.
     for (const employee of employees) {
-      const figure = settingsWindow.getByTestId('agent-avatar-' + employee.id);
+      const figure = settings.getByTestId('agent-avatar-' + employee.id);
       const character =
         employee.color === 'coral'
           ? 'orange'
           : employee.color === 'violet'
             ? 'purple'
             : employee.color;
-      await expect(settingsWindow.getByTestId('workspace-agent-' + employee.id)).toContainText(
+      await expect(settings.getByTestId('workspace-agent-' + employee.id)).toContainText(
         employee.displayName,
       );
       await figure.scrollIntoViewIfNeeded();
@@ -208,7 +205,7 @@ test('keeps employee identities in workspace settings and follows the page Soho 
         )
         .toBeGreaterThan(0);
     }
-    await settingsWindow
+    await settings
       .getByTestId(`workspace-agents-${employees[0]!.workspaceId}`)
       .screenshot({ path: resolve(root, 'team-character-avatars.png') });
     // assert

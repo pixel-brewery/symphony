@@ -56,7 +56,7 @@ Nach der letzten Taste meldet Symphony **God mode activated**, und die Zeile sag
 
 ## Verwandte Features
 
-- [Einstellungen im eigenen Fenster](../window-and-navigation/settings-window.md)
+- [Einstellungen](../window-and-navigation/settings.md)
 - [Appearance](../system/appearance.md)
 - [Hauptfenster und Navigation](../window-and-navigation/README.md)
 - [Befehlspalette](../command-palette/README.md)

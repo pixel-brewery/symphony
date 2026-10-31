@@ -1,5 +1,6 @@
 // #region Imports
 
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
@@ -15,6 +16,7 @@ import {
   TooltipDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
+import { WindowSidebar } from '@symphony/frontend-core';
 import { PresenterViewPresenter } from '../view-presenters/PresenterViewPresenter';
 import { RunPanelView } from './RunPanelView';
 
@@ -38,6 +40,7 @@ import { RunPanelView } from './RunPanelView';
     DropDownButtonComponent,
     MenuComponent,
     MenuItemComponent,
+    NgTemplateOutlet,
     RouterLink,
     RouterLinkActive,
     RunPanelView,
@@ -53,6 +56,9 @@ export class WindowSidebarView {
   // #region Fields
 
   protected readonly presenter = inject(PresenterViewPresenter);
+
+  /** Navigation of the open screen that replaces the destinations, such as Settings. */
+  protected readonly navigationOverride = inject(WindowSidebar).content;
 
   /** Shows the workspace short code itself instead of initials derived from it. */
   protected readonly shortCodeAccessor = (value: string): string => value.slice(0, 2).toUpperCase();

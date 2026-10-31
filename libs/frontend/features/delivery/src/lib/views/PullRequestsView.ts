@@ -19,6 +19,7 @@ import {
   MessageComponent,
   ProgressRingComponent,
   SkeletonComponent,
+  SplitComponent,
   TableBodyCellComponent,
   TableBodyComponent,
   TableBodyRowComponent,
@@ -32,6 +33,7 @@ import {
 } from '@pixel-brewery/mosaik-elements-angular';
 import {
   CommandDirective,
+  PaneSizeDirective,
   View,
   VIEW_PRESENTER,
   WindowToolbarDirective,
@@ -81,6 +83,7 @@ import { PullRequestsViewPresenter } from '../view-presenters/PullRequestsViewPr
     MenuComponent,
     MenuItemComponent,
     MessageComponent,
+    PaneSizeDirective,
     ProgressRingComponent,
     PullRequestCheckIconPipe,
     PullRequestChecksVariantPipe,
@@ -88,6 +91,7 @@ import { PullRequestsViewPresenter } from '../view-presenters/PullRequestsViewPr
     PullRequestMergeStateVariantPipe,
     RelativeTimePipe,
     SkeletonComponent,
+    SplitComponent,
     TableBodyCellComponent,
     TableBodyComponent,
     TableBodyRowComponent,

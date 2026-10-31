@@ -8,7 +8,7 @@ import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { DrawerService, THEME } from '@pixel-brewery/mosaik-elements-angular';
-import { Clock, type INavigationItem } from '@symphony/frontend-core';
+import { Clock, type INavigationItem, WindowSidebar } from '@symphony/frontend-core';
 import { provideNavigation, withNavigationItems } from '@symphony/frontend-core/navigation';
 import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
 import type {
@@ -20,6 +20,7 @@ import { DesktopUpdateStore } from '@symphony/frontend-update';
 import { Subject } from 'rxjs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PRESENTATION_CONTEXT } from '../ports/PresentationContextToken';
+import { LastScreenMemory } from '../routing/LastScreenMemory';
 import { PresenterViewPresenter } from './PresenterViewPresenter';
 
 vi.mock('@pixel-brewery/mosaik-elements-angular', async () => {
@@ -39,6 +40,7 @@ vi.mock('@symphony/frontend-core', async () => {
     NavigationRegistry,
     browserStorage: () => window.localStorage,
     Clock: class Clock {},
+    WindowSidebar: class WindowSidebar {},
     Command: class Command<TParameter> {
       // #region Fields
 
@@ -99,6 +101,9 @@ interface IFixture {
   readonly events: Subject<NavigationStart | NavigationEnd>;
   readonly location: { back: ReturnType<typeof vi.fn>; forward: ReturnType<typeof vi.fn> };
   readonly desktop: { request: ReturnType<typeof vi.fn> };
+  readonly router: { navigateByUrl: ReturnType<typeof vi.fn> };
+  readonly sidebar: { isReplaced: WritableSignal<boolean> };
+  readonly lastScreen: { remember: ReturnType<typeof vi.fn>; read: ReturnType<typeof vi.fn> };
   readonly show: ReturnType<typeof vi.fn>;
   readonly install: ReturnType<typeof vi.fn>;
 }
@@ -111,12 +116,15 @@ function configure(options: {
   readonly updateState?: unknown;
   readonly updateBusy?: boolean;
   readonly startNavigationId?: number;
+  readonly lastScreen?: string;
 }): IFixture {
   const events = new Subject<NavigationStart | NavigationEnd>();
   const location = { back: vi.fn(), forward: vi.fn() };
   const desktop = { request: vi.fn(async () => ({ completed: true })) };
   const show = vi.fn(() => ({ closed: new Subject<void>(), requestAttention: vi.fn() }));
   const install = vi.fn();
+  const sidebar = { isReplaced: signal(false) };
+  const lastScreen = { remember: vi.fn(), read: vi.fn(() => options.lastScreen) };
   const router = {
     url: options.url ?? '/main/home',
     events,
@@ -136,6 +144,8 @@ function configure(options: {
       PresenterViewPresenter,
       { provide: Router, useValue: router },
       { provide: Location, useValue: location },
+      { provide: WindowSidebar, useValue: sidebar },
+      { provide: LastScreenMemory, useValue: lastScreen },
       { provide: DrawerService, useValue: { show, isShown: vi.fn(() => false) } },
       { provide: THEME, useValue: signal(undefined) },
       { provide: Clock, useValue: { now: signal(Date.parse('2026-10-30T12:00:00Z')) } },
@@ -176,6 +186,9 @@ function configure(options: {
     events,
     location,
     desktop,
+    router,
+    sidebar,
+    lastScreen,
     show,
     install,
   };
@@ -484,15 +497,59 @@ describe('PresenterViewPresenter', () => {
     expect(presenter.syncBusy()).toBe(false);
   });
 
-  it('opens Settings in its own window', () => {
+  it('opens Settings inside the main window', () => {
     // arrange
-    const { presenter, desktop } = configure({});
+    const { presenter, router } = configure({});
 
     // act
     presenter.openSettingsCommand.execute();
 
     // assert
-    expect(desktop.request).toHaveBeenCalledExactlyOnceWith('settings.open', {});
+    expect(router.navigateByUrl).toHaveBeenCalledExactlyOnceWith('/main/settings');
+  });
+
+  it('remembers every screen the window navigates to', () => {
+    // arrange
+    const { events, lastScreen } = configure({});
+
+    // act
+    events.next(new NavigationEnd(1, '/main/inbox', '/main/inbox'));
+    events.next(new NavigationEnd(2, '/main/projects', '/main/settings'));
+
+    // assert
+    expect(lastScreen.remember.mock.calls).toEqual([['/main/inbox'], ['/main/settings']]);
+  });
+
+  it('leads back out of Settings to the remembered screen when Settings opened the window', () => {
+    // arrange
+    const { presenter, router, sidebar } = configure({
+      url: '/main/settings',
+      lastScreen: '/main/pull-requests',
+    });
+    sidebar.isReplaced.set(true);
+
+    // act
+    presenter.goBackCommand.execute();
+
+    // assert
+    expect(router.navigateByUrl).toHaveBeenCalledExactlyOnceWith('/main/pull-requests');
+  });
+
+  it('leads back out of Settings to Home when Settings opened the window', () => {
+    // arrange
+    const { presenter, router, location, sidebar } = configure({ url: '/main/settings' });
+    const beforeSettings = presenter.canGoBack();
+    sidebar.isReplaced.set(true);
+
+    // act
+    const inSettings = presenter.canGoBack();
+    presenter.goBackCommand.execute();
+
+    // assert
+    expect(beforeSettings).toBe(false);
+    expect(inSettings).toBe(true);
+    expect(location.back).not.toHaveBeenCalled();
+    expect(router.navigateByUrl).toHaveBeenCalledExactlyOnceWith('/main/home');
   });
 
   it('installs an update only after it is ready and the store is idle', () => {

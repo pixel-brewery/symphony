@@ -13,12 +13,13 @@ const FIXED_PATHS: readonly string[] = [
 ];
 const SETTINGS_PARAMETER = '[a-z][a-zA-Z-]{0,31}=[A-Za-z0-9._~-]{1,200}';
 const SETTINGS_PATH = new RegExp(
-  `^/settings(?:\\?${SETTINGS_PARAMETER}(?:&${SETTINGS_PARAMETER}){0,7})?$`,
+  `^/main/settings(?:\\?${SETTINGS_PARAMETER}(?:&${SETTINGS_PARAMETER}){0,7})?$`,
   'u',
 );
 
 /**
- * Narrows an untrusted IPC payload to a destination a renderer window may open.
+ * Narrows an untrusted IPC payload to a destination the main window may open: one of the fixed
+ * destinations, or `/main/settings` with at most eight bounded `key=value` location parameters.
  *
  * @param value - Raw payload received over the navigation channel.
  * @returns Whether the value is a known in-app destination.

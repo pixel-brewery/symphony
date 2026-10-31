@@ -12,7 +12,7 @@ import {
   TooltipDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
+import { Router } from '@angular/router';
 import { AgentActivityLabelPipe } from '../pipes/AgentActivityLabelPipe';
 import { AgentActivityVariantPipe } from '../pipes/AgentActivityVariantPipe';
 import { RailRunStatePresentationPipe } from '../pipes/RailRunStatePresentationPipe';
@@ -52,7 +52,7 @@ export class RunPanelView {
 
   protected readonly presenter = inject(PresenterViewPresenter);
 
-  private readonly _desktop = inject(DESKTOP_CLIENT);
+  private readonly _router = inject(Router);
 
   // #endregion
 
@@ -61,8 +61,8 @@ export class RunPanelView {
   /** Opens Settings at the active workspace's AI team, where agents are added. */
   protected openAiTeam(): void {
     const workspaceId = this.presenter.activeWorkspace()?.id;
-    void this._desktop.request('settings.open', {
-      parameters: { ...(workspaceId ? { workspace: workspaceId } : {}), section: 'team' },
+    void this._router.navigate(['/main/settings'], {
+      queryParams: { ...(workspaceId ? { workspace: workspaceId } : {}), section: 'team' },
     });
   }
 

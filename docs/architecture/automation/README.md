@@ -4,7 +4,7 @@
 
 ## Ziel und Garantien
 
-Der globale Einstellungsbereich `automation` bearbeitet die anwendungsweite Laufzeitrichtlinie, die bestimmt, wie weit das AI-Team ohne Bedienung arbeitet: autonome Zyklen, die Agentic-Delivery-Richtlinie für fehlgeschlagene Checks („Fix failed checks“) samt Budgets, Review-Rückmeldungen, GitHub-Kommentarbefehle und die Ausführungsumgebung. Das funktionale Verhalten beschreibt [Automation](../../project/automation/README.md); Fensterrahmen, Seitenleiste, Suche, Sheets und Rückfragen beschreibt das [Einstellungsfenster](../window-and-navigation/settings-window.md).
+Der globale Einstellungsbereich `automation` bearbeitet die anwendungsweite Laufzeitrichtlinie, die bestimmt, wie weit das AI-Team ohne Bedienung arbeitet: autonome Zyklen, die Agentic-Delivery-Richtlinie für fehlgeschlagene Checks („Fix failed checks“) samt Budgets, Review-Rückmeldungen, GitHub-Kommentarbefehle und die Ausführungsumgebung. Das funktionale Verhalten beschreibt [Automation](../../project/automation/README.md); Seitenleiste, Suche, Sheets und Rückfragen der Einstellungen beschreibt [Einstellungen im Hauptfenster](../window-and-navigation/settings.md).
 
 Garantien:
 
@@ -24,7 +24,7 @@ Garantien:
 
 | Verantwortung                      | Kanonischer Eigentümer                                                                 | Öffentlicher Vertrag                                                                                                       | Verbraucher                           |
 | ---------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Bereich, Suchbeiträge, Reihenfolge | Automation-Feature (Settings-Beitrag)                                                  | `withSettingsViews` mit Bereich `{ scope: 'global', id: 'automation', order: 20 }` und `search`-Einträgen                  | Einstellungsfenster, Suchindex        |
+| Bereich, Suchbeiträge, Reihenfolge | Automation-Feature (Settings-Beitrag)                                                  | `withSettingsViews` mit Bereich `{ scope: 'global', id: 'automation', order: 20 }` und `search`-Einträgen                  | Einstellungen, Suchindex              |
 | Leitermodell                       | reine Funktionen des Automation-Features                                               | `agenticLadder`, `agenticLevelSwitches`, `agenticLevelOf`, `agenticSwitchBlocker`, `withAgenticLevel`, `withAgenticSwitch` | Presenter, Tests                      |
 | Bedienzustand und Befehle          | `AutomationPolicySettingsViewPresenter`                                                | Signale `runtime`, `agenticLevel`, `agenticSwitchOn`, `agenticBlocker`, `agenticRepositories`; Befehle                     | Bereichsansicht                       |
 | Entwurf und sofortiges Speichern   | `AutomationSettingsStore` (eine Instanz je Fenster, eine Sitzung je Einstellungsroute) | `beginSession`, `applyRuntime`, `applyAgenticDelivery`, `chooseWorkspaceRootCommand`, `confirmClearWorkspacesCommand`      | Presenter                             |
@@ -223,7 +223,7 @@ Der Bereich selbst ist unter `Automation` auffindbar. Statische Einträge (ohne 
 | Speichern im Orchestrator     | `apps/orchestrator/src/composition/createSettingsRequests.ts`, `settings-background-synchronization/needsSettingsBackgroundSynchronization.ts`                                                                                                                                                                           | –                                                                                                                 |
 | Zyklen und Auswertung         | `apps/orchestrator/src/features/automation/provideAutomationOrchestratorFeature.ts`, `libs/application/features/automation/src/lib/AutomationService.ts`, `libs/providers/github/src/lib/github-cloud-provider/GitHubCloudProvider.ts`                                                                                   | `AutomationService.spec.ts`                                                                                       |
 | Aufräumen                     | `libs/frontend/features/workspace/src/lib/state/WorkspaceStore.ts` (`clearWorkspaces`)                                                                                                                                                                                                                                   | –                                                                                                                 |
-| Ende-zu-Ende                  | `apps/renderer-e2e/src/agentic-delivery-settings.spec.ts`, `desktop.spec.ts`, `settings-window.spec.ts`                                                                                                                                                                                                                  | –                                                                                                                 |
+| Ende-zu-Ende                  | `apps/renderer-e2e/src/agentic-delivery-settings.spec.ts`, `desktop.spec.ts`, `settings.spec.ts`                                                                                                                                                                                                                         | –                                                                                                                 |
 
 ## Verifikation und Akzeptanzkriterien
 
@@ -245,7 +245,7 @@ Der Bereich selbst ist unter `Automation` auffindbar. Statische Einträge (ohne 
 ## Verwandte Dokumentation
 
 - [Automation](../../project/automation/README.md)
-- [Einstellungsfenster](../window-and-navigation/settings-window.md)
+- [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [Agentic Delivery](../agentic-delivery.md)
 - [Autonome Ausführung](../autonomous-execution.md)
 - [Remote-Automatisierung](../remote-automation.md)

@@ -56,7 +56,8 @@ test('restores work items and explains a provider request limit after restart', 
     });
     try {
       const page = await offlineApp.firstWindow();
-      await expect(page.getByTestId('home-view')).toBeVisible();
+      // The restarted window reopens the Board, the screen it showed last.
+      await expect(page.getByTestId('board-view')).toBeVisible();
       await page.getByTestId('navigation-home').click();
       await expect(page.getByTestId('home-view')).toBeVisible();
       await page.getByTestId('navigation-board').click();

@@ -4,7 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
-import { openSettingsWindow } from './openSettingsWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -36,7 +36,7 @@ test('shows developer-tool health without treating the OpenCode app as a CLI', a
   // assert
   try {
     const main = await prepareMainWindow(app);
-    const page = await openSettingsWindow(app, main);
+    const page = await openSettings(main);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
     await page.getByTestId('global-settings-section-system').click();
@@ -50,7 +50,7 @@ test('shows developer-tool health without treating the OpenCode app as a CLI', a
     const installOpenCode = page.getByTestId('install-developer-tool-opencode');
     if (await installOpenCode.isVisible()) {
       await installOpenCode.click();
-      // The confirmation is an alert sheet of the Settings window.
+      // The confirmation is an alert sheet of Settings.
       const confirmation = page.getByTestId('settings-alert-install-runtime-dependency-opencode');
       await expect(confirmation).toBeVisible();
       await expect(confirmation).toContainText('Install OpenCode CLI?');

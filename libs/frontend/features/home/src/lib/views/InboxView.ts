@@ -11,12 +11,20 @@ import {
   EmptyStateComponent,
   IconComponent,
   IconNameDirective,
+  ListComponent,
+  ListItemComponent,
   SkeletonComponent,
+  SplitComponent,
   TextBoxComponent,
   TextComponent,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { View, VIEW_PRESENTER, WindowToolbarDirective } from '@symphony/frontend-core';
+import {
+  PaneSizeDirective,
+  View,
+  VIEW_PRESENTER,
+  WindowToolbarDirective,
+} from '@symphony/frontend-core';
 import { RelativeTimePipe } from '@symphony/frontend-ui';
 import { InboxAcceptOptionPipe } from '../pipes/InboxAcceptOptionPipe';
 import { InboxEntryIconPipe } from '../pipes/InboxEntryIconPipe';
@@ -51,9 +59,13 @@ import { InboxViewPresenter } from '../view-presenters/InboxViewPresenter';
     InboxEntrySubtitlePipe,
     InboxEntryTitlePipe,
     InboxEntryVariantPipe,
+    ListComponent,
+    ListItemComponent,
     NgTemplateOutlet,
+    PaneSizeDirective,
     RelativeTimePipe,
     SkeletonComponent,
+    SplitComponent,
     TextBoxComponent,
     TextComponent,
     TypographyDirective,

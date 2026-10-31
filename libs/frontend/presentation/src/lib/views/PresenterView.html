@@ -9,14 +9,29 @@
     part="window"
     test-id="presenter-content"
     data-mosaik-tour-camera-surface
-    class="relative isolate flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden"
+    class="relative isolate flex h-full min-h-0 w-full min-w-0 flex-col overflow-clip"
   >
-    <div class="flex min-h-0 flex-1">
-      @if (!presenter.isSidebarCollapsed()) {
-      <symphony-window-sidebar class="flex w-[240px] flex-none" />
-      }
+    <!-- The sidebar is resizable: the hairline between it and the content is a split divider whose
+         position is remembered. A hidden sidebar collapses the start pane and the divider. -->
+    <mosaik-split
+      part="pane-split"
+      test-id="window-split"
+      class="min-h-0 flex-1"
+      symphonyPaneSize="window.sidebar"
+      [paneSize]="240"
+      [lock]="'start'"
+      [min]="presenter.isSidebarCollapsed() ? '0px' : '200px'"
+      [max]="presenter.isSidebarCollapsed() ? '0px' : '360px'"
+      [disabled]="presenter.isSidebarCollapsed()"
+      [style.--split-divider-width]="presenter.isSidebarCollapsed() ? '0px' : null"
+    >
+      <div slot="start" class="flex h-full min-h-0 min-w-0">
+        @if (!presenter.isSidebarCollapsed()) {
+        <symphony-window-sidebar class="flex min-h-0 w-full min-w-0" />
+        }
+      </div>
 
-      <div part="window-content" class="flex min-w-0 flex-1 flex-col">
+      <div slot="end" part="window-content" class="flex h-full min-h-0 min-w-0 flex-col">
         <!-- The unified toolbar is the window's title bar: back and forward, the screen's title
              and subtitle, the screen's contextual actions and the search field that opens the
              command palette. With the sidebar hidden it also reserves the macOS traffic lights and
@@ -109,7 +124,7 @@
           <router-outlet />
         </main>
       </div>
-    </div>
+    </mosaik-split>
 
     <symphony-window-status-bar class="flex flex-none" />
 
