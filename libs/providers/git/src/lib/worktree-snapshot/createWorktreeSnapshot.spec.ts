@@ -15,7 +15,8 @@ const temporaryDirectories: string[] = [];
 afterEach(() => {
   vi.unstubAllEnvs();
   for (const directory of temporaryDirectories.splice(0)) {
-    rmSync(directory, { recursive: true, force: true });
+    // Windows keeps files of a just-finished Git process locked for a moment.
+    rmSync(directory, { recursive: true, force: true, maxRetries: 3 });
   }
 });
 
@@ -84,7 +85,8 @@ async function snapshot(worktree: string): Promise<{
   };
 }
 
-describe('createWorktreeSnapshot', () => {
+// Every case runs several real Git processes, which take seconds each on Windows runners.
+describe('createWorktreeSnapshot', { timeout: 30_000 }, () => {
   it('captures uncommitted modifications, additions, deletions, and renames', async () => {
     // arrange
     const worktree = createRepository();
