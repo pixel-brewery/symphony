@@ -39,7 +39,7 @@
     "@symphony/application-delivery": "workspace:*",
     "@symphony/domain-platform": "workspace:*",
     "@symphony/ipc-contracts-execution": "workspace:*",
-    "@types/node": "26.6.3",
+    "@types/node": "26.6.5",
     "vitest": "4.1.11"
   }
 }
