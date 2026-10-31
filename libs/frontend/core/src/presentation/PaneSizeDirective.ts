@@ -104,13 +104,17 @@ export class PaneSizeDirective {
   }
 
   /**
-   * The split centres its divider on `position`, so half of it belongs to each pane.
+   * The split centres its divider on `position`, so half of it belongs to each pane. A collapsed
+   * split (a hidden sidebar) draws no divider; it then counts the hairline the divider is drawn
+   * with once the pane opens again, so reopening it does not move the next pane by half a pixel.
    */
   private dividerWidth(): number {
-    const width = Number.parseFloat(
-      getComputedStyle(this._element).getPropertyValue('--split-divider-width'),
-    );
-    return Number.isFinite(width) && width > 0 ? width : 0;
+    const style = getComputedStyle(this._element);
+    for (const property of ['--split-divider-width', '--mosaik-layout-thickness']) {
+      const width = Number.parseFloat(style.getPropertyValue(property));
+      if (Number.isFinite(width) && width > 0) return width;
+    }
+    return 0;
   }
 
   // #endregion
