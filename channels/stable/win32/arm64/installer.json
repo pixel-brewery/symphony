@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.18",
+  "version": "0.1.19",
   "platform": "win32",
   "architecture": "arm64",
   "artifact": {
     "name": "SymphonySetup.exe",
     "bytes": 196961280,
-    "sha256": "9d4beed055fbab07201938a085fe39c63d90c48d2986a326a2f2da1674a5dab1",
-    "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.18/SymphonySetup.exe"
+    "sha256": "91bc633d3b5076782e7480bbce9e8e876b0ca97f377614273f109097344ac9ff",
+    "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.19/SymphonySetup.exe"
   }
 }

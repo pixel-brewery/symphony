@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.19",
+  "sourceCommit": "99a762197ccd777bee9539a63319c3134ed6a933",
+  "createdAt": "2026-10-31T05:27:43.032Z",
+  "files": [
+    {
+      "platform": "win32",
+      "architecture": "arm64",
+      "name": "SymphonySetup.exe",
+      "bytes": 196961280,
+      "sha256": "91bc633d3b5076782e7480bbce9e8e876b0ca97f377614273f109097344ac9ff",
+      "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.19/SymphonySetup.exe"
+    },
+    {
+      "platform": "linux",
+      "architecture": "arm64",
+      "name": "symphony_0.1.19_arm64.deb",
+      "bytes": 137679248,
+      "sha256": "303b98ba613582eb1fda8e7e125f7c53bee39eeb4e65a838d471c0002edfef3a",
+      "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.19/symphony_0.1.19_arm64.deb"
+    },
+    {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "name": "Symphony-darwin-arm64-0.1.19.dmg",
+      "bytes": 172328494,
+      "sha256": "fa13c0f1effe24a308bd204f9fec39822bf0e8eb5b937abbc5b13fdf7c4ff67e",
+      "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.19/Symphony-darwin-arm64-0.1.19.dmg"
+    }
+  ]
+}
