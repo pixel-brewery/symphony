@@ -238,6 +238,9 @@ export class SimulatedPullRequestDelivery
       sourceBranch: published.sourceBranch,
       targetBranch: published.targetBranch,
       baseBranchStatus: this.peekBaseBranchStatus(published.scriptKey),
+      // Deterministic review requests: odd numbers ask the simulated developer, even numbers a
+      // teammate, so a scope signed in as `local-developer` sees some but not all of them.
+      requestedReviewers: [published.number % 2 ? 'local-developer' : 'simulated-teammate'],
       externalUrl: published.externalUrl,
       createdAt: published.createdAt,
       updatedAt: published.updatedAt,

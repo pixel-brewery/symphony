@@ -14,81 +14,81 @@ import {
   AiAccountStatusPipe,
   AiValidationIssuesLabelPipe,
   ConnectionIconPipe,
-  HeadlineComponent,
+  DeliveryFlowStepPipe,
   SelectionAppearancePipe,
   SkillFlowRoleLabelPipe,
 } from '@symphony/frontend-ui';
 import {
   AvatarComponent,
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
+  CardComponent,
+  CheckboxComponent,
+  ChipComponent,
   ChoiceComponent,
   ChoiceGroupComponent,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
   DismissComponent,
-  DrawerContentDirective,
-  DrawerFooterDirective,
-  DrawerHeaderComponent,
-  DrawerHeaderDirective,
+  DividerComponent,
   ExpanderComponent,
-  HintComponent,
+  IconComponent,
+  IconNameDirective,
+  MessageComponent,
   NumberBoxComponent,
   SelectComponent,
   SelectItemComponent,
-  StepperComponent,
-  StepperItemComponent,
-  StepperNextDirective,
-  StepperPrevDirective,
   TextBoxComponent,
   TextComponent,
   ToggleSwitchComponent,
   TypographyDirective,
-  IconNameDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { SettingNamePipe } from '../pipes/SettingNamePipe';
 
 // #endregion
 
-/** Team-owned agent and position configuration drawer. @public */
+/**
+ * The agent sheet of the Settings window (`Edit AI agent` / `Add AI agent`).
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-team-settings-editor-view',
   host: { class: 'block' },
   imports: [
     AgentFigureComponent,
-    AvatarComponent,
     AiAccountStatusPipe,
     AiValidationIssuesLabelPipe,
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
+    AvatarComponent,
     ButtonComponent,
-    ConnectionIconPipe,
+    CardComponent,
+    CheckboxComponent,
+    ChipComponent,
     ChoiceComponent,
     ChoiceGroupComponent,
+    ConnectionIconPipe,
+    DeliveryFlowStepPipe,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
     DismissComponent,
-    DrawerContentDirective,
-    DrawerFooterDirective,
-    DrawerHeaderComponent,
-    DrawerHeaderDirective,
+    DividerComponent,
     ExpanderComponent,
-    HeadlineComponent,
-    HintComponent,
+    IconComponent,
+    IconNameDirective,
+    MessageComponent,
     NumberBoxComponent,
     SelectComponent,
     SelectItemComponent,
     SelectionAppearancePipe,
     SettingNamePipe,
     SkillFlowRoleLabelPipe,
-    StepperComponent,
-    StepperItemComponent,
-    StepperNextDirective,
-    StepperPrevDirective,
     TextBoxComponent,
     TextComponent,
     ToggleSwitchComponent,
     TypographyDirective,
-    IconNameDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: TeamSettingsEditorViewPresenter }],
   templateUrl: './TeamSettingsEditorView.html',
@@ -100,7 +100,7 @@ export class TeamSettingsEditorView extends View<TeamSettingsEditorViewPresenter
   private readonly _changeDetector = inject(ChangeDetectorRef);
   // #endregion
   // #region Ctor
-  /** Retains native drawer rendering after the existing hydration lifecycle. @public */
+  /** Retains native sheet rendering after the existing hydration lifecycle. @public */
   public constructor() {
     super();
     effect(() => {

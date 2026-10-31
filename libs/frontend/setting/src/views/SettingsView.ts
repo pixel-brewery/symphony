@@ -7,47 +7,46 @@ import {
   effect,
   inject,
 } from '@angular/core';
+import { ViewSlotOutletComponent } from '@pixel-brewery/mosaik-elements-angular';
 import {
-  MenuComponent,
-  MenuItemComponent,
-  PageComponent,
-  PageContentComponent,
-  PageHeaderComponent,
-  SegmentComponent,
-  SegmentItemComponent,
-  ViewSlotOutletComponent,
-} from '@pixel-brewery/mosaik-elements-angular';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+  View,
+  VIEW_PRESENTER,
+  WindowSidebarDirective,
+  WindowToolbarDirective,
+} from '@symphony/frontend-core';
 import { SettingsHostSession } from '../context/SettingsHostSession';
 import { SettingsSelectionDirective } from '../context/SettingsSelectionDirective';
 import { SettingsViewSlot } from '../constants/SettingsViewSlot';
 import { SettingsWorkspaceContextDirective } from '../context/SettingsWorkspaceContextDirective';
+import { SettingsSearchIndex } from '../search/SettingsSearchIndex';
 import { SettingsViewPresenter } from '../view-presenters/SettingsViewPresenter';
+import { SettingsSearchView } from './SettingsSearchView';
+import { SettingsSidebarView } from './SettingsSidebarView';
 
 // #endregion
 
 /**
- * Settings route host for independently contributed sections and cards.
+ * Settings inside the main window: it replaces the sidebar's destinations with the Settings
+ * navigation, hands the section's name, description and actions to the window toolbar, and shows
+ * the selected section's feature-contributed cards or the search results.
  *
  * @public
  */
 @Component({
   selector: 'symphony-settings-view',
-  host: { class: 'block' },
+  host: { class: 'flex min-h-0 flex-1 flex-col' },
   imports: [
-    MenuComponent,
-    MenuItemComponent,
-    PageComponent,
-    PageContentComponent,
-    PageHeaderComponent,
-    SegmentComponent,
-    SegmentItemComponent,
-    ViewSlotOutletComponent,
+    SettingsSearchView,
     SettingsSelectionDirective,
+    SettingsSidebarView,
     SettingsWorkspaceContextDirective,
+    ViewSlotOutletComponent,
+    WindowSidebarDirective,
+    WindowToolbarDirective,
   ],
   providers: [
     SettingsHostSession,
+    SettingsSearchIndex,
     SettingsViewPresenter,
     { provide: VIEW_PRESENTER, useExisting: SettingsViewPresenter },
   ],
@@ -59,6 +58,7 @@ export class SettingsView extends View<SettingsViewPresenter> {
   // #region Fields
 
   private readonly _changeDetector = inject(ChangeDetectorRef);
+
   /**
    * Global feature-card extension point.
    *
@@ -66,8 +66,10 @@ export class SettingsView extends View<SettingsViewPresenter> {
    * @readonly
    */
   protected readonly globalSlot = SettingsViewSlot.Global;
+
   /** Header actions owned by their contributing features. @protected @readonly */
   protected readonly headerActionsSlot = SettingsViewSlot.HeaderActions;
+
   /**
    * Workspace feature-card extension point.
    *

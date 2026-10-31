@@ -1,111 +1,116 @@
 @if (presenter.workspace(); as item) {
-<mosaik-card class="w-full" [attr.test-id]="'workspace-card-' + item.id">
-  <mosaik-card-header
-    [text]="item.displayName"
-    [subText]="item.shortCode + ' · Workspace administration'"
-  />
-  <mosaik-card-content
-    ><div class="flex min-w-0 flex-col gap-4">
-      @let storage = presenter.storage();
-      <section class="flex min-w-0 flex-col gap-2" [attr.test-id]="'workspace-storage-' + item.id">
-        <symphony-storage-breakdown
-          [usage]="storage"
-          [measured]="presenter.storageMeasured()"
-          [limitGiB]="presenter.storageLimit()"
-          [sizeTestId]="'workspace-storage-size-' + item.id"
-          [barTestId]="'workspace-storage-progress-' + item.id"
-        />
-        <div
-          class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-4 max-[640px]:grid-cols-1"
-        >
-          <mosaik-numberbox
-            [attr.test-id]="'workspace-storage-limit-' + item.id"
-            [label]="'Maximum workspace size (GB)'"
-            [min]="2"
-            [max]="1024"
-            [value]="presenter.storageLimit()"
-            (input)="presenter.updateWorkspaceStorageLimitCommand.execute($event)"
-          />
-          <mosaik-button
-            [attr.test-id]="'save-workspace-storage-limit-' + item.id"
-            [label]="'Save limit'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            [disabled]="presenter.configurationBusy()"
-            (click)="presenter.saveWorkspaceStorageLimitCommand.execute()"
-          />
-        </div>
-        @if (storage?.pressure === 'critical') {
-        <mosaik-banner
-          [attr.test-id]="'workspace-storage-blocked-' + item.id"
-          [isOpen]="true"
-          [appearance]="'soft'"
-          [variant]="'danger'"
-          [iconName]="'errorCircle'"
-          [iconSize]="'small'"
-        >
-          <mosaik-banner-header [text]="'Storage limit reached - new writes are blocked'" />
-          <mosaik-banner-sub-header
-            [text]="'Clear inactive workspaces or raise the limit only after confirming enough free disk space.'"
-          />
-        </mosaik-banner>
-        }
-      </section>
-      <mosaik-divider />
-      <section
-        class="flex min-w-0 flex-col gap-2"
-        [attr.test-id]="'workspace-delivery-grouping-' + item.id"
-      >
-        <symphony-headline
-          header="Delivery grouping"
-          description="Analyzer suggestions are always shown on the board. Opt in only when fully compatible tickets may start one shared delivery workflow without a second confirmation."
-        />
-        <mosaik-toggle-switch
-          [variant]="'primary'"
-          [attr.test-id]="'workspace-automatic-delivery-grouping-' + item.id"
-          [isChecked]="item.automaticDeliveryGroupingEnabled"
-          [disabled]="presenter.configurationBusy()"
-          (checked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, true])"
-          (unchecked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, false])"
-        >
-          <div slot="label" class="flex min-w-0 flex-col gap-1">
-            <mosaik-text [text]="'Automatically activate safe groups'" [wrap]="true" />
-          </div>
-        </mosaik-toggle-switch>
-      </section></div
-  ></mosaik-card-content>
-  <mosaik-card-footer>
-    <div class="flex w-full flex-wrap justify-end gap-2">
+<div class="flex min-w-0 flex-col gap-3" [attr.test-id]="'workspace-card-' + item.id">
+  @let storage = presenter.storage();
+  <symphony-settings-group [heading]="'Storage'" [attr.test-id]="'workspace-storage-' + item.id">
+    <div part="settings-row" class="flex min-w-0 flex-col gap-1.25 px-2 py-1.5">
+      <symphony-storage-breakdown
+        [usage]="storage"
+        [measured]="presenter.storageMeasured()"
+        [limitGiB]="presenter.storageLimit()"
+        [sizeTestId]="'workspace-storage-size-' + item.id"
+        [barTestId]="'workspace-storage-progress-' + item.id"
+      />
+    </div>
+    <symphony-settings-row
+      [label]="'Maximum workspace size (GB)'"
+      [description]="'Between 2 and 1024 GB.'"
+    >
+      <mosaik-numberbox
+        class="w-[110px]"
+        aria-label="Maximum workspace size (GB)"
+        [attr.test-id]="'workspace-storage-limit-' + item.id"
+        [min]="2"
+        [max]="1024"
+        [value]="presenter.storageLimit()"
+        [disabled]="presenter.configurationBusy()"
+        (change)="presenter.commitWorkspaceStorageLimitCommand.execute($event)"
+      />
+    </symphony-settings-row>
+  </symphony-settings-group>
+  @if (storage?.pressure === 'critical') {
+  <symphony-settings-conditional [condition]="'When the limit is reached'">
+    <mosaik-message
+      class="block w-full"
+      [attr.test-id]="'workspace-storage-blocked-' + item.id"
+      [appearance]="'soft'"
+      [variant]="'danger'"
+      [fit]="'width'"
+      [icon]="'errorCircle'"
+      [iconSize]="'small'"
+      [header]="'Storage limit reached - new writes are blocked'"
+      [content]="'Clear inactive workspaces or raise the limit only after confirming enough free disk space.'"
+    />
+  </symphony-settings-conditional>
+  }
+  <symphony-settings-group
+    [heading]="'Delivery grouping'"
+    [description]="'Analyzer suggestions are always shown on the board. Opt in only when fully compatible tickets may start one shared delivery workflow without a second confirmation.'"
+    [attr.test-id]="'workspace-delivery-grouping-' + item.id"
+  >
+    <symphony-settings-row [label]="'Automatically activate safe groups'">
+      <mosaik-toggle-switch
+        aria-label="Automatically activate safe groups"
+        [variant]="'primary'"
+        [attr.test-id]="'workspace-automatic-delivery-grouping-' + item.id"
+        [isChecked]="presenter.automaticDeliveryGrouping()"
+        [disabled]="presenter.configurationBusy()"
+        (checked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, true])"
+        (unchecked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, false])"
+      />
+    </symphony-settings-row>
+  </symphony-settings-group>
+  <symphony-settings-group [heading]="'Workspace'" [attr.test-id]="'workspace-actions-' + item.id">
+    <symphony-settings-row
+      [label]="'Edit workspace'"
+      [description]="'Security and ownership boundary'"
+    >
       <mosaik-button
-        class="mr-auto"
+        [attr.test-id]="'edit-workspace-' + item.id"
+        [label]="'Edit workspace'"
+        [appearance]="'outline'"
+        (click)="presenter.openWorkspaceCommand.execute(item.id)"
+      />
+    </symphony-settings-row>
+    <symphony-settings-row
+      [label]="'Use only this workspace'"
+      [description]="'Scope Symphony to ' + item.displayName + '.'"
+    >
+      <mosaik-button
+        [attr.test-id]="'focus-workspace-' + item.id"
+        [label]="'Use only this workspace'"
+        [appearance]="'outline'"
+        (click)="presenter.focusWorkspaceCommand.execute(item.id)"
+      />
+    </symphony-settings-row>
+    <symphony-settings-row
+      [label]="'Export workspace'"
+      [description]="'Stored credential fields and machine-local paths are excluded.'"
+    >
+      <mosaik-button
+        [attr.test-id]="'export-workspace-' + item.id"
+        [label]="'Export workspace'"
+        [appearance]="'outline'"
+        [isBusy]="presenter.store.workspaceTransferBusy() === item.id"
+        [disabled]="!!presenter.store.workspaceTransferBusy()"
+        (click)="presenter.chooseWorkspaceExportCommand.execute(item)"
+      />
+    </symphony-settings-row>
+    <symphony-settings-row
+      [label]="'Delete workspace'"
+      [description]="'Permanently removes its connections, execution history, managed worktrees, and isolated AI account data.'"
+    >
+      <mosaik-button
         [attr.test-id]="'delete-workspace-' + item.id"
         [label]="'Delete workspace'"
-        [iconName]="'delete'"
-        [appearance]="'plain'"
+        [icon]="'delete'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
         [variant]="'danger'"
         [isBusy]="presenter.store.workspaceDeletionBusy() === item.id"
         [disabled]="presenter.workspaces().length === 1 || !!presenter.store.workspaceDeletionBusy()"
         (click)="presenter.confirmDeleteWorkspaceCommand.execute(item)"
       />
-      <mosaik-button
-        [attr.test-id]="'export-workspace-' + item.id"
-        [label]="'Export workspace'"
-        [appearance]="'plain'"
-        [isBusy]="presenter.store.workspaceTransferBusy() === item.id"
-        [disabled]="!!presenter.store.workspaceTransferBusy()"
-        (click)="presenter.chooseWorkspaceExportCommand.execute(item)"
-      />
-      <mosaik-button
-        [label]="'Use only this workspace'"
-        [appearance]="'plain'"
-        (click)="presenter.focusWorkspaceCommand.execute(item.id)"
-      />
-      <mosaik-button
-        [label]="'Edit workspace'"
-        [appearance]="'outline'"
-        (click)="presenter.openWorkspaceCommand.execute(item.id)"
-      />
-    </div>
-  </mosaik-card-footer>
-</mosaik-card>
+    </symphony-settings-row>
+  </symphony-settings-group>
+</div>
 }

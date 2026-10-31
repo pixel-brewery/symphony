@@ -1,13 +1,8 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import {
-  AvatarComponent,
-  ButtonComponent,
-  CellComponent,
-  TextComponent,
-  IconNameDirective,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { AvatarComponent, ButtonComponent } from '@pixel-brewery/mosaik-elements-angular';
+import { SettingsRowComponent } from '@symphony/frontend-setting';
 import { ConnectionIconPipe } from '@symphony/frontend-ui';
 import { WorkConnectionsSettingsViewPresenter } from './WorkConnectionsSettingsViewPresenter';
 // #endregion
@@ -15,14 +10,7 @@ import { WorkConnectionsSettingsViewPresenter } from './WorkConnectionsSettingsV
 @Component({
   selector: 'symphony-work-connection-settings-view',
   host: { class: 'contents' },
-  imports: [
-    AvatarComponent,
-    ButtonComponent,
-    CellComponent,
-    TextComponent,
-    ConnectionIconPipe,
-    IconNameDirective,
-  ],
+  imports: [AvatarComponent, ButtonComponent, ConnectionIconPipe, SettingsRowComponent],
   providers: [WorkConnectionsSettingsViewPresenter],
   templateUrl: './WorkConnectionSettingsView.html',
   styleUrl: './WorkConnectionSettingsView.scss',

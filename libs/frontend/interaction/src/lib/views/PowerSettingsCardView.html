@@ -1,84 +1,36 @@
-<mosaik-card test-id="power-settings-card">
-  <mosaik-card-header
-    [text]="'Sleep'"
-    [subText]="'Decide whether this Mac may sleep while Symphony is still working.'"
-  />
-  <mosaik-card-content>
-    <div class="flex min-w-0 flex-col gap-4">
-      <mosaik-banner
-        test-id="keep-awake-guide"
-        is-open
-        appearance="soft"
-        variant="info"
-        iconName="info"
-        iconSize="small"
-      >
-        <mosaik-banner-header text="Unattended runs need a machine that stays on" />
-        <mosaik-banner-sub-header
-          text="Symphony holds sleep only while a task is running and releases it the moment the last one finishes. Closing the lid still sends this Mac to sleep."
-        />
-      </mosaik-banner>
-      <section class="flex min-w-0 flex-col gap-2" test-id="keep-awake-settings-group">
-        <symphony-headline
-          header="Prevent sleep while tasks run"
-          description="Keep long analysis, implementation, local verification, and local CI runs alive while you are away from the keyboard."
-        />
-        @if (presenter.power.state(); as power) {
-        <mosaik-toggle-switch
-          [variant]="'primary'"
-          test-id="keep-awake-while-busy"
-          [isChecked]="power.keepAwakeWhileBusy"
-          [disabled]="presenter.power.busy()"
-          (checked)="presenter.power.setKeepAwakeWhileBusy(true)"
-          (unchecked)="presenter.power.setKeepAwakeWhileBusy(false)"
-        >
-          <div slot="label" class="flex min-w-0 flex-col gap-1">
-            <mosaik-text [text]="'Keep this Mac awake while tasks run'" [wrap]="true" />
-            <mosaik-hint
-              [textOverflow]="'wrap'"
-              [text]="'The system stays awake, the display may still turn off, and battery use rises while a task runs.'"
-            />
-          </div>
-        </mosaik-toggle-switch>
-        <mosaik-cell
-          test-id="keep-awake-status"
-          [label]="power | keepAwakeStatusLabel"
-          [subLabel]="power | keepAwakeDetails"
-        />
-        } @else {
-        <ng-container
-          *ngTemplateOutlet="
-            toggleSkeleton;
-            context: {
-              $implicit: 'Keep this Mac awake while tasks run',
-              hint: 'The system stays awake, the display may still turn off, and battery use rises while a task runs.',
-            }
-          "
-        />
-        <mosaik-cell
-          test-id="keep-awake-status-loading"
-          role="status"
-          aria-label="Loading sleep status"
-        >
-          <div slot="label" class="flex h-3 items-center">
-            <mosaik-skeleton [width]="'9rem'" [height]="'14px'" [shimmer]="true" />
-          </div>
-          <div slot="subLabel" class="flex h-2.5 items-center">
-            <mosaik-skeleton [width]="'20rem'" [height]="'12px'" [shimmer]="true" />
-          </div>
-        </mosaik-cell>
-        }
-      </section>
-    </div>
-  </mosaik-card-content>
-</mosaik-card>
-
-<ng-template #toggleSkeleton let-label let-hint="hint">
-  <div class="flex min-h-[52px] min-w-0 items-center gap-1" role="status" [attr.aria-label]="label">
-    <mosaik-skeleton class="flex-none" [width]="'32px'" [height]="'18px'" [shimmer]="true" />
-    <div class="flex min-w-0 flex-col gap-0.5">
-      <mosaik-text [text]="label" [wrap]="true" />
-      <mosaik-hint [text]="hint" [textOverflow]="'wrap'" />
-    </div>
-  </div>
-</ng-template>
+<symphony-settings-group
+  test-id="keep-awake-settings-group"
+  [level]="'section'"
+  [heading]="'Sleep'"
+  [description]="'Symphony holds sleep only while a task runs and releases it when the last one finishes. Closing the lid still sleeps.'"
+>
+  <symphony-settings-row
+    [label]="'Keep this Mac awake while tasks run'"
+    [description]="'The display may still turn off, and battery use rises while a task runs.'"
+  >
+    <symphony-keep-awake-toggle />
+  </symphony-settings-row>
+  @if (presenter.power.state(); as power) {
+  <symphony-settings-row
+    test-id="keep-awake-status"
+    [label]="power | keepAwakeStatusLabel"
+    [description]="power | keepAwakeDetails"
+  >
+    <mosaik-dot
+      slot="leading"
+      aria-hidden="true"
+      [variant]="power.engaged ? 'success' : 'neutral'"
+      [size]="'small'"
+    />
+  </symphony-settings-row>
+  } @else {
+  <symphony-settings-row
+    test-id="keep-awake-status-loading"
+    role="status"
+    aria-label="Loading sleep status"
+    [label]="'Sleep status'"
+  >
+    <mosaik-skeleton slot="detail" [width]="'20rem'" [height]="'12px'" [shimmer]="true" />
+  </symphony-settings-row>
+  }
+</symphony-settings-group>

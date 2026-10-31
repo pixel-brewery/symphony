@@ -1,0 +1,176 @@
+<aside
+  part="window-sidebar"
+  test-id="window-sidebar"
+  aria-label="Sidebar"
+  class="box-border flex h-full w-full min-w-0 flex-col"
+>
+  <!-- The 52px header row is the title bar above the sidebar: macOS draws its traffic lights here,
+       so the row reserves their width and stays a drag region. -->
+  <div
+    part="window-drag-region"
+    class="box-border flex h-[52px] flex-none items-center gap-1 pr-[10px] pl-2.5"
+  >
+    <div class="flex-1"></div>
+    <mosaik-button
+      test-id="hide-sidebar"
+      [iconName]="'panelLeft'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [attr.aria-label]="'Hide sidebar'"
+      [mosaikTooltip]="'Hide sidebar'"
+      (click)="presenter.toggleSidebarCommand.execute()"
+    />
+  </div>
+
+  @if (navigationOverride(); as navigation) {
+  <!-- A screen with its own navigation, such as Settings, replaces the destinations while it is
+       open; the toolbar's back navigation leads out of it again. -->
+  <div class="flex min-h-0 flex-1 flex-col" test-id="window-sidebar-override">
+    <ng-container [ngTemplateOutlet]="navigation" />
+  </div>
+  } @else { @if (presenter.activeWorkspace(); as workspace) {
+  <div class="flex-none px-[10px] pb-[10px]">
+    <div
+      part="workspace-switcher"
+      test-id="workspace-switcher"
+      class="flex min-w-0 items-center gap-[10px] py-1 pr-1 pl-[10px]"
+    >
+      <mosaik-avatar
+        part="workspace-tile"
+        class="flex-none"
+        aria-hidden="true"
+        [text]="workspace.shortCode"
+        [textAccessor]="shortCodeAccessor"
+        [appearance]="'solid'"
+        [variant]="'neutral'"
+      />
+      <div class="flex min-w-0 flex-1 flex-col">
+        <mosaik-text
+          class="block min-w-0"
+          test-id="workspace-switcher-name"
+          [mosaikTypography]="'subtitle2'"
+          [truncate]="true"
+          [text]="workspace.displayName"
+        />
+        @if (presenter.activeRepositorySlug()) {
+        <mosaik-text
+          class="block min-w-0"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [truncate]="true"
+          [text]="presenter.activeRepositorySlug()"
+        />
+        }
+      </div>
+      <mosaik-dropdown-button
+        #workspaceMenu
+        test-id="global-workspace-filter"
+        class="flex-none"
+        [label]="''"
+        [iconName]="'chevronRight'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [caretVisible]="false"
+        [dropDownPlacement]="'right-start'"
+        [dropDownMaxHeight]="'20rem'"
+        [attr.aria-label]="'Switch workspace. Current workspace: ' + workspace.displayName"
+        [mosaikTooltip]="'Switch workspace'"
+      >
+        <mosaik-menu>
+          @if (presenter.workspaceScopeAvailable) { @for (entry of presenter.workspaces(); track
+          entry.id) {
+          <mosaik-menu-item
+            force-close="true"
+            [attr.test-id]="'global-workspace-filter-' + entry.id"
+            [label]="entry.displayName"
+            [subLabel]="entry.shortCode"
+            [isChecked]="entry.id === workspace.id"
+            (click)="workspaceMenu.invoke('close'); presenter.selectWorkspaceCommand.execute(entry.id)"
+          />
+          }
+          <mosaik-divider />
+          }
+          <mosaik-menu-item
+            force-close="true"
+            test-id="workspace-menu-settings"
+            [label]="'Manage workspaces…'"
+            [iconName]="'settings'"
+            (click)="workspaceMenu.invoke('close'); presenter.openSettingsCommand.execute()"
+          />
+        </mosaik-menu>
+      </mosaik-dropdown-button>
+    </div>
+  </div>
+  }
+
+  <nav
+    aria-label="Main"
+    test-id="presenter-navigation"
+    class="flex min-h-0 flex-initial flex-col gap-px overflow-y-auto overscroll-contain px-[10px]"
+  >
+    @for (group of presenter.navigationGroups(); track group.key) { @if (group.label) {
+    <mosaik-text
+      class="px-1 pt-[14px] pb-0.5"
+      [attr.test-id]="'navigation-group-' + group.key"
+      [mosaikTypography]="'overline'"
+      [variant]="'neutral'"
+      [text]="group.label"
+    />
+    } @for (item of group.items; track item.key) {
+    <div class="relative">
+      <mosaik-button
+        class="w-full"
+        [attr.test-id]="'navigation-' + item.key"
+        [routerLink]="item.route"
+        routerLinkActive
+        #activeRoute="routerLinkActive"
+        [attr.aria-current]="activeRoute.isActive ? 'page' : null"
+        [label]="item.label"
+        [iconName]="item.icon"
+        [iconSize]="'small'"
+        [appearance]="activeRoute.isActive ? 'soft' : 'plain'"
+        [fit]="'width'"
+        [horizontalContentAlignment]="'left'"
+      />
+      @if (item.count?.(); as count) {
+      <span
+        class="pointer-events-none absolute top-1/2 right-[10px] flex -translate-y-1/2 items-center"
+        [attr.test-id]="'navigation-count-' + item.key"
+      >
+        @if (item.countTone === 'attention') {
+        <mosaik-badge
+          [label]="'' + count"
+          [variant]="'danger'"
+          [appearance]="'solid'"
+          [size]="'small'"
+        />
+        } @else {
+        <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'' + count" />
+        }
+      </span>
+      }
+    </div>
+    } }
+  </nav>
+
+  <div class="min-h-0 flex-1"></div>
+
+  @if (presenter.executionAvailable || presenter.ciAvailable) {
+  <symphony-run-panel part="window-sidebar-footer" class="flex flex-none px-[2px] py-[10px]" />
+  }
+
+  <div class="flex-none px-[10px] pb-1.5">
+    <mosaik-button
+      class="w-full"
+      test-id="navigation-settings"
+      [label]="'Settings'"
+      [iconName]="'settings'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [fit]="'width'"
+      [horizontalContentAlignment]="'left'"
+      (click)="presenter.openSettingsCommand.execute()"
+    />
+  </div>
+  }
+</aside>

@@ -516,6 +516,64 @@ describe('GitHubCloudProvider pull-request collection', () => {
     ]);
   });
 
+  it('reduces pending review requests to reviewer logins and organization team names', async () => {
+    // arrange
+    const settings = deliverySettings('/tmp/symphony-pull-request-reviewers');
+    const provider = new GitHubCloudProvider({
+      settings: () => settings,
+      token: async () => 'test-token',
+      execute: async () =>
+        JSON.stringify([
+          {
+            number: 205,
+            html_url: 'https://github.com/flamox/platform/pull/205',
+            title: 'Export the audit log',
+            state: 'open',
+            draft: false,
+            mergeable: true,
+            mergeable_state: 'clean',
+            head: { ref: 'feature/audit-export' },
+            base: { ref: 'main' },
+            requested_reviewers: [{ login: 'RueDeRennes', id: 7 }, { login: ' ' }, {}],
+            requested_teams: [
+              { slug: 'reviewers', organization: { login: 'flamox' } },
+              { slug: 'platform' },
+            ],
+            created_at: '2026-08-14T13:34:38Z',
+            updated_at: '2026-08-14T14:20:00Z',
+          },
+          {
+            number: 206,
+            html_url: 'https://github.com/flamox/platform/pull/206',
+            title: 'Nobody asked',
+            state: 'open',
+            draft: true,
+            mergeable: true,
+            mergeable_state: 'clean',
+            head: { ref: 'feature/nobody' },
+            base: { ref: 'main' },
+            requested_reviewers: [],
+            requested_teams: null,
+            created_at: '2026-08-14T13:34:38Z',
+            updated_at: '2026-08-14T14:10:00Z',
+          },
+        ]),
+    });
+
+    // act
+    const pullRequests = await provider.listPullRequests();
+
+    // assert
+    expect(pullRequests[0]).toMatchObject({
+      number: 205,
+      requestedReviewers: ['RueDeRennes'],
+      requestedTeams: ['flamox/reviewers', 'flamox/platform'],
+    });
+    expect(pullRequests[1]).not.toHaveProperty('requestedReviewers');
+    expect(pullRequests[1]).not.toHaveProperty('requestedTeams');
+    expect(JSON.stringify(pullRequests)).not.toContain('"id":7');
+  });
+
   it('fetches details only for pull requests without definitive mergeability and tolerates a failing detail fetch', async () => {
     // arrange
     const settings = deliverySettings('/tmp/symphony-pull-request-enrichment');

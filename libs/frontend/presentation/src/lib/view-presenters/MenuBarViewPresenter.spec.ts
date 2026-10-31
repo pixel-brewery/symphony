@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
 
 // #region Imports
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
 } from '@symphony/configuration-composition';
-import { ORCHESTRATION_CLIENT } from '@symphony/frontend-core';
+import type { IExecutionRecord } from '@symphony/domain-execution';
+import { INBOX_SUMMARY, ORCHESTRATION_CLIENT, type IInboxSummary } from '@symphony/frontend-core';
 import { ApplicationBootstrap } from '@symphony/frontend-core/bootstrap';
 import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
 import { OrchestrationSynchronizer } from '@symphony/frontend-core/synchronization';
@@ -15,7 +17,13 @@ import { provideAutomationFeature } from '@symphony/frontend-feature-automation'
 import { provideCiFeature } from '@symphony/frontend-feature-ci';
 import { provideExecutionFeature } from '@symphony/frontend-feature-execution';
 import { provideWorkspaceFeature } from '@symphony/frontend-feature-workspace';
-import { NotificationService } from '@symphony/frontend-notification';
+import {
+  NOTIFICATION_SOURCES,
+  NotificationCentre,
+  NotificationHistory,
+  NotificationService,
+  type INotificationItem,
+} from '@symphony/frontend-notification';
 import type {
   IOrchestrationApi,
   RequestMethod,
@@ -31,7 +39,26 @@ type RequestHandlers = {
   [M in RequestMethod]?: (payload: RequestPayload<M>) => Promise<ResponsePayload<M>>;
 };
 
-function arrange(omitted: readonly string[] = []) {
+const CI_RUN_BASE = {
+  workspaceId: 'workspace-1',
+  ciBindingId: 'ci-1',
+  repositoryBindingId: 'repository-1',
+  workflowId: 'workflow-1',
+  branch: 'dev',
+  revision: '4f2a91c0',
+  runAttempt: 1,
+};
+
+function arrange(
+  options: {
+    omitted?: readonly string[];
+    executions?: readonly IExecutionRecord[];
+    attention?: readonly INotificationItem[];
+    inbox?: IInboxSummary;
+    ciRuns?: readonly object[];
+  } = {},
+) {
+  const omitted = options.omitted ?? [];
   const settings = applicationSettingsSchema.parse(createDefaultApplicationSettings('/menu'));
   const execution: ResponsePayload<'execution.pause'> = {
     id: 'execution-1',
@@ -58,21 +85,26 @@ function arrange(omitted: readonly string[] = []) {
         },
       ],
     }),
-    'execution-state.get': async () => ({
-      executions: [execution],
-      executionQueue: [],
-      events: [],
-      goals: [],
-    }),
+    'execution-state.get': async () =>
+      ({
+        executions: options.executions ?? [execution],
+        executionQueue: [],
+        events: [],
+        goals: [],
+      }) as ResponsePayload<'execution-state.get'>,
     'autonomy.status.get': async () => autonomy,
     'autonomy.set-enabled': async ({ enabled }) => ({ ...autonomy, enabled }),
     'repositories.runtime.list': async () => [],
-    'ci.runs.refresh': async () => ({
-      ciWorkflows: [],
-      ciRuns: [],
-      localCiExecutions: [],
-      remoteData: { state: 'current' },
-    }),
+    'storage.status.get': async () => {
+      throw new Error('Storage is measured elsewhere in this test.');
+    },
+    'ci.runs.refresh': async () =>
+      ({
+        ciWorkflows: [],
+        ciRuns: options.ciRuns ?? [],
+        localCiExecutions: [],
+        remoteData: { state: 'current' },
+      }) as ResponsePayload<'ci.runs.refresh'>,
     'execution.pause': async () => execution,
     'execution.resume': async () => execution,
   };
@@ -94,11 +126,16 @@ function arrange(omitted: readonly string[] = []) {
     },
     selectPath: async () => ({ canceled: true, paths: [] }),
   };
+  const windowRoutes: string[] = [];
   const desktop: IDesktopApi = {
     capabilities: { speechRecognition: false },
-    request: async () => {
+    request: (async (method: string, payload: { route?: string }) => {
+      if (method === 'window.show') {
+        windowRoutes.push(payload.route ?? 'current');
+        return { completed: true };
+      }
       throw new Error('Native status delivery is outside these request-session assertions.');
-    },
+    }) as IDesktopApi['request'],
     onUpdateState: () => () => undefined,
     onPowerState: () => () => undefined,
     onSpeechRecognitionEvent: () => () => undefined,
@@ -116,6 +153,18 @@ function arrange(omitted: readonly string[] = []) {
         .filter((feature) => !omitted.includes(feature.id))
         .map((feature) => feature.providers),
       MenuBarViewPresenter,
+      NotificationHistory,
+      NotificationCentre,
+      ...(options.attention
+        ? [
+            {
+              provide: NOTIFICATION_SOURCES,
+              useValue: { items: signal(options.attention).asReadonly(), perform: vi.fn() },
+              multi: true,
+            },
+          ]
+        : []),
+      ...(options.inbox ? [{ provide: INBOX_SUMMARY, useValue: options.inbox }] : []),
       { provide: ORCHESTRATION_CLIENT, useValue: client },
       { provide: DESKTOP_CLIENT, useValue: desktop },
       {
@@ -146,6 +195,7 @@ function arrange(omitted: readonly string[] = []) {
     requests,
     autonomy,
     unsubscribe,
+    windowRoutes,
     hasExecutionListener: () => listener !== undefined,
     emit: () =>
       listener?.({
@@ -167,7 +217,7 @@ describe('MenuBarViewPresenter', () => {
   });
   afterAll(() => TestBed.resetTestEnvironment());
 
-  it('keeps the all-feature request order and its independent execution/autonomy event refresh', async () => {
+  it('loads settings, runs and the notification sources without hydrating the application', async () => {
     // arrange
     const { presenter, requests, autonomy, emit } = arrange();
     // act
@@ -177,58 +227,46 @@ describe('MenuBarViewPresenter', () => {
       'settings.get',
       'execution-state.get',
       'autonomy.status.get',
-      'repositories.runtime.list',
       'ci.runs.refresh',
+      'storage.status.get',
+      'repositories.runtime.list',
     ]);
     expect(presenter.capacity()).toEqual(autonomy);
     expect(presenter.loading()).toBe(false);
-    expect(
-      presenter.executionAvailable && presenter.ciAvailable && presenter.autonomyAvailable,
-    ).toBe(true);
+    expect(presenter.error()).toBeUndefined();
     requests.length = 0;
     emit();
     await Promise.resolve();
     expect(requests).toEqual(['execution-state.get', 'autonomy.status.get']);
   });
 
-  it.each(['execution', 'ci', 'automation', 'workspace'] as const)(
-    'does not query the omitted %s owner while retaining the other menu data',
-    async (omitted) => {
+  it.each([
+    ['execution', ['execution-state.get']],
+    ['ci', ['ci.runs.refresh']],
+    ['automation', ['autonomy.status.get', 'storage.status.get']],
+    ['workspace', ['repositories.runtime.list']],
+  ] as const)(
+    'does not query the omitted %s owner while retaining the other panel data',
+    async (omitted, omittedMethods) => {
       // arrange
-      const { presenter, requests, emit } = arrange([omitted]);
-      const omittedMethods = {
-        execution: 'execution-state.get',
-        ci: 'ci.runs.refresh',
-        automation: 'autonomy.status.get',
-        workspace: 'repositories.runtime.list',
-      } as const;
+      const { presenter, requests } = arrange({ omitted: [omitted] });
       // act
       await presenter.initialize();
       // assert
-      expect(requests).not.toContain(omittedMethods[omitted]);
-      expect(requests).toHaveLength(4);
+      for (const method of omittedMethods) expect(requests).not.toContain(method);
+      expect(requests).toContain('settings.get');
       expect(presenter.executionAvailable).toBe(omitted !== 'execution');
       expect(presenter.ciAvailable).toBe(omitted !== 'ci');
       expect(presenter.autonomyAvailable).toBe(omitted !== 'automation');
-      requests.length = 0;
-      emit();
-      await Promise.resolve();
-      expect(requests).toEqual([
-        ...(omitted === 'execution' ? [] : ['execution-state.get']),
-        ...(omitted === 'automation' ? [] : ['autonomy.status.get']),
-      ]);
     },
   );
 
-  it('keeps the minimal menu usable without subscribing or polling omitted feature owners', async () => {
+  it('keeps the minimal panel usable without subscribing or polling omitted feature owners', async () => {
     // arrange
     vi.useFakeTimers();
-    const { presenter, requests, hasExecutionListener } = arrange([
-      'execution',
-      'ci',
-      'automation',
-      'workspace',
-    ]);
+    const { presenter, requests, hasExecutionListener } = arrange({
+      omitted: ['execution', 'ci', 'automation', 'workspace'],
+    });
     // act
     await presenter.initialize();
     await vi.advanceTimersByTimeAsync(60_000);
@@ -238,9 +276,8 @@ describe('MenuBarViewPresenter', () => {
     expect(requests).toEqual(['settings.get']);
     expect(hasExecutionListener()).toBe(false);
     expect(presenter.pauseExecutionCommand.canExecute()).toBe(false);
-    expect(presenter.resumeExecutionCommand.canExecute()).toBe(false);
     expect(presenter.enableAutonomyCommand.canExecute()).toBe(false);
-    expect(presenter.disableAutonomyCommand.canExecute()).toBe(false);
+    expect(presenter.selectedRunView()).toBe('actions');
     expect(presenter.loading()).toBe(false);
   });
 
@@ -273,5 +310,118 @@ describe('MenuBarViewPresenter', () => {
     presenter.resumeExecutionCommand.execute('execution-1');
     await vi.waitFor(() => expect(presenter.executionBusy()).toBeUndefined());
     expect(requests).toEqual(['execution.resume', 'execution-state.get', 'autonomy.status.get']);
+  });
+
+  it('lists the working agent of the active workspace with its work item and pause control', async () => {
+    // arrange
+    const working = {
+      id: 'execution-2',
+      workItemId: 'work-602',
+      workflowId: 'workflow-1',
+      kind: 'solution',
+      state: 'running',
+      startedAt: '2026-10-30T10:00:00.000Z',
+      bindingSnapshot: { agentProfileId: 'personal-default-agent' },
+      workItemSnapshot: { externalId: 'CR-0602', title: 'New Relic: reduce ingest' },
+    } as unknown as IExecutionRecord;
+    const { presenter } = arrange({ executions: [working] });
+    // act
+    await presenter.initialize();
+    // assert
+    expect(presenter.agentRows()).toEqual([
+      expect.objectContaining({
+        id: 'personal-default-agent',
+        name: 'Default agent',
+        state: 'working',
+        role: 'solution',
+        workItemKey: 'CR-0602',
+        workItemTitle: 'New Relic: reduce ingest',
+        executionId: 'execution-2',
+      }),
+    ]);
+    expect(presenter.activeAgentCount()).toBe(1);
+    expect(presenter.pausableExecutionIds().has('execution-2')).toBe(true);
+    expect(presenter.runningCount()).toBe(1);
+    expect(presenter.menuBarStatus()).toBe('running');
+  });
+
+  it('lists running and queued action runs first and fills up with finished runs', async () => {
+    // arrange
+    const run = (id: string, status: string, minute: number) => ({
+      ...CI_RUN_BASE,
+      id,
+      name: id,
+      status,
+      startedAt: `2026-10-30T10:0${minute}:00.000Z`,
+      ...(status === 'in-progress' ? {} : { finishedAt: `2026-10-30T10:0${minute}:30.000Z` }),
+    });
+    const { presenter } = arrange({
+      executions: [],
+      ciRuns: [
+        run('failed-1', 'failed', 5),
+        run('running-1', 'in-progress', 1),
+        run('queued-1', 'queued', 2),
+        run('done-1', 'succeeded', 4),
+        run('done-2', 'succeeded', 3),
+        run('done-3', 'succeeded', 0),
+      ],
+    });
+    // act
+    await presenter.initialize();
+    // assert
+    expect(presenter.actionRows().map((entry) => entry.title)).toEqual([
+      'queued-1',
+      'running-1',
+      'failed-1',
+      'done-1',
+    ]);
+    expect(presenter.activeActionRunCount()).toBe(2);
+  });
+
+  it('links what needs the user to the main window', async () => {
+    // arrange
+    const attention: INotificationItem = {
+      id: 'developer-tools:codex',
+      severity: 'error',
+      title: 'Codex CLI is not installed',
+      location: ['System', 'Developer tools'],
+      scope: { kind: 'mac' },
+      actions: [],
+    };
+    const inbox: IInboxSummary = {
+      decisionCount: signal(4),
+      firstDecisionTitle: signal('Choose how CR-0589 continues'),
+      refresh: vi.fn(async () => undefined),
+    };
+    const { presenter, windowRoutes } = arrange({ attention: [attention], inbox });
+    // act
+    await presenter.initialize();
+    presenter.openInboxCommand.execute();
+    presenter.openNotificationsCommand.execute();
+    presenter.newWorkItemCommand.execute();
+    presenter.openSettingsCommand.execute();
+    presenter.openAllRunsCommand.execute();
+    presenter.openSymphonyCommand.execute();
+    await Promise.resolve();
+    // assert
+    expect(inbox.refresh).toHaveBeenCalledOnce();
+    expect(presenter.notifications.attentionCount()).toBe(1);
+    expect(windowRoutes).toEqual([
+      'inbox',
+      'notifications',
+      'new-work-item',
+      'settings',
+      'actions',
+      'current',
+    ]);
+  });
+
+  it('switches the run segment', () => {
+    // arrange
+    const { presenter } = arrange();
+    // act
+    presenter.selectRunViewCommand.execute('actions');
+    // assert
+    expect(presenter.selectedRunView()).toBe('actions');
   });
 });

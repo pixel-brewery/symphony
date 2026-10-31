@@ -134,44 +134,70 @@ describe('projectOrbitLabels', () => {
     }
   });
 
-  it('keeps production and destinations ahead of bounded ticket groups at system zoom', () => {
+  it('labels every cluster on its outer side and keeps production and destinations first', () => {
     // arrange
-    const groups: IOrbitProjectedNode[] = Array.from({ length: 30 }, (_, index) => ({
-      node: {
-        id: `group:belt:${index}`,
-        kind: 'group',
-        label: 'Tickets',
-        count: 25,
-        position: { x: 0, y: 0, z: 0 },
+    const centre = { x: 600, y: 350 };
+    const clusters: IOrbitProjectedNode[] = ['TODO', 'Done', 'Ready', 'Backlog'].map(
+      (label, index) => {
+        const angle = -Math.PI / 2 + (index * Math.PI) / 2;
+        return {
+          node: {
+            id: `group:${label}`,
+            kind: 'group',
+            label,
+            count: 12,
+            tone: label === 'Done' ? 'success' : 'neutral',
+            position: { x: 0, y: 0, z: 0 },
+          },
+          x: centre.x + Math.cos(angle) * 260,
+          y: centre.y + Math.sin(angle) * 260,
+          depth: 1,
+          radius: 2,
+        };
       },
-      x: 100 + (index % 10) * 100,
-      y: 280 + Math.floor(index / 10) * 100,
-      depth: 1,
-      radius: 2,
-    }));
-    const context: IOrbitProjectedNode[] = ['production', 'target:preview'].map((id, index) => ({
-      node: {
-        id,
-        kind: index === 0 ? 'production' : 'target',
-        label: index === 0 ? 'Production' : 'Preview',
-        position: { x: 0, y: 0, z: 0 },
+    );
+    const context: IOrbitProjectedNode[] = [
+      {
+        node: {
+          id: 'production',
+          kind: 'production',
+          label: 'Production',
+          position: { x: 0, y: 0, z: 0 },
+        },
+        ...centre,
+        depth: 20,
+        radius: 30,
       },
-      x: 300 + index * 400,
-      y: 100,
-      depth: 20,
-      radius: 30,
-    }));
+      {
+        node: {
+          id: 'target:preview',
+          kind: 'target',
+          label: 'Preview',
+          position: { x: 0, y: 0, z: 0 },
+        },
+        x: 900,
+        y: 160,
+        depth: 20,
+        radius: 12,
+      },
+    ];
     // act
-    const labels = projectOrbitLabels([...groups, ...context, ...points], 1200, 700, 'system');
+    const labels = projectOrbitLabels([...clusters, ...context, ...points], 1200, 700, 'system');
     // assert
     expect(labels.slice(0, 2).map((label) => label.node.id)).toEqual([
       'production',
       'target:preview',
     ]);
-    expect(labels).toHaveLength(10);
-    const group = labels.find((label) => label.node.kind === 'group');
-    expect(group?.width).toBe(88);
-    expect(group?.height).toBe(44);
+    const placed = labels.filter((label) => label.node.kind === 'group');
+    expect(placed.map((label) => label.node.id).toSorted()).toEqual(
+      ['group:Backlog', 'group:Done', 'group:Ready', 'group:TODO'].toSorted(),
+    );
+    const top = placed.find((label) => label.node.id === 'group:TODO')!;
+    const right = placed.find((label) => label.node.id === 'group:Done')!;
+    expect(top.height).toBe(24);
+    expect(top.y + top.height).toBeLessThanOrEqual(top.anchorY);
+    expect(right.x).toBeGreaterThanOrEqual(right.anchorX);
+    expect(right.align).toBe('start');
     expect(labels.some((label) => label.node.kind === 'ticket')).toBe(false);
   });
 });

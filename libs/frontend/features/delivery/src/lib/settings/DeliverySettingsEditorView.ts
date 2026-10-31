@@ -1,5 +1,6 @@
 // #region Imports
 
+import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -7,28 +8,18 @@ import {
   effect,
   inject,
 } from '@angular/core';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { DatePipe, DecimalPipe } from '@angular/common';
 import {
+  ButtonComponent,
   ChoiceComponent,
   ChoiceGroupComponent,
-  TypographyDirective,
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
-  ButtonComponent,
-  CellComponent,
-  CellGroupComponent,
-  DismissComponent,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
   DividerComponent,
-  DrawerContentDirective,
-  DrawerFooterDirective,
-  DrawerHeaderComponent,
-  DrawerHeaderDirective,
   ExpanderComponent,
   FileBoxComponent,
-  HintComponent,
-  IconNameDirective,
+  MessageComponent,
   ProgressBarComponent,
   SelectComponent,
   SelectItemComponent,
@@ -36,52 +27,49 @@ import {
   TextBoxComponent,
   TextComponent,
   ToggleSwitchComponent,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { BooleanVariantPipe, HeadlineComponent } from '@symphony/frontend-ui';
+import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import { GithubActionsAccountLabelPipe } from '@symphony/frontend-feature-ci/presentation';
+import { SettingsConditionalComponent, SettingsRowComponent } from '@symphony/frontend-setting';
+import { BooleanVariantPipe } from '@symphony/frontend-ui';
+import { RepositoryValidationIssuesLabelPipe } from '../pipes/RepositoryValidationIssuesLabelPipe';
 import { DeliverySettingsEditorViewPresenter } from './DeliverySettingsEditorViewPresenter';
 
 // #endregion
 
-/** The existing two Delivery editor forms mounted by native Settings registration. @public */
+/** The repository and delivery-destination sheets of the Settings window. @public */
 @Component({
   selector: 'symphony-delivery-settings-editor-view',
   host: { class: 'block' },
   imports: [
-    ChoiceComponent,
-    ChoiceGroupComponent,
-    TypographyDirective,
-    DatePipe,
-    DecimalPipe,
-    ChoiceComponent,
-    ChoiceGroupComponent,
-    TypographyDirective,
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
     BooleanVariantPipe,
     ButtonComponent,
-    CellComponent,
-    CellGroupComponent,
-    DismissComponent,
+    ChoiceComponent,
+    ChoiceGroupComponent,
+    DatePipe,
+    DecimalPipe,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
     DividerComponent,
-    DrawerContentDirective,
-    DrawerFooterDirective,
-    DrawerHeaderComponent,
-    DrawerHeaderDirective,
     ExpanderComponent,
     FileBoxComponent,
-    HeadlineComponent,
-    HintComponent,
-    IconNameDirective,
+    GithubActionsAccountLabelPipe,
+    MessageComponent,
+    NgTemplateOutlet,
     ProgressBarComponent,
+    RepositoryValidationIssuesLabelPipe,
     SelectComponent,
     SelectItemComponent,
+    SettingsConditionalComponent,
+    SettingsRowComponent,
     SkeletonComponent,
     TextBoxComponent,
     TextComponent,
     ToggleSwitchComponent,
-    GithubActionsAccountLabelPipe,
+    TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: DeliverySettingsEditorViewPresenter }],
   templateUrl: './DeliverySettingsEditorView.html',
@@ -93,7 +81,7 @@ export class DeliverySettingsEditorView extends View<DeliverySettingsEditorViewP
   private readonly _changeDetector = inject(ChangeDetectorRef);
   // #endregion
   // #region Ctor
-  /** Preserves native post-hydration drawer rendering. @public */
+  /** Preserves native post-hydration sheet rendering. @public */
   public constructor() {
     super();
     effect(() => {

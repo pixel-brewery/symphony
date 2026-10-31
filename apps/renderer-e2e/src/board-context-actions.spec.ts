@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { expandBoardColumn } from './expandBoardColumn';
 
 // #endregion
 
@@ -38,7 +39,7 @@ test('reveals board context actions and starts analysis from right-click', async
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.evaluate(async (localPath) => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const settings = await api.request('settings.get', {});
@@ -112,9 +113,13 @@ test('reveals board context actions and starts analysis from right-click', async
           ?.reload(),
       page.url(),
     );
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
+    // Backlog and Qualified start as collapsed strips; the card rests in Qualified and is moved
+    // to Backlog below, so both are expanded.
+    await expandBoardColumn(page, 'qualified');
+    await expandBoardColumn(page, 'backlog');
 
     // The analysis is offered by the stage, not by the card: only an item resting in the
     // stage that runs the analysis may start one.
@@ -201,7 +206,11 @@ test('reveals board context actions and starts analysis from right-click', async
           }, workItemId);
           return {
             executionStates,
-            notifications: await page.locator('[test-id^="notification-"]').allTextContents(),
+            notifications: await page
+              .locator(
+                '[test-id="notification-success"], [test-id="notification-info"], [test-id="notification-warning"], [test-id="notification-error"]',
+              )
+              .allTextContents(),
             messageBoxes: await page.locator('mosaik-message-box').count(),
           };
         },
@@ -298,40 +307,39 @@ test('reveals board context actions and starts analysis from right-click', async
     await expect(page.getByTestId(`board-item-action-decide-approve-${workItemId}`)).toBeVisible();
     await expect(page.getByTestId(`board-item-action-analyze-${workItemId}`)).toHaveCount(0);
 
+    // `Open work item` opens the work item's own screen; Back returns to the board.
     await expect(openAction).toBeVisible();
     await openAction.click();
-    await expect(page.getByTestId('task-drawer')).toBeVisible();
-    await page.getByTestId('task-drawer-header-close').click();
-    await expect(page.getByTestId('task-drawer')).toHaveCount(0);
+    await expect
+      .poll(() => page.evaluate(() => window.location.hash))
+      .toBe(`#/main/board/${encodeURIComponent(workItemId)}`);
+    await page.getByTestId('navigate-back').click();
+    await expect(page.getByTestId('board-view')).toBeVisible();
+    await expect(card).toBeVisible();
 
-    // The trigger sits in the card's own actions slot at the theme-owned content inset. It used
-    // to close the title row, where the tooltip directive pushed it inward by the width of its
-    // own layout boxes. Read the Mosaik padding and border instead of duplicating theme pixels.
-    const triggerInset = await card.evaluate((element) => {
+    // The trigger sits in the card's id row, before the avatar that keeps the trailing edge, so
+    // revealing it never moves the avatar or the title. It stays inside the card's content box.
+    const triggerPlacement = await card.evaluate((element) => {
       const button = element.querySelector('mosaik-dropdown-button')!.getBoundingClientRect();
+      const id = element.querySelector('[test-id^="board-item-id-"]')!.getBoundingClientRect();
+      const avatar = element
+        .querySelector('[test-id^="board-item-avatar-"]')
+        ?.getBoundingClientRect();
       const bounds = element.getBoundingClientRect();
-      const elementStyle = getComputedStyle(element);
-      const container = element.shadowRoot!.querySelector<HTMLElement>('[part~="container"]')!;
-      const containerStyle = getComputedStyle(container);
       return {
-        actual: {
-          fromTop: Math.round(button.top - bounds.top),
-          fromRight: Math.round(bounds.right - button.right),
-        },
-        expected: {
-          fromTop: Math.round(
-            Number.parseFloat(elementStyle.borderTopWidth) +
-              Number.parseFloat(containerStyle.paddingTop),
-          ),
-          fromRight: Math.round(
-            Number.parseFloat(elementStyle.borderRightWidth) +
-              Number.parseFloat(containerStyle.paddingRight),
-          ),
-        },
+        insideCard: button.left >= bounds.left && button.right <= bounds.right,
+        afterId: button.left >= id.right - 1,
+        beforeAvatar: avatar ? button.right <= avatar.left + 1 : true,
+        sharesIdRow:
+          Math.abs(button.top + button.height / 2 - (id.top + id.height / 2)) <= button.height / 2,
       };
     });
-    expect(triggerInset.actual).toEqual(triggerInset.expected);
-    expect(triggerInset.actual.fromTop).toBe(triggerInset.actual.fromRight);
+    expect(triggerPlacement).toEqual({
+      insideCard: true,
+      afterId: true,
+      beforeAvatar: true,
+      sharesIdRow: true,
+    });
 
     // Every provider write behind a card action takes as long as the provider does, so the
     // corner records what it showed at each step: the trigger has to give way to a running

@@ -1,0 +1,5 @@
+// The step icon sits on a 30px neutral disc, as in `AI team`.
+[part~='flow-step-icon'] {
+  background-color: var(--mosaik-color-neutral-200);
+  border-radius: 50%;
+}

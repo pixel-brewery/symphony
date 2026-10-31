@@ -3,6 +3,7 @@
 import { WorkspaceDatabaseRegistry } from '@symphony/persistence-core';
 import { WorkspaceRepositoryTrustRepository } from '@symphony/persistence-workspace';
 import {
+  WorkspaceCiRunHistoryRepository,
   WorkspaceVerificationRepository,
   WorkspaceLocalCiExecutionRepository,
 } from '@symphony/persistence-ci';
@@ -46,6 +47,14 @@ export class WorkspaceRuntimeRepositories {
    */
   public readonly localCi: WorkspaceLocalCiExecutionRepository;
 
+  /**
+   * Workspace-routed finished workflow runs.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly ciRunHistory: WorkspaceCiRunHistoryRepository;
+
   // #endregion
 
   // #region Ctor
@@ -65,6 +74,7 @@ export class WorkspaceRuntimeRepositories {
     );
     this.verification = new WorkspaceVerificationRepository(this._registry);
     this.localCi = new WorkspaceLocalCiExecutionRepository(this._registry);
+    this.ciRunHistory = new WorkspaceCiRunHistoryRepository(this._registry);
   }
 
   // #endregion

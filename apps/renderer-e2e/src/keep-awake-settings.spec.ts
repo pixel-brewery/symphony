@@ -3,6 +3,8 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
+import { openSettings } from './openSettings';
+import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
@@ -51,12 +53,10 @@ test('holds system sleep only while Symphony has background work', async () => {
 
   // assert
   try {
-    const page = await app.firstWindow();
+    const main = await prepareMainWindow(app);
+    const page = await openSettings(main);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
     await page.getByTestId('global-settings-section-system').click();
 
     const group = page.getByTestId('keep-awake-settings-group');
@@ -65,13 +65,15 @@ test('holds system sleep only while Symphony has background work', async () => {
     const toggle = page.getByTestId('keep-awake-while-busy');
     const status = page.getByTestId('keep-awake-status');
     await expect(toggle).toHaveJSProperty('isChecked', false);
-    await expect(status).toHaveJSProperty('label', 'This Mac may sleep while Symphony works.');
+    await expect(status).toContainText('This Mac may sleep while Symphony works.');
     expect(existsSync(settingsPath)).toBe(false);
+
+    // The switch applies at once: there is no Save button.
 
     await toggle.click();
     await expect(toggle).toHaveJSProperty('isChecked', true);
     // Nothing is running yet, so the setting is armed without an assertion being held.
-    await expect(status).toHaveJSProperty('label', 'Sleep is allowed while Symphony is idle.');
+    await expect(status).toContainText('Sleep is allowed while Symphony is idle.');
     await expect
       .poll(() => readPowerState(page))
       .toMatchObject({
@@ -84,15 +86,12 @@ test('holds system sleep only while Symphony has background work', async () => {
 
     await toggle.click();
     await expect(toggle).toHaveJSProperty('isChecked', false);
-    await expect(status).toHaveJSProperty('label', 'This Mac may sleep while Symphony works.');
+    await expect(status).toContainText('This Mac may sleep while Symphony works.');
     expect(JSON.parse(readFileSync(settingsPath, 'utf8'))).toMatchObject({
       keepAwakeWhileBusy: false,
     });
 
-    await page.screenshot({
-      path: resolve(outputDirectory, 'keep-awake-settings.png'),
-      fullPage: true,
-    });
+    await group.screenshot({ path: resolve(outputDirectory, 'keep-awake-settings.png') });
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();

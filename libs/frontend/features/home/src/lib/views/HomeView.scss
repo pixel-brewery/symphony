@@ -1,3 +1,57 @@
+// Overview paints its page on the neutral-50 canvas the artboard draws behind the cards.
 :host {
-  display: block;
+  display: flex;
+  background-color: var(--mosaik-color-neutral-50);
+}
+
+// List rows inside a card are separated by a hairline, as drawn.
+[part~='row'] {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+[part~='row'][role='button'],
+[part~='bar-row'] {
+  cursor: pointer;
+}
+
+// The Production warning sits on the warning tint.
+[part~='notice'] {
+  background-color: var(--mosaik-color-warning-50);
+  border-radius: calc(var(--mosaik-layout-radius) - 2px);
+}
+
+// Board bars: one neutral hue, squared at the axis.
+[part~='bar'] {
+  background-color: var(--mosaik-color-neutral-800);
+  border-radius: 0 calc(var(--mosaik-layout-radius) * 0.4) calc(var(--mosaik-layout-radius) * 0.4) 0;
+}
+
+// Delivered per week: a baseline, dashed gridlines and neutral columns; the current week is emphasised.
+[part~='chart'] {
+  border-bottom: var(--mosaik-layout-thickness) solid var(--mosaik-color-neutral-300);
+}
+
+[part~='gridline'] {
+  border-top: var(--mosaik-layout-thickness) dashed var(--mosaik-scheme-highlight);
+}
+
+[part~='column'] {
+  background-color: var(--mosaik-color-neutral-300);
+  border-radius: calc(var(--mosaik-layout-radius) * 0.4) calc(var(--mosaik-layout-radius) * 0.4) 0 0;
+}
+
+[part~='column'][part~='current'] {
+  background-color: var(--mosaik-color-neutral-800);
+}
+
+[part~='insight'] {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// Cards here draw their own rows and paddings, as the artboard does.
+mosaik-card {
+  --card-padding-top: 0;
+  --card-padding-right: 0;
+  --card-padding-bottom: 0;
+  --card-padding-left: 0;
 }

@@ -37,7 +37,7 @@ test('opens a pull request from the Pull Requests view', async () => {
   // assert
   try {
     const configurationPage = await app.firstWindow();
-    await expect(configurationPage.getByTestId('orbit-view')).toBeVisible();
+    await expect(configurationPage.getByTestId('home-view')).toBeVisible();
     await configurationPage.evaluate(async (localPath) => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const current = await api.request('settings.get', {});
@@ -78,7 +78,7 @@ test('opens a pull request from the Pull Requests view', async () => {
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-pull-requests').click();
     await expect(page.getByTestId('pull-requests-view')).toBeVisible();
 
@@ -143,6 +143,15 @@ test('opens a pull request from the Pull Requests view', async () => {
       .filter({ hasText: 'Open pull requests from the delivery view' });
     await expect(created).toBeVisible();
     await expect(created).toContainText('Draft');
+
+    // The new draft is listed under Drafts, and the inspector shows the selected pull request.
+    await page.getByTestId('pull-requests-segment-drafts').click();
+    await expect(page).toHaveURL(/view=drafts/u);
+    await expect(created).toBeVisible();
+    await expect(page.getByTestId('pull-request-inspector-title')).toContainText(
+      'Open pull requests from the delivery view',
+    );
+    await expect(page.getByTestId('pull-request-open-in-github')).toBeVisible();
 
     expect(rendererErrors).toEqual([]);
   } finally {

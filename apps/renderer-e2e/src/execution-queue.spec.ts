@@ -43,7 +43,7 @@ async function launchWithSingleSlot(name: string): Promise<ElectronApplication> 
   });
 
   const page = await mainWindow(app);
-  await expect(page.getByTestId('orbit-view')).toBeVisible();
+  await expect(page.getByTestId('home-view')).toBeVisible();
   await page.getByTestId('navigation-home').click();
   await expect(page.getByTestId('home-view')).toBeVisible();
   await page.evaluate(async (localPath) => {
@@ -154,7 +154,7 @@ async function mainWindow(app: ElectronApplication): Promise<Page> {
     .poll(
       async () => {
         for (const candidate of app.windows()) {
-          if (await candidate.getByTestId('toggle-rail').count()) {
+          if (await candidate.getByTestId('window-sidebar').count()) {
             shell = candidate;
             return true;
           }
@@ -193,7 +193,6 @@ test('shows a step waiting for an execution slot in the rail and withdraws it ag
       page.url(),
     );
     await expect(page.getByTestId('home-view')).toBeVisible();
-    await page.getByTestId('toggle-rail').click();
     await page.getByTestId('rail-run-segment-agent-runs').click();
 
     const queuedRun = page.getByTestId('rail-run-queued:work-item-142');
@@ -202,7 +201,7 @@ test('shows a step waiting for an execution slot in the rail and withdraws it ag
     await expect(queuedRun).toContainText('Queued');
     const withdraw = page.getByTestId('rail-run-dequeue-queued:work-item-142');
     await expect(withdraw).toBeVisible();
-    await page.getByTestId('workspace-rail').screenshot({
+    await page.getByTestId('run-panel').screenshot({
       path: resolve(outputDirectory, 'execution-queue-rail.png'),
     });
 

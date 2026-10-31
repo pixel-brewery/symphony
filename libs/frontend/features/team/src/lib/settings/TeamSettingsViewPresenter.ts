@@ -1,20 +1,21 @@
 // #region Imports
 
 import { computed, effect, inject, Injectable } from '@angular/core';
-import { MessageBoxService } from '@pixel-brewery/mosaik-elements-angular';
 import { Command } from '@symphony/frontend-core';
 import {
   SETTINGS_WORKSPACE_CONTEXT,
+  SettingsAlertService,
   SettingsEditorService,
   SettingsHostSession,
   type ISettingsEditorRequest,
 } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
-import { AI_RUNTIME_LABELS } from '@symphony/frontend-ui';
+import type { AgentAvailability } from '../models/AgentAvailability';
 import { TEAM_SETTINGS_CONTEXT } from '../ports/TeamSettingsContextToken';
+import { projectDeliveryFlow } from './delivery-flow/projectDeliveryFlow';
+import type { IDeliveryFlowStepView } from './delivery-flow/IDeliveryFlowStepView';
 import { projectWorkspaceOrganization } from './workspace-organization/projectWorkspaceOrganization';
 import type { IWorkspaceOrganizationView } from './workspace-organization/IWorkspaceOrganizationView';
-import type { IWorkspaceAgentFallbackView } from './workspace-organization/IWorkspaceAgentFallbackView';
 import {
   agentIntelligenceIndex,
   modelIntelligenceTargets,
@@ -24,7 +25,12 @@ import { agentRemovalBlockers, withoutAgent } from './agent-removal';
 
 // #endregion
 
-/** Owns the workspace Team card's organization, usage projections and commands. @public */
+/**
+ * Owns the `AI team` section of a workspace: its delivery flow, agent cards, technical setup,
+ * usage projections and commands.
+ *
+ * @public
+ */
 @Injectable()
 export class TeamSettingsViewPresenter {
   // #region Fields
@@ -38,7 +44,7 @@ export class TeamSettingsViewPresenter {
     this.store.settings()?.workspaces.find((item) => item.id === this._selection.workspaceId()),
   );
 
-  private readonly _messageBoxService = inject(MessageBoxService);
+  private readonly _alerts = inject(SettingsAlertService);
 
   private readonly _organizationByWorkspace = computed(() => {
     const settings = this.store.settings();
@@ -65,8 +71,18 @@ export class TeamSettingsViewPresenter {
     readonly [workspaceId: string, connectionId?: string, agentProfileId?: string]
   > = new Command((parameters) => void this.onExecuteOpenAiConnectionCommand(...parameters));
 
-  private readonly _agentSummary = computed(
-    () => (agent: IWorkspaceOrganizationView['agents'][number]) => this.resolveAgentSummary(agent),
+  private readonly _deliveryFlow = computed(
+    () => (workspaceId: string) => this.resolveDeliveryFlow(workspaceId),
+  );
+
+  private readonly _agentAvailability = computed(
+    () => (agent: IWorkspaceOrganizationView['agents'][number]) =>
+      this.resolveAgentAvailability(agent),
+  );
+
+  private readonly _agentIntelligence = computed(
+    () => (agent: IWorkspaceOrganizationView['agents'][number]) =>
+      this.resolveAgentIntelligence(agent),
   );
 
   private readonly _modelIntelligenceIssue = computed(() => this.resolveModelIntelligenceIssue());
@@ -79,18 +95,10 @@ export class TeamSettingsViewPresenter {
     () => (connectionId: string) => this.resolveAccountExhausted(connectionId),
   );
 
-  private readonly _agentProviderSummary = computed(
-    () => (agent: IWorkspaceOrganizationView['agents'][number]) =>
-      this.resolveAgentProviderSummary(agent),
-  );
-
   private readonly _confirmRemoveAgentCommand: Command<
     IWorkspaceOrganizationView['agents'][number]
   > = new Command((agent) => void this.onExecuteConfirmRemoveAgentCommand(agent));
 
-  private readonly _agentFallbackSummary = computed(
-    () => (fallback: IWorkspaceAgentFallbackView) => this.resolveAgentFallbackSummary(fallback),
-  );
   // #endregion
   // #region Ctor
   /** Starts only projections required by the mounted Team card. @public */
@@ -162,13 +170,33 @@ export class TeamSettingsViewPresenter {
   }
 
   /**
-   * The agentSummary projection.
+   * Who does each delivery-flow step of a workspace, with the backups after the preferred agent.
    *
    * @public
    * @readonly
    */
-  public get agentSummary() {
-    return this._agentSummary;
+  public get deliveryFlow() {
+    return this._deliveryFlow;
+  }
+
+  /**
+   * Whether an agent can currently run, judged by its accounts' quota.
+   *
+   * @public
+   * @readonly
+   */
+  public get agentAvailability() {
+    return this._agentAvailability;
+  }
+
+  /**
+   * Intelligence index of an agent's preferred model and effort, when scores are known.
+   *
+   * @public
+   * @readonly
+   */
+  public get agentIntelligence() {
+    return this._agentIntelligence;
   }
 
   /**
@@ -202,16 +230,6 @@ export class TeamSettingsViewPresenter {
   }
 
   /**
-   * The agentProviderSummary projection.
-   *
-   * @public
-   * @readonly
-   */
-  public get agentProviderSummary() {
-    return this._agentProviderSummary;
-  }
-
-  /**
    * The confirmRemoveAgent command.
    *
    * @public
@@ -221,15 +239,6 @@ export class TeamSettingsViewPresenter {
     return this._confirmRemoveAgentCommand;
   }
 
-  /**
-   * The agentFallbackSummary projection.
-   *
-   * @public
-   * @readonly
-   */
-  public get agentFallbackSummary() {
-    return this._agentFallbackSummary;
-  }
   // #endregion
   // #region Methods
 
@@ -278,25 +287,14 @@ export class TeamSettingsViewPresenter {
     this.openEditor({ kind: 'ai', workspaceId, connectionId, agentProfileId });
   }
 
-  /** Sub-label of an agent row: position, AI account, model, and availability. */
   /**
-   * One line under the agent name. The provider is not repeated in words — its avatar already
-   * carries it — and availability reflects the account quota, not just the enabled flag.
+   * Returns the delivery flow of a workspace.
    *
-   * @param agent - Agent.
+   * @param workspaceId - Workspace id.
    * @private
    */
-  private resolveAgentSummary(agent: IWorkspaceOrganizationView['agents'][number]): string {
-    const intelligence = this.agentIntelligence(agent);
-    return [
-      agent.positionDisplayName,
-      ...(agent.accountKind ? [] : ['No AI account']),
-      agent.model,
-      this.agentAvailability(agent),
-      ...(intelligence === undefined ? [] : [`Intelligence ${intelligence}`]),
-    ]
-      .filter((part): part is string => Boolean(part))
-      .join(' · ');
+  private resolveDeliveryFlow(workspaceId: string): readonly IDeliveryFlowStepView[] {
+    return projectDeliveryFlow(this.resolveWorkspaceOrganization(workspaceId));
   }
 
   /**
@@ -314,7 +312,7 @@ export class TeamSettingsViewPresenter {
    * @param agent - Agent.
    * @private
    */
-  private agentIntelligence(
+  private resolveAgentIntelligence(
     agent: IWorkspaceOrganizationView['agents'][number],
   ): number | undefined {
     const scores = this.store.modelIntelligence()?.scores;
@@ -345,16 +343,18 @@ export class TeamSettingsViewPresenter {
    * @param agent - Agent.
    * @private
    */
-  private agentAvailability(agent: IWorkspaceOrganizationView['agents'][number]): string {
-    if (!agent.enabled) return 'Unavailable';
+  private resolveAgentAvailability(
+    agent: IWorkspaceOrganizationView['agents'][number],
+  ): AgentAvailability {
+    if (!agent.enabled) return 'unavailable';
     const preferredExhausted = agent.accountId
       ? this.resolveAccountExhausted(agent.accountId)
       : false;
-    if (!preferredExhausted) return 'Available';
+    if (!preferredExhausted) return 'available';
     const usableBackup = agent.fallbacks.some(
       (fallback) => !this.resolveAccountExhausted(fallback.accountId),
     );
-    return usableBackup ? 'Backup in use · preferred account out of quota' : 'Out of quota';
+    return usableBackup ? 'backup-in-use' : 'out-of-quota';
   }
 
   /**
@@ -370,71 +370,39 @@ export class TeamSettingsViewPresenter {
   }
 
   /**
-   * Tooltip of the provider avatar: which workspace account this agent runs on.
-   *
-   * @param agent - Agent.
-   * @private
-   */
-  private resolveAgentProviderSummary(agent: IWorkspaceOrganizationView['agents'][number]): string {
-    if (!agent.accountKind) return 'No AI account assigned';
-    const provider = AI_RUNTIME_LABELS[agent.accountKind];
-    return agent.accountDisplayName ? `${provider} · ${agent.accountDisplayName}` : provider;
-  }
-
-  /**
    * Confirms the remove agent.
    *
    * @param agent - Agent.
    * @private
    */
-  private onExecuteConfirmRemoveAgentCommand(
+  private async onExecuteConfirmRemoveAgentCommand(
     agent: IWorkspaceOrganizationView['agents'][number],
-  ): void {
+  ): Promise<void> {
     const settings = this.requireSettings();
     const [blocker] = agentRemovalBlockers(settings, agent.id);
     if (blocker) {
-      this._messageBoxService.show({
+      await this._alerts.confirm({
         id: `remove-agent-blocked-${agent.id}`,
         header: 'This agent cannot be removed',
         message:
           blocker === 'last-agent'
             ? 'A workspace needs at least one AI agent. Add another agent first, then remove this one.'
             : 'This agent is the only Work Item Creator while a Teams feedback intake is enabled. Assign that responsibility to another agent or disable the intake first.',
-        buttons: 'ok',
-        variant: 'warning',
-        pressEscapeToClose: true,
+        tone: 'warning',
+        confirmLabel: 'OK',
       });
       return;
     }
-    const confirmation = this._messageBoxService.show({
+    const confirmed = await this._alerts.confirm({
       id: `remove-agent-${agent.id}`,
       header: `Remove ${agent.displayName}?`,
       message:
         'Symphony removes the agent, its position, and its routing. Its responsibilities move to another agent that is allowed to take them; the AI account itself stays connected.',
-      buttons: 'yesNo',
-      variant: 'danger',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Remove agent', noLabel: 'Keep agent' },
+      confirmLabel: 'Remove agent',
+      cancelLabel: 'Keep agent',
+      destructive: true,
     });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason !== 'positive') return;
-      void this.store.saveSettings(withoutAgent(this.requireSettings(), agent.id));
-    });
-  }
-
-  /**
-   * Tooltip for a backup avatar: the account it falls over to, with its model and effort.
-   *
-   * @param fallback - Fallback.
-   * @private
-   */
-  private resolveAgentFallbackSummary(fallback: IWorkspaceAgentFallbackView): string {
-    return [
-      `Backup: ${fallback.accountDisplayName}`,
-      AI_RUNTIME_LABELS[fallback.accountKind],
-      ...(fallback.model ? [fallback.model] : []),
-      ...(fallback.reasoningEffort ? [`${fallback.reasoningEffort} effort`] : []),
-    ].join(' · ');
+    if (confirmed) await this.store.saveSettings(withoutAgent(this.requireSettings(), agent.id));
   }
 
   private openEditor<TRequest extends ISettingsEditorRequest>(data: TRequest): void {

@@ -19,7 +19,8 @@ import { BehaviorSubject } from 'rxjs';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { OrbitViewPresenter } from './OrbitViewPresenter';
 
-vi.mock('@symphony/frontend-core', async () => {
+vi.mock('@symphony/frontend-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@symphony/frontend-core')>();
   const { DestroyRef, inject, InjectionToken, signal } = await import('@angular/core');
   class CommandStub<TParameter = void> {
     private readonly _execute: (parameter: TParameter) => void;
@@ -42,6 +43,8 @@ vi.mock('@symphony/frontend-core', async () => {
     ViewPresenter: ViewPresenterStub,
     ORCHESTRATION_CLIENT: new InjectionToken('ORCHESTRATION_CLIENT'),
     NotificationService: class NotificationService {},
+    resolveBoardColumnLayout: actual.resolveBoardColumnLayout,
+    workItemIdsNeedingAttention: actual.workItemIdsNeedingAttention,
   };
 });
 
@@ -117,6 +120,7 @@ function setup(options: { work?: boolean; delivery?: boolean } = {}) {
     scopedRepositories: signal(repositories),
     selectedWorkspaceIds: signal(['personal']),
     scopedWorkItems: signal([item]),
+    activeBoardId: signal<string | undefined>(undefined),
     selectedWorkItem,
     selectionExplicit: explicit,
     selectWorkItem: vi.fn((id: string | undefined) => {
@@ -144,7 +148,14 @@ function setup(options: { work?: boolean; delivery?: boolean } = {}) {
       },
     ],
   });
-  return { presenter: TestBed.inject(OrbitViewPresenter), pending, request, store, query };
+  return {
+    presenter: TestBed.inject(OrbitViewPresenter),
+    pending,
+    request,
+    store,
+    query,
+    navigate: TestBed.inject(Router).navigate as ReturnType<typeof vi.fn>,
+  };
 }
 
 async function initialize(presenter: OrbitViewPresenter): Promise<void> {
@@ -341,16 +352,14 @@ describe('OrbitViewPresenter', () => {
     await settle();
 
     // act
-    presenter.changeFinderKindCommand.execute('targets');
-    presenter.finderPage.set(2);
-    const last = presenter.finderTargets().at(-1)!;
-    presenter.selectTargetCommand.execute(last.id);
+    const menu = presenter.destinationMenu();
+    presenter.selectTargetCommand.execute(menu.at(-1)!.id);
 
     // assert
-    expect(presenter.finderCount()).toBe(100);
-    expect(presenter.finderTargets()).toHaveLength(20);
+    expect(menu).toHaveLength(100);
     expect(presenter.selectedTarget()?.id).toBe('target-99');
     expect(presenter.focusId()).toBe('target:target-99');
+    expect(presenter.inspectorMode()).toBe('destination');
   });
 
   it("does not associate another repository's identically numbered pull request with the selected ticket", async () => {
@@ -448,7 +457,7 @@ describe('OrbitViewPresenter', () => {
     expect(presenter.orbitScene().nodes.some((node) => node.id.startsWith('pilot-'))).toBe(false);
   });
 
-  it('ignores retired employee objects while preserving ticket selection and the ticket finder', async () => {
+  it('ignores retired employee objects while preserving ticket selection and the cluster list', async () => {
     // arrange
     const { presenter, pending, store } = setup();
     const second = { ...item, id: 'ticket-b', externalId: '#124' };
@@ -459,15 +468,14 @@ describe('OrbitViewPresenter', () => {
 
     // act
     presenter.selectCommand.execute('agent:worker:work:ticket-b');
-    presenter.changeFinderKindCommand.execute('employees');
 
     // assert
     expect(presenter.selectedSceneId()).toBeUndefined();
     expect(new Set(presenter.orbitScene().nodes.map((node) => node.kind))).toEqual(
-      new Set(['production', 'target', 'ticket']),
+      new Set(['production', 'target', 'ticket', 'group']),
     );
-    expect(presenter.finderKind()).toBe('tickets');
-    expect(presenter.finderCount()).toBe(2);
+    expect(presenter.inspectorMode()).toBe('cluster');
+    expect(presenter.clusterItems().map((entry) => entry.id)).toEqual(['ticket-b', 'ticket-a']);
     presenter.selectTicketCommand.execute(item.id);
     expect(presenter.selectedSceneId()).toBe(`ticket:${item.id}`);
     expect(presenter.selectedTicket()?.id).toBe(item.id);
@@ -499,4 +507,222 @@ describe('OrbitViewPresenter', () => {
     expect(presenter.launchBusy()).toBe(false);
     expect(request).not.toHaveBeenCalled();
   });
+
+  it('clusters work items by board column, inspects Needs attention first and opens either on the Board', async () => {
+    // arrange
+    const { presenter, pending, store, navigate } = setup();
+    const done = {
+      ...item,
+      id: 'ticket-done',
+      externalId: '#7',
+      stageId: 'done',
+      boardColumnId: 'done',
+    };
+    const failing = {
+      ...item,
+      id: 'ticket-failing',
+      externalId: '#9',
+      stageId: 'backlog',
+      boardColumnId: 'backlog',
+    };
+    const backlog = {
+      ...item,
+      id: 'ticket-backlog',
+      externalId: '#8',
+      stageId: 'backlog',
+      boardColumnId: 'backlog',
+    };
+    store.scopedWorkItems.set([done, failing, backlog]);
+    store.snapshot.set(clusterSnapshot('ticket-failing'));
+    await initialize(presenter);
+    pending[0]!.resolve(snapshot('a'));
+    await settle();
+
+    // act
+    const clusters = presenter
+      .clusters()
+      .map((cluster) => [cluster.label, cluster.tone, cluster.memberIds]);
+    const firstInspected = presenter.inspectedCluster()?.label;
+    presenter.showOnBoardCommand.execute();
+    presenter.selectCommand.execute('group:column:done');
+    presenter.showOnBoardCommand.execute();
+
+    // assert
+    expect(clusters).toEqual([
+      ['Backlog', 'neutral', ['ticket-backlog']],
+      ['Done', 'success', ['ticket-done']],
+      ['Needs attention', 'danger', ['ticket-failing']],
+    ]);
+    expect(firstInspected).toBe('Needs attention');
+    expect(presenter.inspectorMode()).toBe('cluster');
+    expect(presenter.inspectedCluster()?.label).toBe('Done');
+    expect(presenter.columnLabels().get('ticket-failing')).toBe('Backlog');
+    expect(navigate.mock.calls).toEqual([
+      [['/main/board'], { queryParams: { attention: 'true' } }],
+      [['/main/board'], { queryParams: { column: 'done' } }],
+    ]);
+  });
+
+  it('counts collected evidence and the items missing from the confirmed Production version', async () => {
+    // arrange
+    const { presenter, pending, store } = setup();
+    const first = {
+      ...item,
+      id: 'ticket-1',
+      externalId: '#1',
+      stageId: 'done',
+      boardColumnId: 'done',
+    };
+    const second = {
+      ...item,
+      id: 'ticket-2',
+      externalId: '#2',
+      stageId: 'done',
+      boardColumnId: 'done',
+    };
+    store.scopedWorkItems.set([first, second]);
+    store.snapshot.set(clusterSnapshot());
+    store.settings.update((settings) => ({
+      ...settings,
+      deliveryTargets: [{ ...targets[0]!, production: true }],
+    }));
+    await initialize(presenter);
+    const before = presenter.evidenceKnown();
+
+    // act
+    pending[0]!.resolve({
+      targets: [{ ...targets[0]!, production: true }],
+      refreshedAt: '2026-10-09T12:00:00Z',
+      errors: [],
+      evidence: [
+        {
+          id: 'proof',
+          targetId: 'a',
+          workspaceId: 'personal',
+          repositoryBindingId: 'repo-a',
+          kind: 'deployment',
+          revision: 'revision',
+          version: 'v2026.10.3',
+          state: 'succeeded',
+          observedAt: '2026-10-09T12:00:00Z',
+          workItemIds: ['ticket-1'],
+        },
+      ],
+    });
+    await settle();
+
+    // assert
+    expect(before).toBe(false);
+    expect(presenter.evidenceKnown()).toBe(true);
+    expect(presenter.inspectedCluster()?.label).toBe('Done');
+    expect(presenter.clusterEvidenceCount()).toBe(1);
+    expect(presenter.clusterUnconfirmedCount()).toBe(1);
+    expect(presenter.productionName()).toBe('a');
+    expect(presenter.productionNode()).toMatchObject({
+      deliveryState: 'confirmed',
+      version: 'v2026.10.3',
+    });
+  });
+
+  it('reports the confirmed version of the selected one of several Production destinations', async () => {
+    // arrange
+    const { presenter, pending, store } = setup();
+    const production = targets
+      .filter((target) => target.repositoryBindingId === 'repo-a')
+      .map((target) => ({ ...target, production: true }));
+    store.settings.update((settings) => ({ ...settings, deliveryTargets: production }));
+    await initialize(presenter);
+    pending[0]!.resolve({
+      targets: production,
+      refreshedAt: '2026-10-09T12:00:00Z',
+      errors: [],
+      evidence: production.map((target, index) => ({
+        id: `proof-${target.id}`,
+        targetId: target.id,
+        workspaceId: 'personal',
+        repositoryBindingId: 'repo-a',
+        kind: 'deployment' as const,
+        revision: `revision-${index}`,
+        version: `v2026.10.${index + 1}`,
+        state: 'succeeded' as const,
+        observedAt: '2026-10-09T12:00:00Z',
+        workItemIds: [],
+      })),
+    });
+    await settle();
+    const before = {
+      name: presenter.toolbarDestination()?.displayName,
+      node: presenter.toolbarDestinationNode(),
+    };
+
+    // act
+    presenter.selectTargetCommand.execute('b');
+
+    // assert
+    expect(presenter.productionName()).toBe('Production');
+    expect(before.name).toBe('a');
+    expect(before.node).toMatchObject({ deliveryState: 'confirmed', version: 'v2026.10.1' });
+    expect(presenter.toolbarDestination()?.displayName).toBe('b');
+    expect(presenter.toolbarDestinationNode()).toMatchObject({
+      deliveryState: 'confirmed',
+      version: 'v2026.10.2',
+    });
+  });
+
+  it('returns from a selected cluster to the default one and opens Delivery destinations in Settings', async () => {
+    // arrange
+    const { presenter, pending, store, navigate } = setup();
+    const done = {
+      ...item,
+      id: 'ticket-done',
+      externalId: '#7',
+      stageId: 'done',
+      boardColumnId: 'done',
+    };
+    const failing = { ...item, id: 'ticket-failing', externalId: '#9', stageId: 'done' };
+    store.scopedWorkItems.set([done, failing]);
+    store.snapshot.set(clusterSnapshot('ticket-failing'));
+    await initialize(presenter);
+    pending[0]!.resolve(snapshot('a'));
+    await settle();
+    presenter.selectCommand.execute('group:column:done');
+    const selected = presenter.inspectedCluster()?.label;
+
+    // act
+    presenter.dismissOverlayCommand.execute();
+    presenter.openDeliverySettingsCommand.execute();
+
+    // assert
+    expect(selected).toBe('Done');
+    expect(presenter.inspectedCluster()?.label).toBe('Needs attention');
+    expect(navigate).toHaveBeenLastCalledWith(['/main/settings'], {
+      queryParams: { workspace: 'personal', section: 'delivery', repository: 'repo-a' },
+    });
+  });
 });
+
+function clusterSnapshot(failedWorkItemId?: string): Partial<IOrchestrationSnapshot> {
+  return {
+    boardColumns: [
+      { id: 'backlog', label: 'Backlog', stageId: 'backlog' },
+      { id: 'done', label: 'Done', stageId: 'done' },
+    ],
+    workflow: {
+      stages: [
+        { id: 'backlog', label: 'Backlog', description: '', kind: 'human-gate' },
+        { id: 'done', label: 'Done', description: '', kind: 'terminal' },
+      ],
+    } as unknown as IOrchestrationSnapshot['workflow'],
+    executions: failedWorkItemId
+      ? [
+          {
+            id: 'execution-failed',
+            workItemId: failedWorkItemId,
+            workflowId: 'workflow',
+            state: 'failed',
+            startedAt: '2026-10-09T12:00:00Z',
+          },
+        ]
+      : [],
+  };
+}

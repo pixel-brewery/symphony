@@ -9,7 +9,6 @@ import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
 } from '@symphony/configuration-composition';
-import { SettingsHostSession } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { IPlatformSettingsContext } from '../ports/IPlatformSettingsContext';
@@ -18,80 +17,69 @@ import { AppearanceSettingsStore } from './AppearanceSettingsStore';
 
 // #endregion
 
+function arrange(saved: boolean) {
+  const initial = applicationSettingsSchema.parse(
+    createDefaultApplicationSettings('/tmp/symphony'),
+  );
+  const settings = signal<ApplicationSettingsDto | undefined>(initial);
+  const saveSettings = vi
+    .fn<IPlatformSettingsContext['saveSettings']>()
+    .mockImplementation(async (next) => {
+      if (saved) settings.set(next);
+      return saved;
+    });
+  const context: IPlatformSettingsContext = {
+    settings,
+    saveSettings,
+    refreshConfiguration: async () => undefined,
+  };
+  TestBed.configureTestingModule({
+    providers: [AppearanceSettingsStore, { provide: PLATFORM_SETTINGS_CONTEXT, useValue: context }],
+  });
+  return { initial, settings, saveSettings, store: TestBed.inject(AppearanceSettingsStore) };
+}
+
 describe('AppearanceSettingsStore', () => {
   beforeAll(() => TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting()));
   afterEach(() => TestBed.resetTestingModule());
   afterAll(() => TestBed.resetTestEnvironment());
 
-  it('retains a failed appearance draft within the route and resets it for a new Settings route', () => {
+  it('saves a chosen theme at once', async () => {
     // arrange
-    const initial = applicationSettingsSchema.parse(
-      createDefaultApplicationSettings('/tmp/symphony'),
-    );
-    const settings = signal<ApplicationSettingsDto | undefined>(initial);
-    const saveSettings = vi.fn<IPlatformSettingsContext['saveSettings']>().mockResolvedValue(false);
-    const context: IPlatformSettingsContext = {
-      settings,
-      saveSettings,
-      refreshConfiguration: async () => undefined,
-    };
-    TestBed.configureTestingModule({
-      providers: [
-        AppearanceSettingsStore,
-        { provide: PLATFORM_SETTINGS_CONTEXT, useValue: context },
-      ],
-    });
-    const session = new SettingsHostSession();
-    const store = TestBed.inject(AppearanceSettingsStore);
-    store.beginSession(session);
-    TestBed.tick();
-    store.updateThemeCommand.execute({ detail: { newValue: { value: 'dark' } } });
+    const { initial, saveSettings, store } = arrange(true);
 
     // act
-    store.saveThemeCommand.execute();
-    store.beginSession(session);
-    TestBed.tick();
+    store.updateThemeCommand.execute({ detail: { newValue: { value: 'dark' } } });
+    await vi.waitFor(() => expect(saveSettings).toHaveBeenCalledOnce());
 
     // assert
-    expect(store.theme()).toBe('dark');
-    expect(saveSettings).toHaveBeenCalledExactlyOnceWith({
+    expect(saveSettings).toHaveBeenCalledWith({
       ...initial,
       user: { ...initial.user, theme: 'dark' },
     });
-    expect(settings()).toBe(initial);
-    store.beginSession(new SettingsHostSession());
-    expect(store.theme()).toBe(initial.user.theme);
+    await vi.waitFor(() => expect(store.theme()).toBe('dark'));
   });
 
-  it('reconciles authoritative appearance changes into the same draft signal', () => {
+  it('restores the previous theme when saving fails', async () => {
     // arrange
-    const initial = applicationSettingsSchema.parse(
-      createDefaultApplicationSettings('/tmp/symphony'),
-    );
-    const settings = signal<ApplicationSettingsDto | undefined>(initial);
-    const context: IPlatformSettingsContext = {
-      settings,
-      saveSettings: async () => true,
-      refreshConfiguration: async () => undefined,
-    };
-    TestBed.configureTestingModule({
-      providers: [
-        AppearanceSettingsStore,
-        { provide: PLATFORM_SETTINGS_CONTEXT, useValue: context },
-      ],
-    });
-    const store = TestBed.inject(AppearanceSettingsStore);
-    store.beginSession(new SettingsHostSession());
-    TestBed.tick();
-    const theme = store.theme;
+    const { initial, saveSettings, store } = arrange(false);
+
+    // act
     store.updateThemeCommand.execute('dark');
+    await vi.waitFor(() => expect(saveSettings).toHaveBeenCalledOnce());
+
+    // assert
+    await vi.waitFor(() => expect(store.theme()).toBe(initial.user.theme));
+  });
+
+  it('follows authoritative theme changes from another window', () => {
+    // arrange
+    const { initial, settings, store } = arrange(true);
 
     // act
     settings.set({ ...initial, user: { ...initial.user, theme: 'light' } });
-    TestBed.tick();
 
     // assert
-    expect(store.theme).toBe(theme);
     expect(store.theme()).toBe('light');
   });
 });

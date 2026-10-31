@@ -18,7 +18,7 @@ export class SettingsHostSession {
   private readonly _workspaceId = signal<string | null>(null);
   private readonly _globalSection = signal<GlobalSettingsSection>('workspaces');
   private readonly _workspaceSection = signal<WorkspaceSettingsSection>('team');
-  private readonly _workspaceNavigationExpanded = signal(true);
+  private readonly _searchQuery = signal('');
   private _knownWorkspaceIds: readonly string[] = [];
   private _initialized = false;
   /**
@@ -43,12 +43,13 @@ export class SettingsHostSession {
    */
   public readonly workspaceSection = this._workspaceSection.asReadonly();
   /**
-   * Whether the workspace directory navigation is expanded.
+   * Text typed into `Search settings`; while it is not blank the window lists matching settings
+   * instead of a section.
    *
    * @public
    * @readonly
    */
-  public readonly workspaceNavigationExpanded = this._workspaceNavigationExpanded.asReadonly();
+  public readonly searchQuery = this._searchQuery.asReadonly();
 
   // #endregion
 
@@ -62,25 +63,19 @@ export class SettingsHostSession {
   public openWorkspace(workspaceId: string, section: WorkspaceSettingsSection = 'team'): void {
     this._workspaceId.set(workspaceId);
     this._globalSection.set('workspaces');
-    this._workspaceNavigationExpanded.set(true);
     this._workspaceSection.set(section);
+    this._searchQuery.set('');
   }
 
   /**
-   * Selects an installation section and retains the directory's existing toggle behavior.
+   * Selects an installation section and leaves the workspace being configured.
    *
    * @public
    */
   public selectGlobal(section: GlobalSettingsSection): void {
-    const togglesDirectory =
-      section === 'workspaces' &&
-      this._globalSection() === 'workspaces' &&
-      this._workspaceId() === null;
     this._workspaceId.set(null);
     this._globalSection.set(section);
-    this._workspaceNavigationExpanded.set(
-      section === 'workspaces' && (!togglesDirectory || !this._workspaceNavigationExpanded()),
-    );
+    this._searchQuery.set('');
   }
 
   /**
@@ -90,6 +85,16 @@ export class SettingsHostSession {
    */
   public selectWorkspaceSection(section: WorkspaceSettingsSection): void {
     this._workspaceSection.set(section);
+    this._searchQuery.set('');
+  }
+
+  /**
+   * Changes the `Search settings` query; a blank query returns to the selected section.
+   *
+   * @public
+   */
+  public search(query: string): void {
+    this._searchQuery.set(query);
   }
 
   /**
@@ -119,7 +124,6 @@ export class SettingsHostSession {
     if (this._initialized && added) this.openWorkspace(added);
     else if (this._workspaceId() !== null && !workspaceIds.some((id) => id === this._workspaceId()))
       this._workspaceId.set(null);
-    if (workspaceIds.length === 0) this._workspaceNavigationExpanded.set(false);
     this._knownWorkspaceIds = [...workspaceIds];
     this._initialized = true;
   }

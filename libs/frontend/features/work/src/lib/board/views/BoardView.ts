@@ -1,40 +1,33 @@
 // #region Imports
 
 import { DatePipe } from '@angular/common';
-import { CdkDrag, type CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
+import { type CdkDragDrop, CdkDrag, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { CdkVirtualForOf, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  AnimateDirective,
-  BadgeComponent,
   BannerComponent,
   BannerHeaderComponent,
   BannerSubHeaderComponent,
   ButtonComponent,
-  DividerComponent,
   DropDownButtonComponent,
   EmptyStateComponent,
   FlowBoardColumnComponent,
-  FlowBoardColumnItemComponent,
   FlowBoardComponent,
   HintComponent,
   IconNameDirective,
   MenuComponent,
   MenuItemComponent,
-  PageComponent,
-  PageContentComponent,
-  PageHeaderComponent,
-  PagePreContentComponent,
   SkeletonComponent,
-  StackComponent,
   TextComponent,
   TooltipDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { BooleanIconPipe, PageToolbarComponent } from '@symphony/frontend-ui';
+import { View, VIEW_PRESENTER, WindowToolbarDirective } from '@symphony/frontend-core';
+import { BooleanIconPipe } from '@symphony/frontend-ui';
 import { BoardColumnEntryComponent } from '../components/BoardColumnEntryComponent';
 import { DynamicSizeVirtualScrollDirective } from '../directives/DynamicSizeVirtualScrollDirective';
 import { BoardSourceSummaryPipe } from '../pipes/BoardSourceSummaryPipe';
+import { WorkspaceSelectionSummaryPipe } from '../pipes/WorkspaceSelectionSummaryPipe';
 import { BoardViewPresenter } from '../view-presenters/BoardViewPresenter';
 import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
 
@@ -42,43 +35,36 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
 
 @Component({
   selector: 'symphony-board-view',
-  host: { class: 'flex h-full min-h-0 w-full overflow-hidden' },
+  host: { class: 'flex min-h-0 min-w-0 flex-1 flex-col' },
   imports: [
-    AnimateDirective,
-    BadgeComponent,
     BannerComponent,
     BannerHeaderComponent,
     BannerSubHeaderComponent,
+    BoardColumnEntryComponent,
     BoardSourceSummaryPipe,
     BooleanIconPipe,
     ButtonComponent,
-    BoardColumnEntryComponent,
     CdkDrag,
     CdkDropList,
     CdkDropListGroup,
     CdkVirtualForOf,
     CdkVirtualScrollViewport,
     DatePipe,
-    DividerComponent,
     DropDownButtonComponent,
     DynamicSizeVirtualScrollDirective,
     EmptyStateComponent,
     FlowBoardColumnComponent,
-    FlowBoardColumnItemComponent,
     FlowBoardComponent,
     HintComponent,
     IconNameDirective,
     MenuComponent,
     MenuItemComponent,
-    PageComponent,
-    PageContentComponent,
-    PageHeaderComponent,
-    PagePreContentComponent,
-    PageToolbarComponent,
     SkeletonComponent,
-    StackComponent,
     TextComponent,
     TooltipDirective,
+    TypographyDirective,
+    WindowToolbarDirective,
+    WorkspaceSelectionSummaryPipe,
   ],
   providers: [BoardViewPresenter, { provide: VIEW_PRESENTER, useExisting: BoardViewPresenter }],
   templateUrl: './BoardView.html',

@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+// The icon-only bell keeps the status bar's 24px square in its pressed (soft) state too.
+[part~='notification-bell'] {
+  --button-padding-left: 4px;
+  --button-padding-right: 4px;
+}
+
+// The notification centre floats over the current view. The artboard paints it as a plain
+// surface with a hairline frame and the bold elevation, which no Mosaik input expresses.
+[part~='notification-centre'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: calc(var(--mosaik-layout-radius) * 1.2);
+  box-shadow: var(--mosaik-elevation-bold);
+  color: var(--mosaik-scheme-foreground);
+  font: var(--mosaik-typography-body2);
+  outline: none;
+}
+
+[part~='notification-centre-title'] {
+  --text-font-weight: 600;
+}
+
+// Rows and the footer are separated by hairlines, as drawn.
+[part~='notification-row'],
+[part~='notification-centre-footer'] {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}

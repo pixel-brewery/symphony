@@ -1,100 +1,54 @@
 // #region Imports
 
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
-import {
-  afterNextRender,
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  Injector,
-  viewChild,
-} from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import {
   AppComponent,
-  AppHeaderComponent,
-  AvatarComponent,
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
-  BreakpointDirective,
   ButtonComponent,
-  DividerComponent,
-  DropDownButtonComponent,
-  HintComponent,
-  IconComponent,
   IconNameDirective,
-  ListComponent,
-  ListItemComponent,
-  MenuComponent,
-  MenuItemComponent,
-  PopupComponent,
-  ProgressRingComponent,
   SearchBoxComponent,
-  SegmentComponent,
-  SegmentItemComponent,
-  SheetComponent,
-  SheetContentComponent,
   SplitComponent,
   TextComponent,
-  ToggleButtonComponent,
   TooltipDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
+import { PaneSizeDirective, WindowToolbar } from '@symphony/frontend-core';
+import { CommandPalette } from '@symphony/frontend-search';
+import { CommandPaletteView } from '@symphony/frontend-search/views';
 import { PRESENTATION_CONTEXT } from '../ports/PresentationContextToken';
-import { BooleanIconPipe, CompactTextPipe } from '@symphony/frontend-ui';
-import { PresenterRailSheetDirective } from '../directives/PresenterRailSheetDirective';
-import { PresenterRailSplitDirective } from '../directives/PresenterRailSplitDirective';
 import { PresenterViewPresenter } from '../view-presenters/PresenterViewPresenter';
-import { RailRunStatePresentationPipe } from '../pipes/RailRunStatePresentationPipe';
-import { ActionStateLabelPipe } from '@symphony/frontend-feature-ci/presentation';
+import { WindowSidebarView } from './WindowSidebarView';
+import { WindowStatusBarView } from './WindowStatusBarView';
 
 // #endregion
 
+/**
+ * The main window: source-list sidebar, unified toolbar, routed screen and status bar.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-presenter-view',
-  host: { class: 'block' },
+  host: {
+    class: 'block',
+    '(window:keydown)': 'handleShortcut($event)',
+  },
   imports: [
     AppComponent,
-    ActionStateLabelPipe,
-    AppHeaderComponent,
-    AvatarComponent,
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
-    BooleanIconPipe,
-    BreakpointDirective,
     ButtonComponent,
-    CompactTextPipe,
-    DatePipe,
-    DividerComponent,
-    DropDownButtonComponent,
-    HintComponent,
-    IconComponent,
     IconNameDirective,
-    ListComponent,
-    ListItemComponent,
-    MenuComponent,
-    MenuItemComponent,
+    CommandPaletteView,
     NgTemplateOutlet,
-    PopupComponent,
-    ProgressRingComponent,
-    PresenterRailSheetDirective,
-    RailRunStatePresentationPipe,
-    RouterLink,
-    RouterLinkActive,
+    PaneSizeDirective,
     RouterOutlet,
     SearchBoxComponent,
-    SegmentComponent,
-    SegmentItemComponent,
-    SheetComponent,
-    SheetContentComponent,
     SplitComponent,
     TextComponent,
-    ToggleButtonComponent,
     TooltipDirective,
     TypographyDirective,
-    PresenterRailSplitDirective,
+    WindowSidebarView,
+    WindowStatusBarView,
   ],
   providers: [PresenterViewPresenter],
   templateUrl: './PresenterView.html',
@@ -106,83 +60,58 @@ export class PresenterView {
 
   protected readonly store = inject(PRESENTATION_CONTEXT);
   protected readonly presenter = inject(PresenterViewPresenter);
+  protected readonly toolbar = inject(WindowToolbar);
+  protected readonly palette = inject(CommandPalette);
+  protected readonly isMacOS = /Mac/u.test(globalThis.navigator?.platform ?? '');
 
-  private readonly _injector = inject(Injector);
-  private readonly _searchControl = viewChild<SearchBoxComponent>('searchControl');
-  private _searchFocusPending = false;
-
-  // #endregion
-
-  // #region Ctor
-
-  public constructor() {
-    void this.store.initialize();
-  }
+  private readonly _router = inject(Router);
 
   // #endregion
 
   // #region Methods
 
-  protected search(event: unknown): void {
-    const detail = event as { query?: unknown; target?: HTMLElement & { value?: string } } | null;
-    const query =
-      typeof detail?.query === 'string'
-        ? detail.query
-        : typeof detail?.target?.value === 'string'
-          ? detail.target.value
-          : '';
-    this.presenter.searchQuery.set(query);
-    void this.presenter.searchCommand.execute(query);
-  }
-
-  protected clearSearch(): void {
-    this.presenter.searchQuery.set('');
-    void this.presenter.searchCommand.execute('');
+  /**
+   * Opens the command palette from the toolbar search field instead of typing into the field.
+   *
+   * @param event - Focus or pointer event on the field.
+   */
+  protected openPalette(event: Event): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement | null)?.blur();
+    this.palette.open();
   }
 
   /**
-   * Opens the search field and puts the caret in it.
+   * Hands a printable key typed into the toolbar field to the palette as its first character.
    *
-   * The field replaces the launcher button in the same slot, so it does not exist yet when this
-   * runs; focus is taken on the next render instead.
+   * @param event - Key event on the field.
    */
-  protected expandSearch(): void {
-    this._searchFocusPending = true;
-    this.presenter.isSearchExpanded.set(true);
-    afterNextRender(
-      () => {
-        const control = this._searchControl()?.elementRef.nativeElement;
-        if (!control) {
-          this._searchFocusPending = false;
-          return;
-        }
-        void control.updateComplete.finally(() => {
-          control.focus();
-          this._searchFocusPending = false;
-        });
-      },
-      { injector: this._injector },
-    );
+  protected openPaletteWithText(event: KeyboardEvent): void {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const text = event.key.length === 1 ? event.key : '';
+    if (!text && event.key !== 'Enter' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    this.palette.open(text);
   }
 
-  /** Collapses the launcher once focus has left every control inside the search surface. */
-  protected collapseSearchOnFocusLoss(event: FocusEvent): void {
-    if (this._searchFocusPending) return;
-    const surface = event.currentTarget;
-    const nextTarget = event.relatedTarget;
-    if (
-      surface instanceof HTMLElement &&
-      nextTarget instanceof Node &&
-      surface.contains(nextTarget)
-    ) {
-      return;
+  /**
+   * Window shortcuts: ⌘K (Ctrl+K off macOS) toggles the command palette, ⌘N (Ctrl+N) opens the
+   * new-work-item sheet.
+   *
+   * @param event - Key event that reached the window.
+   */
+  protected handleShortcut(event: KeyboardEvent): void {
+    const modifier = this.isMacOS ? event.metaKey : event.ctrlKey;
+    if (!modifier || event.altKey || event.shiftKey) return;
+    const key = event.key.toLowerCase();
+    if (key === 'k') {
+      event.preventDefault();
+      this.palette.toggle();
+    } else if (key === 'n') {
+      event.preventDefault();
+      this.palette.close();
+      void this._router.navigate(['/main/board'], { queryParams: { create: 'true' } });
     }
-    this.collapseSearch();
-  }
-
-  protected collapseSearch(): void {
-    this.presenter.stopVoiceInputCommand.execute();
-    this.presenter.isSearchExpanded.set(false);
   }
 
   // #endregion

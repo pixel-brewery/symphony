@@ -6,6 +6,7 @@ import { MOBILE_ACCESS_OPERATIONS } from '@symphony/frontend-core/mobile-access'
 import { MOBILE_ACCESS_CLIENT } from '../ports/MobileAccessClientToken';
 import { MobileAccessStore } from '../state/MobileAccessStore';
 import { withMobileSettings } from './withMobileSettings';
+import { withMobileNotifications } from './withMobileNotifications';
 
 // #endregion
 
@@ -22,6 +23,7 @@ export function provideMobileFeature(): EnvironmentProviders {
         MobileAccessStore,
         { provide: MOBILE_ACCESS_CLIENT, useExisting: ORCHESTRATION_CLIENT },
         { provide: MOBILE_ACCESS_OPERATIONS, useExisting: MobileAccessStore },
+        ...withMobileNotifications().provide(),
       ],
       withMobileSettings(),
     ),

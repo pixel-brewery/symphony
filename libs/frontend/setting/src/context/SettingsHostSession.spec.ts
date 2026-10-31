@@ -6,24 +6,32 @@ import { SettingsHostSession } from './SettingsHostSession';
 // #endregion
 
 describe('SettingsHostSession', () => {
-  it('retains directory expansion semantics across workspace and global navigation', () => {
+  it('selects global sections and leaves the configured workspace', () => {
     // arrange
     const session = new SettingsHostSession();
     session.openWorkspace('workspace-a', 'administration');
 
     // act
-    session.selectGlobal('workspaces');
-    const afterWorkspace = session.workspaceNavigationExpanded();
-    session.selectGlobal('workspaces');
-    const afterToggle = session.workspaceNavigationExpanded();
     session.selectGlobal('appearance');
 
     // assert
-    expect(afterWorkspace).toBe(true);
-    expect(afterToggle).toBe(false);
     expect(session.workspaceId()).toBeNull();
     expect(session.globalSection()).toBe('appearance');
-    expect(session.workspaceNavigationExpanded()).toBe(false);
+  });
+
+  it('clears the search query when a section is opened', () => {
+    // arrange
+    const session = new SettingsHostSession();
+    session.search('token');
+    const searching = session.searchQuery();
+
+    // act
+    session.openWorkspace('workspace-a');
+
+    // assert
+    expect(searching).toBe('token');
+    expect(session.searchQuery()).toBe('');
+    expect(session.workspaceSection()).toBe('team');
   });
 
   it('opens a newly persisted workspace and clears a deleted selection without selecting existing workspaces initially', () => {

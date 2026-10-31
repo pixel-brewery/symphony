@@ -161,6 +161,13 @@ interface IGitHubPullRequestResponse {
   readonly merge_commit_sha?: string;
   readonly head?: { readonly ref?: string; readonly sha?: string };
   readonly base?: { readonly ref?: string };
+  readonly requested_reviewers?: readonly { readonly login?: string }[] | null;
+  readonly requested_teams?:
+    | readonly {
+        readonly slug?: string;
+        readonly organization?: { readonly login?: string };
+      }[]
+    | null;
   readonly created_at?: string;
   readonly updated_at?: string;
 }
@@ -2816,9 +2823,37 @@ export class GitHubCloudProvider
         : {}),
       targetBranch: pullRequest.base?.ref ?? repository.defaultBranch,
       baseBranchStatus: this.pullRequestBaseBranchStatus(pullRequest),
+      ...this.pullRequestReviewRequests(repository, pullRequest),
       externalUrl: pullRequest.html_url,
       createdAt: pullRequest.created_at ?? pullRequest.updated_at ?? this.now().toISOString(),
       updatedAt: pullRequest.updated_at ?? pullRequest.created_at ?? this.now().toISOString(),
+    };
+  }
+
+  /** Pending review requests: reviewer logins and `organization/team` names, bounded to 100 each. */
+  private pullRequestReviewRequests(
+    repository: IRepositoryBinding,
+    pullRequest: IGitHubPullRequestResponse,
+  ): Pick<IPullRequestSummary, 'requestedReviewers' | 'requestedTeams'> {
+    const reviewers = [
+      ...new Set(
+        (pullRequest.requested_reviewers ?? []).flatMap((reviewer) =>
+          reviewer.login?.trim() ? [reviewer.login.trim()] : [],
+        ),
+      ),
+    ].slice(0, 100);
+    const teams = [
+      ...new Set(
+        (pullRequest.requested_teams ?? []).flatMap((team) =>
+          team.slug?.trim()
+            ? [`${team.organization?.login?.trim() || repository.owner}/${team.slug.trim()}`]
+            : [],
+        ),
+      ),
+    ].slice(0, 100);
+    return {
+      ...(reviewers.length ? { requestedReviewers: reviewers } : {}),
+      ...(teams.length ? { requestedTeams: teams } : {}),
     };
   }
 

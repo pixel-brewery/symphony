@@ -1,48 +1,48 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { SkillsSettingsViewPresenter } from './SkillsSettingsViewPresenter';
 import {
+  AvatarComponent,
   BadgeComponent,
   ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
-  EmptyStateComponent,
-  HintComponent,
-  SegmentComponent,
-  SegmentItemComponent,
-  TextBoxComponent,
+  IconComponent,
   IconNameDirective,
+  TextComponent,
+  TooltipDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { HeadlineComponent } from '@symphony/frontend-ui';
+import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { BooleanVariantPipe, PseudoLinkDirective } from '@symphony/frontend-ui';
+import { AddedLineCountPipe } from '../pipes/AddedLineCountPipe';
+import { SkillFlowOptionLabelsPipe } from '../pipes/SkillFlowOptionLabelsPipe';
+import { SkillSourceLabelPipe } from '../pipes/SkillSourceLabelPipe';
+import { SkillsSettingsViewPresenter } from './SkillsSettingsViewPresenter';
 
 // #endregion
 
 /**
- * Feature-owned built-in role settings composed by the native Settings host.
+ * The `Skills` section of the Settings window: how each step of the delivery flow works, with the
+ * built-in process roles and the attached skill packages of every step.
  *
  * @public
  */
 @Component({
   selector: 'symphony-skills-settings-view',
-  host: { class: 'contents' },
+  host: { class: 'block min-w-0' },
   imports: [
+    AddedLineCountPipe,
+    AvatarComponent,
     BadgeComponent,
+    BooleanVariantPipe,
     ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    EmptyStateComponent,
-    HeadlineComponent,
-    HintComponent,
-    SegmentComponent,
-    SegmentItemComponent,
-    TextBoxComponent,
+    IconComponent,
     IconNameDirective,
+    PseudoLinkDirective,
+    SkillFlowOptionLabelsPipe,
+    SkillSourceLabelPipe,
+    TextComponent,
+    TooltipDirective,
+    TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: SkillsSettingsViewPresenter }],
   templateUrl: './SkillsSettingsView.html',

@@ -6,12 +6,11 @@ import '@angular/compiler';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { MessageBoxService } from '@pixel-brewery/mosaik-elements-angular';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
 } from '@symphony/configuration-composition';
-import { SettingsHostSession } from '@symphony/frontend-setting';
+import { SettingsAlertService, SettingsHostSession } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { Subject } from 'rxjs';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -53,30 +52,102 @@ describe('CiSettingsViewPresenter', () => {
     expect(remounted.workspace()?.id).toBe('second');
   });
 
-  it('saves activation and trimmed scripts only for the chosen workspace and removes empty scripts', () => {
+  it('keeps a newer machine change when the stored settings of an earlier save arrive', () => {
     // arrange
-    const { presenter, saveSettings, settings } = arrange();
-    presenter.updateWorkspaceLocalCiCommand.execute(['personal', true]);
-    presenter.updateWorkspaceLocalCiCommand.execute(['second', true]);
-    presenter.updateSetupScriptCommand.execute(['repository-personal', '  echo ready  ']);
-    presenter.updateSetupScriptCommand.execute(['repository-second', 'unsaved elsewhere']);
+    const { presenter, settings } = arrange();
+    const stored = settings()!;
+    presenter.localCi.set({ ...stored.localCi, storageLimitGiB: 40 });
+    TestBed.tick();
+    presenter.localCi.set({ ...stored.localCi, storageLimitGiB: 48 });
 
     // act
-    presenter.saveWorkspaceLocalCiCommand.execute('personal');
-    presenter.updateSetupScriptCommand.execute(['repository-personal', '   ']);
-    presenter.saveWorkspaceLocalCiCommand.execute('personal');
+    settings.set({ ...stored, localCi: { ...stored.localCi, storageLimitGiB: 40 } });
+    TestBed.tick();
+    const afterEarlierSave = presenter.localCi().storageLimitGiB;
+    settings.set({ ...stored, localCi: { ...stored.localCi, storageLimitGiB: 48 } });
+    TestBed.tick();
+    settings.set({ ...stored, localCi: { ...stored.localCi, storageLimitGiB: 56 } });
+    TestBed.tick();
 
     // assert
+    expect(afterEarlierSave).toBe(48);
+    expect(presenter.localCi().storageLimitGiB).toBe(56);
+  });
+
+  it('saves a workspace activation as soon as it changes, only for that workspace', async () => {
+    // arrange
+    const { presenter, saveSettings, settings } = arrange();
+
+    // act
+    presenter.updateWorkspaceLocalCiCommand.execute(['personal', true]);
+    await Promise.resolve();
+
+    // assert
+    expect(saveSettings).toHaveBeenCalledTimes(1);
+    const saved = saveSettings.mock.calls[0]![0];
+    expect(saved.workspaces.map((workspace) => workspace.localCiEnabled)).toEqual([true, false]);
+    expect(saved.repositoryBindings).toBe(settings()!.repositoryBindings);
+    expect(saved.runtime).toBe(settings()!.runtime);
+  });
+
+  it('shows the stored activation again when saving it fails', async () => {
+    // arrange
+    const { presenter, saveSettings } = arrange();
+    saveSettings.mockResolvedValueOnce(false);
+
+    // act
+    presenter.updateWorkspaceLocalCiCommand.execute(['personal', true]);
+    const optimistic = presenter.workspaceLocalCiEnabled()('personal');
+    await vi.waitFor(() => expect(saveSettings).toHaveBeenCalled());
+    await Promise.resolve();
+
+    // assert
+    expect(optimistic).toBe(true);
+    expect(presenter.workspaceLocalCiEnabled()('personal')).toBe(false);
+  });
+
+  it('saves a trimmed setup script on commit, removes an empty one and skips unchanged scripts', async () => {
+    // arrange
+    const { presenter, saveSettings, settings } = arrange();
+
+    // act
+    presenter.updateSetupScriptCommand.execute(['repository-personal', '  original personal  ']);
+    presenter.commitSetupScriptCommand.execute('repository-personal');
+    presenter.updateSetupScriptCommand.execute(['repository-personal', '  echo ready  ']);
+    presenter.commitSetupScriptCommand.execute('repository-personal');
+    await Promise.resolve();
     const first = saveSettings.mock.calls[0]![0];
-    expect(first.workspaces.map((workspace) => workspace.localCiEnabled)).toEqual([true, false]);
+    settings.set(first);
+    TestBed.tick();
+    presenter.updateSetupScriptCommand.execute(['repository-personal', '   ']);
+    presenter.commitSetupScriptCommand.execute('repository-personal');
+    await Promise.resolve();
+
+    // assert
+    expect(saveSettings).toHaveBeenCalledTimes(2);
     expect(first.repositoryBindings.map((repository) => repository.localCiSetupScript)).toEqual([
       'echo ready',
       'original second',
     ]);
-    expect(first.runtime).toBe(settings()!.runtime);
+    expect(first.workspaces).toEqual(settings()!.workspaces);
     expect(saveSettings.mock.calls[1]![0].repositoryBindings[0]).not.toHaveProperty(
       'localCiSetupScript',
     );
+  });
+
+  it('restores the stored setup script when saving it fails', async () => {
+    // arrange
+    const { presenter, saveSettings } = arrange();
+    saveSettings.mockResolvedValueOnce(false);
+
+    // act
+    presenter.updateSetupScriptCommand.execute(['repository-personal', 'echo lost']);
+    presenter.commitSetupScriptCommand.execute('repository-personal');
+    await vi.waitFor(() => expect(saveSettings).toHaveBeenCalled());
+    await Promise.resolve();
+
+    // assert
+    expect(presenter.setupScript()('repository-personal')).toBe('original personal');
   });
 
   it('reads the authoritative runtime root before the one shared optional draft fallback', () => {
@@ -95,7 +166,7 @@ describe('CiSettingsViewPresenter', () => {
     expect(fallback).toBe('/draft/workspaces/local-ci');
   });
 
-  it('requires a positive existing confirmation before removing a native machine', () => {
+  it('requires a positive existing confirmation before removing a native machine', async () => {
     // arrange
     const { presenter, decisions, store } = arrange();
 
@@ -106,6 +177,7 @@ describe('CiSettingsViewPresenter', () => {
     presenter.confirmRemoveLocalCiInstanceCommand.execute('machine');
     decisions[1]!.next({ reason: 'positive' });
     decisions[1]!.complete();
+    await vi.waitFor(() => expect(store.removeLocalCiInstance).toHaveBeenCalled());
 
     // assert
     expect(store.removeLocalCiInstance).toHaveBeenCalledExactlyOnceWith('machine');
@@ -199,13 +271,16 @@ function arrange() {
       { provide: CI_RUNTIME_WORKSPACE_ROOT, useValue: workspaceRoot },
       { provide: CiStore, useValue: store },
       {
-        provide: MessageBoxService,
+        provide: SettingsAlertService,
         useValue: {
-          show: () => {
-            const closed = new Subject<{ reason: 'positive' | 'negative' }>();
-            decisions.push(closed);
-            return { closed };
-          },
+          confirm: vi.fn(
+            () =>
+              new Promise<boolean>((resolve) => {
+                const closed = new Subject<{ reason: 'positive' | 'negative' }>();
+                decisions.push(closed);
+                closed.subscribe((decision) => resolve(decision.reason === 'positive'));
+              }),
+          ),
         },
       },
     ],

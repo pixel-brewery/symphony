@@ -13,12 +13,9 @@ import {
   createTrackedSettingsDraft,
   upsertSettingsItem,
   mosaikEventValue,
+  SettingsAlertService,
 } from '@symphony/frontend-setting';
-import {
-  DRAWER_REF,
-  DRAWER_REF_DATA,
-  MessageBoxService,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import { aiAccountRemovalBlockers, withoutAiAccount } from './ai-account-removal';
 import { aiRuntimeValidationIssue, AI_RUNTIME_LABELS } from '@symphony/frontend-ui';
 import { type AiAccountValidationIssue } from '../models/AiAccountValidationIssue';
@@ -37,8 +34,8 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
   // #region Fields
   /** The actual AI state and consumed settings operations. @public @readonly */ public readonly store =
     inject(AiStore);
-  /** Validated feature-owned drawer request. @public @readonly */ public readonly data =
-    inject<IAiAccountSettingsEditorRequest>(DRAWER_REF_DATA);
+  /** Validated feature-owned sheet request. @public @readonly */ public readonly data =
+    inject<IAiAccountSettingsEditorRequest>(DIALOG_REF_DATA);
 
   /**
    * The kind.
@@ -52,8 +49,8 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
 
   private readonly _changeDetector = inject(ChangeDetectorRef);
 
-  private readonly _messageBoxService = inject(MessageBoxService);
-  private readonly _drawerRef = inject(DRAWER_REF);
+  private readonly _alerts = inject(SettingsAlertService);
+  private readonly _dialogRef = inject(DIALOG_REF);
 
   private readonly _draftRevision = signal(0);
 
@@ -398,12 +395,12 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
   }
   // #endregion
   // #region Methods
-  /** Hydrates this feature-owned drawer from the authoritative configuration. @public */
+  /** Hydrates this feature-owned sheet from the authoritative configuration. @public */
   public override async onHydrate(): Promise<void> {
     try {
       if (!this.store.settings()) await this.hydrateConfiguration();
       this.aiAccount = this.createAiAccountDraft();
-      this._drawerRef.closed.subscribe(() => void this.discardProvisionalAiAccount());
+      this._dialogRef.closed.subscribe(() => void this.discardProvisionalAiAccount());
       void this.store
         .refreshProviderConnections()
         .finally(() => this._changeDetector.detectChanges());
@@ -415,7 +412,7 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
     if (this.busy()) return;
     this.busy.set(true);
     try {
-      if (await this.saveAiAccountConnection()) this._drawerRef.close();
+      if (await this.saveAiAccountConnection()) this._dialogRef.close();
     } finally {
       this.busy.set(false);
     }
@@ -427,7 +424,7 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
    * @private
    */
   private onExecuteCloseCommand(): void {
-    this._drawerRef.close();
+    this._dialogRef.close();
   }
   private resolveCanSave(): boolean {
     return (
@@ -505,19 +502,19 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
     ) {
       return;
     }
-    const confirmation = this._messageBoxService.show({
-      id: `install-agent-runtime-${runtime}`,
-      header: `Install ${label} CLI?`,
-      message: `Homebrew will download and install ${label} CLI on this Mac. Symphony verifies the command before enabling it for agents.`,
-      buttons: 'yesNo',
-      variant: 'warning',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Install with Homebrew', noLabel: 'Cancel' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason !== 'positive') return;
-      void this.installAiRuntime(runtime);
-    });
+    void this._alerts
+      .confirm({
+        id: `install-agent-runtime-${runtime}`,
+        header: `Install ${label} CLI?`,
+        message: `Homebrew will download and install ${label} CLI on this Mac. Symphony verifies the command before enabling it for agents.`,
+        tone: 'warning',
+        confirmLabel: 'Install with Homebrew',
+        cancelLabel: 'Cancel',
+      })
+      .then((confirmed) => {
+        if (!confirmed) return;
+        void this.installAiRuntime(runtime);
+      });
   }
 
   // AI account editor (Connected services)
@@ -642,30 +639,30 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
     const settings = this.store.settings();
     const blockers = settings ? aiAccountRemovalBlockers(settings, accountId) : [];
     if (blockers.length) {
-      this._messageBoxService.show({
+      void this._alerts.confirm({
         id: `remove-ai-account-blocked-${accountId}`,
         header: 'This account is still in use',
         message: `${blockers.join(', ')} ${blockers.length === 1 ? 'runs' : 'run'} on this account. Move ${blockers.length === 1 ? 'that agent' : 'those agents'} to another AI account first, then remove it.`,
-        buttons: 'ok',
-        variant: 'warning',
-        pressEscapeToClose: true,
+        tone: 'warning',
+        confirmLabel: 'OK',
       });
       return;
     }
-    const confirmation = this._messageBoxService.show({
-      id: `remove-ai-account-${accountId}`,
-      header: `Remove ${this.aiAccount.displayName.trim() || 'this AI account'}?`,
-      message:
-        'Symphony signs the account out, deletes its isolated workspace data, and drops it from every backup route. Agents keep running on their other accounts.',
-      buttons: 'yesNo',
-      variant: 'danger',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Remove account', noLabel: 'Keep account' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason !== 'positive') return;
-      void this.removeAiAccount(accountId);
-    });
+    void this._alerts
+      .confirm({
+        id: `remove-ai-account-${accountId}`,
+        header: `Remove ${this.aiAccount.displayName.trim() || 'this AI account'}?`,
+        message:
+          'Symphony signs the account out, deletes its isolated workspace data, and drops it from every backup route. Agents keep running on their other accounts.',
+        tone: 'danger',
+        confirmLabel: 'Remove account',
+        cancelLabel: 'Keep account',
+        destructive: true,
+      })
+      .then((confirmed) => {
+        if (!confirmed) return;
+        void this.removeAiAccount(accountId);
+      });
   }
 
   /**
@@ -728,20 +725,20 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
    */
   private onExecuteConfirmImportOpenCodeCredentialsCommand(): void {
     if (this.aiAccount.kind !== 'opencode') return;
-    const confirmation = this._messageBoxService.show({
-      id: `import-opencode-credentials-${this.aiAccountId() ?? 'new'}`,
-      header: 'Import current OpenCode sign-ins?',
-      message:
-        'Symphony copies the provider sign-ins currently stored by OpenCode on this Mac into this one workspace account. The copy is isolated; later sign-in changes in another workspace do not affect it.',
-      buttons: 'yesNo',
-      variant: 'warning',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Import into workspace', noLabel: 'Cancel' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason !== 'positive') return;
-      void this.importOpenCodeCredentials();
-    });
+    void this._alerts
+      .confirm({
+        id: `import-opencode-credentials-${this.aiAccountId() ?? 'new'}`,
+        header: 'Import current OpenCode sign-ins?',
+        message:
+          'Symphony copies the provider sign-ins currently stored by OpenCode on this Mac into this one workspace account. The copy is isolated; later sign-in changes in another workspace do not affect it.',
+        tone: 'warning',
+        confirmLabel: 'Import into workspace',
+        cancelLabel: 'Cancel',
+      })
+      .then((confirmed) => {
+        if (!confirmed) return;
+        void this.importOpenCodeCredentials();
+      });
   }
   private async installAiRuntime(runtime: AiRuntimeKind): Promise<void> {
     if (!(await this.store.installRuntimeDependency(runtime))) return;
@@ -845,7 +842,7 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
       }
       this._aiAccountProvisional = false;
       if (await this.store.saveSettings(withoutAiAccount(this.requireSettings(), accountId))) {
-        this._drawerRef.close();
+        this._dialogRef.close();
       }
     } finally {
       this.busy.set(false);
@@ -946,7 +943,7 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
   }
 
   /**
-   * Creates a computed projection that also follows mutable drawer draft changes.
+   * Creates a computed projection that also follows mutable sheet draft changes.
    *
    * @param resolve - Resolves the current projection value.
    * @private

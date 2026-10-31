@@ -1,0 +1,226 @@
+@let centre = presenter.centre; @let count = centre.attentionCount(); @let items = centre.items();
+@let notices = centre.notices(); @let readItemIds = centre.readItemIds();
+<span class="relative inline-flex" cdkOverlayOrigin #origin="cdkOverlayOrigin">
+  <mosaik-button
+    part="notification-bell"
+    test-id="notification-bell"
+    aria-haspopup="dialog"
+    [iconName]="'bell'"
+    [iconSize]="'small'"
+    [appearance]="presenter.isOpen() ? 'soft' : 'plain'"
+    [attr.aria-expanded]="presenter.isOpen()"
+    [attr.aria-label]="count ? 'Notifications, ' + count + (count === 1 ? ' needs' : ' need') + ' attention' : 'Notifications'"
+    [mosaikTooltip]="'Notifications'"
+    (click)="centre.toggle()"
+  />
+  @if (count) {
+  <span class="pointer-events-none absolute -top-[5px] -right-[7px] flex">
+    <mosaik-badge
+      test-id="notification-bell-count"
+      aria-hidden="true"
+      [label]="'' + count"
+      [variant]="centre.unreadCount() ? 'danger' : 'neutral'"
+      [appearance]="'solid'"
+      [size]="'small'"
+    />
+  </span>
+  }
+</span>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="origin"
+  [cdkConnectedOverlayOpen]="presenter.isOpen()"
+  [cdkConnectedOverlayPositions]="positions"
+  [cdkConnectedOverlayPush]="true"
+  [cdkConnectedOverlayViewportMargin]="8"
+  (overlayOutsideClick)="centre.close()"
+  (detach)="centre.close()"
+>
+  <section
+    part="notification-centre"
+    role="dialog"
+    aria-label="Notifications"
+    tabindex="-1"
+    test-id="notification-centre"
+    class="flex max-h-[calc(100vh-48px)] w-[400px] flex-col overflow-hidden"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+  >
+    <header class="flex flex-none items-center gap-1 pt-1.5 pr-[10px] pb-1 pl-[14px]">
+      <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+        <mosaik-text
+          part="notification-centre-title"
+          [mosaikTypography]="'subtitle2'"
+          [text]="'Notifications'"
+        />
+        <mosaik-text
+          test-id="notification-centre-count"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="count
+            ? count + (count === 1 ? ' needs' : ' need') + ' attention · ' + (items | notificationScopeList)
+            : 'Nothing needs attention'"
+        />
+      </div>
+      <mosaik-button
+        class="flex-none"
+        test-id="notification-centre-mark-all-read"
+        [label]="'Mark all as read'"
+        [appearance]="'plain'"
+        [disabled]="!centre.unreadCount()"
+        (click)="centre.markAllAsRead()"
+      />
+    </header>
+
+    <div class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+      @if (items.length) {
+      <section
+        class="flex flex-col"
+        aria-label="Needs attention"
+        test-id="notification-centre-attention"
+      >
+        <mosaik-text
+          class="px-[14px] pt-[10px] pb-0.5"
+          [mosaikTypography]="'overline'"
+          [variant]="'neutral'"
+          [text]="'Needs attention'"
+        />
+        @for (item of items; track item.id) { @let icon = item.severity | notificationIcon;
+        <article
+          part="notification-row"
+          class="flex items-start gap-[10px] px-[14px] py-[10px]"
+          [attr.test-id]="'notification-item-' + item.id"
+        >
+          <mosaik-icon
+            class="flex-none pt-[1px]"
+            aria-hidden="true"
+            [icon]="icon.icon"
+            [size]="'small'"
+            [variant]="icon.variant"
+          />
+          <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [wrap]="true" [text]="item.title" />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="item.location.join(' › ') + (item.detail ? ' · ' + item.detail : '')"
+            />
+            @if (item.actions.length) {
+            <div class="flex flex-wrap gap-[6px] pt-[6px]">
+              @for (action of item.actions; track action.id) { @let look = action.emphasis |
+              notificationActionAppearance;
+              <mosaik-button
+                [attr.test-id]="'notification-action-' + item.id + '-' + action.id"
+                [label]="action.label"
+                [appearance]="look.appearance"
+                [variant]="look.variant"
+                [isBusy]="action.busy ?? false"
+                [disabled]="action.disabled ?? false"
+                (click)="centre.perform(item.id, action.id)"
+              />
+              }
+            </div>
+            }
+          </div>
+          @if (!readItemIds.has(item.id)) {
+          <mosaik-dot
+            class="mt-[6px] flex-none"
+            role="img"
+            aria-label="Unread"
+            [attr.test-id]="'notification-unread-' + item.id"
+            [variant]="'info'"
+            [fill]="'full'"
+            [size]="'small'"
+          />
+          }
+        </article>
+        }
+      </section>
+      } @if (notices.length) {
+      <section
+        class="flex flex-col"
+        aria-label="Earlier today"
+        test-id="notification-centre-history"
+      >
+        <mosaik-text
+          class="px-[14px] pt-[10px] pb-0.5"
+          [mosaikTypography]="'overline'"
+          [variant]="'neutral'"
+          [text]="'Earlier today'"
+        />
+        @for (notice of notices; track notice.id) { @let icon = notice.kind | notificationIcon:
+        'notice';
+        <article
+          part="notification-row"
+          class="flex items-start gap-[10px] px-[14px] py-[10px]"
+          [attr.test-id]="'notification-notice-' + notice.id"
+        >
+          <mosaik-icon
+            class="flex-none pt-[1px]"
+            aria-hidden="true"
+            [icon]="icon.icon"
+            [size]="'small'"
+            [variant]="icon.variant"
+          />
+          <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+            <mosaik-text
+              [mosaikTypography]="'subtitle2'"
+              [wrap]="true"
+              [readonly]="notice.read"
+              [text]="notice.title"
+            />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="(notice.content ? notice.content + ' · ' : '') + (notice.occurredAt | date: 'HH:mm')"
+            />
+          </div>
+          @if (!notice.read) {
+          <mosaik-dot
+            class="mt-[6px] flex-none"
+            role="img"
+            aria-label="Unread"
+            [variant]="'info'"
+            [fill]="'full'"
+            [size]="'small'"
+          />
+          }
+        </article>
+        }
+      </section>
+      } @if (!items.length && !notices.length) {
+      <mosaik-empty-state
+        class="px-2 py-3"
+        test-id="notification-centre-empty"
+        [iconName]="'checkCircle'"
+        [header]="'Nothing needs your attention'"
+        [content]="'Problems with tools, accounts, repositories and pairing requests appear here, with today’s notices.'"
+      />
+      }
+    </div>
+
+    <footer
+      part="notification-centre-footer"
+      class="flex flex-none items-center justify-between gap-1 py-1 pr-[10px] pl-[14px]"
+      test-id="notification-centre-footer"
+    >
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="'Work-item decisions stay in the Inbox.'"
+      />
+      <mosaik-button
+        class="flex-none"
+        test-id="notification-centre-clear-read"
+        [label]="'Clear read'"
+        [appearance]="'plain'"
+        [disabled]="!centre.readNoticeCount()"
+        (click)="centre.clearRead()"
+      />
+    </footer>
+  </section>
+</ng-template>

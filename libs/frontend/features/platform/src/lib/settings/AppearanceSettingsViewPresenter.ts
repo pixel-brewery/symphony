@@ -2,14 +2,13 @@
 
 import { inject, Injectable } from '@angular/core';
 import { Hydratable, ViewPresenter } from '@symphony/frontend-core';
-import { SettingsHostSession } from '@symphony/frontend-setting';
 import { PLATFORM_SETTINGS_CONTEXT } from '../ports/PlatformSettingsContextToken';
 import { AppearanceSettingsStore } from '../state/AppearanceSettingsStore';
 
 // #endregion
 
 /**
- * Presents the route's appearance draft independently from theme application.
+ * Presents Appearance's colour theme, which applies as soon as it is chosen.
  *
  * @public
  */
@@ -17,43 +16,24 @@ import { AppearanceSettingsStore } from '../state/AppearanceSettingsStore';
 export class AppearanceSettingsViewPresenter extends Hydratable(ViewPresenter) {
   // #region Fields
 
-  private readonly _draft = inject(AppearanceSettingsStore);
+  private readonly _store = inject(AppearanceSettingsStore);
   private readonly _context = inject(PLATFORM_SETTINGS_CONTEXT);
+
   /**
-   * Shared route appearance draft.
+   * The chosen theme.
    *
    * @public
    * @readonly
    */
-  public readonly theme = this._draft.theme;
+  public readonly theme = this._store.theme;
+
   /**
-   * Updates the draft through the existing event normalization.
+   * Applies a theme.
    *
    * @public
    * @readonly
    */
-  public readonly updateThemeCommand = this._draft.updateThemeCommand;
-  /**
-   * Saves through the single settings writer.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly saveThemeCommand = this._draft.saveThemeCommand;
-
-  // #endregion
-
-  // #region Ctor
-
-  /**
-   * Joins one Settings route's appearance draft.
-   *
-   * @public
-   */
-  public constructor() {
-    super();
-    this._draft.beginSession(inject(SettingsHostSession));
-  }
+  public readonly updateThemeCommand = this._store.updateThemeCommand;
 
   // #endregion
 

@@ -63,6 +63,7 @@ export class OrbitCanvasRenderer {
   private _visible = true;
   private _hasRendered = false;
   private _fitted = true;
+  private _fitDistance = 0;
   private _reducedMotion: boolean;
   private _down?: { id: number; x: number; y: number; moved: boolean };
   private readonly _pointers = new Set<number>();
@@ -142,6 +143,7 @@ export class OrbitCanvasRenderer {
     this._sceneKey = key;
     this._scene = scene;
     this.rebuildScene();
+    this.measureFit();
     if (this._fitted) this.fit(false);
     this.invalidate();
   }
@@ -185,15 +187,20 @@ export class OrbitCanvasRenderer {
   public fit(animate = true): void {
     this._fitted = true;
     const camera = fitOrbitCamera(this._scene, this._size.x, this._size.y);
-    const distance = new THREE.Vector3(
-      camera.position.x,
-      camera.position.y,
-      camera.position.z,
-    ).distanceTo(new THREE.Vector3(camera.target.x, camera.target.y, camera.target.z));
-    this._controls.maxDistance = Math.max(400, distance * 4);
-    this._camera.far = Math.max(2000, distance * 10);
-    this._camera.updateProjectionMatrix();
     this.moveTo(camera, animate);
+  }
+
+  /**
+   * Moves the camera to a distance relative to the fitted view without changing its direction or
+   * target: 1 is the fitted 100 %, 2 is twice as close. A zoom never changes selection.
+   *
+   * @public
+   */
+  public zoomTo(scale: number): void {
+    if (!Number.isFinite(scale) || scale <= 0 || this._fitDistance <= 0) return;
+    const current = this._camera.position.distanceTo(this._controls.target);
+    if (current <= 0) return;
+    this.zoomBy(current / (this._fitDistance / scale));
   }
 
   /** Positive values above one move closer; a zoom never changes selection. @public */
@@ -222,7 +229,7 @@ export class OrbitCanvasRenderer {
     const target = new THREE.Vector3(node.position.x, node.position.y, node.position.z);
     let distance =
       node.kind === 'ticket'
-        ? 8
+        ? 12
         : node.kind === 'production'
           ? 19
           : node.kind === 'target'
@@ -289,6 +296,7 @@ export class OrbitCanvasRenderer {
     this._renderer.setSize(x, y, false);
     this._camera.aspect = x / y;
     this._camera.updateProjectionMatrix();
+    this.measureFit();
     if (this._fitted) this.fit(false);
     this.invalidate();
   }
@@ -358,6 +366,19 @@ export class OrbitCanvasRenderer {
     this.updateSelection();
   }
 
+  /** The fitted camera distance is the 100 % reference of the zoom readout and `zoomTo`. @private */
+  private measureFit(): void {
+    const camera = fitOrbitCamera(this._scene, this._size.x, this._size.y);
+    this._fitDistance = Math.hypot(
+      camera.position.x - camera.target.x,
+      camera.position.y - camera.target.y,
+      camera.position.z - camera.target.z,
+    );
+    this._controls.maxDistance = Math.max(400, this._fitDistance * 4);
+    this._camera.far = Math.max(2000, this._fitDistance * 10);
+    this._camera.updateProjectionMatrix();
+  }
+
   /** Light comes from the brighter scheme pole; light-mode text must not become black illumination. @private */
   private illumination(): THREE.Color {
     const background = new THREE.Color(this._palette.background);
@@ -413,13 +434,26 @@ export class OrbitCanvasRenderer {
           new THREE.Vector3(Math.cos(angle) * ring.radius, 0, Math.sin(angle) * ring.radius),
         );
       }
-      const material = new THREE.LineBasicMaterial({
-        color: this._palette.secondary,
-        transparent: true,
-        opacity: 0.42,
-        depthWrite: false,
-      });
+      // Quiet neutral guides, as the diagram draws them: destination orbits dashed, the work-item
+      // belt solid.
+      const material =
+        ring.style === 'dashed'
+          ? new THREE.LineDashedMaterial({
+              color: this._palette.neutral,
+              transparent: true,
+              opacity: 0.45,
+              dashSize: 0.32,
+              gapSize: 0.26,
+              depthWrite: false,
+            })
+          : new THREE.LineBasicMaterial({
+              color: this._palette.neutral,
+              transparent: true,
+              opacity: 0.3,
+              depthWrite: false,
+            });
       const orbit = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), material);
+      if (ring.style === 'dashed') orbit.computeLineDistances();
       orbit.rotation.order = 'YXZ';
       orbit.rotation.x = ring.tilt;
       orbit.rotation.y = ring.rotation;
@@ -436,7 +470,8 @@ export class OrbitCanvasRenderer {
         ? 350
         : 0;
     for (const node of this._scene.nodes) {
-      if (node.kind === 'ticket') continue;
+      // Tickets are instanced below; a cluster is its label, not a body of its own.
+      if (node.kind === 'ticket' || node.kind === 'group') continue;
       let body: THREE.Mesh;
       const radius = node.kind === 'production' ? 3.25 : node.kind === 'target' ? 1.15 : 0.42;
       if (node.kind === 'production' && (node.celestialBody ?? 'sun') === 'sun') {
@@ -581,7 +616,7 @@ export class OrbitCanvasRenderer {
     tickets.forEach((node, index) => {
       let hash = 2166136261;
       for (const character of node.id) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
-      const size = 0.15 + (((hash >>> 0) % 101) / 100) * 0.16;
+      const size = 0.3 + (((hash >>> 0) % 101) / 100) * 0.08;
       transform.position.set(node.position.x, node.position.y, node.position.z);
       transform.rotation.set(hash % 7, hash % 11, hash % 13);
       transform.scale.setScalar(size);
@@ -608,7 +643,8 @@ export class OrbitCanvasRenderer {
     this._connections = new THREE.Group();
     this._world.add(this._connections);
     const node = this._selectedId ? this._nodes.get(this._selectedId) : undefined;
-    if (!node) return;
+    // A selected cluster is marked by its label and the inspector, not by a marker in space.
+    if (!node || node.kind === 'group') return;
     const celestial = node.kind === 'production' || node.kind === 'target';
     const radius = (this._radii.get(node.id) ?? 0.3) * (celestial ? 1.035 : 1.9);
     const marker = new THREE.Mesh(
@@ -860,6 +896,7 @@ export class OrbitCanvasRenderer {
       flybys: this._flybyLabels,
       activeFlybyCount: this._flybys.count,
       ticketCount: this._ticketIds.length,
+      zoom: this._fitDistance > 0 && distance > 0 ? this._fitDistance / distance : 1,
       assetState: this._failedTextures.size
         ? 'unavailable'
         : this._pendingTextures.size

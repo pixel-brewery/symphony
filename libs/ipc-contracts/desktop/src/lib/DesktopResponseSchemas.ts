@@ -9,7 +9,7 @@ import { updateStateSchema } from './UpdateStateSchema';
 export const desktopResponseSchemas = {
   'updates.get': updateStateSchema,
   'updates.check': updateStateSchema,
-  'updates.download': z.object({ outcome: z.enum(['opened', 'not-available']) }),
+  'updates.download': z.object({ outcome: z.enum(['started', 'opened', 'not-available']) }),
   'updates.channel.set': updateStateSchema,
   'updates.install': z.object({ outcome: z.enum(['installing', 'deferred', 'not-ready']) }),
   'window.show': z.object({ completed: z.literal(true) }),
@@ -21,4 +21,5 @@ export const desktopResponseSchemas = {
   'speech.start': z.object({ started: z.literal(true) }),
   'speech.stop': z.object({ stopped: z.literal(true) }),
   'speech.cancel': z.object({ cancelled: z.literal(true) }),
+  'settings.open': z.object({ completed: z.literal(true) }),
 } as const;

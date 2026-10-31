@@ -25,6 +25,13 @@ export interface IPullRequestSummary {
   mergeRevision?: string;
   /** Last cycle-observed base-branch qualification for Symphony-managed pull requests; may be absent. */
   baseBranchStatus?: PullRequestBaseBranchStatus;
+  /**
+   * Logins of the people whose review is requested and still pending, as the provider reports
+   * them; absent when the provider reports no pending request.
+   */
+  requestedReviewers?: readonly string[];
+  /** Teams whose review is requested and still pending (`organization/team`); absent when none. */
+  requestedTeams?: readonly string[];
   externalUrl: string;
   createdAt: string;
   updatedAt: string;

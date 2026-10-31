@@ -1,30 +1,30 @@
 // #region Imports
 import { ApplicationRef, ChangeDetectorRef, inject, Injectable, signal } from '@angular/core';
-import { DRAWER_REF, DRAWER_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
 import { SkillStore } from '../catalog/SkillStore';
 import type { ISkillImportEditorRequest } from './ISkillImportEditorRequest';
 import { SKILL_IMPORT_PATHS } from './SkillImportPathsToken';
 import { SKILLS_SETTINGS_CONTEXT } from './SkillsSettingsContextToken';
 // #endregion
-/** Owns the existing portable package import and native drawer lifecycle. @public */
+/** Owns the existing portable package import and sheet lifecycle. @public */
 @Injectable()
 export class SkillImportEditorViewPresenter extends Hydratable(ViewPresenter) {
   // #region Fields
   private readonly _store = inject(SkillStore);
   private readonly _paths = inject(SKILL_IMPORT_PATHS);
-  private readonly _drawerRef = inject(DRAWER_REF);
+  private readonly _dialogRef = inject(DIALOG_REF);
   private readonly _changeDetector = inject(ChangeDetectorRef);
   private readonly _application = inject(ApplicationRef);
-  /** The same validated import request accepted by the prior drawer. @public @readonly */
-  public readonly data = inject<ISkillImportEditorRequest>(DRAWER_REF_DATA);
+  /** The same validated import request that opens this sheet. @public @readonly */
+  public readonly data = inject<ISkillImportEditorRequest>(DIALOG_REF_DATA);
   /** The selected portable package directory. @public */
   public importPath = '';
   /** The existing local submit lifecycle. @public @readonly */
   public readonly busy = signal(false);
   /** The existing aggregate Settings exclusion, including Skills and Feedback activity. @public @readonly */
   public readonly editorBusy = inject(SKILLS_SETTINGS_CONTEXT).editorBusy;
-  /** The import drawer retains the existing Save affordance for an empty path. @public @readonly */
+  /** Whether the import may be confirmed. @public @readonly */
   public readonly canSave = (): boolean => true;
   private readonly _chooseImportDirectoryCommand = new Command<void>(() => {
     void this.onExecuteChooseImportDirectoryCommand();
@@ -32,7 +32,7 @@ export class SkillImportEditorViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _saveCommand = new Command<void>(() => {
     void this.onExecuteSaveCommand();
   });
-  private readonly _closeCommand = new Command<void>(() => this._drawerRef.close());
+  private readonly _closeCommand = new Command<void>(() => this._dialogRef.close());
   // #endregion
   // #region Properties
   /** Chooses the portable directory through the typed native bridge. @public @readonly */
@@ -49,7 +49,7 @@ export class SkillImportEditorViewPresenter extends Hydratable(ViewPresenter) {
   }
   // #endregion
   // #region Methods
-  /** Preserves the import drawer's existing post-hydration render scheduling. @public */
+  /** Preserves the sheet post-hydration render scheduling. @public */
   public override async onHydrate(): Promise<void> {
     window.requestAnimationFrame(() => this._application.tick());
   }
@@ -80,7 +80,7 @@ export class SkillImportEditorViewPresenter extends Hydratable(ViewPresenter) {
   }
   private async importSkill(): Promise<void> {
     if (this.importPath.trim() && (await this._store.importSkill(this.importPath.trim())))
-      this._drawerRef.close();
+      this._dialogRef.close();
   }
   // #endregion
 }

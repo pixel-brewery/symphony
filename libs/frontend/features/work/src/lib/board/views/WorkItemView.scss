@@ -1,0 +1,77 @@
+// Framed groups of the artboard - the stepper, the checks table, the criteria and the activity -
+// are plain surfaces with a hairline frame; lists inside them divide their rows the same way.
+[part~='framed'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+[part~='framed-rows'] > * + * {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// Section titles are subtitle2 set semibold, as drawn.
+[part~='section-title'] {
+  --text-font-weight: 600;
+}
+
+// Ids, branches and repositories are technical values in the caption size the artboard draws:
+// monospace from the shared `technical-value` class, so only the public size properties are set
+// here (the typography directive would replace the monospace family with the caption's).
+[part~='technical-caption'] {
+  --text-font-size: var(--mosaik-typography-caption-font-size);
+  --text-font-line-height: var(--mosaik-typography-caption-line-height);
+}
+
+[part~='technical-button'] {
+  --button-font-family: var(--technical-value-font-family);
+  --button-font-size: var(--mosaik-typography-caption-font-size);
+}
+
+// Stage markers of the stepper: a filled circle with a check for a finished stage, a ring with a
+// dot for the current one, a danger ring for a failed one and an empty ring for what is ahead.
+[part~='stage-marker'] {
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+[part~='stage-marker-done'] {
+  background-color: var(--mosaik-scheme-foreground);
+}
+
+[part~='stage-marker-icon'] {
+  --icon-padding-top: 0;
+  --icon-padding-right: 0;
+  --icon-padding-bottom: 0;
+  --icon-padding-left: 0;
+  --icon-foreground-color: var(--mosaik-scheme-background);
+}
+
+[part~='stage-marker-current'] {
+  border: 2px solid var(--mosaik-color-info-500);
+}
+
+[part~='stage-marker-dot'] {
+  border-radius: 50%;
+  background-color: var(--mosaik-color-info-500);
+}
+
+[part~='stage-marker-failed'] {
+  border: 2px solid var(--mosaik-color-danger-500);
+}
+
+[part~='stage-marker-failed'] [part~='stage-marker-icon'] {
+  --icon-foreground-color: var(--mosaik-color-danger-500);
+}
+
+[part~='stage-marker-pending'] {
+  border: 1.5px solid var(--mosaik-color-neutral-300);
+}
+
+[part~='stage-connector'] {
+  background-color: var(--mosaik-scheme-highlight);
+}
+
+[part~='stage-connector-done'] {
+  background-color: var(--mosaik-scheme-foreground);
+}

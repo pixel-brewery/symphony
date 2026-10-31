@@ -1,7 +1,7 @@
 // #region Imports
 
-import type { IAgentPhaseAssignment } from '@symphony/domain-team';
 import type { BuiltinSkillDto } from '@symphony/ipc-contracts-skills';
+import type { ISkillsTeamAssignments } from './ISkillsTeamAssignments';
 
 // #endregion
 
@@ -12,11 +12,12 @@ import type { BuiltinSkillDto } from '@symphony/ipc-contracts-skills';
  */
 export interface ISkillsAssignments {
   /**
-   * Saves one team's complete assignments through aggregate validation.
+   * Saves the complete assignments of one or more teams in one aggregate settings write; declines
+   * without writing when a team is unknown.
    *
    * @public
    */
-  saveAssignments(teamId: string, assignments: readonly IAgentPhaseAssignment[]): Promise<boolean>;
+  saveAssignments(changes: readonly ISkillsTeamAssignments[]): Promise<boolean>;
   /**
    * Applies the existing built-in customization response to aggregate settings.
    *

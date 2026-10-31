@@ -8,17 +8,24 @@ import { FEEDBACK_OPERATIONS } from '@symphony/frontend-core/feedback';
 import {
   SettingsViewSlot,
   withSettingsEditor,
+  withSettingsEditorRoute,
+  withSettingsSearch,
   type ISettingsServiceSelection,
 } from '@symphony/frontend-setting';
 import { FEEDBACK_CLIENT } from '../ports/FeedbackClientToken';
 import { FEEDBACK_SETTINGS_CONTEXT } from '../ports/FeedbackSettingsContextToken';
 import type { IFeedbackSettingsContext } from '../ports/IFeedbackSettingsContext';
+import { feedbackIntakeSearchEntries } from '../settings/feedbackIntakeSearchEntries';
 import { isFeedbackSettingsEditorRequest } from '../settings/isFeedbackSettingsEditorRequest';
+import { resolveFeedbackIntakeEditorRoute } from '../settings/resolveFeedbackIntakeEditorRoute';
 import { FeedbackStore } from '../state/FeedbackStore';
 
 // #endregion
 
-/** Registers the actual intake state, native services fragment and lazy channel editor. @public */
+/**
+ * Registers the actual intake state, native services fragment, lazy channel editor with its
+ * `?intake=` route and one `Search settings` entry per intake. @public
+ */
 export function provideFeedbackFeature(): EnvironmentProviders {
   return makeEnvironmentProviders([
     ...composeProviders(
@@ -35,11 +42,23 @@ export function provideFeedbackFeature(): EnvironmentProviders {
         withSettingsEditor({
           id: 'feedback-channel-editor',
           kind: 'teams-feedback',
+          width: '600px',
           isRequest: isFeedbackSettingsEditorRequest,
           loadComponent: () =>
             import('../settings/FeedbackSettingsEditorView').then(
               (module) => module.FeedbackSettingsEditorView,
             ),
+        }),
+        withSettingsSearch({
+          id: 'feedback-intake-search',
+          sectionId: 'services',
+          searchEntries: feedbackIntakeSearchEntries,
+        }),
+        withSettingsEditorRoute({
+          id: 'feedback-intake-route',
+          section: 'services',
+          parameter: 'intake',
+          resolve: resolveFeedbackIntakeEditorRoute,
         }),
       ],
     ),

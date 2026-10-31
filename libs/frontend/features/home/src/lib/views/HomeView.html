@@ -1,41 +1,1029 @@
-<mosaik-page class="flex h-full min-h-0 w-full flex-1 flex-col" test-id="home-view">
-  <mosaik-page-header [inset]="'all'">
-    <mosaik-text
-      test-id="home-greeting"
-      class="pr-40 max-sm:pr-16"
-      [mosaikTypography]="'headline4'"
-      [wrap]="true"
-      [text]="now | greeting"
-    />
-  </mosaik-page-header>
+<ng-template
+  symphonyWindowToolbar
+  [toolbarTitle]="'Overview'"
+  [toolbarSubtitle]="(presenter.workspaceName() ? presenter.workspaceName() + ' · ' : '') + (presenter.now() | date: 'EEEE, MMMM d')"
+  [toolbarActions]="false"
+/>
 
-  <mosaik-page-content class="flex min-h-0 flex-1 flex-col justify-center" [inset]="'all'">
-    <mosaik-scroll test-id="home-panorama" class="h-full min-h-0 w-full">
-      <div
-        class="my-auto flex w-max items-center gap-6 px-1 py-2"
-        [symphonyWidgetHost]="presenter.hasSnapshot()"
-        [attr.test-id]="presenter.hasSnapshot() ? null : 'home-loading-skeleton'"
-        [attr.role]="presenter.hasSnapshot() ? null : 'status'"
-        [attr.aria-label]="presenter.hasSnapshot() ? null : 'Loading the workspace summary'"
-      >
-        <mosaik-view-slot-outlet class="contents" [slot]="widgetSlot" />
-      </div>
-    </mosaik-scroll>
-    @if (presenter.hasSnapshot()) { @if (presenter.externalServiceIncident(); as incident) {
-    <div class="flex w-full justify-center px-1 pt-6">
-      <mosaik-banner
-        class="w-full max-w-3xl"
-        test-id="home-external-service-incident"
-        [isOpen]="true"
-        [appearance]="'soft'"
-        [variant]="incident.severity === 'outage' ? 'danger' : 'warning'"
-        [iconName]="'errorCircle'"
-        [iconSize]="'small'"
-      >
-        <mosaik-banner-header [text]="incident.providerName + ' is reporting service problems'" />
-        <mosaik-banner-sub-header [text]="incident | externalServiceIncidentImpact" />
-      </mosaik-banner>
+@let now = presenter.now(); @let decisions = presenter.decisionCount(); @let failing =
+presenter.failingWorkflowName(); @let agent = presenter.activeAgentWork(); @let report =
+presenter.reporting(); @let period = presenter.period(); @let firstRepository =
+presenter.repositories()[0];
+<div test-id="home-view" class="flex min-w-0 flex-col gap-[18px] px-4 pt-[22px] pb-3">
+  <header class="flex min-w-0 flex-wrap items-end gap-2">
+    <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+      <mosaik-text
+        test-id="home-greeting"
+        [mosaikTypography]="'headline5'"
+        [text]="now | greeting"
+      />
+      @if (presenter.hasSnapshot()) {
+      <mosaik-text
+        [mosaikTypography]="'body2'"
+        test-id="home-summary"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="(decisions === 0 ? 'Nothing waits for your decision.' : decisions === 1 ? '1 decision waits for you.' : decisions + ' decisions wait for you.')
+          + (failing ? ' ' + failing + ' is failing' + (agent ? ', and ' : '.') : agent ? ' ' : '')
+          + (agent ? (agent.agentName ?? 'An agent') + (agent.implementing ? ' is implementing ' : ' is analysing ') + (agent.workItemKey ?? 'a work item') + '.' : '')"
+      />
+      } @else {
+      <mosaik-skeleton [height]="'16px'" [width]="'28rem'" [shimmer]="true" />
+      }
     </div>
-    } }
-  </mosaik-page-content>
-</mosaik-page>
+    <div role="group" aria-label="Quick actions" class="flex items-center gap-1">
+      <mosaik-button
+        test-id="home-sync"
+        [label]="'Sync now'"
+        [iconName]="'sync'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [isBusy]="presenter.syncing()"
+        [disabled]="!presenter.syncCommand.canExecute()"
+        (click)="presenter.syncCommand.execute()"
+      />
+      <mosaik-button
+        test-id="home-run-workflow"
+        [label]="'Run workflow'"
+        [iconName]="'play'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
+        (click)="presenter.runWorkflowCommand.execute()"
+      />
+      <mosaik-button
+        test-id="home-create-work-item"
+        [label]="'New work item'"
+        [iconName]="'add'"
+        [iconSize]="'small'"
+        [variant]="'primary'"
+        [appearance]="'solid'"
+        (click)="presenter.newWorkItemCommand.execute()"
+      />
+    </div>
+  </header>
+
+  @if (presenter.externalServiceIncident(); as incident) {
+  <mosaik-banner
+    test-id="home-external-service-incident"
+    [isOpen]="true"
+    [appearance]="'soft'"
+    [variant]="incident.severity === 'outage' ? 'danger' : 'warning'"
+    [iconName]="'errorCircle'"
+    [iconSize]="'small'"
+  >
+    <mosaik-banner-header [text]="incident.providerName + ' is reporting service problems'" />
+    <mosaik-banner-sub-header [text]="incident | externalServiceIncidentImpact" />
+  </mosaik-banner>
+  }
+
+  <div
+    class="grid min-w-0 grid-cols-1 items-stretch gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)_minmax(0,1fr)]"
+  >
+    <mosaik-card test-id="home-waiting-card" class="min-w-0 lg:col-span-2 xl:col-span-1">
+      <div slot="content" class="flex min-w-0 flex-col">
+        <div class="flex min-h-[52px] min-w-0 items-center gap-1 pt-[10px] pr-[10px] pb-[6px] pl-2">
+          <div class="flex min-w-0 flex-1 items-baseline gap-1">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'Waiting for you'" />
+            @if (decisions) {
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="decisions + (decisions === 1 ? ' decision' : ' decisions') + ' · oldest ' + (presenter.oldestDecisionAt() | relativeTime: now)"
+            />
+            }
+          </div>
+          <mosaik-button
+            test-id="home-open-inbox"
+            [label]="'Open inbox'"
+            [iconName]="'chevronRight'"
+            [iconSize]="'small'"
+            [iconPosition]="'after'"
+            [appearance]="'plain'"
+            (click)="presenter.openCommand.execute('/main/inbox')"
+          />
+        </div>
+        @if (!presenter.hasSnapshot()) {
+        <div
+          class="flex flex-col gap-1.5 px-2 pt-1 pb-2"
+          role="status"
+          aria-label="Loading decisions"
+        >
+          @for (row of [0, 1, 2]; track row) {
+          <mosaik-skeleton [height]="'32px'" [width]="'100%'" [shimmer]="true" />
+          }
+        </div>
+        } @else { @for (entry of presenter.waitingDecisions(); track entry.id) {
+        <div
+          part="row"
+          role="button"
+          tabindex="0"
+          class="flex min-w-0 items-start gap-1.5 px-2 py-[6px]"
+          [attr.test-id]="'home-waiting-' + entry.id"
+          (click)="presenter.openDecisionCommand.execute(entry.id)"
+          (keydown.enter)="presenter.openDecisionCommand.execute(entry.id)"
+        >
+          <mosaik-icon
+            class="flex-none pt-[2px]"
+            [iconName]="entry | inboxEntryIcon"
+            [size]="'small'"
+            [variant]="entry | inboxEntryVariant"
+          />
+          <span class="flex min-w-0 flex-1 flex-col gap-[2px]">
+            <mosaik-text
+              [mosaikTypography]="'subtitle2'"
+              [truncate]="true"
+              [text]="entry | inboxEntryTitle"
+            />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="entry | inboxEntrySubtitle"
+            />
+          </span>
+          <mosaik-text
+            class="flex-none pt-[2px]"
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [text]="entry.at | relativeTime: now"
+          />
+        </div>
+        } @empty {
+        <div
+          part="row"
+          class="flex min-w-0 items-center gap-1.5 px-2 py-1.5"
+          test-id="home-waiting-empty"
+        >
+          <mosaik-icon [iconName]="'checkmarkCircle'" [size]="'small'" [variant]="'success'" />
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="'Nothing waits for you. New decisions appear here and in the Inbox.'"
+          />
+        </div>
+        } }
+      </div>
+    </mosaik-card>
+
+    <mosaik-card test-id="home-pull-requests-card" class="min-w-0">
+      <div slot="content" class="flex min-w-0 flex-col">
+        <div class="flex min-h-[52px] min-w-0 items-center gap-1 pt-[10px] pr-[10px] pb-[6px] pl-2">
+          <div class="flex min-w-0 flex-1 items-baseline gap-1">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'Pull requests'" />
+            @if (presenter.pullRequestsState() === 'ready') {
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="presenter.pullRequestCounts().open + ' open'"
+            />
+            }
+          </div>
+          <mosaik-button
+            test-id="home-open-pull-requests"
+            [label]="'Open'"
+            [iconName]="'chevronRight'"
+            [iconSize]="'small'"
+            [iconPosition]="'after'"
+            [appearance]="'plain'"
+            (click)="presenter.openCommand.execute('/main/pull-requests')"
+          />
+        </div>
+        @switch (presenter.pullRequestsState()) { @case ('loading') {
+        <div
+          class="flex flex-col gap-1 px-2 pt-1 pb-2"
+          role="status"
+          aria-label="Loading pull requests"
+        >
+          @for (row of [0, 1, 2, 3, 4]; track row) {
+          <mosaik-skeleton [height]="'20px'" [width]="'100%'" [shimmer]="true" />
+          }
+        </div>
+        } @case ('failed') {
+        <div
+          part="row"
+          class="flex min-w-0 flex-col items-start gap-1 px-2 py-1.5"
+          test-id="home-pull-requests-failed"
+        >
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [wrap]="true"
+            [text]="'Pull requests could not be loaded from GitHub.'"
+          />
+          <mosaik-button
+            test-id="home-pull-requests-retry"
+            [label]="'Retry'"
+            [appearance]="'outline'"
+            [isBusy]="presenter.syncing()"
+            (click)="presenter.syncCommand.execute()"
+          />
+        </div>
+        } @case ('ready') { @let pullRequests = presenter.pullRequestCounts();
+        <div
+          part="row"
+          class="flex items-center gap-[10px] px-2 py-[6px]"
+          test-id="home-pull-requests-review"
+        >
+          <mosaik-icon [iconName]="'eyeShow'" [size]="'small'" />
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            class="min-w-0 flex-1"
+            [text]="'Waiting for your review'"
+          />
+          @if (pullRequests.waitingForReview !== undefined) {
+          <mosaik-text
+            test-id="home-pull-requests-review-count"
+            [mosaikTypography]="'subtitle2'"
+            [text]="'' + pullRequests.waitingForReview"
+          />
+          } @else {
+          <mosaik-text
+            test-id="home-pull-requests-review-count"
+            [mosaikTypography]="'subtitle2'"
+            [text]="'—'"
+            [mosaikTooltip]="'Symphony does not know which GitHub account is yours in this workspace.'"
+          />
+          }
+        </div>
+        <div
+          part="row"
+          class="flex items-center gap-[10px] px-2 py-[6px]"
+          test-id="home-pull-requests-failing"
+        >
+          <mosaik-icon [iconName]="'errorCircle'" [size]="'small'" [variant]="'danger'" />
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            class="min-w-0 flex-1"
+            [text]="'Checks failing'"
+          />
+          <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'' + pullRequests.checksFailing" />
+        </div>
+        <div
+          part="row"
+          class="flex items-center gap-[10px] px-2 py-[6px]"
+          test-id="home-pull-requests-mergeable"
+        >
+          <mosaik-icon [iconName]="'checkmarkCircle'" [size]="'small'" [variant]="'success'" />
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            class="min-w-0 flex-1"
+            [text]="'Ready to merge'"
+          />
+          <mosaik-text
+            [mosaikTypography]="'subtitle2'"
+            [text]="'' + pullRequests.readyToMerge"
+            [mosaikTooltip]="'Branch current with its base and every check passed. Symphony does not read approvals.'"
+          />
+        </div>
+        <div
+          part="row"
+          class="flex items-center gap-[10px] px-2 py-[6px]"
+          test-id="home-pull-requests-running"
+        >
+          <mosaik-icon [iconName]="'sync'" [size]="'small'" />
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            class="min-w-0 flex-1"
+            [text]="'Checks running'"
+          />
+          <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'' + pullRequests.checksRunning" />
+        </div>
+        <div
+          part="row"
+          class="flex items-center gap-[10px] px-2 py-[6px]"
+          test-id="home-pull-requests-drafts"
+        >
+          <mosaik-icon [iconName]="'edit'" [size]="'small'" />
+          <mosaik-text [mosaikTypography]="'body2'" class="min-w-0 flex-1" [text]="'Drafts'" />
+          <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'' + pullRequests.drafts" />
+        </div>
+        } }
+      </div>
+    </mosaik-card>
+
+    <mosaik-card test-id="home-production-card" class="min-w-0">
+      <div slot="content" class="flex min-w-0 flex-col">
+        <div class="flex min-h-[52px] min-w-0 items-center gap-1 pt-[10px] pr-[10px] pb-[6px] pl-2">
+          <div class="flex min-w-0 flex-1 items-baseline gap-1">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'Production'" />
+            <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Orbit'" />
+          </div>
+          <mosaik-button
+            test-id="home-open-orbit"
+            [label]="'Open'"
+            [iconName]="'chevronRight'"
+            [iconSize]="'small'"
+            [iconPosition]="'after'"
+            [appearance]="'plain'"
+            (click)="presenter.openCommand.execute('/main/orbit')"
+          />
+        </div>
+        <div class="flex min-w-0 flex-col gap-[14px] px-2 pt-[6px] pb-2">
+          @switch (presenter.productionState()) { @case ('loading') {
+          <div class="flex flex-col gap-1" role="status" aria-label="Loading Production">
+            <mosaik-skeleton [height]="'40px'" [width]="'60%'" [shimmer]="true" />
+            <mosaik-skeleton [height]="'56px'" [width]="'100%'" [shimmer]="true" />
+          </div>
+          } @case ('failed') {
+          <div class="flex min-w-0 flex-col items-start gap-1" test-id="home-production-failed">
+            <mosaik-text
+              [mosaikTypography]="'body2'"
+              [wrap]="true"
+              [text]="'Delivery evidence could not be refreshed. Check the GitHub account and retry.'"
+            />
+            <mosaik-button
+              test-id="home-production-retry"
+              [label]="'Retry'"
+              [appearance]="'outline'"
+              (click)="presenter.retryProductionCommand.execute()"
+            />
+          </div>
+          } @case ('ready') { @if (presenter.production(); as production) { @switch
+          (production.state) { @case ('confirmed') {
+          <div class="flex min-w-0 items-center gap-1.5" test-id="home-production-confirmed">
+            <mosaik-icon [iconName]="'checkmarkCircle'" [size]="'medium'" [variant]="'success'" />
+            <div class="flex min-w-0 flex-col gap-[2px]">
+              <mosaik-text
+                [class.technical-value]="!production.version"
+                [mosaikTypography]="'headline6'"
+                [truncate]="true"
+                [text]="production.version ?? (production.revision ?? '').slice(0, 7)"
+              />
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="'Confirmed ' + (production.confirmedAt | date: 'MMM d') + ' · ' + (production.confirmedAt | relativeTime: now : 'ago')"
+              />
+            </div>
+          </div>
+          } @case ('unconfirmed') {
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            test-id="home-production-unconfirmed"
+            [wrap]="true"
+            [text]="'A production destination is configured, but its current version is not confirmed.'"
+          />
+          } @case ('unassigned') {
+          <div class="flex min-w-0 flex-col gap-0.5" test-id="home-production-unassigned">
+            <mosaik-text
+              [mosaikTypography]="'body2'"
+              [wrap]="true"
+              [text]="'No production destination is configured.'"
+            />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="'Choose the environment, release channel or installation that represents Production in Workspace settings → Delivery destinations.'"
+            />
+          </div>
+          } @case ('stale') {
+          <div class="flex min-w-0 flex-col items-start gap-1" test-id="home-production-stale">
+            <mosaik-text
+              [mosaikTypography]="'body2'"
+              [wrap]="true"
+              [text]="'The last delivery status could not be verified. Refresh the evidence before relying on it.'"
+            />
+            <mosaik-button
+              [label]="'Refresh evidence'"
+              [appearance]="'outline'"
+              (click)="presenter.retryProductionCommand.execute()"
+            />
+          </div>
+          } } @if (production.state !== 'unassigned' && production.clusterSize) { @if
+          (production.notInProduction) {
+          <div
+            part="notice"
+            class="flex min-w-0 items-start gap-[10px] px-1.5 py-[10px]"
+            test-id="home-production-pending"
+          >
+            <mosaik-icon
+              class="flex-none pt-[1px]"
+              [iconName]="'warning'"
+              [size]="'small'"
+              [variant]="'warning'"
+            />
+            <mosaik-text
+              [mosaikTypography]="'body2'"
+              [wrap]="true"
+              [text]="(production.notInProduction === production.clusterSize ? '' + production.notInProduction : production.notInProduction + ' of ' + production.clusterSize) + (production.notInProduction === 1 ? ' work item is' : ' work items are') + ' not in a confirmed Production version.'"
+            />
+          </div>
+          }
+          <div class="flex min-w-0 flex-col gap-[6px]" test-id="home-production-evidence">
+            <div class="flex min-w-0 items-baseline">
+              <mosaik-text
+                [mosaikTypography]="'body2'"
+                class="min-w-0 flex-1"
+                [text]="'Evidence collected'"
+              />
+              <mosaik-text
+                [mosaikTypography]="'subtitle2'"
+                [text]="production.evidenceCollected + ' of ' + production.clusterSize"
+              />
+            </div>
+            <mosaik-progress-bar
+              [min]="0"
+              [max]="production.clusterSize"
+              [value]="production.evidenceCollected"
+              [variant]="'primary'"
+              [attr.aria-label]="'Evidence collected, ' + production.evidenceCollected + ' of ' + production.clusterSize"
+            />
+          </div>
+          } } } }
+        </div>
+      </div>
+    </mosaik-card>
+  </div>
+
+  <div class="flex min-w-0 flex-wrap items-center gap-1.5 pt-0.5">
+    <div class="flex min-w-0 flex-1 items-baseline gap-1">
+      <mosaik-text test-id="home-reporting" [mosaikTypography]="'subtitle1'" [text]="'Reporting'" />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [truncate]="true"
+        [text]="(presenter.repositories().length === 1 && firstRepository ? firstRepository.owner + '/' + firstRepository.name : presenter.repositories().length ? presenter.repositories().length + ' repositories' : (presenter.workspaceName() ?? 'This workspace')) + ' · compared with the previous period'"
+      />
+    </div>
+    <mosaik-segment
+      test-id="home-reporting-period"
+      [appearance]="'soft'"
+      aria-label="Reporting period"
+    >
+      <mosaik-segment-item
+        test-id="home-reporting-period-7-days"
+        [label]="'7 days'"
+        [isChecked]="period === '7-days'"
+        (checked)="presenter.selectPeriodCommand.execute('7-days')"
+      />
+      <mosaik-segment-item
+        test-id="home-reporting-period-30-days"
+        [label]="'30 days'"
+        [isChecked]="period === '30-days'"
+        (checked)="presenter.selectPeriodCommand.execute('30-days')"
+      />
+      <mosaik-segment-item
+        test-id="home-reporting-period-quarter"
+        [label]="'Quarter'"
+        [isChecked]="period === 'quarter'"
+        (checked)="presenter.selectPeriodCommand.execute('quarter')"
+      />
+    </mosaik-segment>
+  </div>
+
+  @let before = period === '7-days' ? 'the week before' : period === '30-days' ? 'the 30 days
+  before' : 'the quarter before';
+  <div class="-mt-1 grid min-w-0 grid-cols-2 gap-2 xl:grid-cols-4">
+    <mosaik-card test-id="home-tile-delivered" class="min-w-0">
+      <div slot="content" class="flex min-w-0 flex-col gap-0.5 px-2 py-1.5">
+        <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Delivered'" />
+        @switch (presenter.stageHistoryState()) { @case ('loading') {
+        <div class="flex flex-col gap-0.5" role="status" aria-label="Loading deliveries">
+          <mosaik-skeleton [height]="'32px'" [width]="'50%'" [shimmer]="true" />
+          <mosaik-skeleton [height]="'20px'" [width]="'80%'" [shimmer]="true" />
+        </div>
+        } @case ('failed') {
+        <div class="flex min-h-[52px] min-w-0 flex-col items-start justify-end gap-0.5">
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [wrap]="true"
+            [text]="'Delivery history could not be loaded.'"
+          />
+          <mosaik-button
+            test-id="home-reporting-retry"
+            [label]="'Retry'"
+            [appearance]="'outline'"
+            [size]="'small'"
+            (click)="presenter.retryReportingCommand.execute()"
+          />
+        </div>
+        } @case ('ready') {
+        <div class="flex items-baseline gap-[6px]">
+          <mosaik-text
+            test-id="home-tile-delivered-value"
+            [mosaikTypography]="'headline4'"
+            [text]="report?.delivered ? '' + report!.delivered!.current : '—'"
+          />
+          <mosaik-text [mosaikTypography]="'body2'" [variant]="'neutral'" [text]="'work items'" />
+        </div>
+        <div class="flex min-h-[20px] min-w-0 items-center gap-[6px]">
+          @if (report?.delivered; as delivered) { @if (delivered.previous !== undefined) {
+          <mosaik-badge
+            [label]="(delivered.current - delivered.previous) | signedNumber"
+            [appearance]="'soft'"
+            [variant]="(delivered.current - delivered.previous) | changeVariant: 'higher'"
+            [size]="'small'"
+          />
+          }
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="'vs. ' + (delivered.previous ?? '—') + ' ' + before"
+          />
+          } @else {
+          <mosaik-text
+            test-id="home-tile-delivered-uncovered"
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="report?.deliveryHistorySince ? 'Recorded since ' + (report!.deliveryHistorySince! | date: 'MMM d') : 'No stage changes recorded yet'"
+          />
+          }
+        </div>
+        } }
+      </div>
+    </mosaik-card>
+
+    <mosaik-card test-id="home-tile-lead-time" class="min-w-0">
+      <div slot="content" class="flex min-w-0 flex-col gap-0.5 px-2 py-1.5">
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [text]="'Median lead time'"
+        />
+        @switch (presenter.stageHistoryState()) { @case ('loading') {
+        <div class="flex flex-col gap-0.5" role="status" aria-label="Loading lead times">
+          <mosaik-skeleton [height]="'32px'" [width]="'50%'" [shimmer]="true" />
+          <mosaik-skeleton [height]="'20px'" [width]="'80%'" [shimmer]="true" />
+        </div>
+        } @case ('failed') {
+        <div class="flex min-h-[52px] min-w-0 flex-col items-start justify-end gap-0.5">
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [wrap]="true"
+            [text]="'Delivery history could not be loaded.'"
+          />
+          <mosaik-button
+            [label]="'Retry'"
+            [appearance]="'outline'"
+            [size]="'small'"
+            (click)="presenter.retryReportingCommand.execute()"
+          />
+        </div>
+        } @case ('ready') {
+        <div class="flex items-baseline gap-[6px]">
+          <mosaik-text
+            test-id="home-tile-lead-time-value"
+            [mosaikTypography]="'headline4'"
+            [text]="report?.medianLeadTimeDays ? ((report!.medianLeadTimeDays!.current | number: '1.1-1') ?? '—') : '—'"
+          />
+          <mosaik-text [mosaikTypography]="'body2'" [variant]="'neutral'" [text]="'days'" />
+        </div>
+        <div class="flex min-h-[20px] min-w-0 items-center gap-[6px]">
+          @if (report?.medianLeadTimeDays; as lead) { @if (lead.previous !== undefined) {
+          <mosaik-badge
+            [label]="((lead.current - lead.previous) | signedNumber: 1) + ' d'"
+            [appearance]="'soft'"
+            [variant]="(lead.current - lead.previous) | changeVariant: 'lower'"
+            [size]="'small'"
+          />
+          } }
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="'Qualified → Done'"
+          />
+        </div>
+        } }
+      </div>
+    </mosaik-card>
+
+    <mosaik-card test-id="home-tile-agent-runs" class="min-w-0">
+      <div slot="content" class="flex min-w-0 flex-col gap-0.5 px-2 py-1.5">
+        <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Agent runs'" />
+        <mosaik-text
+          test-id="home-tile-agent-runs-value"
+          [mosaikTypography]="'headline4'"
+          [text]="report ? '' + report.agentRuns.current : '—'"
+        />
+        <div class="flex min-h-[20px] min-w-0 items-center gap-[6px]">
+          @if (report) {
+          <mosaik-badge
+            [label]="(report.agentRuns.current - report.agentRuns.previous) | signedNumber"
+            [appearance]="'soft'"
+            [variant]="(report.agentRuns.current - report.agentRuns.previous) | changeVariant: 'none'"
+            [size]="'small'"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="report.agentRuns.withoutIntervention + ' needed no intervention'"
+          />
+          }
+        </div>
+      </div>
+    </mosaik-card>
+
+    <mosaik-card test-id="home-tile-workflow-success" class="min-w-0">
+      <div slot="content" class="flex min-w-0 flex-col gap-0.5 px-2 py-1.5">
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [text]="'Workflow success'"
+        />
+        @switch (presenter.workflowRunsState()) { @case ('loading') {
+        <div class="flex flex-col gap-0.5" role="status" aria-label="Loading workflow success">
+          <mosaik-skeleton [height]="'32px'" [width]="'50%'" [shimmer]="true" />
+          <mosaik-skeleton [height]="'20px'" [width]="'80%'" [shimmer]="true" />
+        </div>
+        } @case ('failed') {
+        <div class="flex min-h-[52px] min-w-0 flex-col items-start justify-end gap-0.5">
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [wrap]="true"
+            [text]="presenter.runsState() === 'failed' ? 'Workflow runs could not be loaded from GitHub.' : 'Run history could not be loaded.'"
+          />
+          <mosaik-button
+            [label]="'Retry'"
+            [appearance]="'outline'"
+            [size]="'small'"
+            [isBusy]="presenter.syncing()"
+            (click)="presenter.retryWorkflowRunsCommand.execute()"
+          />
+        </div>
+        } @case ('ready') {
+        <div class="flex items-baseline gap-[6px]">
+          <mosaik-text
+            test-id="home-tile-workflow-success-value"
+            [mosaikTypography]="'headline4'"
+            [text]="report?.workflowSuccess ? '' + report!.workflowSuccess!.current : '—'"
+          />
+          <mosaik-text [mosaikTypography]="'body2'" [variant]="'neutral'" [text]="'%'" />
+        </div>
+        <div class="flex min-h-[20px] min-w-0 items-center gap-[6px]">
+          @if (report?.workflowSuccess; as success) { @if (success.previous !== undefined) {
+          <mosaik-badge
+            [label]="((success.current - success.previous) | signedNumber) + ' pts'"
+            [appearance]="'soft'"
+            [variant]="(success.current - success.previous) | changeVariant: 'higher'"
+            [size]="'small'"
+          />
+          }
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="success.succeeded + ' of ' + success.finished + ' finished runs'"
+          />
+          } @else {
+          <mosaik-text
+            test-id="home-tile-workflow-success-uncovered"
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="report?.workflowRuns ? 'No finished runs in this period' : report?.runHistorySince ? 'Recorded since ' + (report!.runHistorySince! | date: 'MMM d') : 'No finished runs recorded yet'"
+          />
+          }
+        </div>
+        } }
+      </div>
+    </mosaik-card>
+  </div>
+
+  <div
+    class="grid min-w-0 grid-cols-1 items-stretch gap-2 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]"
+  >
+    <mosaik-card test-id="home-board-card" class="min-w-0 lg:col-span-2 xl:col-span-1">
+      <div slot="content" class="flex min-w-0 flex-col">
+        <div class="flex min-h-[52px] min-w-0 items-center gap-1 pt-[10px] pr-[10px] pb-[6px] pl-2">
+          <div class="flex min-w-0 flex-1 items-baseline gap-1">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'Board'" />
+            @if (presenter.boardState() === 'ready') {
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="presenter.workItemCount() + ' work items · ' + presenter.attentionCount() + ' need you'"
+            />
+            }
+          </div>
+          <mosaik-button
+            test-id="home-open-board"
+            [label]="'Open'"
+            [iconName]="'chevronRight'"
+            [iconSize]="'small'"
+            [iconPosition]="'after'"
+            [appearance]="'plain'"
+            (click)="presenter.openCommand.execute('/main/board')"
+          />
+        </div>
+        @switch (presenter.boardState()) { @case ('loading') {
+        <div
+          class="flex flex-col gap-1 px-2 pt-0.5 pb-2"
+          role="status"
+          aria-label="Loading the board"
+        >
+          @for (row of [0, 1, 2, 3, 4, 5]; track row) {
+          <mosaik-skeleton [height]="'14px'" [width]="'100%'" [shimmer]="true" />
+          }
+        </div>
+        } @case ('failed') {
+        <div
+          class="flex min-w-0 flex-col items-start gap-1 px-2 pt-0.5 pb-2"
+          test-id="home-board-failed"
+        >
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [wrap]="true"
+            [text]="'Work items could not be loaded from the tracker.'"
+          />
+          <mosaik-button
+            [label]="'Retry'"
+            [appearance]="'outline'"
+            [isBusy]="presenter.syncing()"
+            (click)="presenter.syncCommand.execute()"
+          />
+        </div>
+        } @case ('ready') {
+        <div
+          role="list"
+          aria-label="Work items per board column"
+          class="flex min-w-0 flex-col gap-[2px] px-2 pt-0.5 pb-[14px]"
+        >
+          @for (bar of presenter.boardBars(); track bar.id) {
+          <div
+            part="bar-row"
+            role="listitem"
+            tabindex="0"
+            class="grid h-[20px] min-w-0 grid-cols-[84px_minmax(0,1fr)_28px] items-center gap-[10px]"
+            [attr.test-id]="'home-board-column-' + bar.id"
+            [attr.aria-label]="bar.label + ': ' + bar.count + (bar.count === 1 ? ' work item' : ' work items')"
+            (click)="presenter.openBoardColumnCommand.execute(bar.id)"
+            (keydown.enter)="presenter.openBoardColumnCommand.execute(bar.id)"
+          >
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="bar.label"
+            />
+            <span class="flex h-[10px] min-w-0" aria-hidden="true">
+              <span part="bar" class="h-[10px]" [style.width.%]="bar.share"></span>
+            </span>
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [alignment]="'right'"
+              [text]="'' + bar.count"
+            />
+          </div>
+          } @empty {
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="'This board has no columns yet.'"
+          />
+          }
+        </div>
+        } }
+      </div>
+    </mosaik-card>
+
+    <mosaik-card test-id="home-delivered-card" class="min-w-0">
+      <div slot="content" class="flex min-w-0 flex-col">
+        <div class="flex min-h-[52px] min-w-0 items-center gap-1 pt-[10px] pr-[10px] pb-[6px] pl-2">
+          <div class="flex min-w-0 flex-1 items-baseline gap-1">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'Delivered per week'" />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="'moved to Done · 8 weeks'"
+            />
+          </div>
+        </div>
+        @switch (presenter.stageHistoryState()) { @case ('loading') {
+        <div
+          class="flex min-w-0 items-end gap-[6px] pt-[10px] pr-2 pb-[14px] pl-5"
+          role="status"
+          aria-label="Loading deliveries per week"
+        >
+          @for (column of [0, 1, 2, 3, 4, 5, 6, 7]; track column) {
+          <mosaik-skeleton class="flex-1" [height]="'120px'" [width]="'100%'" [shimmer]="true" />
+          }
+        </div>
+        } @case ('failed') {
+        <div
+          class="flex min-w-0 flex-col items-start gap-1 px-2 pt-0.5 pb-2"
+          test-id="home-delivered-failed"
+        >
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [wrap]="true"
+            [text]="'Delivery history could not be loaded.'"
+          />
+          <mosaik-button
+            [label]="'Retry'"
+            [appearance]="'outline'"
+            (click)="presenter.retryReportingCommand.execute()"
+          />
+        </div>
+        } @case ('ready') { @if (report?.deliveredPerWeek; as weeks) { @let scale =
+        presenter.deliveredScale();
+        <div class="flex min-w-0 flex-col gap-[6px] pt-[10px] pr-2 pb-[14px] pl-5">
+          <div part="chart" class="relative flex h-[138px] items-end">
+            <span part="gridline" class="absolute right-0 bottom-[120px] left-0" aria-hidden="true">
+              <mosaik-text
+                class="absolute top-[-8px] left-[-24px] w-[18px]"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [alignment]="'right'"
+                [text]="'' + scale"
+              />
+            </span>
+            <span part="gridline" class="absolute right-0 bottom-[60px] left-0" aria-hidden="true">
+              <mosaik-text
+                class="absolute top-[-8px] left-[-24px] w-[18px]"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [alignment]="'right'"
+                [text]="'' + scale / 2"
+              />
+            </span>
+            <div
+              role="list"
+              aria-label="Work items delivered per week"
+              class="relative flex h-full w-full items-end gap-[6px]"
+            >
+              @for (week of weeks; track week.startsOn) {
+              <div
+                role="listitem"
+                class="flex h-full flex-1 flex-col items-center justify-end gap-0.5"
+                [attr.test-id]="'home-delivered-week-' + week.week"
+                [attr.aria-label]="'Week ' + week.week + ': ' + (week.count === undefined ? 'not recorded' : week.count + ' delivered')"
+                [mosaikTooltip]="'W' + week.week + ' · ' + (week.count === undefined ? 'not recorded' : week.count + ' delivered')"
+              >
+                @if (week.current && week.count !== undefined) {
+                <mosaik-text [mosaikTypography]="'overline'" [text]="'' + week.count" />
+                }
+                <span
+                  class="w-[22px]"
+                  [attr.part]="week.current ? 'column current' : 'column'"
+                  [style.height.px]="((week.count ?? 0) / scale) * 120"
+                ></span>
+              </div>
+              }
+            </div>
+          </div>
+          <div class="flex gap-[6px]" aria-hidden="true">
+            @for (week of weeks; track week.startsOn) {
+            <mosaik-text
+              class="flex-1"
+              [mosaikTypography]="week.current ? 'overline' : 'caption'"
+              [variant]="week.current ? 'default' : 'neutral'"
+              [alignment]="'center'"
+              [text]="'W' + week.week"
+            />
+            }
+          </div>
+        </div>
+        } @else {
+        <div
+          class="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 pb-2"
+          test-id="home-delivered-empty"
+        >
+          <mosaik-text [mosaikTypography]="'headline4'" [text]="'—'" />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="report?.deliveryHistorySince ? 'Moves to Done are recorded since ' + (report!.deliveryHistorySince! | date: 'MMM d') + '; the chart starts with the first complete week.' : 'No move to Done is recorded yet, so there is no weekly history to chart.'"
+          />
+        </div>
+        } } }
+      </div>
+    </mosaik-card>
+
+    <mosaik-card test-id="home-runs-card" class="min-w-0">
+      <div slot="content" class="flex min-w-0 flex-col">
+        <div class="flex min-h-[52px] min-w-0 items-center gap-1 pt-[10px] pr-[10px] pb-[6px] pl-2">
+          <div class="flex min-w-0 flex-1 items-baseline gap-1">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'Workflow runs'" />
+            @if (presenter.workflowRunsState() === 'ready') {
+            <mosaik-text
+              test-id="home-runs-total"
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="(report?.workflowRuns ? '' + report!.workflowRuns!.total : '—') + ' in ' + (period === '7-days' ? '7 days' : period === '30-days' ? '30 days' : 'the quarter')"
+            />
+            }
+          </div>
+          <mosaik-button
+            test-id="home-open-actions"
+            [label]="'Open'"
+            [iconName]="'chevronRight'"
+            [iconSize]="'small'"
+            [iconPosition]="'after'"
+            [appearance]="'plain'"
+            (click)="presenter.openCommand.execute('/main/actions')"
+          />
+        </div>
+        <div class="flex min-w-0 flex-col gap-[10px] px-2 pt-1 pb-[14px]">
+          @switch (presenter.workflowRunsState()) { @case ('loading') {
+          <div class="flex flex-col gap-1" role="status" aria-label="Loading workflow runs">
+            <mosaik-skeleton [height]="'10px'" [width]="'100%'" [shimmer]="true" />
+            @for (row of [0, 1, 2]; track row) {
+            <mosaik-skeleton [height]="'20px'" [width]="'100%'" [shimmer]="true" />
+            }
+          </div>
+          } @case ('failed') {
+          <div class="flex min-w-0 flex-col items-start gap-1" test-id="home-runs-failed">
+            <mosaik-text
+              [mosaikTypography]="'body2'"
+              [wrap]="true"
+              [text]="presenter.runsState() === 'failed' ? 'Workflow runs could not be loaded from GitHub.' : 'Run history could not be loaded.'"
+            />
+            <mosaik-button
+              [label]="'Retry'"
+              [appearance]="'outline'"
+              [isBusy]="presenter.syncing()"
+              (click)="presenter.retryWorkflowRunsCommand.execute()"
+            />
+          </div>
+          } @case ('ready') { @if (report?.workflowRuns; as runs) { @let finished = runs.succeeded +
+          runs.failed + runs.cancelled; @if (finished) {
+          <mosaik-segment-bar
+            test-id="home-runs-bar"
+            [min]="0"
+            [max]="finished"
+            [thickness]="'10px'"
+            [segmentGap]="2"
+            [attr.aria-label]="'Finished workflow runs by outcome: ' + runs.succeeded + ' succeeded, ' + runs.failed + ' failed, ' + runs.cancelled + ' cancelled'"
+          >
+            <mosaik-segment-bar-item
+              [value]="runs.succeeded"
+              [variant]="'success'"
+              [label]="'Succeeded'"
+            />
+            <mosaik-segment-bar-item
+              [value]="runs.failed"
+              [variant]="'danger'"
+              [label]="'Failed'"
+            />
+            <mosaik-segment-bar-item
+              [value]="runs.cancelled"
+              [variant]="'neutral'"
+              [label]="'Cancelled'"
+            />
+          </mosaik-segment-bar>
+          }
+          <div class="flex min-w-0 flex-col">
+            <div class="flex h-[24px] items-center gap-[10px]" test-id="home-runs-succeeded">
+              <mosaik-icon [iconName]="'checkmarkCircle'" [size]="'small'" [variant]="'success'" />
+              <mosaik-text
+                [mosaikTypography]="'body2'"
+                class="min-w-0 flex-1"
+                [text]="'Succeeded'"
+              />
+              <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'' + runs.succeeded" />
+            </div>
+            <div class="flex h-[24px] items-center gap-[10px]" test-id="home-runs-failed-count">
+              <mosaik-icon [iconName]="'errorCircle'" [size]="'small'" [variant]="'danger'" />
+              <mosaik-text [mosaikTypography]="'body2'" class="min-w-0 flex-1" [text]="'Failed'" />
+              <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'' + runs.failed" />
+            </div>
+            <div class="flex h-[24px] items-center gap-[10px]" test-id="home-runs-cancelled">
+              <mosaik-icon [iconName]="'clear'" [size]="'small'" />
+              <mosaik-text
+                [mosaikTypography]="'body2'"
+                class="min-w-0 flex-1"
+                [text]="'Cancelled'"
+              />
+              <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'' + runs.cancelled" />
+            </div>
+          </div>
+          @let active = presenter.activeRuns();
+          <div
+            part="insight"
+            class="flex min-w-0 items-start gap-[10px] pt-[10px]"
+            test-id="home-runs-insight"
+          >
+            <mosaik-icon class="flex-none pt-[1px]" [iconName]="'info'" [size]="'small'" />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="(runs.topFailure ? runs.topFailure.workflowName + ' caused ' + runs.topFailure.failures + ' of the ' + runs.failed + (runs.failed === 1 ? ' failure.' : ' failures.') : 'No run failed in this period.')
+                + (active.inProgress || active.queued ? ' ' + active.inProgress + (active.inProgress === 1 ? ' run is' : ' runs are') + ' in progress, ' + active.queued + (active.queued === 1 ? ' is' : ' are') + ' queued.' : '')"
+            />
+          </div>
+          } @else {
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            test-id="home-runs-uncovered"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="report?.runHistorySince ? 'Finished runs are recorded since ' + (report!.runHistorySince! | date: 'MMM d') + ', after this period starts.' : 'No finished workflow run is recorded yet.'"
+          />
+          } } }
+        </div>
+      </div>
+    </mosaik-card>
+  </div>
+</div>

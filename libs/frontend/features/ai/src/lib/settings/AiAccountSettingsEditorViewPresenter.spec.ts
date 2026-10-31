@@ -6,15 +6,12 @@ import '@angular/compiler';
 import { ApplicationRef, ChangeDetectorRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import {
-  DRAWER_REF,
-  DRAWER_REF_DATA,
-  MessageBoxService,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
 } from '@symphony/configuration-composition';
+import { SettingsAlertService } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto, ResponsePayload } from '@symphony/ipc-contracts-composition';
 import { Subject } from 'rxjs';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -33,8 +30,7 @@ function arrange(nativeInstallAvailable = true, runtimeAvailable = true) {
   const connectCodex = vi.fn<AiStore['connectCodex']>(async () => true);
   const refreshProviderConnections = vi.fn(async () => undefined);
   const installRuntimeDependency = vi.fn<AiStore['installRuntimeDependency']>(async () => false);
-  const confirmation = new Subject<{ reason: 'positive' }>();
-  const show = vi.fn(() => ({ closed: confirmation }));
+  const confirm = vi.fn<SettingsAlertService['confirm']>(async () => true);
   const context: Pick<
     AiStore,
     | 'nativeInstallAvailable'
@@ -84,13 +80,13 @@ function arrange(nativeInstallAvailable = true, runtimeAvailable = true) {
       AiAccountSettingsEditorViewPresenter,
       { provide: AiStore, useValue: context },
       {
-        provide: DRAWER_REF_DATA,
+        provide: DIALOG_REF_DATA,
         useValue: { kind: 'ai-account', workspaceId: 'workspace-a', runtime: 'codex' },
       },
-      { provide: DRAWER_REF, useValue: { closed, close } },
+      { provide: DIALOG_REF, useValue: { closed, close } },
       { provide: ApplicationRef, useValue: { tick: vi.fn() } },
       { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn() } },
-      { provide: MessageBoxService, useValue: { show } },
+      { provide: SettingsAlertService, useValue: { confirm } },
     ],
   });
   return {
@@ -101,8 +97,7 @@ function arrange(nativeInstallAvailable = true, runtimeAvailable = true) {
     refreshProviderConnections,
     closed,
     close,
-    show,
-    confirmation,
+    confirm,
     installRuntimeDependency,
   };
 }
@@ -112,19 +107,18 @@ describe('AiAccountSettingsEditorViewPresenter', () => {
     'requires the actual Platform owner before confirming native installation: %s',
     async (nativeInstallAvailable) => {
       // arrange
-      const { presenter, show, confirmation, installRuntimeDependency } = arrange(
+      const { presenter, confirm, installRuntimeDependency } = arrange(
         nativeInstallAvailable,
         false,
       );
 
       // act
       presenter.confirmInstallAiRuntimeCommand.execute(['codex', 'Codex']);
-      if (nativeInstallAvailable) confirmation.next({ reason: 'positive' });
-      await Promise.resolve();
+      await new Promise((resolve) => setTimeout(resolve));
 
       // assert
       expect(presenter.confirmInstallAiRuntimeCommand.canExecute()).toBe(nativeInstallAvailable);
-      expect(show).toHaveBeenCalledTimes(nativeInstallAvailable ? 1 : 0);
+      expect(confirm).toHaveBeenCalledTimes(nativeInstallAvailable ? 1 : 0);
       expect(installRuntimeDependency).toHaveBeenCalledTimes(nativeInstallAvailable ? 1 : 0);
     },
   );

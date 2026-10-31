@@ -21,6 +21,12 @@ const KONAMI_CODE = [
 
 const SEQUENCE_RESET_DELAY_MS = 2_000;
 
+/** Channel that keeps god mode in step across Symphony's windows (main and Settings). */
+const CHANNEL_NAME = 'symphony.arcade-god-mode';
+
+/** Messages exchanged on the channel. */
+type GodModeMessage = { readonly kind: 'enabled' } | { readonly kind: 'query' };
+
 /** Owns the renderer-session Arcade test mode and its activation progress. @public */
 @Injectable({ providedIn: 'root' })
 export class ArcadeGodModeStore {
@@ -32,6 +38,7 @@ export class ArcadeGodModeStore {
   private readonly _progress = signal(0);
   private _resetTimer: number | undefined;
   private _initialized = false;
+  private _channel: BroadcastChannel | undefined;
   private readonly _keyDownListener = (event: KeyboardEvent): void => this.onKeyDown(event);
 
   /** Whether Arcade simulations should apply their session-only test rules. @public @readonly */
@@ -66,6 +73,7 @@ export class ArcadeGodModeStore {
       return;
     this._initialized = true;
     this._document.addEventListener('keydown', this._keyDownListener, true);
+    this.connectWindows();
   }
 
   /** Releases the renderer-wide listener. @public */
@@ -75,6 +83,8 @@ export class ArcadeGodModeStore {
     this.clearResetTimer();
     if (!this._enabled()) this._progress.set(0);
     this._document.removeEventListener('keydown', this._keyDownListener, true);
+    this._channel?.close();
+    this._channel = undefined;
   }
 
   /** Advances the hidden code while leaving ordinary application input untouched. @private */
@@ -99,12 +109,39 @@ export class ArcadeGodModeStore {
       this.clearResetTimer();
       this._enabled.set(true);
       this._notifications.showSuccess('God mode activated');
+      this.post({ kind: 'enabled' });
       return;
     }
     const nextProgress = event.code === KONAMI_CODE[0][0] ? 1 : 0;
     this._progress.set(nextProgress);
     if (nextProgress === 0) this.clearResetTimer();
     else this.restartResetTimer();
+  }
+
+  /**
+   * Shares god mode with Symphony's other windows: the code can be entered in the Settings window
+   * while the games run in the main window. A window that opens later asks whether god mode is
+   * already active. @private
+   */
+  private connectWindows(): void {
+    const view = this._document.defaultView as (Window & typeof globalThis) | null;
+    if (!view || typeof view.BroadcastChannel === 'undefined') return;
+    const channel = new view.BroadcastChannel(CHANNEL_NAME);
+    this._channel = channel;
+    channel.onmessage = (event: MessageEvent<GodModeMessage>) => {
+      if (event.data?.kind === 'query' && this._enabled()) this.post({ kind: 'enabled' });
+      if (event.data?.kind === 'enabled' && !this._enabled()) {
+        this.clearResetTimer();
+        this._progress.set(KONAMI_CODE.length);
+        this._enabled.set(true);
+      }
+    };
+    this.post({ kind: 'query' });
+  }
+
+  /** Posts a message to the other windows. @private */
+  private post(message: GodModeMessage): void {
+    this._channel?.postMessage(message);
   }
 
   /** Restarts the inactivity window for the current attempt. @private */

@@ -42,15 +42,16 @@ const expectedDesktopEnvelopeMethods = [
   'speech.start',
   'speech.stop',
   'speech.cancel',
+  'settings.open',
 ];
 
 describe('DesktopRequestEnvelopeSchema compatibility', () => {
-  it('preserves all 14 native methods in their existing order', () => {
+  it('preserves the 14 existing native methods in their order and appends Settings', () => {
     // arrange
     // act
     const methods = desktopRequestEnvelopeSchema.shape.method.options;
     // assert
-    expect(methods).toHaveLength(14);
+    expect(methods).toHaveLength(15);
     expect(methods).toEqual(expectedDesktopEnvelopeMethods);
   });
 });

@@ -19,6 +19,7 @@ export class DesktopUpdateStore {
   private _unsubscribe?: () => void;
   private _initializeInFlight?: Promise<void>;
   private _manualCheckPending = false;
+  private _downloadStarted = false;
 
   // #endregion
 
@@ -125,7 +126,9 @@ export class DesktopUpdateStore {
   }
 
   /**
-   * Opens the verified installer download for the available update.
+   * Starts downloading the available update. Symphony downloads it itself and publishes its
+   * progress through the update state, which the status bar shows as a filling ring; only when no
+   * in-app download is possible is the verified installer opened in the browser instead.
    *
    * @public
    */
@@ -135,6 +138,10 @@ export class DesktopUpdateStore {
     this._busy.set(true);
     try {
       const result = await this._desktop.request('updates.download', {});
+      if (result.outcome === 'started') {
+        this._downloadStarted = true;
+        return;
+      }
       if (result.outcome === 'opened') {
         this._notifications.showInfo(
           'Update download opened.',
@@ -186,7 +193,16 @@ export class DesktopUpdateStore {
   }
 
   private applyState(state: UpdateState): void {
+    const previous = this._state();
     this._state.set(state);
+    // The status-bar button disappears when a download fails, so the window that started it says
+    // why; the next update check offers the update again.
+    if (this._downloadStarted && state.kind !== 'downloading') {
+      this._downloadStarted = false;
+      if (previous?.kind === 'downloading' && state.kind === 'failed') {
+        this._notifications.showError('The update could not be downloaded.', state.message);
+      }
+    }
     if (!this._manualCheckPending) return;
     if (state.kind === 'idle' && state.lastCheckedAt) {
       this._manualCheckPending = false;

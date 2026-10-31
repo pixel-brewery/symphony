@@ -2,7 +2,7 @@
 
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { form, required, type FieldTree } from '@angular/forms/signals';
-import { DRAWER_REF, type IDrawerRef } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, type IDialogRef } from '@pixel-brewery/mosaik-elements-angular';
 import type { IPullRequestComparison, ISourceControlBranch } from '@symphony/domain-delivery';
 import { ExternalLinkService, Hydratable, ViewPresenter, Command } from '@symphony/frontend-core';
 import { proposePullRequestTitle, resolveInitialBranchSelection } from './pullRequestDraft';
@@ -21,7 +21,7 @@ interface IPullRequestDraftModel {
 }
 
 /**
- * Authoring surface for a pull request an operator opens by hand. It mirrors the GitHub compare
+ * Authoring sheet for a pull request an operator opens by hand. It mirrors the GitHub compare
  * form: pick the repository, pick base and compare, see what the range carries, then describe it.
  */
 @Injectable()
@@ -31,7 +31,7 @@ export class PullRequestCreateDrawerViewPresenter extends Hydratable(ViewPresent
   private readonly _store = inject(DELIVERY_VIEW_CONTEXT);
   private readonly _pullRequests = inject(PullRequestStore);
   private readonly _externalLinks = inject(ExternalLinkService);
-  private readonly _drawerRef = inject(DRAWER_REF) as IDrawerRef<undefined>;
+  private readonly _sheetRef = inject(DIALOG_REF) as IDialogRef<undefined>;
   private _branchGeneration = 0;
   private _comparisonGeneration = 0;
   private _proposedTitle = '';
@@ -324,7 +324,7 @@ export class PullRequestCreateDrawerViewPresenter extends Hydratable(ViewPresent
       body: draft.body,
       draft: this.draft(),
     });
-    if (created) this._drawerRef.close();
+    if (created) this._sheetRef.close();
   }
 
   /**
@@ -333,7 +333,7 @@ export class PullRequestCreateDrawerViewPresenter extends Hydratable(ViewPresent
    * @private
    */
   private onExecuteCloseCommand(): void {
-    this._drawerRef.close();
+    this._sheetRef.close();
   }
 
   private async loadBranches(repositoryBindingId: string): Promise<void> {

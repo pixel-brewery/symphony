@@ -13,3 +13,7 @@ export type { IContinuousIntegrationProjectionScope } from './lib/IContinuousInt
 export type { IContinuousIntegrationProjectionRepository } from './lib/ports/IContinuousIntegrationProjectionRepository';
 export type { IVerificationRepository } from './lib/ports/IVerificationRepository';
 export type { ILocalCiExecutionRepository } from './lib/ports/ILocalCiExecutionRepository';
+export { CiRunHistoryService } from './lib/history/CiRunHistoryService';
+export type { ICiRunHistoryDependencies } from './lib/history/ICiRunHistoryDependencies';
+export type { ICiRunHistoryQuery } from './lib/history/ICiRunHistoryQuery';
+export type { ICiRunHistoryRepository } from './lib/ports/ICiRunHistoryRepository';

@@ -1,0 +1,45 @@
+// The palette dims the whole window as drawn (black at 32 %, no blur) instead of the default
+// translucent, blurred backdrop.
+mosaik-backdrop[part~='palette-backdrop'] {
+  --backdrop-background-color: color-mix(
+    in oklab,
+    var(--mosaik-scheme-semi-transparent) 64%,
+    transparent
+  );
+  --backdrop-blur: 0;
+}
+
+// The footer closes the palette flush (a resting card keeps room below its content), and hairlines
+// separate the search row and the hint row from the results, as drawn.
+mosaik-card[part~='palette'] {
+  --card-padding-bottom: 0;
+  --card-divider-height: var(--mosaik-layout-thickness);
+}
+
+// The search text reads one step larger than body text and sits in the palette without a field
+// outline, as drawn; the caret marks the focus.
+mosaik-searchbox[part~='palette-search'] {
+  --searchbox-font-size: var(--mosaik-typography-subtitle1-font-size);
+  --searchbox-focus-ring-color: var(--mosaik-scheme-transparent);
+}
+
+// Key caps (`esc`, `↵`, shortcuts) keep the drawn horizontal padding.
+mosaik-kbd[part~='palette-key'] {
+  --kbd-padding-left: calc(var(--mosaik-layout-space) * 0.75);
+  --kbd-padding-right: calc(var(--mosaik-layout-space) * 0.75);
+}
+
+// Result rows are plain listbox options; the selected one sits on the first neutral step.
+[part~='palette-option'] {
+  border-radius: calc(var(--mosaik-layout-radius) * 0.8);
+  cursor: pointer;
+}
+
+[part~='palette-option'][aria-selected='true'] {
+  background-color: var(--mosaik-color-neutral-100);
+}
+
+// The hint row sits on the faintest neutral below the results, as drawn.
+[part~='palette-hint'] {
+  background-color: var(--mosaik-color-neutral-50);
+}

@@ -1,90 +1,127 @@
-<ng-template mosaikDrawerHeader>
-  <mosaik-drawer-header
+<ng-template mosaikDialogHeader>
+  <mosaik-dialog-header
+    slot="header"
+    class="flex min-w-0 flex-1"
     [text]="presenter.data.workspaceId ? 'Edit workspace' : 'Add workspace'"
     [subText]="'Security and ownership boundary'"
   >
-    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
-  </mosaik-drawer-header>
+    <mosaik-button
+      slot="suffix"
+      test-id="close-settings-editor"
+      [iconName]="'clear'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [attr.aria-label]="'Close'"
+      (click)="presenter.closeCommand.execute()"
+    />
+  </mosaik-dialog-header>
 </ng-template>
-<ng-template mosaikDrawerContent>
-  <div
-    test-id="settings-editor-drawer"
-    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
-  >
+<ng-template mosaikDialogContent>
+  <div test-id="settings-editor-drawer" class="flex min-w-0 flex-col gap-[14px]">
     @if(presenter.isHydrating()) {
     <section
       test-id="settings-editor-loading-skeleton"
-      class="flex min-w-0 flex-col gap-4"
+      class="flex min-w-0 flex-col gap-1.5"
       role="status"
       aria-busy="true"
       aria-label="Loading settings"
     >
-      <div class="flex min-w-0 flex-col">
-        <div class="flex h-2.5 items-center">
-          <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
-        </div>
-        <div class="flex h-2.5 items-center">
-          <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
-        </div>
+      <div class="flex min-w-0 flex-col gap-0.5">
+        <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
+        <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
       </div>
-      <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
-        @for (field of [1, 2, 3, 4]; track field) {
-        <div class="flex min-w-0 flex-col gap-0.75">
-          <div class="flex h-2.5 items-center">
-            <mosaik-skeleton [width]="'5rem'" [height]="'14px'" [shimmer]="true" />
-          </div>
+      <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
+        @for (field of [1, 2, 3]; track field) {
+        <div class="flex min-w-0 flex-col gap-[6px]">
+          <mosaik-skeleton [width]="'5rem'" [height]="'12px'" [shimmer]="true" />
           <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
         </div>
         }
       </div>
     </section>
     }
-    <div class="min-w-0" [hidden]="presenter.isHydrating()">
-      <section class="flex min-w-0 flex-col gap-4">
-        <symphony-headline
-          header="Workspace"
-          description="The strict ownership, credential and execution boundary."
+    <div class="flex min-w-0 flex-col gap-[14px]" [hidden]="presenter.isHydrating()">
+      <div class="flex min-w-0 flex-col gap-[3px]">
+        <mosaik-text
+          part="settings-group-heading"
+          [mosaikTypography]="'subtitle2'"
+          [text]="'Workspace'"
         />
-        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="'The strict ownership, credential and execution boundary.'"
+        />
+      </div>
+      <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
+        <div class="flex min-w-0 flex-col gap-[6px]">
+          <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Name'" />
           <mosaik-textbox
             test-id="workspace-name"
-            [label]="'Name'"
+            class="w-full"
             [value]="presenter.workspace.displayName"
+            [attr.aria-label]="'Name'"
             (input)="presenter.workspace.displayName = eventText($event)"
           />
+        </div>
+        <div class="flex min-w-0 flex-col gap-[6px]">
+          <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Short code'" />
           <mosaik-textbox
             test-id="workspace-short-code"
-            [label]="'Short code'"
+            class="w-full"
             [value]="presenter.workspace.shortCode"
+            [attr.aria-label]="'Short code'"
             (input)="presenter.workspace.shortCode = eventText($event)"
+          />
+        </div>
+        <div class="flex min-w-0 flex-col gap-[6px]">
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [text]="'Color (hex)'"
           />
           <mosaik-textbox
             test-id="workspace-color"
-            [label]="'Color (hex)'"
+            class="w-full"
             [value]="presenter.workspace.color"
+            [attr.aria-label]="'Color (hex)'"
             (input)="presenter.workspace.color = eventText($event)"
           />
         </div>
-        <mosaik-toggle-switch
-          [variant]="'primary'"
-          [isChecked]="presenter.workspace.enabled"
-          (checked)="presenter.workspace.enabled = true"
-          (unchecked)="presenter.workspace.enabled = false"
+      </div>
+      <div part="settings-group-rows" class="flex min-w-0 flex-col">
+        <symphony-settings-row
+          [label]="'Workspace enabled'"
+          [description]="'Include this workspace in configuration and task routing.'"
         >
-          <div slot="label" class="flex min-w-0 flex-col gap-1">
-            <mosaik-text [text]="'Workspace enabled'" [wrap]="true" />
-            <mosaik-hint
-              [textOverflow]="'wrap'"
-              [text]="'Include this workspace in configuration and task routing.'"
-            />
-          </div>
-        </mosaik-toggle-switch>
-      </section>
+          <mosaik-toggle-switch
+            test-id="workspace-enabled"
+            [variant]="'primary'"
+            [isChecked]="presenter.workspace.enabled"
+            [attr.aria-label]="'Workspace enabled'"
+            (checked)="presenter.workspace.enabled = true"
+            (unchecked)="presenter.workspace.enabled = false"
+          />
+        </symphony-settings-row>
+      </div>
+      @if (presenter.error(); as error) {
+      <mosaik-message
+        test-id="settings-editor-error"
+        [appearance]="'soft'"
+        [variant]="'danger'"
+        [fit]="'width'"
+        [iconName]="'errorCircle'"
+        [iconSize]="'small'"
+        [header]="error === 'save' ? 'Unable to save settings.' : 'Check the workspace'"
+        [content]="error === 'save' ? 'Your changes are still here. Try again.' : 'Enter a name, a short code and a color such as #4f6bed.'"
+      />
+      }
     </div>
   </div>
 </ng-template>
-<ng-template mosaikDrawerFooter>
-  <div class="flex w-full min-w-0 flex-wrap justify-end gap-2">
+<ng-template mosaikDialogFooter>
+  <div class="flex w-full min-w-0 flex-wrap items-center justify-end gap-1">
     <mosaik-button
       test-id="cancel-settings-editor"
       [label]="'Cancel'"

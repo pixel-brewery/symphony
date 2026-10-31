@@ -8,34 +8,36 @@ import {
 } from '@angular/core';
 import {
   ButtonComponent,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
   DismissComponent,
-  DrawerContentDirective,
-  DrawerFooterDirective,
-  DrawerHeaderComponent,
-  DrawerHeaderDirective,
   FileBoxComponent,
-  SkeletonComponent,
   IconNameDirective,
+  SkeletonComponent,
+  TextComponent,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { HeadlineComponent } from '@symphony/frontend-ui';
 import { SkillImportEditorViewPresenter } from './SkillImportEditorViewPresenter';
 // #endregion
-/** The existing portable import drawer rendered by the Skills owner. @public */
+/** The `Import skill` sheet of the Skills section. @public */
 @Component({
   selector: 'symphony-skill-import-editor',
   host: { class: 'block' },
   imports: [
     ButtonComponent,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
     DismissComponent,
-    DrawerContentDirective,
-    DrawerFooterDirective,
-    DrawerHeaderComponent,
-    DrawerHeaderDirective,
     FileBoxComponent,
-    SkeletonComponent,
-    HeadlineComponent,
     IconNameDirective,
+    SkeletonComponent,
+    TextComponent,
+    TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: SkillImportEditorViewPresenter }],
   templateUrl: './SkillImportEditorView.html',
@@ -47,7 +49,7 @@ export class SkillImportEditorView extends View<SkillImportEditorViewPresenter> 
   private readonly _changeDetector = inject(ChangeDetectorRef);
   // #endregion
   // #region Ctor
-  /** Preserves the existing native drawer's render scheduling after hydration. @public */
+  /** Preserves the existing sheet render scheduling after hydration. @public */
   public constructor() {
     super();
     effect(() => {

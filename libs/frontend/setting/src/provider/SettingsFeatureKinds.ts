@@ -14,4 +14,5 @@ export const SettingsFeatureKinds = {
   RouteInitializer: createFeatureKind('route-initializer'),
   View: createFeatureKind<SettingsFeatureKind>('view'),
   Editor: createFeatureKind<SettingsFeatureKind>('editor'),
+  Search: createFeatureKind<SettingsFeatureKind>('search'),
 } as const;

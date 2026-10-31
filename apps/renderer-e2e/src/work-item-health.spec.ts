@@ -4,11 +4,12 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { expandBoardColumn } from './expandBoardColumn';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
-test('reports each work-item problem in a complete banner that scrolls with the drawer', async () => {
+test('reports each work-item problem in a complete banner that scrolls with the work-item screen', async () => {
   // arrange
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
@@ -37,8 +38,6 @@ test('reports each work-item problem in a complete banner that scrolls with the 
   // assert
   try {
     const page = await prepareMainWindow(app);
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('navigation-home').click();
     await expect(page.getByTestId('home-view')).toBeVisible();
     await page.evaluate(async (localPath) => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -91,16 +90,18 @@ test('reports each work-item problem in a complete banner that scrolls with the 
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
 
     // The simulated board ships items without estimate, target date or priority. Those are
-    // optional planning values nobody is obliged to fill in, so neither the card nor the
-    // drawer may raise them: an unset optional field is not a finding.
-    const indicator = page.getByTestId('board-item-health-work-item-142');
-    await expect(indicator).toHaveCount(0);
-
+    // optional planning values nobody is obliged to fill in, so neither the card's status chip
+    // nor the work-item screen may raise them: an unset optional field is not a finding.
+    await expandBoardColumn(page, 'backlog');
+    const status = page.getByTestId('board-item-status-work-item-142');
+    await expect(status).toBeVisible();
+    await expect(status).not.toHaveJSProperty('label', 'Waiting for you');
     await page.getByTestId('board-item-work-item-142').click();
     let health = page.getByTestId('task-health');
     await expect(page.getByTestId('task-drawer')).toBeVisible();
     await expect(health).toHaveCount(0);
-    await page.getByTestId('task-drawer-header-close').click();
+    await page.getByTestId('navigate-back').click();
+    await expect(page.getByTestId('board-view')).toBeVisible();
 
     // Create three independent, real findings without changing the shared simulated fixture:
     // a contradictory closing label, a missing assistance field and, after the UI move below,
@@ -141,15 +142,23 @@ test('reports each work-item problem in a complete banner that scrolls with the 
     // Moving an item straight into the implementation stage skips the analysis it is supposed
     // to arrive with. Nothing can run there afterwards, so the card has to say so instead of
     // looking like every other item waiting for a worker.
+    await expandBoardColumn(page, 'backlog');
     const card = page.getByTestId('board-item-work-item-142');
     await card.click();
+    await expect(page.getByTestId('task-loading-skeleton')).toHaveCount(0);
     await page.getByTestId('task-drawer-edit-content').click();
     await page.getByTestId('issue-project-field-field-status').locator('mosaik-select').click();
-    await page.getByText('Ready', { exact: true }).last().click();
+    await page.getByTestId('issue-project-field-field-status-option-status-ready').click();
     await page.getByTestId('issue-save').click();
-    await expect(page.getByTestId('task-drawer')).toHaveCount(0);
+    await expect(page.getByTestId('issue-save')).toHaveCount(0);
+    await page.getByTestId('navigate-back').click();
+    await expect(page.getByTestId('board-view')).toBeVisible();
 
-    await expect(indicator).toHaveAttribute('aria-label', /^Blocked/);
+    // A blocked item waits for a person: the card's status chip says so and names the blocker
+    // in its tooltip.
+    await expect(status).toHaveJSProperty('label', 'Waiting for you');
+    await status.hover();
+    await expect(page.getByRole('tooltip', { name: /^Blocked: / })).toBeVisible();
     await card.click({ button: 'right' });
     const solveAction = page.getByTestId('board-item-action-solve-work-item-142');
     await expect(solveAction).toContainText('Implement now');
@@ -208,7 +217,6 @@ test('reports each work-item problem in a complete banner that scrolls with the 
         }),
       )
       .toBe(true);
-    await page.getByTestId('task-checks-section').click();
     // The step controls must not offer an analysis the stage would refuse to run.
     await expect(page.getByTestId('task-analysis-step')).toHaveCount(0);
     await expect(page.getByTestId('task-solution-step')).toHaveCount(0);

@@ -1,13 +1,20 @@
 // #region Imports
 
+import { Location } from '@angular/common';
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { DrawerService, THEME, type IDrawerRef } from '@pixel-brewery/mosaik-elements-angular';
-import { type IExecutionRecord } from '@symphony/domain-execution';
-import { browserStorage, Command, NavigationRegistry } from '@symphony/frontend-core';
-import { NotificationService } from '@symphony/frontend-notification';
-import { SearchManager } from '@symphony/frontend-search';
+import { projectAgentActivity } from '@symphony/domain-execution';
+import {
+  browserStorage,
+  Clock,
+  Command,
+  NavigationRegistry,
+  WindowSidebar,
+  type INavigationItem,
+} from '@symphony/frontend-core';
+import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { filter } from 'rxjs';
 import {
   ActionDrawerView,
@@ -16,29 +23,66 @@ import {
 import { ExecutionDrawerView } from '@symphony/frontend-feature-execution';
 import { type IExecutionDrawerData } from '@symphony/frontend-feature-execution';
 import { buildRailRuns, type IRailRun } from '@symphony/frontend-feature-execution/projections';
-import { shouldShowActionsRemoteDataNotice } from './shouldShowActionsRemoteDataNotice';
+import { CommandPalette } from '@symphony/frontend-search';
 import { DesktopUpdateStore } from '@symphony/frontend-update';
-import { DesktopSpeechRecognitionService } from '@symphony/frontend-interaction';
 import { PRESENTATION_CONTEXT } from '../ports/PresentationContextToken';
+import { LastScreenMemory } from '../routing/LastScreenMemory';
 
 // #endregion
 
-const RAIL_OPEN_STORAGE_KEY = 'presentation.isRailOpen';
-type RailView = 'agent-runs' | 'actions';
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'presentation.isSidebarCollapsed';
+const RUN_VIEW_STORAGE_KEY = 'presentation.runView';
+type RunView = 'agents' | 'actions';
 
+interface INavigationGroup {
+  readonly key: string;
+  readonly label: string;
+  readonly items: readonly INavigationItem[];
+}
+
+type AgentProfile = ApplicationSettingsDto['agentProfiles'][number];
+type ExecutionReference = { readonly id: string; readonly startedAt: string };
+type AgentActivityState = ReturnType<typeof projectAgentActivity>[number]['state'];
+
+interface IAgentRow {
+  readonly id: string;
+  readonly name: string;
+  readonly profile: AgentProfile;
+  readonly state: AgentActivityState;
+  readonly role?: string;
+  readonly workItemKey?: string;
+  readonly executionId?: string;
+  readonly runsToday: number;
+}
+
+/**
+ * Owns the main window's chrome: the source-list sidebar with its run panel, the unified toolbar
+ * and the status bar along the bottom edge.
+ *
+ * @public
+ */
 @Injectable()
 export class PresenterViewPresenter {
   // #region Fields
 
   private readonly _router = inject(Router);
+  private readonly _location = inject(Location);
   private readonly _destroyRef = inject(DestroyRef);
   private readonly _store = inject(PRESENTATION_CONTEXT);
   private readonly _navigation = inject(NavigationRegistry);
-  private readonly _search = inject(SearchManager);
   private readonly _drawerService = inject(DrawerService);
-  private readonly _notifications = inject(NotificationService);
-  private readonly _speechRecognition = inject(DesktopSpeechRecognitionService);
+  private readonly _palette = inject(CommandPalette);
+  private readonly _clock = inject(Clock);
+  private readonly _sidebar = inject(WindowSidebar);
+  private readonly _lastScreen = inject(LastScreenMemory);
   private readonly _routeState = signal(this._router.url);
+  private readonly _history = signal<{ readonly ids: readonly number[]; readonly index: number }>({
+    ids: [],
+    index: -1,
+  });
+  private _pendingTrigger: NavigationStart['navigationTrigger'];
+  private _pendingRestoredId: number | undefined;
+  private _pendingReplacesUrl = false;
   private _activeExecutionDrawer?: IDrawerRef<IExecutionDrawerData>;
   private _openedRunLink = '';
   private _activeActionDrawer?: IDrawerRef<IActionDrawerData>;
@@ -60,46 +104,25 @@ export class PresenterViewPresenter {
   public readonly updates = inject(DesktopUpdateStore);
 
   /**
-   * Whether it is rail open.
+   * Current time for relative labels in the chrome.
    *
    * @public
    * @readonly
    */
-  public readonly isRailOpen = signal(
-    (this._store.executionAvailable || this._store.ciAvailable) &&
-      (readStoredBoolean(RAIL_OPEN_STORAGE_KEY) ?? false),
+  public readonly now = this._clock.now;
+
+  /**
+   * Whether the source-list sidebar is hidden. The choice survives a restart.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly isSidebarCollapsed = signal(
+    readStoredBoolean(SIDEBAR_COLLAPSED_STORAGE_KEY) ?? false,
   );
 
   /**
-   * Whether it is voice input active.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly isVoiceInputActive = signal(false);
-
-  /**
-   * The search query.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly searchQuery = signal('');
-
-  /**
-   * Whether the global search is expanded into its input.
-   *
-   * The launcher follows the macOS toolbar pattern: it rests as a single search button and becomes
-   * a search field on activation, so a narrow window spends its width on the navigation instead of
-   * on a permanently open input.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly isSearchExpanded = signal(false);
-
-  /**
-   * Enabled workspaces available to the global workspace scope.
+   * Enabled workspaces available to the workspace switcher.
    *
    * @public
    * @readonly
@@ -108,79 +131,100 @@ export class PresenterViewPresenter {
     () => this._store.settings()?.workspaces.filter((workspace) => workspace.enabled) ?? [],
   );
 
-  /**
-   * Feature-owned destinations for the desktop header in their configured order.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly navigationItems = this._navigation.byRegion('desktop-main');
-  /** Feature-owned destinations inside the existing workspace menu. @public @readonly */
-  public readonly workspaceMenuItems = this._navigation.byRegion('workspace-menu');
-
-  /** Active workspace represented by the global avatar trigger. */
+  /** Active workspace shown in the switcher card. @public @readonly */
   public readonly activeWorkspace = this._store.activeWorkspace;
 
   /**
-   * Selects the active workspace.
+   * Repository slug shown under the workspace name: the first enabled repository of the active
+   * workspace, or empty while it has none.
    *
    * @public
    * @readonly
    */
-  public readonly selectWorkspaceCommand: Command<string> = new Command((workspaceId) => {
-    void this.selectWorkspace(workspaceId);
+  public readonly activeRepositorySlug = computed(() => {
+    const workspaceId = this.activeWorkspace()?.id;
+    const repository = this._store
+      .settings()
+      ?.repositoryBindings.find(
+        (binding) => binding.workspaceId === workspaceId && binding.enabled,
+      );
+    return repository ? `${repository.owner}/${repository.name}` : '';
   });
 
   /**
-   * Navigates to a primary navigation target.
-   *
-   * `mosaik-segment` owns the checked state of its items: `SegmentElement.onClick` writes
-   * `isChecked` on every item imperatively, and the item's own `Checkable` behaviour toggles on
-   * click. Keyboard activation reaches those handlers but not the `routerLink` on the item host, so
-   * navigation is driven from the element's own `checked` output instead of from the click.
+   * Feature-owned destinations grouped for the sidebar: ungrouped destinations first, then each
+   * group in the order of its first destination.
    *
    * @public
    * @readonly
    */
-  public readonly navigateToRouteCommand: Command<string> = new Command((path) => {
-    void this._router.navigateByUrl(path);
+  public readonly navigationGroups = computed<readonly INavigationGroup[]>(() => {
+    const groups: { key: string; label: string; items: INavigationItem[] }[] = [];
+    for (const item of this._navigationItems()) {
+      const label = item.group ?? '';
+      let group = groups.find((entry) => entry.label === label);
+      if (!group) {
+        group = { key: label ? label.toLowerCase() : 'primary', label, items: [] };
+        if (label) groups.push(group);
+        else groups.unshift(group);
+      }
+      group.items.push(item);
+    }
+    return groups;
   });
 
   /**
-   * Stops voice input when the search surface loses focus.
+   * Label of the sidebar destination that contains the current route, the toolbar title for a
+   * screen that registered none of its own.
    *
    * @public
    * @readonly
    */
-  public readonly stopVoiceInputCommand = new Command(() => this.stopVoiceInput());
+  public readonly activeNavigationLabel = computed(() => {
+    const path = this._routeState().split('?')[0] ?? '';
+    return (
+      this._navigationItems().find(
+        (item) => path === item.route || path.startsWith(`${item.route}/`),
+      )?.label ?? ''
+    );
+  });
 
   /**
-   * The selected rail view.
+   * Whether toolbar back navigation is available. A screen with its own sidebar navigation, such
+   * as Settings, can always be left this way, even when it was the first screen shown.
    *
    * @public
    * @readonly
    */
-  public readonly selectedRailView = signal<RailView>(
-    this._store.executionAvailable ? 'agent-runs' : 'actions',
+  public readonly canGoBack = computed(
+    () => this._history().index > 0 || this._sidebar.isReplaced(),
   );
 
-  /** Included features determine the existing rail surfaces. @public @readonly */
+  /** Whether toolbar forward navigation is available. @public @readonly */
+  public readonly canGoForward = computed(() => {
+    const history = this._history();
+    return history.index >= 0 && history.index < history.ids.length - 1;
+  });
+
+  /**
+   * The selected run panel segment.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly selectedRunView = signal<RunView>(
+    readStoredRunView() ?? (this._store.executionAvailable ? 'agents' : 'actions'),
+  );
+
+  /** Included features determine the existing run surfaces. @public @readonly */
   public readonly executionAvailable = this._store.executionAvailable;
-  /** CI's tab and commands exist only when that feature is included. @public @readonly */
+  /** CI's segment and commands exist only when that feature is included. @public @readonly */
   public readonly ciAvailable = this._store.ciAvailable;
   /** Workspace scope can change only through its included owner. @public @readonly */
   public readonly workspaceScopeAvailable = this._store.workspaceScopeAvailable;
 
   /**
-   * The voice input available.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly voiceInputAvailable = this._speechRecognition.available;
-
-  /**
-   * The rail runs.
+   * Runs of every source, newest first, as the rail projected them.
    *
    * @public
    * @readonly
@@ -212,58 +256,179 @@ export class PresenterViewPresenter {
   });
 
   /**
-   * The visible rail runs.
+   * Current action runs for the run panel: every running and queued run, then the latest failure.
    *
    * @public
    * @readonly
    */
-  public readonly visibleRailRuns = computed(() =>
-    this.railRuns().filter((run) =>
-      this.selectedRailView() === 'agent-runs' ? run.kind === 'agent' : run.kind !== 'agent',
-    ),
+  public readonly currentActionRuns = computed(() => {
+    const actions = this.railRuns().filter((run) => run.kind !== 'agent');
+    const current = actions.filter(
+      (run) => run.active || run.queueEntryId || run.state === 'queued',
+    );
+    const latestFailure = actions.find((run) => !run.active && run.state === 'failed');
+    return latestFailure ? [...current, latestFailure] : current;
+  });
+
+  /**
+   * Agent steps waiting for a free execution slot, listed under the agents so they can be withdrawn.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly waitingAgentSteps = computed(() =>
+    this.railRuns().filter((run) => run.kind === 'agent' && run.queueEntryId),
   );
 
   /**
-   * The actions remote data.
+   * Number of running and queued action runs, shown on the `Actions` segment.
    *
    * @public
    * @readonly
    */
-  public readonly actionsRemoteData = computed(() => this._store.snapshot()?.remoteData?.ciRuns);
+  public readonly activeActionRunCount = computed(
+    () =>
+      this.currentActionRuns().filter(
+        (run) => run.active || run.queueEntryId || run.state === 'queued',
+      ).length,
+  );
 
-  /** Whether the compact rail owns a remote-data notice on the active route. */
-  public readonly showActionsRemoteDataNotice = computed(() =>
-    shouldShowActionsRemoteDataNotice(
-      this._routeState(),
-      this.actionsRemoteData(),
-      this._store.snapshot()?.remoteData?.pullRequests,
-    ),
+  /**
+   * Agents of the active workspace with what each one is doing right now.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly agentRows = computed<readonly IAgentRow[]>(() => {
+    const settings = this._store.settings();
+    const workspaceId = this.activeWorkspace()?.id;
+    if (!settings || !workspaceId) return [];
+    const snapshot = this._store.snapshot();
+    const profiles = settings.agentProfiles.filter(
+      (profile) => profile.workspaceId === workspaceId && profile.enabled,
+    );
+    const activities = projectAgentActivity(profiles, snapshot, true);
+    const workItems = new Map(snapshot?.workItems.map((item) => [item.id, item]) ?? []);
+    const startOfDay = new Date(this.now());
+    startOfDay.setHours(0, 0, 0, 0);
+    const today = startOfDay.toISOString();
+    return profiles.map((profile) => {
+      const activity = activities.find((entry) => entry.agentId === profile.id);
+      // Finished work no longer occupies the agent: it reads as idle with today's run count.
+      const state = !activity || activity.state === 'completed' ? 'idle' : activity.state;
+      const work = state === 'idle' ? undefined : activity?.work[0];
+      const runsToday =
+        snapshot?.executions.filter(
+          (execution) =>
+            execution.bindingSnapshot?.agentProfileId === profile.id &&
+            execution.startedAt >= today,
+        ).length ?? 0;
+      const workItemKey = work ? workItems.get(work.workItemId)?.externalId : undefined;
+      // A blocked goal carries no execution of its own; the row then opens the agent's latest run
+      // on that work item, so the failure that blocked it stays one click away.
+      const executionId =
+        work?.executionId ??
+        (work
+          ? snapshot?.executions
+              .filter(
+                (execution) =>
+                  execution.workItemId === work.workItemId &&
+                  execution.bindingSnapshot?.agentProfileId === profile.id,
+              )
+              .reduce<ExecutionReference | undefined>(
+                (latest, execution) =>
+                  !latest || execution.startedAt > latest.startedAt ? execution : latest,
+                undefined,
+              )?.id
+          : undefined);
+      return {
+        id: profile.id,
+        name: profile.displayName,
+        profile,
+        state,
+        runsToday,
+        ...(work?.role ? { role: work.role } : {}),
+        ...(workItemKey ? { workItemKey } : {}),
+        ...(executionId ? { executionId } : {}),
+      };
+    });
+  });
+
+  /**
+   * GitHub synchronisation state shown at the leading end of the status bar: the oldest of the
+   * pull-request and Actions refreshes, because the sync is only as current as its slowest part.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly syncState = computed(() => {
+    const remoteData = this._store.snapshot()?.remoteData;
+    const sources = [remoteData?.pullRequests, remoteData?.ciRuns].filter(
+      (source) => source !== undefined,
+    );
+    if (sources.length === 0) return undefined;
+    const state = sources.some((source) => source.state === 'unavailable')
+      ? 'unavailable'
+      : sources.some((source) => source.state === 'stale')
+        ? 'stale'
+        : 'current';
+    const refreshTimes = sources
+      .map((source) => source.lastSuccessfulRefreshAt)
+      .filter((time): time is string => Boolean(time))
+      .sort();
+    const rateLimited = sources.find((source) => source.reason === 'rate-limited');
+    return {
+      state,
+      ...(refreshTimes[0] ? { lastSuccessfulRefreshAt: refreshTimes[0] } : {}),
+      ...(rateLimited?.retryAt ? { retryAt: rateLimited.retryAt } : {}),
+      rateLimited: Boolean(rateLimited),
+    } as const;
+  });
+
+  /** Whether a GitHub refresh is in flight. @public @readonly */
+  public readonly syncBusy = computed(
+    () => this._syncBusy() || this._store.continuousIntegrationRunsBusy(),
   );
-  private readonly _toggleRailCommand: Command<void> = new Command(
-    () => void this.onExecuteToggleRailCommand(),
+
+  private readonly _navigationItems = this._navigation.byRegion('desktop-main');
+
+  private readonly _toggleSidebarCommand: Command<void> = new Command(() =>
+    this.setSidebarCollapsed(!this.isSidebarCollapsed()),
   );
-  private readonly _closeRailCommand: Command<void> = new Command(
-    () => void this.onExecuteCloseRailCommand(),
+  private readonly _goBackCommand: Command<void> = new Command(() => {
+    if (this._history().index > 0) this._location.back();
+    else void this._router.navigateByUrl(this._lastScreen.read() ?? '/main/home');
+  }, this.canGoBack);
+  private readonly _goForwardCommand: Command<void> = new Command(
+    () => this._location.forward(),
+    this.canGoForward,
   );
-  private readonly _handleRailSplitRepositionCommand: Command<unknown> = new Command(
-    (event) => void this.onExecuteHandleRailSplitRepositionCommand(event),
+  private readonly _navigateToRouteCommand: Command<string> = new Command((path) => {
+    void this._router.navigateByUrl(path);
+  });
+  private readonly _selectWorkspaceCommand: Command<string> = new Command((workspaceId) => {
+    void this._store.selectWorkspaceScope(workspaceId);
+  });
+  private readonly _openSettingsCommand: Command<void> = new Command(
+    () => void this._router.navigateByUrl('/main/settings'),
   );
+  private readonly _openPaletteCommand: Command<void> = new Command(() => this._palette.open());
   private readonly _openRailRunCommand: Command<IRailRun> = new Command(
     (run) => void this.onExecuteOpenRailRunCommand(run),
   );
+  private readonly _openAgentCommand: Command<string | undefined> = new Command((executionId) => {
+    if (executionId) this.openExecution(executionId);
+  });
   private readonly _removeQueuedRunCommand: Command<readonly [run: IRailRun, event?: Event]> =
     new Command((parameters) => void this.onExecuteRemoveQueuedRunCommand(...parameters));
-  private readonly _selectRailViewCommand: Command<RailView> = new Command(
-    (view) => void this.onExecuteSelectRailViewCommand(view),
-  );
-  private readonly _refreshActionsCommand: Command<void> = new Command(
-    () => void this.onExecuteRefreshActionsCommand(),
-  );
-  private readonly _searchCommand: Command<string> = new Command(
-    (query) => void this.onExecuteSearchCommand(query),
-  );
-  private readonly _toggleVoiceInputCommand: Command<void> = new Command(
-    () => void this.onExecuteToggleVoiceInputCommand(),
+  private readonly _selectRunViewCommand: Command<RunView> = new Command((view) => {
+    this.selectedRunView.set(view);
+    browserStorage()?.setItem(RUN_VIEW_STORAGE_KEY, view);
+  });
+  private readonly _syncBusy = signal(false);
+  private readonly _synchronizeCommand: Command<void> = new Command(
+    () => void this.synchronize(),
+    computed(() => !this._syncBusy()),
   );
   private readonly _installUpdateCommand: Command<void> = new Command(
     () => void this.updates.install(),
@@ -273,12 +438,16 @@ export class PresenterViewPresenter {
     () => void this.updates.download(),
     computed(() => this.updates.state()?.kind === 'available' && !this.updates.busy()),
   );
+
   // #endregion
 
   // #region Ctor
 
   public constructor() {
-    if (this._routeState().split('?')[0] === '/main/orbit') this.isRailOpen.set(false);
+    // The start navigation completes while the shell still hydrates, before this window chrome
+    // exists, so the history starts at the entry that is already shown.
+    const shown = this._router.navigated ? this._router.lastSuccessfulNavigation()?.id : undefined;
+    if (shown !== undefined) this._history.set({ ids: [shown], index: 0 });
     effect(() => {
       const url = this._routeState();
       const runId = new URLSearchParams(url.split('?')[1] ?? '').get('run');
@@ -293,178 +462,150 @@ export class PresenterViewPresenter {
         this.openAction(run);
       }
     });
-    this.syncSearchQueryFromRoute();
+    this._router.events
+      .pipe(
+        filter((event): event is NavigationStart => event instanceof NavigationStart),
+        takeUntilDestroyed(this._destroyRef),
+      )
+      .subscribe((event) => {
+        this._pendingTrigger = event.navigationTrigger;
+        this._pendingRestoredId = event.restoredState?.navigationId;
+        this._pendingReplacesUrl = this._router.currentNavigation()?.extras.replaceUrl === true;
+      });
     this._router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
         takeUntilDestroyed(this._destroyRef),
       )
       .subscribe((event) => {
-        if (
-          event.urlAfterRedirects.split('?')[0] === '/main/orbit' &&
-          this._routeState().split('?')[0] !== '/main/orbit'
-        ) {
-          this.isRailOpen.set(false);
-        }
         this._routeState.set(event.urlAfterRedirects);
-        this.syncSearchQueryFromRoute();
+        this._lastScreen.remember(event.urlAfterRedirects);
+        this.recordHistory(event.id);
       });
-    this._destroyRef.onDestroy(() => void this._speechRecognition.cancel());
   }
 
   // #endregion
 
   // #region Properties
 
-  /**
-   * The toggleRail command.
-   *
-   * @public
-   * @readonly
-   */
-  public get toggleRailCommand(): Command<void> {
-    return this._toggleRailCommand;
+  /** Collapses or restores the sidebar. @public @readonly */
+  public get toggleSidebarCommand(): Command<void> {
+    return this._toggleSidebarCommand;
   }
-  /**
-   * The closeRail command.
-   *
-   * @public
-   * @readonly
-   */
-  public get closeRailCommand(): Command<void> {
-    return this._closeRailCommand;
+
+  /** Goes back in the navigation history. @public @readonly */
+  public get goBackCommand(): Command<void> {
+    return this._goBackCommand;
   }
-  /**
-   * The handleRailSplitReposition command.
-   *
-   * @public
-   * @readonly
-   */
-  public get handleRailSplitRepositionCommand(): Command<unknown> {
-    return this._handleRailSplitRepositionCommand;
+
+  /** Goes forward in the navigation history. @public @readonly */
+  public get goForwardCommand(): Command<void> {
+    return this._goForwardCommand;
   }
-  /**
-   * The openRailRun command.
-   *
-   * @public
-   * @readonly
-   */
+
+  /** Opens a sidebar destination. @public @readonly */
+  public get navigateToRouteCommand(): Command<string> {
+    return this._navigateToRouteCommand;
+  }
+
+  /** Switches the active workspace. @public @readonly */
+  public get selectWorkspaceCommand(): Command<string> {
+    return this._selectWorkspaceCommand;
+  }
+
+  /** Opens the Settings window. @public @readonly */
+  public get openSettingsCommand(): Command<void> {
+    return this._openSettingsCommand;
+  }
+
+  /** Opens the command palette. @public @readonly */
+  public get openPaletteCommand(): Command<void> {
+    return this._openPaletteCommand;
+  }
+
+  /** Opens a run from the run panel. @public @readonly */
   public get openRailRunCommand(): Command<IRailRun> {
     return this._openRailRunCommand;
   }
-  /**
-   * The removeQueuedRun command.
-   *
-   * @public
-   * @readonly
-   */
+
+  /** Opens the execution an agent is working on. @public @readonly */
+  public get openAgentCommand(): Command<string | undefined> {
+    return this._openAgentCommand;
+  }
+
+  /** Withdraws a queued step from the run panel. @public @readonly */
   public get removeQueuedRunCommand(): Command<readonly [run: IRailRun, event?: Event]> {
     return this._removeQueuedRunCommand;
   }
-  /**
-   * The selectRailView command.
-   *
-   * @public
-   * @readonly
-   */
-  public get selectRailViewCommand(): Command<RailView> {
-    return this._selectRailViewCommand;
-  }
-  /**
-   * The refreshActions command.
-   *
-   * @public
-   * @readonly
-   */
-  public get refreshActionsCommand(): Command<void> {
-    return this._refreshActionsCommand;
-  }
-  /**
-   * The search command.
-   *
-   * @public
-   * @readonly
-   */
-  public get searchCommand(): Command<string> {
-    return this._searchCommand;
-  }
-  /**
-   * The toggleVoiceInput command.
-   *
-   * @public
-   * @readonly
-   */
-  public get toggleVoiceInputCommand(): Command<void> {
-    return this._toggleVoiceInputCommand;
+
+  /** Switches the run panel between `Agents` and `Actions`. @public @readonly */
+  public get selectRunViewCommand(): Command<RunView> {
+    return this._selectRunViewCommand;
   }
 
   /**
-   * Installs the update that has already downloaded and is ready to apply.
+   * Synchronises with GitHub again: the snapshot and the Actions runs, as `Sync now` does. The
+   * status bar offers it while the sync is stale or unavailable.
    *
    * @public
    * @readonly
    */
+  public get synchronizeCommand(): Command<void> {
+    return this._synchronizeCommand;
+  }
+
+  /** Installs the downloaded update and restarts Symphony. @public @readonly */
   public get installUpdateCommand(): Command<void> {
     return this._installUpdateCommand;
   }
 
-  /**
-   * Opens the installer download for an available update.
-   *
-   * @public
-   * @readonly
-   */
+  /** Starts downloading the available update. @public @readonly */
   public get downloadUpdateCommand(): Command<void> {
     return this._downloadUpdateCommand;
   }
+
   // #endregion
 
   // #region Methods
 
-  /**
-   * Toggles the rail.
-   *
-   * @private
-   */
-  private onExecuteToggleRailCommand(): void {
-    this.setRailOpen(!this.isRailOpen());
+  private async synchronize(): Promise<void> {
+    this._syncBusy.set(true);
+    try {
+      await this._store.synchronize();
+    } finally {
+      this._syncBusy.set(false);
+    }
   }
 
-  /**
-   * Closes the rail.
-   *
-   * @private
-   */
-  private onExecuteCloseRailCommand(): void {
-    this.setRailOpen(false);
+  private recordHistory(navigationId: number): void {
+    const trigger = this._pendingTrigger;
+    const restoredId = this._pendingRestoredId;
+    const replaces = this._pendingReplacesUrl;
+    this._history.update((history) => {
+      if (trigger === 'popstate' && restoredId !== undefined) {
+        const index = history.ids.indexOf(restoredId);
+        if (index >= 0) {
+          // Angular reuses the restored id for the state it navigates back to.
+          return { ids: history.ids, index };
+        }
+      }
+      if (replaces && history.index >= 0) {
+        const ids = history.ids.map((id, position) =>
+          position === history.index ? navigationId : id,
+        );
+        return { ids, index: history.index };
+      }
+      const ids = [...history.ids.slice(0, history.index + 1), navigationId];
+      return { ids, index: ids.length - 1 };
+    });
   }
 
-  /**
-   * Handles the rail split reposition.
-   *
-   * @param event - Event.
-   * @private
-   */
-  private onExecuteHandleRailSplitRepositionCommand(event: unknown): void {
-    const payload = eventRecord(event);
-    const position = payload['position'];
-    if (typeof position !== 'number' || !Number.isFinite(position)) return;
-    this.setRailOpen(position < 100);
-  }
-
-  /**
-   * Opens the execution.
-   *
-   * @param executionId - Execution id.
-   * @private
-   */
   private openExecution(executionId: string): void {
     if (!this.executionAvailable) return;
     if (this._activeExecutionDrawer && this._drawerService.isShown(this._activeExecutionDrawer)) {
       this._activeExecutionDrawer.requestAttention();
       return;
     }
-
     const drawer = this._drawerService.show<IExecutionDrawerData>(ExecutionDrawerView, {
       data: { executionId },
     });
@@ -474,12 +615,6 @@ export class PresenterViewPresenter {
     });
   }
 
-  /**
-   * Opens the rail run.
-   *
-   * @param run - Run.
-   * @private
-   */
   private onExecuteOpenRailRunCommand(run: IRailRun): void {
     // A waiting step has no run to open yet; withdrawing it is the only thing it offers.
     if (run.queueEntryId) return;
@@ -490,82 +625,10 @@ export class PresenterViewPresenter {
     this.openAction(run);
   }
 
-  /**
-   * Removes the queued run.
-   *
-   * @param run - Run.
-   * @param event - Event.
-   * @private
-   */
   private async onExecuteRemoveQueuedRunCommand(run: IRailRun, event?: Event): Promise<void> {
     event?.stopPropagation();
     if (!run.queueEntryId) return;
     await this._store.removeQueueEntry(run.queueEntryId);
-  }
-
-  /**
-   * Selects the rail view.
-   *
-   * @param view - View.
-   * @private
-   */
-  private onExecuteSelectRailViewCommand(view: RailView): void {
-    this.selectedRailView.set(view);
-  }
-
-  /**
-   * Refreshes the actions.
-   *
-   * @private
-   */
-  private async onExecuteRefreshActionsCommand(): Promise<void> {
-    await this._store.refreshContinuousIntegrationRuns();
-  }
-
-  private async selectWorkspace(workspaceId: string): Promise<void> {
-    await this._store.selectWorkspaceScope(workspaceId);
-  }
-
-  /**
-   * Whether it is execution active.
-   *
-   * @param execution - Execution.
-   * @private
-   */
-  private isExecutionActive(execution: IExecutionRecord): boolean {
-    return (
-      execution.state === 'queued' || execution.state === 'running' || execution.state === 'waiting'
-    );
-  }
-
-  /**
-   * Returns the search.
-   *
-   * @param query - Query.
-   * @private
-   */
-  private async onExecuteSearchCommand(query: string): Promise<void> {
-    await this._search.search(query);
-  }
-
-  /**
-   * Toggles the voice input.
-   *
-   * @private
-   */
-  private onExecuteToggleVoiceInputCommand(): void {
-    if (this.isVoiceInputActive()) {
-      void this._speechRecognition.stop();
-      return;
-    }
-    this.isVoiceInputActive.set(true);
-    void this._speechRecognition.start(
-      (transcript) => {
-        this.searchQuery.set(transcript);
-        void this.onExecuteSearchCommand(transcript);
-      },
-      () => this.finishVoiceInput(),
-    );
   }
 
   private openAction(run: IRailRun): void {
@@ -583,39 +646,12 @@ export class PresenterViewPresenter {
     });
   }
 
-  private finishVoiceInput(): void {
-    this.isVoiceInputActive.set(false);
-  }
-
-  private stopVoiceInput(): void {
-    if (!this.isVoiceInputActive()) return;
-    void this._speechRecognition.stop();
-  }
-
-  private syncSearchQueryFromRoute(): void {
-    const queryIndex = this._router.url.indexOf('?');
-    if (queryIndex < 0) {
-      this.searchQuery.set('');
-      return;
-    }
-    const query = new URLSearchParams(this._router.url.slice(queryIndex + 1)).get('q') ?? '';
-    this.searchQuery.set(query);
-  }
-
-  private setRailOpen(value: boolean): void {
-    this.isRailOpen.set(value);
-    writeStoredBoolean(RAIL_OPEN_STORAGE_KEY, value);
+  private setSidebarCollapsed(value: boolean): void {
+    this.isSidebarCollapsed.set(value);
+    browserStorage()?.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(value));
   }
 
   // #endregion
-}
-
-function eventRecord(event: unknown): Record<string, unknown> {
-  if (typeof event !== 'object' || event === null) return {};
-  const record = event as Record<string, unknown>;
-  return typeof record['detail'] === 'object' && record['detail'] !== null
-    ? (record['detail'] as Record<string, unknown>)
-    : record;
 }
 
 function readStoredBoolean(key: string): boolean | undefined {
@@ -623,6 +659,7 @@ function readStoredBoolean(key: string): boolean | undefined {
   return value === 'true' ? true : value === 'false' ? false : undefined;
 }
 
-function writeStoredBoolean(key: string, value: boolean): void {
-  browserStorage()?.setItem(key, String(value));
+function readStoredRunView(): RunView | undefined {
+  const value = browserStorage()?.getItem(RUN_VIEW_STORAGE_KEY);
+  return value === 'agents' || value === 'actions' ? value : undefined;
 }

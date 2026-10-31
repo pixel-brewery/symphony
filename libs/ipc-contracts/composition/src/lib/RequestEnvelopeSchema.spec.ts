@@ -106,6 +106,7 @@ const expectedEnvelopeMethods = [
   'verification.cancel',
   'ci.usage.get',
   'ci.runs.refresh',
+  'ci.runs.history.list',
   'ci.workflow.dispatch',
   'ci.workflow.local.run',
   'delivery.refresh',
@@ -152,6 +153,7 @@ const expectedEnvelopeMethods = [
   'workflow.get',
   'workflow.decide',
   'workflow.answer',
+  'workflow.stage-changes.list',
   'skills.builtin.list',
   'skills.builtin.customize',
   'skills.get',
@@ -170,12 +172,12 @@ const expectedEnvelopeMethods = [
 ];
 
 describe('RequestEnvelopeSchema compatibility', () => {
-  it('preserves all 113 method IDs in their existing envelope order', () => {
+  it('preserves all 115 method IDs in their existing envelope order', () => {
     // arrange
     // act
     const methods = requestEnvelopeSchema.shape.method.options;
     // assert
-    expect(methods).toHaveLength(113);
+    expect(methods).toHaveLength(115);
     expect(methods).toEqual(expectedEnvelopeMethods);
   });
 

@@ -3,6 +3,7 @@
 import type { IAgentAppearance } from '@symphony/domain-team';
 import type { IWorkspaceAgentFallbackView } from './IWorkspaceAgentFallbackView';
 import type { Settings } from './Settings';
+import type { SkillFlowRole } from './SkillFlowRole';
 
 // #endregion
 
@@ -12,6 +13,8 @@ export interface IWorkspaceAgentView {
   readonly appearance?: IAgentAppearance;
   readonly positionDisplayName: string;
   readonly positionDescription: string | undefined;
+  /** Responsibilities of the agent's position, in delivery-flow order. */
+  readonly responsibilities: readonly SkillFlowRole[];
   readonly enabled: boolean;
   readonly accountId?: string;
   /** Provider the agent's preferred route runs on; drives the provider avatar. */

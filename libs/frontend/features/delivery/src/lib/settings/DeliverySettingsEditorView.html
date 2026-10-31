@@ -1,32 +1,52 @@
-<ng-template mosaikDrawerHeader>
+<ng-template mosaikDialogHeader>
   @switch (presenter.data.kind) { @case ('delivery-target') {
-  <mosaik-drawer-header
+  <mosaik-dialog-header
+    slot="header"
+    class="flex min-w-0 flex-1"
     [text]="presenter.data.targetId ? 'Edit delivery destination' : 'Add delivery destination'"
     [subText]="presenter.deliveryRepository()?.displayName ?? ''"
   >
-    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
-  </mosaik-drawer-header>
+    <mosaik-button
+      slot="suffix"
+      test-id="close-settings-editor"
+      [icon]="'clear'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [attr.aria-label]="'Close'"
+      (click)="presenter.closeCommand.execute()"
+    />
+  </mosaik-dialog-header>
   } @case ('repository') {
-  <mosaik-drawer-header
+  <mosaik-dialog-header
+    slot="header"
+    class="flex min-w-0 flex-1"
     [text]="presenter.data.repositoryBindingId ? 'Edit repository' : 'Add repository'"
     [subText]="'GitHub source control and Actions'"
   >
-    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
-  </mosaik-drawer-header>
+    <mosaik-button
+      slot="suffix"
+      test-id="close-settings-editor"
+      [icon]="'clear'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [attr.aria-label]="'Close'"
+      (click)="presenter.closeCommand.execute()"
+    />
+  </mosaik-dialog-header>
   } }
 </ng-template>
 
-<ng-template mosaikDrawerContent>
+<ng-template mosaikDialogContent>
   <div
     test-id="settings-editor-drawer"
-    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+    class="flex max-h-[calc(100dvh-220px)] min-h-0 min-w-0 flex-1 flex-col gap-1.75 overflow-y-auto py-0.5"
   >
     @if (presenter.isHydrating()) {
-    <!-- Every editor opens with the same anatomy: a section headline above a two-column field
+    <!-- Every sheet opens with the same anatomy: a section headline above a two-column field
          grid. The skeleton keeps that anatomy - headline lines and labelled fields - in place. -->
     <section
       test-id="settings-editor-loading-skeleton"
-      class="flex min-w-0 flex-col gap-4"
+      class="flex min-w-0 flex-col gap-2"
       role="status"
       aria-busy="true"
       aria-label="Loading settings"
@@ -39,7 +59,7 @@
           <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
         </div>
       </div>
-      <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+      <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
         @for (field of [1, 2, 3, 4]; track field) {
         <div class="flex min-w-0 flex-col gap-0.75">
           <div class="flex h-2.5 items-center">
@@ -53,12 +73,64 @@
     }
     <div class="min-w-0" [hidden]="presenter.isHydrating()">
       @switch (presenter.kind) { @case ('delivery-target') {
-      <section class="flex min-w-0 flex-col gap-4" test-id="delivery-target-editor">
-        <symphony-headline
-          header="Destination"
-          description="Use the exact destination name recorded by your delivery provider. Configuration alone does not confirm a deployed version."
+      <section class="flex min-w-0 flex-col gap-1.75" test-id="delivery-target-editor">
+        @if (presenter.deliveryTarget.production) {
+        <!-- Orbit preview: the chosen body at the centre and the project's other destinations on
+             their rings. Decorative; every value is also a control below. -->
+        <div
+          part="orbit-preview"
+          class="relative h-[230px] min-w-0 overflow-hidden"
+          test-id="delivery-target-orbit-preview"
+          aria-hidden="true"
+        >
+          <span part="orbit-preview-ring" data-ring="inner"></span>
+          <span part="orbit-preview-ring" data-ring="outer"></span>
+          <img
+            part="orbit-preview-body"
+            [attr.test-id]="'delivery-target-orbit-preview-body-' + presenter.deliveryTarget.celestialBody"
+            [src]="'orbit/previews/' + presenter.deliveryTarget.celestialBody + '.png'"
+            width="96"
+            height="64"
+            alt=""
+          />
+          <mosaik-text
+            part="orbit-preview-centre-label"
+            [mosaikTypography]="'caption'"
+            [text]="presenter.deliveryTarget.displayName.trim() || 'Production'"
+          />
+          @for (destination of presenter.orbitPreviewDestinations(); track destination.id) {
+          <span
+            part="orbit-preview-destination"
+            class="flex items-center gap-0.75"
+            [attr.data-ring]="$index % 2 === 0 ? 'inner' : 'outer'"
+            [style.--orbit-angle]="43 + $index * 180 + ($index - ($index % 2)) * 33.5 + 'deg'"
+          >
+            <span part="orbit-preview-dot"></span>
+            <mosaik-text
+              part="orbit-preview-label"
+              [mosaikTypography]="'caption'"
+              [text]="destination.displayName"
+            />
+          </span>
+          }
+          <mosaik-text
+            part="orbit-preview-title"
+            [mosaikTypography]="'overline'"
+            [text]="'Orbit preview · ' + (presenter.deliveryRepository()?.displayName ?? '')"
+          />
+        </div>
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="'Use the exact destination name recorded by your delivery provider. Configuration alone does not confirm a deployed version.'"
         />
-        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+        } @else {
+        <ng-container
+          *ngTemplateOutlet="sectionHeading; context: { $implicit: 'Destination', description: 'Use the exact destination name recorded by your delivery provider. Configuration alone does not confirm a deployed version.' }"
+        />
+        }
+        <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
           <mosaik-textbox
             test-id="delivery-target-name"
             [label]="'Display name'"
@@ -82,111 +154,94 @@
             (input)="presenter.deliveryTarget.environment = presenter.eventText()($event)"
           />
         </div>
-        <mosaik-toggle-switch
-          test-id="delivery-target-production"
-          [variant]="'primary'"
-          [isChecked]="presenter.deliveryTarget.production"
-          (checked)="presenter.deliveryTarget.production = true"
-          (unchecked)="presenter.deliveryTarget.production = false"
-        >
-          <mosaik-text
-            slot="label"
-            [text]="'Represents Production at the centre of the orbit'"
-            [wrap]="true"
-          />
-        </mosaik-toggle-switch>
+        <div part="settings-group-rows" class="flex min-w-0 flex-col">
+          <symphony-settings-row [label]="'Represents Production at the centre of the orbit'">
+            <mosaik-toggle-switch
+              test-id="delivery-target-production"
+              aria-label="Represents Production at the centre of the orbit"
+              [variant]="'primary'"
+              [isChecked]="presenter.deliveryTarget.production"
+              (checked)="presenter.deliveryTarget.production = true"
+              (unchecked)="presenter.deliveryTarget.production = false"
+            />
+          </symphony-settings-row>
+        </div>
         @if (presenter.deliveryTarget.production) {
-        <mosaik-choice-group
-          test-id="delivery-target-celestial-body"
-          class="w-full min-w-0"
-          aria-labelledby="delivery-target-celestial-body-label"
-          [name]="'delivery-celestial-body'"
-          [orientation]="'vertical'"
-          [appearance]="'outline'"
-          [variant]="'primary'"
-          [value]="presenter.deliveryTarget.celestialBody"
-          (choiceChanged)="presenter.selectDeliveryCelestialBodyCommand.execute($event)"
-        >
+        <div class="flex min-w-0 items-center gap-1 pt-0.25">
           <mosaik-text
-            slot="header"
+            part="settings-group-heading"
             id="delivery-target-celestial-body-label"
-            [text]="'Body at the centre of the orbit'"
+            class="min-w-0 flex-1"
             [mosaikTypography]="'subtitle2'"
             [wrap]="true"
+            [text]="'Body at the centre of the orbit'"
           />
-          @for (body of [ { value: 'sun', label: 'Sun' }, { value: 'mercury', label: 'Mercury' }, {
-          value: 'venus', label: 'Venus' }, { value: 'earth', label: 'Earth' }, { value: 'mars',
-          label: 'Mars' }, { value: 'jupiter', label: 'Jupiter' }, { value: 'saturn', label:
-          'Saturn' }, { value: 'uranus', label: 'Uranus' }, { value: 'neptune', label: 'Neptune' }
-          ]; track body.value) {
-          <mosaik-choice
+          <mosaik-button
+            [label]="'Planet textures: Solar System Scope · CC BY 4.0'"
+            [href]="'https://www.solarsystemscope.com/textures/'"
+            [target]="'_blank'"
+            [appearance]="'plain'"
+            [size]="'small'"
+          />
+        </div>
+        <div part="choice-cards" class="min-w-0">
+          <mosaik-choice-group
+            test-id="delivery-target-celestial-body"
             class="w-full min-w-0"
-            [attr.test-id]="'delivery-body-' + body.value"
-            [value]="body.value"
-            [label]="body.label"
+            aria-labelledby="delivery-target-celestial-body-label"
+            [name]="'delivery-celestial-body'"
+            [orientation]="'horizontal'"
             [appearance]="'outline'"
             [variant]="'primary'"
+            [value]="presenter.deliveryTarget.celestialBody"
+            (choiceChanged)="presenter.selectDeliveryCelestialBodyCommand.execute($event)"
           >
-            <div slot="label" class="flex min-w-0 items-center gap-3">
-              <img
-                class="h-[64px] w-[96px] shrink-0"
-                [attr.test-id]="'delivery-body-preview-' + body.value"
-                [src]="'orbit/previews/' + body.value + '.png'"
-                width="96"
-                height="64"
-                alt=""
-              />
-              <mosaik-text [text]="body.label" [wrap]="true" />
-            </div>
-          </mosaik-choice>
-          }
-        </mosaik-choice-group>
-        <mosaik-button
-          class="self-start"
-          [label]="'Planet textures: Solar System Scope · CC BY 4.0'"
-          [href]="'https://www.solarsystemscope.com/textures/'"
-          [target]="'_blank'"
-          [appearance]="'plain'"
-          [size]="'small'"
-        />
-        } @if (presenter.duplicateDeliveryTarget()) {
-        <mosaik-hint
-          test-id="delivery-target-duplicate"
-          [textOverflow]="'wrap'"
-          [text]="'This destination is already configured for this project. Edit the existing destination instead.'"
-        />
-        } @if (presenter.deliveryTarget.kind === 'release-channel') {
-        <mosaik-hint
-          [textOverflow]="'wrap'"
-          [text]="'Stable follows GitHub’s latest release. Other channels use .symphony/release-channels.json in the repository.'"
-        />
-        } @else if (presenter.deliveryTarget.kind === 'installation') {
-        <mosaik-hint
-          [textOverflow]="'wrap'"
-          [text]="'An installation needs an explicit installation receipt; a published release is not proof of installation.'"
-        />
+            @for (body of [ { value: 'sun', label: 'Sun' }, { value: 'mercury', label: 'Mercury' },
+            { value: 'venus', label: 'Venus' }, { value: 'earth', label: 'Earth' }, { value: 'mars',
+            label: 'Mars' }, { value: 'jupiter', label: 'Jupiter' }, { value: 'saturn', label:
+            'Saturn' }, { value: 'uranus', label: 'Uranus' }, { value: 'neptune', label: 'Neptune' }
+            ]; track body.value) {
+            <mosaik-choice
+              class="min-w-0"
+              [attr.test-id]="'delivery-body-' + body.value"
+              [value]="body.value"
+              [label]="body.label"
+              [appearance]="'outline'"
+              [variant]="'primary'"
+            >
+              <div slot="label" class="flex min-w-0 items-center gap-1">
+                <img
+                  class="h-[32px] w-[48px] shrink-0 object-contain"
+                  [attr.test-id]="'delivery-body-preview-' + body.value"
+                  [src]="'orbit/previews/' + body.value + '.png'"
+                  width="48"
+                  height="32"
+                  alt=""
+                />
+                <mosaik-text [mosaikTypography]="'body2'" [text]="body.label" />
+              </div>
+            </mosaik-choice>
+            }
+          </mosaik-choice-group>
+        </div>
         }
         <mosaik-expander
           test-id="delivery-target-workflow-settings"
+          [appearance]="'plain'"
           [header]="'Deployment workflow (optional)'"
           [subHeader]="'Enable starting an exact version from the orbit'"
         >
-          <div class="flex min-w-0 flex-col gap-4 pt-4">
+          <div class="flex min-w-0 flex-col gap-1.5 pt-1.25">
             <mosaik-button
+              class="w-full"
               test-id="delivery-target-load-workflows"
               [label]="'Load project workflows'"
               [appearance]="'outline'"
+              [fit]="'width'"
               [isBusy]="presenter.deliveryWorkflowsBusy()"
               [disabled]="presenter.deliveryWorkflowsBusy()"
               (click)="presenter.refreshDeliveryWorkflowsCommand.execute()"
             />
-            @if (presenter.deliveryWorkflowsError()) {
-            <mosaik-hint
-              test-id="delivery-target-workflows-error"
-              [textOverflow]="'wrap'"
-              [text]="'Workflows could not be loaded. Check this project’s GitHub account under Repositories and retry.'"
-            />
-            }
             <mosaik-select
               test-id="delivery-target-workflow"
               [label]="'Workflow'"
@@ -203,8 +258,18 @@
               <mosaik-select-item [value]="workflow.id" [label]="workflow.name" />
               }
             </mosaik-select>
-            @if (presenter.deliveryTarget.workflowId) {
-            <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+            @if (presenter.deliveryWorkflowsError()) {
+            <symphony-settings-conditional [condition]="'When loading fails'">
+              <mosaik-text
+                test-id="delivery-target-workflows-error"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [wrap]="true"
+                [text]="'Workflows could not be loaded. Check this project’s GitHub account under Repositories and retry.'"
+              />
+            </symphony-settings-conditional>
+            } @if (presenter.deliveryTarget.workflowId) {
+            <div class="grid min-w-0 grid-cols-3 gap-1.5">
               <mosaik-textbox
                 test-id="delivery-target-version-input"
                 [label]="'Exact version input (required)'"
@@ -224,21 +289,52 @@
                 (input)="presenter.deliveryTarget.operationInput = presenter.eventText()($event)"
               />
             </div>
-            <mosaik-hint
-              [textOverflow]="'wrap'"
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
               [text]="'Enter workflow input names. The operation ID must appear in the workflow run-name so an interrupted start can be reconciled.'"
             />
             }
           </div>
         </mosaik-expander>
+        @if (presenter.duplicateDeliveryTarget() || presenter.deliveryTarget.kind !== 'environment')
+        {
+        <symphony-settings-conditional
+          [condition]="'Duplicate, release channel and installation hints'"
+        >
+          @if (presenter.duplicateDeliveryTarget()) {
+          <mosaik-text
+            test-id="delivery-target-duplicate"
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="'This destination is already configured for this project. Edit the existing destination instead.'"
+          />
+          } @if (presenter.deliveryTarget.kind === 'release-channel') {
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="'Stable follows GitHub’s latest release. Other channels use .symphony/release-channels.json in the repository.'"
+          />
+          } @else if (presenter.deliveryTarget.kind === 'installation') {
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="'An installation needs an explicit installation receipt; a published release is not proof of installation.'"
+          />
+          }
+        </symphony-settings-conditional>
+        }
       </section>
       } @case ('repository') {
-      <section class="flex min-w-0 flex-col gap-4">
-        <symphony-headline
-          header="GitHub repository"
-          description="Source control identity and GitHub Actions remain explicit and workspace-scoped."
+      <section class="flex min-w-0 flex-col gap-1.75" test-id="repository-editor">
+        <ng-container
+          *ngTemplateOutlet="sectionHeading; context: { $implicit: 'GitHub repository', description: 'Source control identity and GitHub Actions remain explicit and workspace-scoped.' }"
         />
-        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+        <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
           <mosaik-textbox
             test-id="repository-display-name"
             [label]="'Display name'"
@@ -255,7 +351,9 @@
             <mosaik-button
               slot="suffix"
               test-id="choose-repository-local-path"
-              [iconName]="'folder'"
+              aria-label="Choose local repository"
+              [icon]="'folder'"
+              [iconSize]="'small'"
               [appearance]="'plain'"
               (click)="presenter.chooseRepositoryDirectoryCommand.execute()"
             />
@@ -310,81 +408,91 @@
             />
           </mosaik-select>
         </div>
-        @if (presenter.hasCiOperations) {
-        <mosaik-toggle-switch
-          [variant]="'primary'"
-          [isChecked]="presenter.repository.ciEnabled"
-          (checked)="presenter.repository.ciEnabled = true"
-          (unchecked)="presenter.repository.ciEnabled = false"
-        >
-          <div slot="label" class="flex min-w-0 flex-col gap-1">
-            <mosaik-text [text]="'Show GitHub Actions runs'" [wrap]="true" />
-            <mosaik-hint
-              [textOverflow]="'wrap'"
-              [text]="'Include workflow runs from this repository in delivery status.'"
+        <div part="settings-group-rows" class="flex min-w-0 flex-col">
+          @if (presenter.hasCiOperations) {
+          <symphony-settings-row
+            [label]="'Show GitHub Actions runs'"
+            [description]="'Include workflow runs from this repository in delivery status.'"
+          >
+            <mosaik-toggle-switch
+              test-id="repository-ci-enabled"
+              aria-label="Show GitHub Actions runs"
+              [variant]="'primary'"
+              [isChecked]="presenter.repository.ciEnabled"
+              (checked)="presenter.repository.ciEnabled = true"
+              (unchecked)="presenter.repository.ciEnabled = false"
             />
-          </div>
-        </mosaik-toggle-switch>
-        @if (presenter.repository.ciEnabled) {
-        <mosaik-toggle-switch
-          [variant]="'primary'"
-          test-id="repository-agentic-delivery"
-          [isChecked]="presenter.repository.agenticDeliveryEnabled"
-          (checked)="presenter.repository.agenticDeliveryEnabled = true"
-          (unchecked)="presenter.repository.agenticDeliveryEnabled = false"
-        >
-          <div slot="label" class="flex min-w-0 flex-col gap-1">
-            <mosaik-text [text]="'Allow agentic delivery for this repository'" [wrap]="true" />
-            <mosaik-hint
-              [textOverflow]="'wrap'"
-              [text]="'Opt this repository into the globally enabled diagnosis, repair, and rerun policy.'"
+          </symphony-settings-row>
+          @if (presenter.repository.ciEnabled) {
+          <symphony-settings-row
+            [label]="'Allow agentic delivery for this repository'"
+            [description]="'Opt this repository into the globally enabled diagnosis, repair, and rerun policy.'"
+          >
+            <mosaik-toggle-switch
+              test-id="repository-agentic-delivery"
+              aria-label="Allow agentic delivery for this repository"
+              [variant]="'primary'"
+              [isChecked]="presenter.repository.agenticDeliveryEnabled"
+              (checked)="presenter.repository.agenticDeliveryEnabled = true"
+              (unchecked)="presenter.repository.agenticDeliveryEnabled = false"
             />
-          </div>
-        </mosaik-toggle-switch>
-        } } @if (presenter.sourceConnectionsAvailable) {
-        <mosaik-toggle-switch
-          [variant]="'primary'"
-          [isChecked]="presenter.repository.authenticate"
-          (checked)="presenter.repository.authenticate = true"
-          (unchecked)="presenter.repository.authenticate = false"
-        >
-          <div slot="label" class="flex min-w-0 flex-col gap-1">
-            <mosaik-text [text]="'Sign in after saving'" [wrap]="true" />
-            <mosaik-hint
-              [textOverflow]="'wrap'"
-              [text]="'Open GitHub browser authentication for this account after the repository is saved.'"
+          </symphony-settings-row>
+          } } @if (presenter.sourceConnectionsAvailable) {
+          <symphony-settings-row
+            [label]="'Sign in after saving'"
+            [description]="'Open GitHub browser authentication for this account after the repository is saved.'"
+          >
+            <mosaik-toggle-switch
+              test-id="repository-authenticate"
+              aria-label="Sign in after saving"
+              [variant]="'primary'"
+              [isChecked]="presenter.repository.authenticate"
+              (checked)="presenter.repository.authenticate = true"
+              (unchecked)="presenter.repository.authenticate = false"
             />
-          </div>
-        </mosaik-toggle-switch>
-        }
-        <mosaik-toggle-switch
-          [variant]="'primary'"
-          [isChecked]="presenter.repository.enabled"
-          (checked)="presenter.repository.enabled = true"
-          (unchecked)="presenter.repository.enabled = false"
-        >
-          <div slot="label" class="flex min-w-0 flex-col gap-1">
-            <mosaik-text [text]="'Repository enabled'" [wrap]="true" />
-            <mosaik-hint
-              [textOverflow]="'wrap'"
-              [text]="'Allow this repository to receive implementation branches and pull requests.'"
+          </symphony-settings-row>
+          }
+          <symphony-settings-row
+            [label]="'Repository enabled'"
+            [description]="'Allow this repository to receive implementation branches and pull requests.'"
+          >
+            <mosaik-toggle-switch
+              test-id="repository-enabled"
+              aria-label="Repository enabled"
+              [variant]="'primary'"
+              [isChecked]="presenter.repository.enabled"
+              (checked)="presenter.repository.enabled = true"
+              (unchecked)="presenter.repository.enabled = false"
             />
-          </div>
-        </mosaik-toggle-switch>
-        @if (presenter.hasCiOperations && presenter.hasExistingRepository()) {
+          </symphony-settings-row>
+        </div>
+        @if (presenter.repositoryValidationIssues().length) {
+        <symphony-settings-conditional [condition]="'With missing details'">
+          <mosaik-message
+            class="block w-full"
+            test-id="repository-validation-summary"
+            [appearance]="'soft'"
+            [variant]="'warning'"
+            [fit]="'width'"
+            [icon]="'warning'"
+            [iconSize]="'small'"
+            [header]="'Finish these details before saving'"
+            [content]="presenter.repositoryValidationIssues() | repositoryValidationIssuesLabel"
+          />
+        </symphony-settings-conditional>
+        } @if (presenter.hasCiOperations && presenter.hasExistingRepository()) {
         <mosaik-divider />
-        <div class="flex min-w-0 items-start justify-between gap-2">
-          <div class="flex min-w-0 flex-col gap-1">
-            <mosaik-text [text]="'GitHub Actions usage'" [wrap]="true" [readonly]="true" />
-            <mosaik-text
-              [text]="presenter.githubActionsUsage()?.account | githubActionsAccountLabel"
-              [wrap]="true"
-              [readonly]="true"
-            />
-          </div>
+        <div class="flex min-w-0 items-center gap-1 pt-0.5">
+          <mosaik-text
+            part="settings-group-heading"
+            class="min-w-0 flex-1"
+            [mosaikTypography]="'subtitle2'"
+            [text]="'GitHub Actions usage'"
+          />
           <mosaik-button
             test-id="refresh-github-actions-usage"
-            [iconName]="'sync'"
+            [icon]="'sync'"
+            [iconSize]="'small'"
             [appearance]="'plain'"
             [variant]="'primary'"
             [isBusy]="presenter.continuousIntegrationUsageBusy()"
@@ -393,6 +501,12 @@
             (click)="presenter.refreshGitHubActionsUsageCommand.execute()"
           />
         </div>
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="presenter.githubActionsUsage()?.account | githubActionsAccountLabel"
+        />
         @if (presenter.continuousIntegrationUsageBusy()) {
         <mosaik-progress-bar
           test-id="github-actions-usage-loading"
@@ -400,83 +514,117 @@
           [variant]="'highlight'"
         />
         } @else if (presenter.githubActionsUsage()?.error; as usageError) {
-        <mosaik-banner
+        <mosaik-message
+          class="block w-full"
           test-id="github-actions-usage-error"
-          [isOpen]="true"
           [appearance]="'soft'"
           [variant]="'warning'"
-          [iconName]="'errorCircle'"
+          [fit]="'width'"
+          [icon]="'warning'"
           [iconSize]="'small'"
-        >
-          <mosaik-banner-header [text]="'GitHub Actions usage unavailable'" />
-          <mosaik-banner-sub-header [text]="usageError" />
-        </mosaik-banner>
+          [header]="'GitHub Actions usage unavailable'"
+          [content]="usageError"
+        />
         } @else if (presenter.githubActionsUsage()?.minutes; as minutes) {
-        <div class="flex min-w-0 flex-col gap-2" test-id="github-actions-usage">
-          <div class="flex min-w-0 justify-between gap-2">
-            <mosaik-text [text]="'Monthly usage'" [wrap]="true" [readonly]="true" />
+        <div
+          part="settings-group-rows"
+          class="flex min-w-0 flex-col"
+          test-id="github-actions-usage"
+        >
+          <symphony-settings-row [label]="'Monthly usage'">
             <mosaik-text
+              [mosaikTypography]="'subtitle2'"
               [text]="
                 minutes.remaining !== undefined
                   ? (minutes.remaining | number) + ' minutes remaining'
                   : (minutes.used | number) + ' minutes used'
               "
-              [wrap]="true"
-              [readonly]="true"
+            />
+          </symphony-settings-row>
+          @if (minutes.remainingPercent !== undefined) {
+          <div class="min-w-0 px-2 py-1.5">
+            <mosaik-progress-bar
+              test-id="github-actions-usage-progress"
+              [attr.aria-label]="'Remaining minutes, ' + minutes.remainingPercent + ' %'"
+              [min]="0"
+              [max]="100"
+              [value]="minutes.remainingPercent"
+              [variant]="(minutes.remaining === 0) | booleanVariant: 'danger' : 'primary'"
             />
           </div>
-          @if (minutes.remainingPercent !== undefined) {
-          <mosaik-progress-bar
-            test-id="github-actions-usage-progress"
-            [min]="0"
-            [max]="100"
-            [value]="minutes.remainingPercent"
-            [variant]="(minutes.remaining === 0) | booleanVariant: 'danger' : 'highlight'"
-          />
           }
-          <mosaik-cell-group test-id="github-actions-usage-details">
-            <mosaik-cell
-              [label]="'Used minutes'"
-              [subLabel]="minutes.used === undefined ? 'Unavailable' : ((minutes.used | number) ?? 'Unavailable')"
-            />
-            <mosaik-cell
-              [label]="'Included minutes'"
-              [subLabel]="minutes.included === undefined ? 'Unavailable' : ((minutes.included | number) ?? 'Unavailable')"
-            />
-            <mosaik-cell
-              [label]="'Remaining minutes'"
-              [subLabel]="minutes.remaining === undefined ? 'Unavailable' : ((minutes.remaining | number) ?? 'Unavailable')"
-            />
-          </mosaik-cell-group>
+          <div
+            class="grid min-w-0 grid-cols-3 gap-x-2 gap-y-1.5 px-2 py-1.5"
+            test-id="github-actions-usage-details"
+          >
+            <div class="flex min-w-0 flex-col gap-0.75">
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="'Used minutes'"
+              />
+              <mosaik-text
+                [mosaikTypography]="'subtitle2'"
+                [text]="minutes.used === undefined ? 'Unavailable' : ((minutes.used | number) ?? 'Unavailable')"
+              />
+            </div>
+            <div class="flex min-w-0 flex-col gap-0.75">
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="'Included minutes'"
+              />
+              <mosaik-text
+                [mosaikTypography]="'subtitle2'"
+                [text]="minutes.included === undefined ? 'Unavailable' : ((minutes.included | number) ?? 'Unavailable')"
+              />
+            </div>
+            <div class="flex min-w-0 flex-col gap-0.75">
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="'Remaining minutes'"
+              />
+              <mosaik-text
+                [mosaikTypography]="'subtitle2'"
+                [text]="minutes.remaining === undefined ? 'Unavailable' : ((minutes.remaining | number) ?? 'Unavailable')"
+              />
+            </div>
+          </div>
           @if (presenter.githubActionsUsage()?.period?.resetsAt; as resetsAt) {
-          <mosaik-text
-            [text]="'Resets ' + (resetsAt | date: 'medium')"
-            [wrap]="true"
-            [readonly]="true"
-          />
-          } @if (minutes.included === undefined) {
-          <mosaik-hint
-            [textOverflow]="'wrap'"
-            [text]="'GitHub reported usage, but the included allowance is not available for this plan.'"
-          />
+          <div class="min-w-0 px-2 py-1.5">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="'Resets ' + (resetsAt | date: 'mediumDate')"
+            />
+          </div>
           }
         </div>
-        } }
+        @if (minutes.included === undefined) {
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="'GitHub reported usage, but the included allowance is not available for this plan.'"
+        />
+        } } }
       </section>
       } }
     </div>
   </div>
 </ng-template>
 
-<ng-template mosaikDrawerFooter>
-  <div class="flex w-full min-w-0 flex-wrap justify-end gap-2">
+<ng-template mosaikDialogFooter>
+  <div class="flex w-full min-w-0 items-center gap-1">
+    <div class="flex-1"></div>
     <mosaik-button
       test-id="cancel-settings-editor"
       [label]="'Cancel'"
       [appearance]="'plain'"
       (click)="presenter.closeCommand.execute()"
     />
-
     <mosaik-button
       test-id="save-settings-editor"
       [label]="'Save'"
@@ -485,6 +633,23 @@
       [isBusy]="presenter.busy()"
       [disabled]="!presenter.canSave() || presenter.busy() || presenter.editorBusy()"
       (click)="presenter.saveCommand.execute()"
+    />
+  </div>
+</ng-template>
+
+<ng-template #sectionHeading let-heading let-description="description">
+  <div class="flex min-w-0 flex-col gap-0.5">
+    <mosaik-text
+      part="settings-group-heading"
+      [mosaikTypography]="'subtitle2'"
+      [wrap]="true"
+      [text]="heading"
+    />
+    <mosaik-text
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [wrap]="true"
+      [text]="description"
     />
   </div>
 </ng-template>

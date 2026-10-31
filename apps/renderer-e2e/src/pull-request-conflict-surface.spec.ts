@@ -39,7 +39,7 @@ test('surfaces a behind pull request, narrows it by base, and updates its branch
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     const workItemId = await page.evaluate(async (localPath) => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const settings = await api.request('settings.get', {});
@@ -134,7 +134,7 @@ test('surfaces a behind pull request, narrows it by base, and updates its branch
           ?.reload(),
       page.url(),
     );
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await expect
       .poll(
         () =>
@@ -157,7 +157,7 @@ test('surfaces a behind pull request, narrows it by base, and updates its branch
     await expect(page.getByTestId('task-create-pull-request')).toBeVisible();
     await page.getByTestId('task-create-pull-request').click();
     await expect(page.getByTestId('task-pull-request')).toBeVisible();
-    await page.getByTestId('task-drawer-header-close').click();
+    await page.getByTestId('navigate-back').click();
     await expect(page.getByTestId('task-drawer')).toHaveCount(0);
 
     // The delivered pull request is listed with its behind-base qualification.
@@ -170,7 +170,32 @@ test('surfaces a behind pull request, narrows it by base, and updates its branch
     const row = page.getByTestId(`pull-request-${pullRequestId}`);
     await expect(row).toBeVisible();
     await expect(row).toContainText('#142');
-    await expect(row).toContainText('Behind base');
+    await expect(page.getByTestId(`pull-request-merge-${pullRequestId}`)).toContainText(
+      'Behind base',
+    );
+    // The inspector of the selected pull request surfaces the base relationship with its fix.
+    await row.click();
+    const inspector = page.getByTestId('pull-request-inspector');
+    await expect(inspector).toBeVisible();
+    await expect(page.getByTestId('pull-request-behind-base')).toBeVisible();
+    await expect(page.getByTestId('pull-request-update-branch')).toHaveJSProperty(
+      'disabled',
+      false,
+    );
+
+    // A branch behind its base needs action, so the segment lists it and keeps the choice in the URL.
+    await expect(page.getByTestId('pull-requests-segment-needs-action')).toContainText(
+      'Needs action · 1',
+    );
+    await page.getByTestId('pull-requests-segment-needs-action').click();
+    await expect(page).toHaveURL(/view=needs-action/u);
+    await expect(row).toBeVisible();
+    await page.getByTestId('pull-requests-segment-drafts').click();
+    await expect(row).toHaveCount(0);
+    await expect(page.getByTestId('pull-requests-drafts-empty-state')).toBeVisible();
+    await page.getByTestId('pull-requests-segment-open').click();
+    await expect(page).not.toHaveURL(/view=/u);
+    await expect(row).toBeVisible();
     await page.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'pull-request-behind-base.png'),
@@ -216,7 +241,10 @@ test('surfaces a behind pull request, narrows it by base, and updates its branch
     await expect(updateBranch).toHaveJSProperty('disabled', false);
     await updateBranch.click();
     await expect(row).toBeVisible();
-    await expect(row).not.toContainText('Behind base');
+    await expect(page.getByTestId(`pull-request-merge-${pullRequestId}`)).not.toContainText(
+      'Behind base',
+    );
+    await expect(page.getByTestId('pull-request-behind-base')).toHaveCount(0);
     await row.click({ button: 'right' });
     await expect(updateBranch).toHaveJSProperty('disabled', true);
     await page.keyboard.press('Escape');

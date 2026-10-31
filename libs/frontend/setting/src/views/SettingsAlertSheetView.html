@@ -1,0 +1,53 @@
+<!-- The dialog renders these templates outside this view, so each declares what it reads. -->
+<ng-template mosaikDialogContent>
+  @let alert = presenter.alert; @let tone = alert.tone ?? (alert.destructive ? 'danger' :
+  'warning');
+  <div
+    role="alertdialog"
+    class="flex min-w-0 items-start gap-1.5"
+    [attr.test-id]="'settings-alert-' + alert.id"
+    [attr.aria-label]="alert.header"
+  >
+    <mosaik-icon
+      class="flex-none pt-[1px]"
+      aria-hidden="true"
+      [iconName]="tone | settingsAlertIcon"
+      [size]="'medium'"
+      [variant]="tone === 'info' ? 'neutral' : tone"
+    />
+    <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+      <mosaik-text
+        part="settings-group-heading"
+        [mosaikTypography]="'subtitle2'"
+        [wrap]="true"
+        [text]="alert.header"
+      />
+      <mosaik-text
+        [mosaikTypography]="'body2'"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="alert.message"
+      />
+    </div>
+  </div>
+</ng-template>
+<ng-template mosaikDialogFooter>
+  @let alert = presenter.alert;
+  <div class="flex w-full min-w-0 items-center justify-end gap-1">
+    @if (alert.cancelLabel) {
+    <mosaik-button
+      [attr.test-id]="'settings-alert-' + alert.id + '-cancel'"
+      [label]="alert.cancelLabel"
+      [appearance]="'outline'"
+      (click)="presenter.cancelCommand.execute()"
+    />
+    }
+    <mosaik-button
+      [attr.test-id]="'settings-alert-' + alert.id + '-confirm'"
+      [label]="alert.confirmLabel"
+      [appearance]="'solid'"
+      [variant]="alert.destructive ? 'danger' : 'primary'"
+      (click)="presenter.confirmCommand.execute()"
+    />
+  </div>
+</ng-template>

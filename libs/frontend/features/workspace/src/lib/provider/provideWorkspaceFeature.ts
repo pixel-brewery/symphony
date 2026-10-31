@@ -19,6 +19,7 @@ import { WORKSPACE_PATH_SELECTOR } from '../ports/WorkspacePathSelectorToken';
 import type { IWorkspaceSettingsContext } from '../ports/IWorkspaceSettingsContext';
 import { provideRepositoryRuntime } from './provideRepositoryRuntime';
 import { withWorkspaceSettings } from './withWorkspaceSettings';
+import { withWorkspaceNotifications } from './withWorkspaceNotifications';
 import { WorkspaceContext } from '../adapters/WorkspaceContext';
 
 // #endregion
@@ -61,6 +62,7 @@ export function provideWorkspaceFeature(): EnvironmentProviders {
         },
         { provide: WORKSPACE_OPERATIONS, useExisting: WorkspaceStore },
         { provide: WORKSPACE_SCOPE, useExisting: WorkspaceSelectionStore },
+        ...withWorkspaceNotifications().provide(),
       ],
       withWorkspaceSettings(),
     ),

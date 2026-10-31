@@ -1,266 +1,104 @@
-<mosaik-page
-  class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden"
-  test-id="arcade-view"
+<ng-template
+  symphonyWindowToolbar
+  [toolbarTitle]="'Arcade'"
+  [toolbarSubtitle]="presenter.games.length + ' games'"
 >
-  <mosaik-page-header
-    [text]="'Arcade'"
-    [subText]="'Choose a game.'"
-    [inset]="'all'"
-    test-id="arcade-header"
+  <mosaik-button
+    test-id="arcade-open-leaderboard"
+    [label]="'Leaderboard'"
+    [icon]="'checkCircle'"
+    [iconSize]="'small'"
+    [appearance]="'plain'"
+    (click)="presenter.showLeaderboardCommand.execute()"
   />
-  <mosaik-page-content
-    class="flex min-h-0 flex-1 flex-col overflow-auto"
-    [inset]="'all'"
-    test-id="arcade-gallery"
-  >
+</ng-template>
+
+<div
+  class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-auto"
+  test-id="arcade-view"
+  role="region"
+  aria-label="Arcade"
+>
+  <section class="flex flex-col gap-2.5 p-3.5" test-id="arcade-gallery">
+    <div class="flex flex-col gap-0.5">
+      <mosaik-text
+        role="heading"
+        aria-level="2"
+        test-id="arcade-header"
+        [mosaikTypography]="'headline5'"
+        [text]="'Choose a game'"
+      />
+      <mosaik-text
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="'A short break while your AI team works. Esc pauses a running game.'"
+      />
+    </div>
+
+    <!-- At most four equal columns as drawn; narrower windows wrap to fewer columns of at least
+         240px so a card never shrinks below its cover and Play button. -->
     <div
-      class="m-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-6"
+      role="list"
+      aria-label="Games"
       test-id="arcade-tiles"
+      class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,max(240px,calc((100%_-_48px)/4))),1fr))] gap-2"
     >
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-game-pitfall"
+      @for (game of presenter.games; track game.id) {
+      <mosaik-card
+        part="arcade-card"
+        role="listitem"
+        class="min-w-0"
+        [attr.test-id]="'arcade-game-' + game.id"
+        [elevation]="'none'"
       >
-        <mosaik-tile
-          test-id="arcade-play-pitfall"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.playPitfallCommand }"
-        >
-          <mosaik-image
-            class="absolute inset-0"
-            test-id="arcade-cover-pitfall"
-            [src]="'arcade/pitfall.webp'"
-            [alt]="''"
-            [width]="'100%'"
-            [height]="'100%'"
-            [fit]="'contain'"
-            [showFailed]="true"
-            [variant]="'neutral'"
-          />
-          <span class="sr-only">Play Pitfall!</span>
-        </mosaik-tile>
-      </div>
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-game-pitfall-ii"
-      >
-        <mosaik-tile
-          test-id="arcade-play-pitfall-ii"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.playPitfallIICommand }"
-        >
-          <mosaik-image
-            class="absolute inset-0"
-            test-id="arcade-cover-pitfall-ii"
-            [src]="'arcade/pitfall-ii.webp'"
-            [alt]="''"
-            [width]="'100%'"
-            [height]="'100%'"
-            [fit]="'contain'"
-            [showFailed]="true"
-            [variant]="'neutral'"
-          />
-          <span class="sr-only">Play Pitfall II: Lost Caverns</span>
-        </mosaik-tile>
-      </div>
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-game-breakout"
-      >
-        <mosaik-tile
-          test-id="arcade-play-breakout"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.playBreakoutCommand }"
-        >
-          <mosaik-image
-            class="absolute inset-0"
-            test-id="arcade-cover-breakout"
-            [src]="'arcade/breakout.webp'"
-            [alt]="''"
-            [width]="'100%'"
-            [height]="'100%'"
-            [fit]="'contain'"
-            [showFailed]="true"
-            [variant]="'neutral'"
-          />
-          <span class="sr-only">Play Breakout</span>
-        </mosaik-tile>
-      </div>
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-game-realsports-boxing"
-      >
-        <mosaik-tile
-          test-id="arcade-play-realsports-boxing"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.playRealSportsBoxingCommand }"
-        >
-          <mosaik-image
-            class="absolute inset-0"
-            test-id="arcade-cover-realsports-boxing"
-            [src]="'arcade/realsports-boxing.webp'"
-            [alt]="''"
-            [width]="'100%'"
-            [height]="'100%'"
-            [fit]="'contain'"
-            [showFailed]="true"
-            [variant]="'neutral'"
-          />
-          <span class="sr-only">Play RealSports Boxing</span>
-        </mosaik-tile>
-      </div>
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-game-jungle-hunt"
-      >
-        <mosaik-tile
-          test-id="arcade-play-jungle-hunt"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.playJungleHuntCommand }"
-        >
-          <mosaik-image
-            class="absolute inset-0"
-            test-id="arcade-cover-jungle-hunt"
-            [src]="'arcade/jungle-hunt.webp'"
-            [alt]="''"
-            [width]="'100%'"
-            [height]="'100%'"
-            [fit]="'contain'"
-            [showFailed]="true"
-            [variant]="'neutral'"
-          />
-          <span class="sr-only">Play Jungle Hunt</span>
-        </mosaik-tile>
-      </div>
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-game-pong"
-      >
-        <mosaik-tile
-          test-id="arcade-play-pong"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.playPongCommand }"
-        >
-          <mosaik-image
-            class="absolute inset-0"
-            test-id="arcade-cover-pong"
-            [src]="'arcade/pong.webp'"
-            [alt]="''"
-            [width]="'100%'"
-            [height]="'100%'"
-            [fit]="'contain'"
-            [showFailed]="true"
-            [variant]="'neutral'"
-          />
-          <span class="sr-only">Play Pong</span>
-        </mosaik-tile>
-      </div>
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-game-seaquest"
-      >
-        <mosaik-tile
-          test-id="arcade-play-seaquest"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.playSeaquestCommand }"
-        >
-          <mosaik-image
-            class="absolute inset-0"
-            test-id="arcade-cover-seaquest"
-            [src]="'arcade/seaquest.webp'"
-            [alt]="''"
-            [width]="'100%'"
-            [height]="'100%'"
-            [fit]="'contain'"
-            [showFailed]="true"
-            [variant]="'neutral'"
-          />
-          <span class="sr-only">Play Seaquest</span>
-        </mosaik-tile>
-      </div>
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-game-river-raid"
-      >
-        <mosaik-tile
-          test-id="arcade-play-river-raid"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.playRiverRaidCommand }"
-        >
-          <mosaik-image
-            class="absolute inset-0"
-            test-id="arcade-cover-river-raid"
-            [src]="'arcade/river-raid.webp'"
-            [alt]="''"
-            [width]="'100%'"
-            [height]="'100%'"
-            [fit]="'contain'"
-            [showFailed]="true"
-            [variant]="'neutral'"
-          />
-          <span class="sr-only">Play River Raid</span>
-        </mosaik-tile>
-      </div>
-      <div
-        class="aspect-[120/155] w-[calc(240px*120/155)] max-w-full shrink-0"
-        test-id="arcade-leaderboard"
-      >
-        <mosaik-tile
-          test-id="arcade-open-leaderboard"
-          [type]="'button'"
-          [fit]="'both'"
-          [appearance]="'outline'"
-          [variant]="'neutral'"
-          [elevation]="'none'"
-          [command]="{ click: presenter.showLeaderboardCommand }"
-        >
-          <div class="flex h-full w-full flex-col items-center justify-center gap-3 p-4">
-            <mosaik-icon aria-hidden="true" [icon]="'leaderboard'" [size]="'large'" />
-            <span [mosaikTypography]="'headline5'">Leaderboard</span>
-            <mosaik-text
-              [text]="
-                presenter.leaderboardEntries().length === 1
-                  ? '1 saved result'
-                  : presenter.leaderboardEntries().length + ' saved results'
-              "
-              [mosaikTypography]="'caption'"
-              [wrap]="true"
+        <div slot="content" class="flex min-w-0 flex-col gap-[14px] p-[14px]">
+          <div class="relative aspect-[16/10] w-full">
+            <mosaik-image
+              part="arcade-cover"
+              class="absolute inset-0"
+              [attr.test-id]="'arcade-cover-' + game.id"
+              [src]="game.cover"
+              [alt]="''"
+              [width]="'100%'"
+              [height]="'100%'"
+              [fit]="'contain'"
+              [showFailed]="true"
             />
           </div>
-        </mosaik-tile>
-      </div>
+          <div class="flex min-w-0 items-center gap-1">
+            <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+              <mosaik-text
+                [attr.test-id]="'arcade-title-' + game.id"
+                [mosaikTypography]="'subtitle2'"
+                [truncate]="true"
+                [text]="game.title"
+              />
+              <mosaik-text
+                [attr.test-id]="'arcade-players-' + game.id"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [truncate]="true"
+                [text]="
+                  game.minPlayers === game.maxPlayers
+                    ? game.maxPlayers + (game.maxPlayers === 1 ? ' player' : ' players')
+                    : game.minPlayers + '–' + game.maxPlayers + ' players'
+                "
+              />
+            </div>
+            <mosaik-button
+              class="flex-none"
+              [attr.test-id]="'arcade-play-' + game.id"
+              [attr.aria-label]="'Play ' + game.fullTitle"
+              [label]="'Play'"
+              [icon]="'play'"
+              [iconSize]="'small'"
+              [appearance]="'outline'"
+              (click)="game.play.execute()"
+            />
+          </div>
+        </div>
+      </mosaik-card>
+      }
     </div>
-  </mosaik-page-content>
-</mosaik-page>
+  </section>
+</div>

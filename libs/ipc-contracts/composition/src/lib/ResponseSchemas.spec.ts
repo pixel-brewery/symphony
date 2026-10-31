@@ -70,6 +70,7 @@ const expectedResponseMethods = [
   'verification.cancel',
   'ci.usage.get',
   'ci.runs.refresh',
+  'ci.runs.history.list',
   'ci.workflow.dispatch',
   'ci.workflow.local.run',
   'delivery.refresh',
@@ -116,6 +117,7 @@ const expectedResponseMethods = [
   'workflow.get',
   'workflow.decide',
   'workflow.answer',
+  'workflow.stage-changes.list',
   'skills.builtin.list',
   'skills.builtin.customize',
   'skills.get',
@@ -134,12 +136,12 @@ const expectedResponseMethods = [
 ];
 
 describe('ResponseSchemas compatibility', () => {
-  it('preserves all 113 method IDs in their existing response-catalog order', () => {
+  it('preserves all 115 method IDs in their existing response-catalog order', () => {
     // arrange
     // act
     const methods = Object.keys(responseSchemas);
     // assert
-    expect(methods).toHaveLength(113);
+    expect(methods).toHaveLength(115);
     expect(methods).toEqual(expectedResponseMethods);
   });
 

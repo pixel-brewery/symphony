@@ -13,7 +13,7 @@ import {
 import { ORCHESTRATION_CLIENT } from '@symphony/frontend-core';
 import { OrchestrationState } from '@symphony/frontend-core/testing/orchestration';
 import { NotificationService } from '@symphony/frontend-notification';
-import { SettingsHostSession } from '@symphony/frontend-setting';
+import { SettingsAlertService, SettingsHostSession } from '@symphony/frontend-setting';
 import type {
   ApplicationSettingsDto,
   IOrchestrationApi,
@@ -26,7 +26,6 @@ import { AUTOMATION_SETTINGS_CONTEXT } from '../ports/AutomationSettingsContextT
 import { AUTOMATION_PATH_SELECTOR } from '../ports/AutomationPathSelectorToken';
 import { provideAutomationFeature } from '../provider/provideAutomationFeature';
 import { AutomationPolicySettingsViewPresenter } from '../settings/AutomationPolicySettingsViewPresenter';
-import { StorageSafetySettingsViewPresenter } from '../settings/StorageSafetySettingsViewPresenter';
 import { AutomationSettingsStore } from './AutomationSettingsStore';
 
 // #endregion
@@ -58,6 +57,7 @@ function arrange(
       { provide: AUTOMATION_SETTINGS_CONTEXT, useValue: context },
       { provide: AUTOMATION_PATH_SELECTOR, useValue: paths },
       { provide: MessageBoxService, useValue: {} },
+      { provide: SettingsAlertService, useValue: { confirm: vi.fn(async () => true) } },
     ],
   });
   const store = TestBed.inject(AutomationSettingsStore);
@@ -71,7 +71,7 @@ describe('AutomationSettingsStore', () => {
   afterEach(() => TestBed.resetTestingModule());
   afterAll(() => TestBed.resetTestEnvironment());
 
-  it('shares one unsaved policy between real Automation and Storage cards and resets for a new route', () => {
+  it('shares one policy between mounted Automation sections and resets for a new route', () => {
     // arrange
     const client: IOrchestrationApi = {
       request: async () => {
@@ -90,6 +90,7 @@ describe('AutomationSettingsStore', () => {
           useValue: { showError: vi.fn(), showSuccess: vi.fn(), showWarning: vi.fn() },
         },
         { provide: MessageBoxService, useValue: {} },
+        { provide: SettingsAlertService, useValue: { confirm: vi.fn(async () => true) } },
       ],
     });
     const initial = settings();
@@ -99,22 +100,14 @@ describe('AutomationSettingsStore', () => {
     policy.runtime.update((runtime) => ({ ...runtime, workspaceRoot: '/unsaved/root' }));
 
     // act
-    const storage = TestBed.runInInjectionContext(() => new StorageSafetySettingsViewPresenter());
-    storage.updateRuntimeNumberCommand.execute([
-      'managedStorageLimitGiB',
-      { detail: { value: '83' } },
-    ]);
     const remounted = TestBed.runInInjectionContext(
       () => new AutomationPolicySettingsViewPresenter(),
     );
     TestBed.tick();
 
     // assert
-    expect(storage.runtime).toBe(policy.runtime);
-    expect(remounted.runtime()).toMatchObject({
-      workspaceRoot: '/unsaved/root',
-      managedStorageLimitGiB: 83,
-    });
+    expect(remounted.runtime).toBe(policy.runtime);
+    expect(remounted.runtime()).toMatchObject({ workspaceRoot: '/unsaved/root' });
     const store = TestBed.inject(AutomationSettingsStore);
     expect(store.workspaceRoot()).toBe('/unsaved/root');
     store.beginSession(new SettingsHostSession());
@@ -156,7 +149,8 @@ describe('AutomationSettingsStore', () => {
           provide: NotificationService,
           useValue: { showError: vi.fn(), showSuccess: vi.fn(), showWarning: vi.fn() },
         },
-        { provide: MessageBoxService, useValue: { show: showConfirmation } },
+        { provide: MessageBoxService, useValue: {} },
+        { provide: SettingsAlertService, useValue: { confirm: showConfirmation } },
       ],
     });
     TestBed.inject(OrchestrationState).settings.set(settings());
@@ -217,5 +211,60 @@ describe('AutomationSettingsStore', () => {
 
     // assert
     expect(store.runtime().workspaceRoot).toBe(authoritative()?.runtime.workspaceRoot);
+  });
+
+  it('applies a runtime change at once and saves only that change on the stored policy', async () => {
+    // arrange
+    const { store, authoritative, saveSettings } = arrange();
+    store.updateRuntimeNumberCommand.execute(['managedStorageLimitGiB', 83]);
+
+    // act
+    const saved = await store.applyRuntime({ maxParallelExecutions: 7 });
+
+    // assert
+    expect(saved).toBe(true);
+    expect(saveSettings).toHaveBeenCalledExactlyOnceWith({
+      ...authoritative(),
+      runtime: { ...authoritative()?.runtime, maxParallelExecutions: 7 },
+    });
+  });
+
+  it('restores the stored value when saving a change fails', async () => {
+    // arrange
+    const { store, authoritative, saveSettings } = arrange();
+    saveSettings.mockResolvedValue(false);
+
+    // act
+    const pending = store.applyAgenticDelivery((policy) => ({ ...policy, enabled: true }));
+    const shown = store.runtime().agenticDelivery.enabled;
+    const saved = await pending;
+
+    // assert
+    expect(shown).toBe(true);
+    expect(saved).toBe(false);
+    expect(store.runtime().agenticDelivery.enabled).toBe(
+      authoritative()?.runtime.agenticDelivery.enabled,
+    );
+  });
+
+  it('builds quick successive changes on each other', async () => {
+    // arrange
+    const { store, authoritative, saveSettings } = arrange();
+    saveSettings.mockImplementation(async (next) => {
+      authoritative.set(next);
+      return true;
+    });
+
+    // act
+    const first = store.applyAgenticDelivery((policy) => ({ ...policy, enabled: true }));
+    const second = store.applyAgenticDelivery((policy) => ({ ...policy, observeFailures: true }));
+    await Promise.all([first, second]);
+
+    // assert
+    expect(saveSettings).toHaveBeenCalledTimes(2);
+    expect(authoritative()?.runtime.agenticDelivery).toMatchObject({
+      enabled: true,
+      observeFailures: true,
+    });
   });
 });

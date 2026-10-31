@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+// A workspace row is a source-list button whose label leaves room for the short-code tile drawn
+// over its leading edge, with the name in the semibold subtitle weight as drawn.
+[part~='settings-workspace-row'] mosaik-button {
+  --button-padding-left: 36px;
+  --button-font-weight: 600;
+}

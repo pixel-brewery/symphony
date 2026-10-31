@@ -1,52 +1,32 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
-import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
-  CardComponent,
-  CardContentComponent,
-  CardHeaderComponent,
-  CellComponent,
-  HintComponent,
-  SkeletonComponent,
-  TextComponent,
-  ToggleSwitchComponent,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { DotComponent, SkeletonComponent } from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { HeadlineComponent } from '@symphony/frontend-ui';
-import { PowerSettingsCardViewPresenter } from '../view-presenters/PowerSettingsCardViewPresenter';
+import { SettingsGroupComponent, SettingsRowComponent } from '@symphony/frontend-setting';
 import { KeepAwakeDetailsPipe } from '../pipes/KeepAwakeDetailsPipe';
 import { KeepAwakeStatusLabelPipe } from '../pipes/KeepAwakeStatusLabelPipe';
+import { PowerSettingsCardViewPresenter } from '../view-presenters/PowerSettingsCardViewPresenter';
+import { KeepAwakeToggleView } from './KeepAwakeToggleView';
 
 // #endregion
 
 /**
- * The existing Sleep settings card, owned by the desktop interaction capability.
+ * System › `Sleep`, owned by the desktop interaction capability.
  *
  * @public
  */
 @Component({
   selector: 'symphony-power-settings-card',
-  host: { class: 'block' },
+  host: { class: 'flex min-w-0 flex-col' },
   imports: [
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
-    CardComponent,
-    CardContentComponent,
-    CardHeaderComponent,
-    CellComponent,
-    HeadlineComponent,
-    HintComponent,
+    DotComponent,
     KeepAwakeDetailsPipe,
     KeepAwakeStatusLabelPipe,
-    NgTemplateOutlet,
+    KeepAwakeToggleView,
+    SettingsGroupComponent,
+    SettingsRowComponent,
     SkeletonComponent,
-    TextComponent,
-    ToggleSwitchComponent,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: PowerSettingsCardViewPresenter }],
   templateUrl: './PowerSettingsCardView.html',

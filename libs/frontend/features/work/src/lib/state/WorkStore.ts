@@ -63,6 +63,8 @@ export class WorkStore implements IWorkOperations {
   private readonly _publicWorkItemsBusy: Signal<boolean>;
   private readonly _publicWorkItemCommentBusy = this._workItemCommentBusy.asReadonly();
   private readonly _publicIssueDraftBusy = this._issueDraftBusy.asReadonly();
+  private readonly _workItemMutationError = signal<string | undefined>(undefined);
+  private readonly _publicWorkItemMutationError = this._workItemMutationError.asReadonly();
   private readonly _selectedWorkItem: Signal<IWorkItem | undefined>;
 
   // #endregion
@@ -140,6 +142,14 @@ export class WorkStore implements IWorkOperations {
   /** Current feature-owned issueDraftBusy. @public @readonly */
   public get issueDraftBusy(): Signal<boolean> {
     return this._publicIssueDraftBusy;
+  }
+
+  /**
+   * Why the newest create or update was refused, so a form can show it beside the input it keeps;
+   * cleared when the next one starts. @public @readonly
+   */
+  public get workItemMutationError(): Signal<string | undefined> {
+    return this._publicWorkItemMutationError;
   }
 
   /** Current item selected in the authoritative snapshot. @public @readonly */
@@ -421,6 +431,7 @@ export class WorkStore implements IWorkOperations {
     message: string,
   ): Promise<IWorkItem | undefined> {
     this._workItemsBusy.set(true);
+    this._workItemMutationError.set(undefined);
     const overtakenRefresh = this.refreshStartedBeforeMutation();
     try {
       const updated = await this._client.request(method, payload);
@@ -431,6 +442,7 @@ export class WorkStore implements IWorkOperations {
       this._notifications.showSuccess(message);
       return updated;
     } catch (cause) {
+      this._workItemMutationError.set(operatorErrorMessage(cause));
       this.showError(cause, 'Unable to save the work item.');
       return undefined;
     } finally {

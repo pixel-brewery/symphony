@@ -65,4 +65,34 @@ describe('WorkflowResponseSchemas', () => {
       }),
     ).toThrow();
   });
+
+  it('carries the recorded stage changes and where they become complete', () => {
+    // arrange
+    const schema = responseSchemas['workflow.stage-changes.list'];
+
+    // act
+    const actual = schema.parse({
+      changes: [
+        {
+          workItemId: 'work-1',
+          fromStageId: 'acceptance',
+          toStageId: 'done',
+          changedAt: '2026-10-30T10:00:00.000Z',
+        },
+        { workItemId: 'work-1', toStageId: 'qualified', changedAt: '2026-10-20T10:00:00.000Z' },
+      ],
+      recordedSince: '2026-09-01T08:00:00.000Z',
+      truncated: false,
+    });
+
+    // assert
+    expect(actual.changes).toHaveLength(2);
+    expect(actual.recordedSince).toBe('2026-09-01T08:00:00.000Z');
+    expect(() =>
+      schema.parse({
+        changes: [{ workItemId: 'work-1', toStageId: '', changedAt: '2026-10-30T10:00:00Z' }],
+        truncated: false,
+      }),
+    ).toThrow();
+  });
 });

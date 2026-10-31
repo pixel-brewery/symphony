@@ -8,53 +8,48 @@ import {
   inject,
 } from '@angular/core';
 import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
-  DismissComponent,
-  DrawerContentDirective,
-  DrawerFooterDirective,
-  DrawerHeaderComponent,
-  DrawerHeaderDirective,
-  HintComponent,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
+  MessageComponent,
   SelectComponent,
   SelectItemComponent,
   SkeletonComponent,
   TextBoxComponent,
   TextComponent,
   ToggleSwitchComponent,
-  IconNameDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { HeadlineComponent } from '@symphony/frontend-ui';
+import { SettingsConditionalComponent, SettingsRowComponent } from '@symphony/frontend-setting';
 import { FeedbackSettingsEditorViewPresenter } from './FeedbackSettingsEditorViewPresenter';
+import { TeamsFeedbackValidationIssuesLabelPipe } from './TeamsFeedbackValidationIssuesLabelPipe';
 
 // #endregion
 
-/** The existing channel drawer rendered by its canonical feature owner. @public */
+/** The Microsoft Teams feedback intake sheet of the Settings window. @public */
 @Component({
   selector: 'symphony-feedback-settings-editor-view',
   host: { class: 'block' },
   imports: [
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
     ButtonComponent,
-    DismissComponent,
-    DrawerContentDirective,
-    DrawerFooterDirective,
-    DrawerHeaderComponent,
-    DrawerHeaderDirective,
-    HeadlineComponent,
-    HintComponent,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
+    MessageComponent,
     SelectComponent,
     SelectItemComponent,
+    SettingsConditionalComponent,
+    SettingsRowComponent,
     SkeletonComponent,
+    TeamsFeedbackValidationIssuesLabelPipe,
     TextBoxComponent,
     TextComponent,
     ToggleSwitchComponent,
-    IconNameDirective,
+    TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: FeedbackSettingsEditorViewPresenter }],
   templateUrl: './FeedbackSettingsEditorView.html',
@@ -70,7 +65,7 @@ export class FeedbackSettingsEditorView extends View<FeedbackSettingsEditorViewP
 
   // #region Ctor
 
-  /** Preserves the existing drawer's render scheduling after hydration. @public */
+  /** Preserves the sheet's render scheduling after hydration. @public */
   public constructor() {
     super();
     effect(() => {

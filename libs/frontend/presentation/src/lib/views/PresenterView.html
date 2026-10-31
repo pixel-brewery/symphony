@@ -1,520 +1,135 @@
-<ng-template #railToggle>
-  @if (presenter.executionAvailable || presenter.ciAvailable) {
-  <mosaik-button
-    class="flex-none"
-    test-id="toggle-rail"
-    [appearance]="'plain'"
-    [iconName]="presenter.isRailOpen() | booleanIcon: 'panelRightContract' : 'panelRight'"
-    [attr.aria-label]="presenter.isRailOpen() ? 'Close workspace rail' : 'Open workspace rail'"
-    [mosaikTooltip]="presenter.isRailOpen() ? 'Close workspace rail' : 'Open workspace rail'"
-    (click)="presenter.toggleRailCommand.execute()"
-  />
-  }
-</ng-template>
-
 <mosaik-app
   part="app"
   class="absolute inset-0 block h-dvh w-screen"
   [theme]="presenter.theme()"
   [hasNav]="false"
 >
-  <mosaik-app-header
-    part="header"
-    class="[app-region:drag] [-webkit-app-region:drag]"
-    *mosaikBreakpoint="let headerBreakpoint"
-  >
-    <!-- Leading: workspace scope and its related Settings destination share one menu. A bare
-         `mosaik-dropdown`, not a dropdown button - the avatar is the anchor and carries no button
-         chrome of its own. The element triggers on anchor click only, so the anchor also has to
-         answer the keyboard itself. -->
-    <div
-      slot="menu"
-      class="flex min-w-0 flex-none items-center [app-region:no-drag] [-webkit-app-region:no-drag] min-[60rem]:min-w-[7.5rem]"
-    >
-      @if (presenter.activeWorkspace(); as activeWorkspace) {
-      <!-- The picker carries no button chrome of its own: `appearance="plain"` and no caret leave
-           the avatar as the whole control. `mosaik-dropdown` would express that more directly, but
-           in this composition it reports `open` while closing its own panel again on the same
-           click, so the dropdown button - which is keyboard-operable and holds open - stays. -->
-      <mosaik-dropdown-button
-        #workspaceFilter
-        test-id="global-workspace-filter"
-        class="min-w-0"
-        [label]="''"
-        [appearance]="'plain'"
-        [caretVisible]="false"
-        [size]="'small'"
-        [dropDownPlacement]="'bottom-start'"
-        [dropDownMaxHeight]="'20rem'"
-        [attr.aria-label]="'Select workspace. Current selection: ' + activeWorkspace.displayName"
-        [mosaikTooltip]="activeWorkspace.displayName"
-      >
-        <mosaik-avatar
-          slot="icon"
-          test-id="global-workspace-avatar"
-          aria-hidden="true"
-          [text]="activeWorkspace.displayName"
-          [size]="'small'"
-          [appearance]="'soft'"
-          [variant]="'primary'"
-        />
-        <mosaik-menu>
-          @if (presenter.workspaceScopeAvailable) { @for (workspace of presenter.workspaces(); track
-          workspace.id) {
-          <mosaik-menu-item
-            force-close="true"
-            [attr.test-id]="'global-workspace-filter-' + workspace.id"
-            [label]="workspace.shortCode + ' · ' + workspace.displayName"
-            [isChecked]="activeWorkspace.id === workspace.id"
-            (click)="workspaceFilter.invoke('close'); presenter.selectWorkspaceCommand.execute(workspace.id)"
-          />
-          } } @if (presenter.workspaceMenuItems().length) { <mosaik-divider /> } @for (item of
-          presenter.workspaceMenuItems(); track item.key) { @if (!$first) {
-          <mosaik-divider [attr.test-id]="'workspace-menu-' + item.key + '-divider'" />
-          }
-          <mosaik-menu-item
-            force-close="true"
-            [attr.test-id]="'workspace-menu-' + item.key"
-            [label]="item.label"
-            [iconName]="item.icon"
-            (click)="workspaceFilter.invoke('close'); presenter.navigateToRouteCommand.execute(item.route)"
-          />
-          }
-        </mosaik-menu>
-      </mosaik-dropdown-button>
-      }
-    </div>
-
-    <!-- Centre: primary navigation. The `brand` slot maps to the toolbar's `[part='main']`. The
-         segment is taken out of that flex calculation and centred against the positioned toolbar
-         host itself, so expanding the trailing search cannot move the primary navigation.
-
-         Navigation hangs off `checked` because that is the only signal both activation paths share.
-         `SegmentElement` binds Enter and the arrow keys in a capture-phase keyboard controller that
-         calls `item.check()` and then `preventDefault()` plus `stopPropagation()`, so a keyboard
-         activation never becomes a click and never reaches the `routerLink` on the item host.
-
-         `checked` also fires when `routerLinkActive` writes `isChecked` back after some other
-         navigation - the global search, a deep link, browser back - which would re-navigate to the
-         bare route and drop its query parameters. The `isActive` guard breaks that loop.
-
-         `showScrollButtons` must be bound as a property: left on, the overflow affordance renders
-         Mosaik's own kebab-case icon names, which are not in Symphony's registry and resolve to
-         nothing. With it off the segment simply scrolls when the window is too narrow for it.
-
-         Mosaik's Toolbar host is positioned and spans the full header band. It is therefore the
-         containing block for this absolutely positioned slotted segment; `left: 50%` resolves
-         against the complete band rather than against the changing residual flex space. -->
-    <mosaik-segment
-      slot="brand"
-      class="absolute top-1/2 left-1/2 w-[40rem] max-w-full -translate-x-1/2 -translate-y-1/2 [app-region:no-drag] [-webkit-app-region:no-drag] max-[68rem]:w-[34rem] max-[60rem]:relative max-[60rem]:top-auto max-[60rem]:left-auto max-[60rem]:w-full max-[60rem]:min-w-0 max-[60rem]:translate-x-0 max-[60rem]:translate-y-0"
-      test-id="presenter-navigation"
-      [size]="'small'"
-      aria-label="Primary navigation"
-      [appearance]="'soft'"
-      [showScrollButtons]="false"
-      [class.hidden]="!headerBreakpoint('lt-md') && headerBreakpoint('lt-lg') && presenter.isSearchExpanded()"
-    >
-      @for (item of presenter.navigationItems(); track item.key) {
-      <mosaik-segment-item
-        class="max-[60rem]:min-w-0"
-        [attr.test-id]="'navigation-' + item.key"
-        [routerLink]="item.route"
-        routerLinkActive
-        #activeRoute="routerLinkActive"
-        [isChecked]="activeRoute.isActive"
-        [label]="headerBreakpoint('lt-md') ? '' : item.label"
-        [iconName]="headerBreakpoint('lt-md') ? item.icon : ''"
-        [attr.aria-label]="item.label"
-        [mosaikTooltip]="item.label"
-        [mosaikTooltipDisabled]="!headerBreakpoint('lt-md')"
-        (checked)="activeRoute.isActive || presenter.navigateToRouteCommand.execute(item.route)"
-      />
-      }
-    </mosaik-segment>
-
-    <!-- Trailing: transient update work, search, and the rail toggle stay in one non-overlapping
-         action group at the outer edge. -->
-    <div
-      slot="actions"
-      part="header-actions"
-      class="flex min-w-0 flex-none flex-row items-center justify-end gap-1 [app-region:no-drag] [-webkit-app-region:no-drag] min-[60rem]:min-w-[7.5rem]"
-    >
-      @if (presenter.updates.state(); as updateState) { @if (updateState.kind === 'available') {
-      <mosaik-button
-        class="flex-none"
-        test-id="download-available-update"
-        [iconName]="'download'"
-        [size]="'small'"
-        [appearance]="'solid'"
-        [variant]="'info'"
-        [disabled]="!presenter.downloadUpdateCommand.canExecute()"
-        [isBusy]="presenter.updates.busy()"
-        [attr.aria-label]="'Download update ' + updateState.targetVersion"
-        [mosaikTooltip]="
-          presenter.updates.busy()
-            ? 'Opening update ' + updateState.targetVersion + '…'
-            : 'Download update ' + updateState.targetVersion
-        "
-        [class.hidden]="headerBreakpoint('lt-md')"
-        (click)="presenter.downloadUpdateCommand.execute()"
-      />
-      } @else if (updateState.kind === 'ready') {
-      <mosaik-button
-        class="flex-none"
-        test-id="install-ready-update"
-        [iconName]="'download'"
-        [size]="'small'"
-        [appearance]="'solid'"
-        [variant]="'info'"
-        [disabled]="!presenter.installUpdateCommand.canExecute()"
-        [isBusy]="presenter.updates.busy()"
-        [attr.aria-label]="'Install update ' + updateState.targetVersion + ' and restart Symphony'"
-        [mosaikTooltip]="
-          presenter.updates.busy()
-            ? 'Installing update ' + updateState.targetVersion + '…'
-            : 'Install update ' + updateState.targetVersion + ' and restart Symphony'
-        "
-        [class.hidden]="headerBreakpoint('lt-md')"
-        (click)="presenter.installUpdateCommand.execute()"
-      />
-      } }
-
-      <!-- The launcher rests as a search button and becomes the search field on activation, the way
-           a macOS toolbar search does. The width transition between the two lives in
-           PresenterView.scss: it is host-local structure, and Tailwind's transition utilities are
-           not available for it. -->
-      @if (!headerBreakpoint('lt-md')) {
-      <div
-        part="search-launcher"
-        class="flex flex-none items-center justify-end"
-        [class.search-launcher--expanded]="presenter.isSearchExpanded()"
-        (focusout)="collapseSearchOnFocusLoss($event)"
-      >
-        @if (presenter.isSearchExpanded()) {
-        <mosaik-popup
-          class="block w-full min-w-0"
-          data-global-search-surface="popup"
-          [trigger]="'manual'"
-          [isOpen]="false"
-          [placement]="'bottom'"
-          [sync]="'width'"
-          [interactive]="true"
-          [flip]="false"
-          [shift]="false"
-          [trapFocus]="false"
-          [pressEscapeToClose]="false"
-          [clickOutsideToClose]="false"
-          [hasBackdrop]="false"
-        >
-          <mosaik-searchbox
-            #searchControl
-            test-id="global-search-launcher-input"
-            class="w-full min-w-0"
-            data-global-search-surface="control"
-            [placeholder]="'Search workspace…'"
-            [value]="presenter.searchQuery()"
-            [variant]="'primary'"
-            [mode]="'enter'"
-            [isClearable]="true"
-            (searched)="search($event)"
-            (cleared)="clearSearch()"
-            (keydown.escape)="collapseSearch()"
-          >
-            <!-- `@if`, not `[hidden]`: Mosaik's toggle button declares its own display, which wins
-                 over the user-agent rule behind the hidden attribute. -->
-            @if (presenter.voiceInputAvailable) {
-            <div slot="suffix" class="flex items-center">
-              <mosaik-toggle-button
-                test-id="voice-search"
-                [appearance]="'plain'"
-                [iconName]="'mic'"
-                [size]="'small'"
-                [iconSize]="'medium'"
-                [isChecked]="presenter.isVoiceInputActive()"
-                [attr.aria-label]="presenter.isVoiceInputActive() ? 'Stop voice input' : 'Start voice input'"
-                [mosaikTooltip]="presenter.isVoiceInputActive() ? 'Stop voice input' : 'Start voice input'"
-                (click)="presenter.toggleVoiceInputCommand.execute()"
-              />
-            </div>
-            }
-          </mosaik-searchbox>
-        </mosaik-popup>
-        } @else {
-        <mosaik-button
-          class="flex-none"
-          test-id="global-search-launcher"
-          [appearance]="'plain'"
-          [iconName]="'search'"
-          [attr.aria-label]="'Search workspace'"
-          [attr.aria-expanded]="false"
-          [mosaikTooltip]="'Search workspace'"
-          (click)="expandSearch()"
-        />
-        }
-      </div>
-      }
-
-      <ng-container [ngTemplateOutlet]="railToggle" />
-    </div>
-  </mosaik-app-header>
-
   <div
     slot="content"
-    part="content"
+    part="window"
     test-id="presenter-content"
     data-mosaik-tour-camera-surface
-    class="relative isolate flex h-full w-full overflow-hidden"
-    *mosaikBreakpoint="let bp"
+    class="relative isolate flex h-full min-h-0 w-full min-w-0 flex-col overflow-clip"
   >
-    @if (presenter.updates.state()?.currentVersion; as currentVersion) {
-    <mosaik-hint
-      class="pointer-events-none absolute bottom-1 left-1 z-20"
-      test-id="app-version-watermark"
-      [text]="'v' + currentVersion"
-      [textOverflow]="'truncate'"
-      [alignment]="'left'"
-    />
-    }
-
+    <!-- The sidebar is resizable: the hairline between it and the content is a split divider whose
+         position is remembered. A hidden sidebar collapses the start pane and the divider. -->
     <mosaik-split
-      symphonyPresenterRailSplit
-      test-id="presenter-rail-split"
-      class="h-full min-h-0 w-full min-w-0"
-      [collapsible]="true"
-      [orientation]="'horizontal'"
-      [position]="bp('lt-md') || !presenter.isRailOpen() ? '100%' : '75%'"
-      [snaps]="['50%', '75%']"
-      [min]="'50%'"
-      [max]="'75%'"
-      [thickness]="bp('lt-md') ? 0 : 1"
-      (splitReposition)="presenter.handleRailSplitRepositionCommand.execute($event)"
+      part="pane-split"
+      test-id="window-split"
+      class="min-h-0 flex-1"
+      symphonyPaneSize="window.sidebar"
+      [paneSize]="240"
+      [lock]="'start'"
+      [min]="presenter.isSidebarCollapsed() ? '0px' : '200px'"
+      [max]="presenter.isSidebarCollapsed() ? '0px' : '360px'"
+      [disabled]="presenter.isSidebarCollapsed()"
+      [style.--split-divider-width]="presenter.isSidebarCollapsed() ? '0px' : null"
     >
-      <div
-        slot="start"
-        class="relative isolate flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden"
-      >
-        <div
-          test-id="presenter-route-scroll"
-          part="route-scroll"
-          class="flex min-h-0 flex-1 flex-col overflow-auto"
-          [attr.aria-busy]="store.loading()"
-        >
-          <router-outlet />
-        </div>
+      <div slot="start" class="flex h-full min-h-0 min-w-0">
+        @if (!presenter.isSidebarCollapsed()) {
+        <symphony-window-sidebar class="flex min-h-0 w-full min-w-0" />
+        }
       </div>
 
-      @if (!bp('lt-md') && presenter.isRailOpen()) {
-      <aside
-        slot="end"
-        part="rail"
-        test-id="workspace-rail"
-        class="box-border flex h-full min-w-xs w-full flex-col overflow-hidden"
-      >
-        <ng-container [ngTemplateOutlet]="railContent" />
-      </aside>
-      }
-    </mosaik-split>
-
-    @if (presenter.isRailOpen() && bp('lt-md')) {
-    <mosaik-sheet
-      symphonyPresenterRailSheet
-      animate.enter="presenter-rail-sheet-enter"
-      animate.leave="presenter-rail-sheet-exit"
-      test-id="workspace-rail-sheet"
-      [width]="'100%'"
-      [style.--sheet-max-width]="'100%'"
-      [height]="'90dvh'"
-      [snaps]="['90dvh']"
-      [dragMode]="'handle'"
-      [isModal]="true"
-      [closeable]="true"
-      [hasBackdrop]="true"
-      [pressEscapeToClose]="true"
-      [clickOutsideToClose]="true"
-      (closeAttempted)="presenter.closeRailCommand.execute()"
-    >
-      <mosaik-sheet-content class="min-h-0">
-        <ng-container [ngTemplateOutlet]="railContent" />
-      </mosaik-sheet-content>
-    </mosaik-sheet>
-    }
-
-    <ng-template #railContent>
-      <div class="box-border flex h-full min-h-0 flex-1 flex-col gap-2 p-2">
-        <header test-id="rail-header" class="grid w-full flex-none gap-1 px-1 pt-1">
-          <div class="flex min-w-0 items-start justify-between gap-2">
-            <div class="grid min-w-0 gap-1">
-              <mosaik-text
-                role="heading"
-                aria-level="2"
-                [mosaikTypography]="'subtitle1'"
-                [text]="'Runs'"
-              />
-              <mosaik-text
-                class="min-w-0"
-                [mosaikTypography]="'caption'"
-                [text]="presenter.selectedRailView() === 'agent-runs' ? 'Follow Analyzer and Implementation runs.' : 'Follow GitHub Actions and local runner state.'"
-                [readonly]="true"
-                [wrap]="true"
-              />
-            </div>
-            @if (presenter.selectedRailView() === 'actions') {
-            <mosaik-button
-              class="flex-none"
-              test-id="refresh-rail-actions"
-              [iconName]="'sync'"
-              [appearance]="'outline'"
-              [isBusy]="store.continuousIntegrationRunsBusy()"
-              [attr.aria-label]="'Refresh Actions'"
-              (click)="presenter.refreshActionsCommand.execute()"
+      <div slot="end" part="window-content" class="flex h-full min-h-0 min-w-0 flex-col">
+        <!-- The unified toolbar is the window's title bar: back and forward, the screen's title
+             and subtitle, the screen's contextual actions and the search field that opens the
+             command palette. With the sidebar hidden it also reserves the macOS traffic lights and
+             offers `Show sidebar`. On Windows the native window buttons take the right edge. -->
+        <header
+          part="window-toolbar window-drag-region"
+          test-id="window-toolbar"
+          class="flex h-[52px] flex-none items-center gap-0.5 pr-[calc(12px+var(--window-controls-overlay-right,0px))] pl-1.5"
+          [style.padding-left.px]="presenter.isSidebarCollapsed() && isMacOS ? 80 : null"
+        >
+          @if (presenter.isSidebarCollapsed()) {
+          <mosaik-button
+            test-id="show-sidebar"
+            [iconName]="'panelLeft'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [attr.aria-label]="'Show sidebar'"
+            [mosaikTooltip]="'Show sidebar'"
+            (click)="presenter.toggleSidebarCommand.execute()"
+          />
+          }
+          <mosaik-button
+            test-id="navigate-back"
+            [iconName]="'chevronLeft'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [disabled]="!presenter.canGoBack()"
+            [attr.aria-label]="'Back'"
+            [mosaikTooltip]="'Back'"
+            (click)="presenter.goBackCommand.execute()"
+          />
+          <mosaik-button
+            test-id="navigate-forward"
+            [iconName]="'chevronRight'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [disabled]="!presenter.canGoForward()"
+            [attr.aria-label]="'Forward'"
+            [mosaikTooltip]="'Forward'"
+            (click)="presenter.goForwardCommand.execute()"
+          />
+          <div class="flex min-w-0 flex-1 flex-col pl-[6px]" test-id="window-title">
+            <mosaik-text
+              role="heading"
+              aria-level="1"
+              test-id="window-title-text"
+              [mosaikTypography]="'subtitle2'"
+              [truncate]="true"
+              [text]="toolbar.title() || presenter.activeNavigationLabel()"
+            />
+            @if (toolbar.subtitle()) {
+            <mosaik-text
+              test-id="window-subtitle"
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="toolbar.subtitle()"
             />
             }
           </div>
-          <mosaik-segment class="mt-2 w-full" test-id="rail-run-segment" [appearance]="'soft'">
-            @if (presenter.executionAvailable) {
-            <mosaik-segment-item
-              test-id="rail-run-segment-agent-runs"
-              [label]="'Agent Runs'"
-              [isChecked]="presenter.selectedRailView() === 'agent-runs'"
-              (checked)="presenter.selectRailViewCommand.execute('agent-runs')"
-            />
-            } @if (presenter.ciAvailable) {
-            <mosaik-segment-item
-              test-id="rail-run-segment-actions"
-              [label]="'Actions'"
-              [isChecked]="presenter.selectedRailView() === 'actions'"
-              (checked)="presenter.selectRailViewCommand.execute('actions')"
-            />
-            }
-          </mosaik-segment>
+          @if (toolbar.actions(); as actions) {
+          <div
+            part="window-no-drag"
+            test-id="window-toolbar-actions"
+            class="flex flex-none items-center gap-0.5"
+          >
+            <ng-container [ngTemplateOutlet]="actions" />
+          </div>
+          }
+          <mosaik-searchbox
+            test-id="global-search-launcher"
+            class="ml-1 w-[220px] flex-none"
+            [placeholder]="isMacOS ? 'Search  ⌘K' : 'Search  Ctrl+K'"
+            [value]="''"
+            [mode]="'enter'"
+            [attr.aria-label]="'Search work items, pull requests and commands'"
+            [attr.aria-haspopup]="'dialog'"
+            (focusin)="openPalette($event)"
+            (pointerdown)="openPalette($event)"
+            (keydown)="openPaletteWithText($event)"
+          />
         </header>
 
-        @if (presenter.selectedRailView() === 'actions' && presenter.showActionsRemoteDataNotice()
-        && presenter.actionsRemoteData(); as remoteData) {
-        <mosaik-banner
-          test-id="rail-actions-stale-data"
-          [isOpen]="true"
-          [appearance]="'soft'"
-          [variant]="'warning'"
-          [iconName]="'errorCircle'"
-          [iconSize]="'small'"
+        <main
+          test-id="presenter-route-scroll"
+          part="route-scroll"
+          class="relative flex min-h-0 flex-1 flex-col overflow-auto"
+          [attr.aria-busy]="store.loading()"
         >
-          <mosaik-banner-header
-            [text]="remoteData.reason === 'rate-limited'
-              ? 'GitHub request limit reached'
-              : remoteData.state === 'stale'
-                ? 'Actions update paused'
-                : 'Actions are temporarily unavailable'"
-          />
-          <mosaik-banner-sub-header
-            [text]="remoteData.state === 'stale'
-              ? 'Actions were last updated ' + (remoteData.lastSuccessfulRefreshAt | date: 'medium') + '. ' +
-                (remoteData.reason === 'rate-limited'
-                  ? remoteData.retryAt
-                    ? 'Try again after ' + (remoteData.retryAt | date: 'medium') + '.'
-                    : 'Use Refresh later to try again.'
-                  : 'Use Refresh to try again.')
-              : remoteData.reason === 'rate-limited'
-                ? remoteData.retryAt
-                  ? 'Try again after ' + (remoteData.retryAt | date: 'medium') + '.'
-                  : 'Use Refresh later to try again.'
-                : 'GitHub could not refresh Actions. Use Refresh to try again.'"
-          />
-        </mosaik-banner>
-        }
-
-        <div
-          class="block min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
-          test-id="rail-run-scroll"
-          role="region"
-          aria-label="Runs"
-        >
-          <mosaik-list
-            class="flex min-h-full h-auto w-full overflow-visible"
-            test-id="rail-run-list"
-            style="--list-background-color: var(--mosaik-scheme-transparent)"
-          >
-            @for (run of presenter.visibleRailRuns(); track run.id) {
-            <mosaik-list-item
-              [value]="run"
-              [attr.test-id]="'rail-run-' + run.id"
-              (click)="presenter.openRailRunCommand.execute(run)"
-            >
-              @if (run.active) {
-              <span
-                slot="prefix"
-                class="inline-flex h-3 w-3 flex-none items-center justify-center"
-                [attr.test-id]="'rail-run-progress-' + run.id"
-                [attr.aria-label]="'Run in progress'"
-              >
-                <mosaik-progress-ring
-                  [isIndeterminate]="true"
-                  [variant]="'neutral'"
-                  [radius]="8"
-                  [thickness]="2"
-                />
-              </span>
-              } @else {
-              <mosaik-icon
-                slot="prefix"
-                [icon]="(run.state | railRunStatePresentation).icon"
-                [appearance]="'soft'"
-                [size]="'tiny'"
-                [variant]="(run.state | railRunStatePresentation).variant"
-              />
-              }
-              <div class="flex w-full min-w-0 items-start gap-2">
-                <div class="grid min-w-0 flex-1 gap-1 overflow-hidden">
-                  <strong class="overflow-hidden text-ellipsis whitespace-nowrap"
-                    >{{ run.title }}</strong
-                  >
-                  <span class="overflow-hidden text-ellipsis whitespace-nowrap"
-                    >{{ run.message | compactText: 'Run in progress' }}</span
-                  >
-                  <small class="flex flex-wrap gap-x-1 gap-y-1">
-                    @if (run.sources?.length) { @for (source of run.sources; track source.kind) {
-                    <span [attr.test-id]="'rail-run-source-' + run.id + '-' + source.kind"
-                      >{{ source.label }} · {{ source.state | actionStateLabel }}</span
-                    >
-                    } } @else {
-                    <span>{{ run.statusLabel }} · {{ run.sourceLabel }}</span>
-                    } @if (run.finishedAt ?? run.startedAt; as timestamp) {
-                    <span>
-                      ·
-                      <time
-                        [attr.test-id]="'rail-run-timestamp-' + run.id"
-                        [attr.datetime]="timestamp"
-                        >{{ timestamp | date: 'medium' }}</time
-                      >
-                    </span>
-                    }
-                  </small>
-                </div>
-                @if (run.queueEntryId) {
-                <mosaik-button
-                  class="flex-none"
-                  [attr.test-id]="'rail-run-dequeue-' + run.id"
-                  [iconName]="'clear'"
-                  [appearance]="'plain'"
-                  [variant]="'danger'"
-                  [size]="'small'"
-                  [attr.aria-label]="'Remove ' + run.title + ' from the queue'"
-                  [mosaikTooltip]="'Remove from the queue'"
-                  (click)="presenter.removeQueuedRunCommand.execute([run, $event])"
-                />
-                }
-              </div>
-            </mosaik-list-item>
-            } @empty {
-            <div class="p-3">
-              {{ presenter.selectedRailView() === 'agent-runs' ? 'No Agent Runs yet.' : 'No Actions
-              yet.' }}
-            </div>
-            }
-          </mosaik-list>
-        </div>
+          <router-outlet />
+        </main>
       </div>
-    </ng-template>
+    </mosaik-split>
+
+    <symphony-window-status-bar class="flex flex-none" />
+
+    @if (palette.isOpen()) {
+    <symphony-command-palette />
+    }
   </div>
 </mosaik-app>

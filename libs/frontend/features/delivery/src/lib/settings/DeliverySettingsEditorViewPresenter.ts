@@ -9,9 +9,9 @@ import {
   signal,
 } from '@angular/core';
 import {
-  DRAWER_REF,
-  DRAWER_REF_DATA,
-  type IDrawerRef,
+  DIALOG_REF,
+  DIALOG_REF_DATA,
+  type IDialogRef,
 } from '@pixel-brewery/mosaik-elements-angular';
 import type { ICiWorkflow } from '@symphony/domain-ci';
 import { deliveryTargetSchema, orbitCelestialBodySchema } from '@symphony/configuration-delivery';
@@ -27,6 +27,7 @@ import { DELIVERY_SETTINGS_CONFIGURATION } from '../ports/DeliverySettingsConfig
 import { DELIVERY_SETTINGS_CLIENT } from '../ports/DeliverySettingsClientToken';
 import { DELIVERY_CI_OPERATIONS } from '../ports/DeliveryCiOperationsToken';
 import type { DeliverySettingsEditorRequest } from './DeliverySettingsEditorRequest';
+import type { RepositoryValidationIssue } from './RepositoryValidationIssue';
 
 // #endregion
 
@@ -44,12 +45,12 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
   private readonly _configuration = inject(DELIVERY_SETTINGS_CONFIGURATION);
   private readonly _ci = inject(DELIVERY_CI_OPERATIONS);
   private readonly _client = inject(DELIVERY_SETTINGS_CLIENT);
-  private readonly _drawerRef = inject(DRAWER_REF) as IDrawerRef<
+  private readonly _dialogRef = inject(DIALOG_REF) as IDialogRef<
     DeliverySettingsEditorRequest,
     ISettingsEditorResult
   >;
   /** The validated Delivery-specific editor request. @public @readonly */
-  public readonly data = inject<DeliverySettingsEditorRequest>(DRAWER_REF_DATA);
+  public readonly data = inject<DeliverySettingsEditorRequest>(DIALOG_REF_DATA);
   /** Shared exclusion from the existing single settings writer. @public @readonly */
   public readonly editorBusy = this._context.editorBusy;
   /** Whether the CI contribution is included in this product. @public @readonly */
@@ -126,6 +127,22 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
       )
     );
   });
+  /**
+   * The project's other destinations, drawn on the rings of the destination sheet's orbit preview.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly orbitPreviewDestinations = computed(() => {
+    const data = this.data;
+    if (data.kind !== 'delivery-target') return [];
+    return (this._context.settings()?.deliveryTargets ?? []).filter(
+      (target) =>
+        target.id !== data.targetId &&
+        target.workspaceId === data.workspaceId &&
+        target.repositoryBindingId === data.repositoryBindingId,
+    );
+  });
   /** Reads the existing repository-inspection contract; never dispatches a workflow. @public */
   public readonly refreshDeliveryWorkflowsCommand = new Command<void>(
     () => void this.refreshDeliveryWorkflows(),
@@ -164,6 +181,9 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
     () => void this.onExecuteCloseCommand(),
   );
   private readonly _canSave = this.createDraftProjection(() => this.resolveCanSave());
+  private readonly _repositoryValidationIssues = this.createDraftProjection(() =>
+    this.resolveRepositoryValidationIssues(),
+  );
   private readonly _eventText = computed(() => (event: unknown) => this.resolveEventText(event));
   private readonly _updateRepositoryGitProtocolCommand: Command<unknown> = new Command(
     (event) => void this.onExecuteUpdateRepositoryGitProtocolCommand(event),
@@ -214,6 +234,16 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
    */
   public get canSave() {
     return this._canSave;
+  }
+  /**
+   * The required repository details that are still empty, in form order; `Save` stays disabled
+   * while there is one.
+   *
+   * @public
+   * @readonly
+   */
+  public get repositoryValidationIssues() {
+    return this._repositoryValidationIssues;
   }
   /**
    * The eventText projection.
@@ -297,11 +327,20 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
       this.busy.set(false);
     }
   }
-  /** Preserves the existing destination-only validation gate. @private */
+  /** Gates `Save` on a valid destination or a repository with every required detail. @private */
   private resolveCanSave(): boolean {
     if (this.kind === 'delivery-target')
       return Boolean(this.resolveDeliveryTarget()) && !this.duplicateDeliveryTarget();
-    return true;
+    return this.resolveRepositoryValidationIssues().length === 0;
+  }
+  /** The required repository details that are still empty. @private */
+  private resolveRepositoryValidationIssues(): readonly RepositoryValidationIssue[] {
+    if (this.kind !== 'repository') return [];
+    return [
+      ...(!this.repository.displayName.trim() ? (['display-name'] as const) : []),
+      ...(!this.repository.owner.trim() ? (['owner'] as const) : []),
+      ...(!this.repository.name.trim() ? (['name'] as const) : []),
+    ];
   }
   /** Rebuilds the two drafts after the authoritative configuration is loaded. @private */
   private async hydrateConfiguration(): Promise<void> {
@@ -335,7 +374,7 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
    * @private
    */
   private onExecuteCloseCommand(): void {
-    this._drawerRef.close();
+    this._dialogRef.close();
   }
   /**
    * Returns the event text.
@@ -399,7 +438,7 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
         deliveryTargets: upsert(current.deliveryTargets, target),
       })
     )
-      this._drawerRef.close();
+      this._dialogRef.close();
   }
   /** @private */
   private resolveDeliveryTarget(): Settings['deliveryTargets'][number] | undefined {
@@ -565,10 +604,10 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
         gitProtocol: connection.gitProtocol,
       });
     }
-    this._drawerRef.close();
+    this._dialogRef.close();
   }
   /**
-   * Creates a computed projection that also follows mutable drawer draft changes.
+   * Creates a computed projection that also follows mutable sheet draft changes.
    *
    * @param resolve - Resolves the current projection value.
    * @private
@@ -580,7 +619,7 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
     });
   }
   /**
-   * Tracks assignments to a mutable drawer draft as a reactive revision.
+   * Tracks assignments to a mutable sheet draft as a reactive revision.
    *
    * @param draft - Draft to track.
    * @private

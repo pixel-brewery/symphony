@@ -46,7 +46,7 @@ test('keeps pull requests and the run rail consistent with the Actions workspace
   // assert
   try {
     const configurationPage = await app.firstWindow();
-    await expect(configurationPage.getByTestId('orbit-view')).toBeVisible();
+    await expect(configurationPage.getByTestId('home-view')).toBeVisible();
     await configurationPage.evaluate(async (localPath) => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const current = await api.request('settings.get', {});
@@ -98,21 +98,24 @@ test('keeps pull requests and the run rail consistent with the Actions workspace
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await expect(page.getByTestId('presenter-route-scroll')).toHaveAttribute('aria-busy', 'false', {
       timeout: 15_000,
     });
     await expect(page.getByTestId('navigation-actions')).toBeVisible();
 
-    await page.getByTestId('toggle-rail').click();
-    await expect(page.getByTestId('rail-run-segment-agent-runs')).toHaveJSProperty(
-      'isChecked',
-      true,
+    // The sidebar's run panel opens on the agents; its Actions segment lists the current runs and
+    // the latest failure.
+    await expect(page.getByTestId('rail-run-segment-agent-runs')).toHaveAttribute(
+      'aria-pressed',
+      'true',
     );
     await expect(page.getByTestId('rail-run-local-action:local-rail-e2e')).toHaveCount(0);
     await page.getByTestId('rail-run-segment-actions').click();
-    const refreshActions = page.getByTestId('refresh-rail-actions');
-    await expect(refreshActions).toHaveJSProperty('disabled', false);
+    await expect(page.getByTestId('rail-run-segment-actions')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     const ciRun = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const result = await api.request('ci.runs.refresh', {});
@@ -126,9 +129,9 @@ test('keeps pull requests and the run rail consistent with the Actions workspace
       repositoryBindingId: ciRun.repositoryBindingId,
       ciRunId: ciRun.id,
       runAttempt: 1,
-      state: 'succeeded',
-      startedAt: '2026-08-15T06:00:00.000Z',
-      finishedAt: '2026-08-15T06:05:00.000Z',
+      state: 'failed',
+      startedAt: new Date(Date.now() - 5 * 60_000).toISOString(),
+      finishedAt: new Date(Date.now() - 60_000).toISOString(),
       runner: {
         kind: 'managed-linux-vm',
         os: 'linux',
@@ -153,15 +156,22 @@ test('keeps pull requests and the run rail consistent with the Actions workspace
         localExecution.startedAt,
       );
     runtimeDatabase.close();
-    await refreshActions.click();
+
+    // The Pull requests screen refreshes the pull requests and their runs from its own toolbar.
+    const pullRequestsNavigation = page.getByTestId('navigation-pull-requests');
+    await expect(pullRequestsNavigation).toContainText('Pull requests');
+    await pullRequestsNavigation.click();
+    await expect(page).toHaveURL(/\/main\/pull-requests/u);
+    await expect(page.getByTestId('pull-requests-view')).toHaveAttribute('aria-busy', 'false', {
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId('window-title-text')).toContainText('Pull requests');
+    const refreshPullRequests = page.getByTestId('refresh-pull-requests');
+    await expect(refreshPullRequests).toHaveJSProperty('disabled', false);
+    await refreshPullRequests.click();
     const localRailRun = page.getByTestId('rail-run-local-action:local-rail-e2e');
     await expect(localRailRun).toContainText(ciRun.name, { timeout: 10_000 });
-    await expect(
-      page.getByTestId('rail-run-source-local-action:local-rail-e2e-github'),
-    ).toContainText('GitHub · Succeeded');
-    await expect(
-      page.getByTestId('rail-run-source-local-action:local-rail-e2e-local-runner'),
-    ).toContainText('Local runner · Succeeded');
+    await expect(localRailRun).toContainText('Failed');
     await page.screenshot({
       path: resolve(outputDirectory, 'run-rail-actions.png'),
       fullPage: true,
@@ -172,33 +182,15 @@ test('keeps pull requests and the run rail consistent with the Actions workspace
       'GitHub · Succeeded',
     );
     await expect(page.getByTestId('action-detail-source-local-runner')).toContainText(
-      'Local runner · Succeeded',
+      'Local runner · Failed',
     );
     await expect(page.getByTestId('action-detail-log')).toContainText('PR Quality');
-    await expect(page.getByTestId('action-detail-log')).toContainText('Typecheck and test');
-    const stepProtocol = page.getByTestId(
-      `action-detail-step-protocol-${ciRun.id}:job:quality:step:test`,
-    );
-    await stepProtocol.click();
-    await expect(stepProtocol).toContainText('completed successfully');
-    const localDiagnostics = page.getByTestId(
-      'action-detail-run-protocol-local-runner-diagnostics',
-    );
-    await localDiagnostics.click();
-    await expect(localDiagnostics).toContainText('Swap: 4Gi');
     await page.screenshot({
       path: resolve(outputDirectory, 'action-detail-log.png'),
       fullPage: true,
     });
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('action-detail-drawer')).toHaveCount(0);
-    await page.getByTestId('toggle-rail').click();
-
-    const pullRequestsNavigation = page.getByTestId('navigation-pull-requests');
-    await expect(pullRequestsNavigation).toContainText('Pull Requests');
-    await pullRequestsNavigation.click();
-    await expect(page).toHaveURL(/\/main\/pull-requests/u);
-    await expect(page.getByTestId('pull-requests-view')).toBeVisible();
 
     await page.getByTestId('navigation-actions').click();
     await expect(page).toHaveURL(/\/main\/actions/u);

@@ -1,0 +1,8 @@
+<mosaik-toggle-switch
+  test-id="arcade-enabled-toggle"
+  [variant]="'primary'"
+  [isChecked]="presenter.enabled.value()"
+  [attr.aria-label]="'Show Arcade'"
+  (checked)="presenter.setEnabledCommand.execute(true)"
+  (unchecked)="presenter.setEnabledCommand.execute(false)"
+/>

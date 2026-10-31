@@ -19,8 +19,12 @@
     "@angular/forms": "22.2.3",
     "@angular/router": "22.2.3",
     "@pixel-brewery/mosaik-elements-angular": "0.1.183",
+    "@symphony/configuration-composition": "workspace:*",
+    "@symphony/domain-ci": "workspace:*",
     "@symphony/domain-delivery": "workspace:*",
+    "@symphony/domain-execution": "workspace:*",
     "@symphony/domain-platform": "workspace:*",
+    "@symphony/domain-team": "workspace:*",
     "@symphony/domain-work": "workspace:*",
     "@symphony/domain-workflow": "workspace:*",
     "@symphony/domain-workspace": "workspace:*",
@@ -28,16 +32,14 @@
     "@symphony/frontend-notification": "workspace:*",
     "@symphony/frontend-search": "workspace:*",
     "@symphony/frontend-ui": "workspace:*",
-    "@symphony/frontend-widget": "workspace:*",
-    "@symphony/ipc-contracts-composition": "workspace:*"
+    "@symphony/ipc-contracts-composition": "workspace:*",
+    "rxjs": "7.8.2"
   },
   "devDependencies": {
     "@angular/compiler": "22.2.3",
     "@angular/platform-browser": "22.2.3",
-    "@symphony/configuration-composition": "workspace:*",
     "@symphony/frontend-feature-delivery": "workspace:*",
     "@symphony/frontend-feature-work": "workspace:*",
-    "rxjs": "7.8.2",
     "vitest": "5.0.5"
   }
 }

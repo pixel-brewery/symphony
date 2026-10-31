@@ -1,10 +1,13 @@
 export { workRoutes } from './lib/board/routing/WorkRoutes';
 export * from './lib/board/view-presenters/BoardViewPresenter';
-export * from './lib/board/view-presenters/TaskDialogData';
 export * from './lib/board/views/BoardView';
-export * from './lib/board/views/dialogs/TaskDialogView';
+export * from './lib/board/views/WorkItemView';
+export * from './lib/board/views/dialogs/NewWorkItemSheetView';
 export * from './lib/board/view-presenters/WorkflowInputMode';
-export * from './lib/board/view-presenters/TaskDialogViewPresenter';
+export * from './lib/board/view-presenters/WorkItemViewPresenter';
+export * from './lib/board/view-presenters/NewWorkItemSheetViewPresenter';
+export { NewWorkItemSheet } from './lib/board/services/NewWorkItemSheet';
+export type { INewWorkItemSheetOptions } from './lib/board/services/INewWorkItemSheetOptions';
 export { withWorkNavigation } from './lib/provider/withWorkNavigation';
 export { provideWorkFeature } from './lib/provider/provideWorkFeature';
 export { WorkStore } from './lib/state/WorkStore';

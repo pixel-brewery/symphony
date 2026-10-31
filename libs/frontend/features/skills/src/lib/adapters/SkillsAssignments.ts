@@ -1,11 +1,11 @@
 // #region Imports
 
 import { Inject, inject, Injectable } from '@angular/core';
-import type { IAgentPhaseAssignment } from '@symphony/domain-team';
 import { ConfigurationStore } from '@symphony/frontend-core/configuration';
 import type { BuiltinSkillDto } from '@symphony/ipc-contracts-skills';
 import type { ISkillsAssignments } from '../ports/ISkillsAssignments';
 import type { ISkillsClient } from '../ports/ISkillsClient';
+import type { ISkillsTeamAssignments } from '../ports/ISkillsTeamAssignments';
 import { SKILLS_CLIENT } from '../ports/SkillsClientToken';
 
 // #endregion
@@ -45,25 +45,29 @@ export class SkillsAssignments implements ISkillsAssignments {
   // #region Methods
 
   /**
-   * Persists one team's assignments while preserving all other configuration sections.
+   * Persists the assignments of one or more teams in one settings write while preserving all other
+   * configuration sections.
    *
-   * @param teamId - Team selected by the feature context.
-   * @param assignments - Updated role assignments.
-   * @returns Whether aggregate validation and persistence succeeded.
+   * @param changes - Each changed team with its complete updated role assignments.
+   * @returns Whether aggregate validation and persistence succeeded; `false` without a write when
+   * nothing changes or a team is unknown.
    * @public
    */
-  public saveAssignments(
-    teamId: string,
-    assignments: readonly IAgentPhaseAssignment[],
-  ): Promise<boolean> {
+  public saveAssignments(changes: readonly ISkillsTeamAssignments[]): Promise<boolean> {
     const current = this._configuration.settings();
-    if (!current || !current.agentTeams.some((team) => team.id === teamId))
+    if (
+      !current ||
+      !changes.length ||
+      !changes.every((change) => current.agentTeams.some((team) => team.id === change.teamId))
+    )
       return Promise.resolve(false);
+    const byTeam = new Map(changes.map((change) => [change.teamId, change.assignments]));
     return this._configuration.saveSettings(
       {
         ...current,
-        agentTeams: current.agentTeams.map((team) =>
-          team.id === teamId
+        agentTeams: current.agentTeams.map((team) => {
+          const assignments = byTeam.get(team.id);
+          return assignments
             ? {
                 ...team,
                 assignments: assignments.map((assignment) => ({
@@ -71,8 +75,8 @@ export class SkillsAssignments implements ISkillsAssignments {
                   fallbackAgentIds: [...assignment.fallbackAgentIds],
                 })),
               }
-            : team,
-        ),
+            : team;
+        }),
       },
       false,
     );

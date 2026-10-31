@@ -23,4 +23,26 @@ describe('updateStateSchema', () => {
     expect(parsed).toEqual(state);
     expect(parsed).not.toHaveProperty('downloadUrl');
   });
+
+  it('carries bounded download progress and keeps the indeterminate native download valid', () => {
+    // arrange
+    const measured = {
+      kind: 'downloading',
+      currentVersion: '0.1.10',
+      channel: 'stable',
+      targetVersion: '0.1.11',
+      progress: 0.42,
+    };
+    const indeterminate = { kind: 'downloading', currentVersion: '0.1.10', channel: 'stable' };
+
+    // act
+    const parsedMeasured = updateStateSchema.parse(measured);
+    const parsedIndeterminate = updateStateSchema.parse(indeterminate);
+
+    // assert
+    expect(parsedMeasured).toEqual(measured);
+    expect(parsedIndeterminate).toEqual(indeterminate);
+    expect(() => updateStateSchema.parse({ ...measured, progress: 1.01 })).toThrow();
+    expect(() => updateStateSchema.parse({ ...measured, progress: -0.01 })).toThrow();
+  });
 });

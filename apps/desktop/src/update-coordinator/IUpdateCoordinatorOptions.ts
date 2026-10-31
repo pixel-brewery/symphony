@@ -15,5 +15,10 @@ export interface IUpdateCoordinatorOptions {
   readonly platform: NodeJS.Platform;
   readonly architecture: string;
   readonly packaged: boolean;
+  /**
+   * Quits Symphony once a downloaded installer has been opened, so the installer can replace the
+   * running application. The native updater quits on its own.
+   */
+  readonly quitApplication: () => void;
   readonly now?: () => Date;
 }

@@ -1,7 +1,7 @@
 // #region Imports
 
 import { inject, Injectable, signal } from '@angular/core';
-import { DRAWER_REF, DRAWER_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { WORKSPACE_CONFIGURATION } from '../ports/WorkspaceConfigurationToken';
@@ -21,15 +21,16 @@ export class WorkspaceSettingsEditorViewPresenter extends Hydratable(ViewPresent
 
   private readonly _context = inject(WORKSPACE_SETTINGS_CONTEXT);
   private readonly _configuration = inject(WORKSPACE_CONFIGURATION);
-  private readonly _drawer = inject(DRAWER_REF);
+  private readonly _sheet = inject(DIALOG_REF);
   private readonly _busy = signal(false);
+  private readonly _error = signal<'invalid' | 'save' | undefined>(undefined);
   /**
    * Validated feature-specific editor request.
    *
    * @public
    * @readonly
    */
-  public readonly data = inject<IWorkspaceSettingsEditorRequest>(DRAWER_REF_DATA);
+  public readonly data = inject<IWorkspaceSettingsEditorRequest>(DIALOG_REF_DATA);
   /**
    * Existing global exclusion between settings operations.
    *
@@ -45,7 +46,14 @@ export class WorkspaceSettingsEditorViewPresenter extends Hydratable(ViewPresent
    */
   public readonly busy = this._busy.asReadonly();
   /**
-   * Mutable form draft retained for the drawer lifetime.
+   * Why the last save did not close the sheet: `invalid` input or a failed `save`.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly error = this._error.asReadonly();
+  /**
+   * Mutable form draft retained for the sheet's lifetime, also when saving fails.
    *
    * @public
    */
@@ -56,7 +64,7 @@ export class WorkspaceSettingsEditorViewPresenter extends Hydratable(ViewPresent
    * @public
    * @readonly
    */
-  public readonly closeCommand = new Command<void>(() => this._drawer.close());
+  public readonly closeCommand = new Command<void>(() => this._sheet.close());
   /**
    * Saves a valid form, preserving other configured workspace settings.
    *
@@ -101,7 +109,11 @@ export class WorkspaceSettingsEditorViewPresenter extends Hydratable(ViewPresent
     if (!current) throw new Error('Application settings are not loaded.');
     const displayName = this.workspace.displayName.trim();
     const shortCode = this.workspace.shortCode.trim().toLocaleUpperCase().slice(0, 8);
-    if (!displayName || !shortCode || !/^#[0-9a-fA-F]{6}$/u.test(this.workspace.color)) return;
+    if (!displayName || !shortCode || !/^#[0-9a-fA-F]{6}$/u.test(this.workspace.color)) {
+      this._error.set('invalid');
+      return;
+    }
+    this._error.set(undefined);
     const id = this.data.workspaceId ?? `workspace-${crypto.randomUUID()}`;
     const stored = current.workspaces.find((candidate) => candidate.id === id);
     const workspace: ApplicationSettingsDto['workspaces'][number] = {
@@ -131,7 +143,8 @@ export class WorkspaceSettingsEditorViewPresenter extends Hydratable(ViewPresent
           activeViewScope: { ...current.activeViewScope, workspaceIds },
         })
       )
-        this._drawer.close();
+        this._sheet.close();
+      else this._error.set('save');
     } finally {
       this._busy.set(false);
     }

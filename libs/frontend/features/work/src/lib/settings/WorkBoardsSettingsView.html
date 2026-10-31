@@ -1,47 +1,45 @@
 @if(presenter.workspace(); as item){
-<section class="flex min-w-0 flex-col gap-2" [attr.test-id]="'workspace-boards-' + item.id">
-  <symphony-headline
-    header="Boards"
-    description="Each board is one GitHub Project or Azure DevOps query. Columns follow the project; map them to workflow states in the board editor."
-  />
-  <mosaik-cell-group [attr.test-id]="'configured-boards-' + item.id">
-    @for (board of presenter.workspaceBoards()(item.id); track board.id) {
-    <mosaik-cell
-      [attr.test-id]="'configured-board-' + board.id"
-      [label]="board.displayName"
-      [subLabel]="presenter.boardSummary()(board)"
-    >
-      <mosaik-avatar
-        slot="start"
-        [size]="'small'"
-        [appearance]="'soft'"
-        [iconName]="board.provider === 'azure-devops' ? 'azureDevOps' : 'github'"
-      />
-      <mosaik-button
-        slot="end"
-        [attr.test-id]="'edit-board-' + board.id"
-        [label]="'Edit'"
-        [appearance]="'plain'"
-        (click)="presenter.openBoardCommand.execute(board)"
-      />
-    </mosaik-cell>
-    }
-    <mosaik-cell
-      [attr.test-id]="'add-github-board-entry-' + item.id"
-      [label]="'GitHub Projects board'"
-      [subLabel]="'Choose a project owned by the signed-in account or linked to a workspace repository'"
-    >
-      <mosaik-avatar slot="start" [size]="'small'" [appearance]="'soft'" [iconName]="'github'" />
-      <mosaik-button
-        slot="end"
-        [attr.test-id]="'add-github-board-' + item.id"
-        [label]="'Add board'"
-        [iconName]="'add'"
-        [appearance]="'solid'"
-        [variant]="'primary'"
-        (click)="presenter.openGitHubProjectsCommand.execute([item.id])"
-      />
-    </mosaik-cell>
-  </mosaik-cell-group>
-</section>
+<symphony-settings-group
+  [heading]="'Boards'"
+  [description]="'Each board is one GitHub Project or Azure DevOps query. Columns follow the project; map them to workflow states in the board editor.'"
+  [attr.test-id]="'workspace-boards-' + item.id"
+>
+  @for (board of presenter.workspaceBoards()(item.id); track board.id) {
+  <symphony-settings-row
+    [attr.test-id]="'configured-board-' + board.id"
+    [label]="board.displayName"
+    [description]="presenter.boardSummary()(board)"
+  >
+    <mosaik-avatar
+      slot="leading"
+      [size]="'small'"
+      [appearance]="'soft'"
+      [icon]="board.provider === 'azure-devops' ? 'azureDevOps' : 'github'"
+    />
+    <mosaik-button
+      [attr.test-id]="'edit-board-' + board.id"
+      [label]="'Edit'"
+      [icon]="'edit'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      (click)="presenter.openBoardCommand.execute(board)"
+    />
+  </symphony-settings-row>
+  }
+  <symphony-settings-row
+    [attr.test-id]="'add-github-board-entry-' + item.id"
+    [label]="'GitHub Projects board'"
+    [description]="'Choose a project owned by the signed-in account or linked to a workspace repository'"
+  >
+    <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'outline'" [icon]="'github'" />
+    <mosaik-button
+      [attr.test-id]="'add-github-board-' + item.id"
+      [label]="'Add board'"
+      [icon]="'add'"
+      [iconSize]="'small'"
+      [appearance]="'outline'"
+      (click)="presenter.openGitHubProjectsCommand.execute([item.id])"
+    />
+  </symphony-settings-row>
+</symphony-settings-group>
 }

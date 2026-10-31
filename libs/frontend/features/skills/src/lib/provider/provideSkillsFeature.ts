@@ -20,7 +20,6 @@ import { withSkillsSearch } from './withSkillsSearch';
 import { provideViewSlot } from '@pixel-brewery/mosaik-elements-angular';
 import { ConfigurationStore } from '@symphony/frontend-core/configuration';
 import { SettingsViewSlot, type ISettingsSelection } from '@symphony/frontend-setting';
-import { SkillsSettingsDrafts } from '../settings/SkillsSettingsDrafts';
 import { SKILL_IMPORT_PATHS } from '../settings/SkillImportPathsToken';
 import { SKILLS_SETTINGS_CONTEXT } from '../settings/SkillsSettingsContextToken';
 import type { ISkillsSettingsContext } from '../settings/ISkillsSettingsContext';
@@ -39,7 +38,6 @@ export function provideSkillsFeature(): EnvironmentProviders {
     ...composeProviders(
       [
         SkillStore,
-        SkillsSettingsDrafts,
         { provide: SKILL_IMPORT_PATHS, useExisting: ORCHESTRATION_CLIENT },
         {
           provide: SKILLS_SETTINGS_CONTEXT,
@@ -70,9 +68,9 @@ export function provideSkillsFeature(): EnvironmentProviders {
     ),
     provideViewSlot<ISettingsSelection>(SettingsViewSlot.HeaderActions, [
       {
-        id: 'skills-settings-import-action',
+        id: 'skills-settings-header-actions',
         canActivate: (selection) =>
-          selection?.workspaceId === null && selection.sectionId === 'system',
+          selection?.workspaceId === null && selection.sectionId === 'skills',
         loadComponent: () =>
           import('../settings/SkillsSettingsHeaderActionView').then(
             (module) => module.SkillsSettingsHeaderActionView,

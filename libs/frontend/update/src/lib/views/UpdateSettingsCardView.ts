@@ -2,45 +2,35 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
-  CardComponent,
-  CardContentComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
+  ButtonComponent,
   SelectComponent,
   SelectItemComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { HeadlineComponent } from '@symphony/frontend-ui';
+import { SettingsGroupComponent, SettingsRowComponent } from '@symphony/frontend-setting';
+import { UpdateDetailsPipe } from '../pipes/UpdateDetailsPipe';
+import { UpdateStatusLabelPipe } from '../pipes/UpdateStatusLabelPipe';
 import { UpdateSettingsCardViewPresenter } from '../view-presenters/UpdateSettingsCardViewPresenter';
-import { UpdateActionsView } from './UpdateActionsView';
-import { UpdateStatusView } from './UpdateStatusView';
 
 // #endregion
 
 /**
- * The existing Updates settings card, owned by the update capability.
+ * System › `Updates`: the installed version, `Check for updates` and the release channel; download
+ * and restart live in the main window's status bar.
  *
  * @public
  */
 @Component({
   selector: 'symphony-update-settings-card',
-  host: { class: 'block' },
+  host: { class: 'flex min-w-0 flex-col' },
   imports: [
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
-    CardComponent,
-    CardContentComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    HeadlineComponent,
+    ButtonComponent,
     SelectComponent,
     SelectItemComponent,
-    UpdateActionsView,
-    UpdateStatusView,
+    SettingsGroupComponent,
+    SettingsRowComponent,
+    UpdateDetailsPipe,
+    UpdateStatusLabelPipe,
   ],
   providers: [
     UpdateSettingsCardViewPresenter,

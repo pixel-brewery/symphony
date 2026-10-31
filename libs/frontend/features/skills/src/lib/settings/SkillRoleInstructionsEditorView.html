@@ -1,0 +1,93 @@
+<ng-template mosaikDialogHeader>
+  @let skill = presenter.skill();
+  <mosaik-dialog-header
+    slot="header"
+    [text]="(skill?.displayName ?? 'Process role') + ' · instructions'"
+    [subText]="'Process role of the ' + (presenter.step?.label ?? '') + ' step' + (skill ? ' · v' + skill.version + ' · ' + (skill.mutatesWorkspace ? 'Changes files' : 'Reads only') : '')"
+  >
+    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+  </mosaik-dialog-header>
+</ng-template>
+<ng-template mosaikDialogContent>
+  @let skill = presenter.skill();
+  <div
+    class="flex max-h-[calc(100dvh-240px)] min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-y-auto py-0.5"
+    [attr.test-id]="'builtin-skill-instructions-sheet-' + presenter.data.role"
+  >
+    <mosaik-segment class="w-full" aria-label="Instructions" [appearance]="'soft'">
+      <mosaik-segment-item
+        [attr.test-id]="'builtin-skill-tab-shipped-' + presenter.data.role"
+        [label]="'Built-in instructions'"
+        [fit]="'width'"
+        [isChecked]="presenter.tab() === 'shipped'"
+        (checked)="presenter.tab.set('shipped')"
+      />
+      <mosaik-segment-item
+        [attr.test-id]="'builtin-skill-tab-additional-' + presenter.data.role"
+        [label]="'Your additions'"
+        [fit]="'width'"
+        [isChecked]="presenter.tab() === 'additional'"
+        (checked)="presenter.tab.set('additional')"
+      />
+    </mosaik-segment>
+    @if (presenter.tab() === 'shipped') {
+    <mosaik-textbox
+      [attr.test-id]="'builtin-skill-shipped-' + presenter.data.role"
+      [label]="'Built-in instructions'"
+      [multiline]="true"
+      [multilineRows]="12"
+      [readonly]="true"
+      [value]="skill?.instructions ?? ''"
+    />
+    <mosaik-text
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [wrap]="true"
+      [text]="'Shipped with Symphony and versioned with it. Read them to see what your additions build on.'"
+    />
+    } @else {
+    <mosaik-textbox
+      [attr.test-id]="'builtin-skill-instructions-' + presenter.data.role"
+      [label]="'Additional instructions'"
+      [multiline]="true"
+      [multilineRows]="8"
+      [value]="presenter.additions()"
+      (input)="presenter.updateAdditionsCommand.execute($event)"
+    />
+    <mosaik-text
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [wrap]="true"
+      [text]="'Appended below the built-in instructions. They refine how the role works and cannot widen what it is allowed to do.'"
+    />
+    }
+  </div>
+</ng-template>
+<ng-template mosaikDialogFooter>
+  @let skill = presenter.skill();
+  <div class="flex w-full min-w-0 items-center gap-1">
+    <mosaik-button
+      [attr.test-id]="'builtin-skill-reset-' + presenter.data.role"
+      [label]="'Reset'"
+      [appearance]="'plain'"
+      [disabled]="presenter.busy() || !skill?.additionalInstructions"
+      (click)="presenter.resetCommand.execute()"
+    />
+    <div class="flex-1"></div>
+    <mosaik-button
+      test-id="cancel-settings-editor"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      (click)="presenter.closeCommand.execute()"
+    />
+    <mosaik-button
+      [attr.test-id]="'builtin-skill-save-' + presenter.data.role"
+      [label]="'Save'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.busy()"
+      [disabled]="presenter.busy()"
+      (click)="presenter.saveCommand.execute()"
+    />
+  </div>
+</ng-template>

@@ -1,0 +1,31 @@
+// The agent sheet draws its question numbers and responsibility cards as the design does; every
+// value is a Mosaik token.
+
+// The number of each question on a 24px neutral disc.
+[part~='question-number'] {
+  --avatar-diameter: 24px;
+  --avatar-background-color: var(--mosaik-color-neutral-200);
+  --avatar-font-size: 11px;
+  --avatar-padding-left: 0px;
+  --avatar-padding-right: 0px;
+}
+
+[part~='question-heading'] {
+  --text-font-weight: 600;
+}
+
+// A responsibility is a check-box card; a chosen one sits on the neutral fill.
+[part~='responsibility-card'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+[part~='responsibility-card'][data-checked='true'] {
+  background-color: var(--mosaik-color-neutral-100);
+}
+
+// The card's content brings its own padding; Soho's card adds bottom padding of its own.
+mosaik-card {
+  --card-padding-bottom: 0px;
+}

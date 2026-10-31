@@ -1242,7 +1242,7 @@ empty box — so Material-style or invented names still fail silently. Register 
 
 <!-- design-md:icons -->
 
-`add, arrowRight, azureDevOps, board, bot, branch, checkCircle, checkmark, checkmarkCircle,
+`add, arrowRight, azureDevOps, bell, board, bot, branch, checkCircle, checkmark, checkmarkCircle,
 chevronLeft, chevronRight, claude, clear, clipboardTask, cloudArrowRight, comment, copy, delete,
 disconnect, download, edit, error, errorCircle, executionOutline, eyeShow, filter, flow, folder,
 folderOpen, games, github, homeOutline, info, leaderboard, mic, open, openai, panelLeft,
@@ -1254,9 +1254,9 @@ sparkle, sync, warning, weatherMoon, weatherSunny`
 
 <!-- design-md:overrides -->
 
-`apps/renderer/src/styles/mosaik.scss` loads the theme stylesheet and these 3 override files from `apps/renderer/src/styles/overrides/`:
+`apps/renderer/src/styles/mosaik.scss` loads the theme stylesheet and these 4 override files from `apps/renderer/src/styles/overrides/`:
 
-`app`, `app-header`, `technical-value`
+`app`, `app-header`, `technical-value`, `window-chrome`
 <!-- /design-md:overrides -->
 
 Put a reusable visual override here, at the shared component boundary, rather than in feature code.

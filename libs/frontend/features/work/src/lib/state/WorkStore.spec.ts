@@ -330,6 +330,7 @@ describe('WorkStore', () => {
     expect(result).toBeUndefined();
     expect(store.workItemsBusy()).toBe(false);
     expect(replayRefresh).toHaveBeenCalledOnce();
+    expect(store.workItemMutationError()).toBe('rejected');
   });
 
   it('keeps the editor metadata and busy state untouched while another scope loads assignees', async () => {

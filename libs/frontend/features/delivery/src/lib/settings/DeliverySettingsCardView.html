@@ -1,181 +1,182 @@
 @if (presenter.workspace(); as item) {
-<mosaik-card class="w-full" [attr.test-id]="'workspace-card-' + item.id">
-  <mosaik-card-header
-    [text]="item.displayName"
-    [subText]="item.shortCode + ' · ' + (presenter.section() === 'team' ? 'AI team and responsibilities' : presenter.section() === 'services' ? 'Connected services' : presenter.section() === 'repositories' ? 'Source-code repositories' : presenter.section() === 'delivery' ? 'Delivery destinations' : 'Workspace administration')"
-  />
-  <mosaik-card-content>
-    <div class="flex min-w-0 flex-col gap-4">
-      @if (presenter.section() === 'delivery') {
-      <section class="flex min-w-0 flex-col gap-4" test-id="workspace-delivery-destinations">
-        <symphony-headline
-          header="Delivery destinations"
-          description="Choose which environments, release channels and installations appear in the orbit. Mark the destination that represents Production. A version is confirmed only by delivery evidence."
-        />
-        @if (presenter.deliveryRepositories().length) {
-        <mosaik-select
-          test-id="delivery-settings-repository"
-          [label]="'Project'"
-          [value]="presenter.deliveryRepository()?.id ?? ''"
-          (selectionChanged)="presenter.selectDeliveryRepositoryCommand.execute($event)"
-        >
-          @for (repository of presenter.deliveryRepositories(); track repository.id) {
-          <mosaik-select-item
-            [attr.test-id]="'delivery-settings-repository-' + repository.id"
-            [value]="repository.id"
-            [label]="repository.displayName"
-          />
-          }
-        </mosaik-select>
-        <mosaik-cell-group>
-          @for (target of presenter.deliveryTargets(); track target.id) {
-          <mosaik-cell
-            class="min-w-0"
-            [attr.test-id]="'delivery-settings-target-' + target.id"
-            [label]="target.displayName"
-          >
-            <div slot="subLabel" class="flex min-w-0 flex-col gap-1">
-              <span
-                >@switch (target.kind) { @case ('environment') { Environment } @case
-                ('release-channel') { Release channel } @case ('installation') { Installation } } ·
-                {{ target.environment }} @if (target.production) { · Production }</span
-              >
-              @if (target.workflowId) { <span>Workflow: {{ target.workflowId }}</span> }
-            </div>
-            <div slot="end" class="flex shrink-0 flex-wrap gap-2">
-              <mosaik-button
-                [attr.test-id]="'edit-delivery-target-' + target.id"
-                [label]="'Edit'"
-                [appearance]="'plain'"
-                [disabled]="presenter.configurationBusy()"
-                (click)="presenter.openDeliveryTargetCommand.execute(target.id)"
-              />
-              <mosaik-button
-                [attr.test-id]="'remove-delivery-target-' + target.id"
-                [label]="'Remove'"
-                [appearance]="'plain'"
-                [variant]="'danger'"
-                [disabled]="presenter.configurationBusy()"
-                (click)="presenter.removeDeliveryTargetCommand.execute(target.id)"
-              />
-            </div>
-          </mosaik-cell>
-          } @empty {
-          <mosaik-text
-            test-id="delivery-settings-empty"
-            [wrap]="true"
-            [text]="'No destinations are configured for this project. Add one and mark it as Production to configure the centre of the orbit.'"
-          />
-          }
-        </mosaik-cell-group>
-        <mosaik-button
-          test-id="add-delivery-target"
-          [label]="'Add destination'"
-          [iconName]="'add'"
-          [appearance]="'solid'"
-          [variant]="'primary'"
-          [disabled]="presenter.configurationBusy()"
-          (click)="presenter.openDeliveryTargetCommand.execute()"
-        />
-        } @else {
-        <mosaik-text
-          [wrap]="true"
-          [text]="'Add a project under Repositories before configuring its destinations.'"
-        />
-        <mosaik-button
-          test-id="delivery-settings-open-repositories"
-          [label]="'Open repositories'"
-          (click)="presenter.selectWorkspaceSettingsSectionCommand.execute('repositories')"
+<div class="flex min-w-0 flex-col gap-3" [attr.test-id]="'workspace-card-' + item.id">
+  @if (presenter.section() === 'delivery') {
+  <symphony-settings-group
+    test-id="workspace-delivery-destinations"
+    [heading]="'Delivery destinations'"
+    [description]="'Choose which environments, release channels and installations appear in the orbit. Mark the destination that represents Production. A version is confirmed only by delivery evidence.'"
+    [framed]="!!presenter.deliveryRepositories().length"
+  >
+    <mosaik-button
+      slot="actions"
+      test-id="add-delivery-target"
+      [label]="'Add destination'"
+      [icon]="'add'"
+      [iconSize]="'small'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [disabled]="presenter.configurationBusy() || !presenter.deliveryRepositories().length"
+      (click)="presenter.openDeliveryTargetCommand.execute()"
+    />
+    @if (presenter.deliveryRepositories().length) {
+    <symphony-settings-row [label]="'Project'">
+      <mosaik-select
+        class="w-[220px]"
+        test-id="delivery-settings-repository"
+        aria-label="Project"
+        [value]="presenter.deliveryRepository()?.id ?? ''"
+        (selectionChanged)="presenter.selectDeliveryRepositoryCommand.execute($event)"
+      >
+        @for (repository of presenter.deliveryRepositories(); track repository.id) {
+        <mosaik-select-item
+          [attr.test-id]="'delivery-settings-repository-' + repository.id"
+          [value]="repository.id"
+          [label]="repository.displayName"
         />
         }
-      </section>
-      } @if (presenter.section() === 'repositories') {
-      <section class="flex min-w-0 flex-col gap-2" [attr.test-id]="'local-repositories-' + item.id">
-        <symphony-headline
-          header="Repositories"
-          description="Add every source-code repository used by this workspace. Configured repositories are available to AI tasks."
-        />
-        <mosaik-cell-group [attr.test-id]="'workspace-repositories-' + item.id">
-          @for (repository of presenter.workspaceRepositories()(item.id); track repository.id) {
-          @let runtimeStatus = presenter.repositoryRuntimeStatus(repository.id);
-          <mosaik-cell
-            [attr.test-id]="'local-repository-' + repository.id"
-            [label]="repository.displayName"
-            [subLabel]="repository.owner + '/' + repository.name + ' · ' + (!repository.enabled ? 'Disabled' : !runtimeStatus || runtimeStatus.preparation.state === 'unprepared' ? 'Not prepared locally' : 'Prepared locally')"
-          >
-            <mosaik-avatar
-              slot="start"
-              [size]="'small'"
-              [appearance]="'soft'"
-              [iconName]="'github'"
-            />
-            @if (presenter.repositoryRuntimeAvailable && repository.enabled &&
-            !presenter.repositoryPrepared()(repository.id)) {
-            <mosaik-button
-              slot="end"
-              [attr.test-id]="'prepare-repository-' + repository.id"
-              [label]="'Prepare locally'"
-              [appearance]="'solid'"
-              [variant]="'primary'"
-              [isBusy]="presenter.repositoryRuntimeBusy() === repository.id"
-              [disabled]="!!presenter.repositoryRuntimeBusy()"
-              (click)="presenter.prepareRepositoryCommand.execute(repository)"
-            />
-            } @else if (presenter.repositoryRuntimeAvailable && repository.enabled &&
-            presenter.repositoryManaged()(repository.id)) {
-            <mosaik-button
-              slot="end"
-              [attr.test-id]="'refresh-repository-' + repository.id"
-              [label]="'Refresh'"
-              [appearance]="'plain'"
-              [disabled]="!!presenter.repositoryRuntimeBusy()"
-              (click)="presenter.prepareRepositoryCommand.execute(repository)"
-            />
-            }
-            <mosaik-button
-              slot="end"
-              [attr.test-id]="'edit-repository-' + repository.id"
-              [label]="'Edit'"
-              [appearance]="'plain'"
-              [disabled]="!!presenter.repositoryRuntimeBusy()"
-              (click)="presenter.openRepositoryCommand.execute([item.id, repository.id])"
-            />
-            <mosaik-button
-              slot="end"
-              [attr.test-id]="'remove-repository-' + repository.id"
-              [iconName]="'delete'"
-              [appearance]="'plain'"
-              [variant]="'danger'"
-              [disabled]="presenter.configurationBusy()"
-              (click)="presenter.confirmRemoveRepositoryCommand.execute(repository)"
-            >
-              <span slot="label" class="sr-only"
-                >Remove repository: {{ repository.displayName }}</span
-              >
-            </mosaik-button>
-          </mosaik-cell>
-          }
-          <mosaik-cell
-            [attr.test-id]="'add-repository-entry-' + item.id"
-            [label]="'Add repository'"
-            [subLabel]="'Add another GitHub repository to this workspace'"
-          >
-            <mosaik-avatar slot="start" [size]="'small'" [appearance]="'soft'" [iconName]="'add'" />
-            <mosaik-button
-              slot="end"
-              [attr.test-id]="'add-repository-' + item.id"
-              [label]="'Add repository'"
-              [iconName]="'add'"
-              [appearance]="'solid'"
-              [variant]="'primary'"
-              (click)="presenter.openRepositoryCommand.execute([item.id])"
-            />
-          </mosaik-cell>
-        </mosaik-cell-group>
-      </section>
+      </mosaik-select>
+    </symphony-settings-row>
+    @for (target of presenter.deliveryTargets(); track target.id) {
+    <symphony-settings-row
+      [attr.test-id]="'delivery-settings-target-' + target.id"
+      [label]="target.displayName"
+      [description]="(target.kind === 'release-channel' ? 'Release channel' : target.kind === 'installation' ? 'Installation' : 'Environment') + ' · ' + target.environment + (target.production ? ' · Production' : '')"
+    >
+      @if (target.workflowId) {
+      <mosaik-text
+        slot="detail"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="'Workflow: ' + target.workflowId"
+      />
+      } @if (target.production) {
+      <mosaik-badge
+        [attr.test-id]="'delivery-settings-target-production-' + target.id"
+        [label]="'Production'"
+        [appearance]="'soft'"
+        [variant]="'success'"
+        [size]="'small'"
+      />
       }
+      <mosaik-button
+        [attr.test-id]="'edit-delivery-target-' + target.id"
+        [label]="'Edit'"
+        [icon]="'edit'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [disabled]="presenter.configurationBusy()"
+        (click)="presenter.openDeliveryTargetCommand.execute(target.id)"
+      />
+      <mosaik-button
+        [attr.test-id]="'remove-delivery-target-' + target.id"
+        [label]="'Remove'"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        [disabled]="presenter.configurationBusy()"
+        (click)="presenter.removeDeliveryTargetCommand.execute(target.id)"
+      />
+    </symphony-settings-row>
+    } } @else {
+    <symphony-settings-conditional [condition]="'Without a project'">
+      <div part="settings-group-rows" class="flex min-w-0 flex-col">
+        <symphony-settings-row
+          [label]="'Add a project under Repositories before configuring its destinations.'"
+        >
+          <mosaik-button
+            test-id="delivery-settings-open-repositories"
+            [label]="'Open repositories'"
+            [appearance]="'outline'"
+            (click)="presenter.selectWorkspaceSettingsSectionCommand.execute('repositories')"
+          />
+        </symphony-settings-row>
+      </div>
+    </symphony-settings-conditional>
+    }
+  </symphony-settings-group>
+  @if (presenter.deliveryRepositories().length && !presenter.deliveryTargets().length) {
+  <symphony-settings-conditional [condition]="'A project without destinations'">
+    <div part="settings-group-rows" class="flex min-w-0 flex-col">
+      <symphony-settings-row
+        test-id="delivery-settings-empty"
+        [label]="'No destinations are configured for this project. Add one and mark it as Production to configure the centre of the orbit.'"
+      />
     </div>
-  </mosaik-card-content>
-</mosaik-card>
-
+  </symphony-settings-conditional>
+  } } @if (presenter.section() === 'repositories') {
+  <symphony-settings-group
+    [heading]="'Repositories'"
+    [description]="'Add every source-code repository used by this workspace. Configured repositories are available to AI tasks.'"
+    [attr.test-id]="'workspace-repositories-' + item.id"
+  >
+    @for (repository of presenter.workspaceRepositories()(item.id); track repository.id) { @let
+    runtimeStatus = presenter.repositoryRuntimeStatus(repository.id);
+    <symphony-settings-row
+      [attr.test-id]="'local-repository-' + repository.id"
+      [label]="repository.displayName"
+      [description]="repository.owner + '/' + repository.name + ' · ' + (!repository.enabled ? 'Disabled' : !runtimeStatus || runtimeStatus.preparation.state === 'unprepared' ? 'Not prepared locally' : 'Prepared locally')"
+    >
+      <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'soft'" [icon]="'github'" />
+      @if (presenter.repositoryRuntimeAvailable && repository.enabled &&
+      !presenter.repositoryPrepared()(repository.id)) {
+      <mosaik-button
+        [attr.test-id]="'prepare-repository-' + repository.id"
+        [label]="'Prepare locally'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.repositoryRuntimeBusy() === repository.id"
+        [disabled]="!!presenter.repositoryRuntimeBusy()"
+        (click)="presenter.prepareRepositoryCommand.execute(repository)"
+      />
+      } @else if (presenter.repositoryRuntimeAvailable && repository.enabled &&
+      presenter.repositoryManaged()(repository.id)) {
+      <mosaik-button
+        [attr.test-id]="'refresh-repository-' + repository.id"
+        [label]="'Refresh'"
+        [icon]="'sync'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [disabled]="!!presenter.repositoryRuntimeBusy()"
+        (click)="presenter.prepareRepositoryCommand.execute(repository)"
+      />
+      }
+      <mosaik-button
+        [attr.test-id]="'edit-repository-' + repository.id"
+        [label]="'Edit'"
+        [icon]="'edit'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [disabled]="!!presenter.repositoryRuntimeBusy()"
+        (click)="presenter.openRepositoryCommand.execute([item.id, repository.id])"
+      />
+      <mosaik-button
+        [attr.test-id]="'remove-repository-' + repository.id"
+        [icon]="'delete'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        [attr.aria-label]="'Remove repository: ' + repository.displayName"
+        [disabled]="presenter.configurationBusy()"
+        (click)="presenter.confirmRemoveRepositoryCommand.execute(repository)"
+      />
+    </symphony-settings-row>
+    }
+    <symphony-settings-row
+      [attr.test-id]="'add-repository-entry-' + item.id"
+      [label]="'Add repository'"
+      [description]="'Add another GitHub repository to this workspace'"
+    >
+      <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'outline'" [icon]="'add'" />
+      <mosaik-button
+        [attr.test-id]="'add-repository-' + item.id"
+        [label]="'Add repository'"
+        [icon]="'add'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
+        (click)="presenter.openRepositoryCommand.execute([item.id])"
+      />
+    </symphony-settings-row>
+  </symphony-settings-group>
+  }
+</div>
 }

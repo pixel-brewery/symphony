@@ -34,7 +34,15 @@ export interface ISettingsEditorDefinition {
    */
   readonly workspaceSection?: WorkspaceSettingsSection;
   /**
-   * Validates the owning feature's specific request before a drawer is created.
+   * Width of the sheet in pixels. Settings sheets are 640px wide unless an editor needs
+   * more room, such as the agent sheet with its live preview (920px).
+   *
+   * @public
+   * @readonly
+   */
+  readonly width?: `${number}px`;
+  /**
+   * Validates the owning feature's specific request before a sheet is created.
    *
    * @public
    * @readonly

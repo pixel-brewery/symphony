@@ -4,6 +4,8 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { closeSettings } from './closeSettings';
+import { openSettings } from './openSettings';
 
 // #endregion
 
@@ -38,8 +40,6 @@ test('keeps exhausted GitHub Actions usage in Settings and out of navigation', a
   // assert
   try {
     const configurationPage = await app.firstWindow();
-    await expect(configurationPage.getByTestId('orbit-view')).toBeVisible();
-    await configurationPage.getByTestId('navigation-home').click();
     await expect(configurationPage.getByTestId('home-view')).toBeVisible();
 
     await configurationPage.evaluate(async (localPath) => {
@@ -93,12 +93,14 @@ test('keeps exhausted GitHub Actions usage in Settings and out of navigation', a
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('navigation-home').click();
     await expect(page.getByTestId('home-view')).toBeVisible();
-    await page.getByTestId('toggle-rail').click();
-    await page.getByTestId('rail-run-segment-actions').click();
-    const refreshActions = page.getByTestId('refresh-rail-actions');
+    // Refreshing Actions is a control of the Actions screen; exhausted minutes never appear in
+    // navigation or on the screen, only in the repository's settings.
+    await page.getByTestId('navigation-actions').click();
+    await expect(page.getByTestId('actions-view')).toHaveAttribute('aria-busy', 'false', {
+      timeout: 15_000,
+    });
+    const refreshActions = page.getByTestId('refresh-actions');
     await expect(refreshActions).toHaveJSProperty('disabled', false);
     await expect(page.getByTestId('workspace-github-actions-usage')).toHaveCount(0);
     await refreshActions.click();
@@ -108,23 +110,22 @@ test('keeps exhausted GitHub Actions usage in Settings and out of navigation', a
       path: resolve(outputDirectory, 'github-actions-usage-navigation.png'),
       fullPage: true,
     });
-    await page.getByTestId('toggle-rail').click();
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
-    await page.getByTestId('open-workspace-settings-personal').click();
+    const settings = await openSettings(page);
+    await settings.getByTestId('workspace-navigation-item-personal').click();
     // A GitHub connection that only carries a repository is managed with that repository under
     // Repositories, not as a separate connected service.
-    await page.getByTestId('workspace-settings-section-repositories').click();
-    await expect(page.getByTestId('workspace-card-personal')).toBeVisible();
-    await page.getByTestId('edit-repository-github-usage-repository').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toBeVisible();
-    await expect(page.getByTestId('github-actions-usage')).toContainText('0 minutes remaining');
-    await expect(page.getByTestId('github-actions-usage-details')).toContainText(/3[.,]000/);
-    await expect(page.getByTestId('github-actions-usage-progress')).toBeVisible();
-    await page.screenshot({
+    await settings.getByTestId('workspace-settings-section-repositories').click();
+    await settings.getByTestId('edit-repository-github-usage-repository').click();
+    await expect(settings.getByTestId('github-actions-usage')).toContainText('0 minutes remaining');
+    await expect(settings.getByTestId('github-actions-usage-details')).toContainText(/3[.,]000/);
+    await expect(settings.getByTestId('github-actions-usage-progress')).toBeVisible();
+    await settings.screenshot({
       path: resolve(outputDirectory, 'github-actions-usage-settings.png'),
       fullPage: true,
     });
+    await settings.keyboard.press('Escape');
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await closeSettings(page);
     await expect(page.getByTestId('navigation-actions')).toBeVisible();
 
     expect(rendererErrors).toEqual([]);

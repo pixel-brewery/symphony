@@ -1,6 +1,7 @@
 // #region Imports
 import { type OrchestratorSettingsState } from '../../composition/OrchestratorSettingsState';
 import {
+  type CiRunHistoryService,
   type ILocalCiExecutionRepository,
   type ExternalWriteService,
 } from '@symphony/application-ci';
@@ -17,6 +18,8 @@ import { type SimulatedCiQueries } from '@symphony/providers-simulated';
  */
 export interface IProvideCiOrchestratorFeatureDependencies {
   readonly settingsState: Readonly<Pick<OrchestratorSettingsState, 'current'>>;
+  /** Durable workflow-run history: recorded on every refresh, read for reporting. */
+  readonly runHistory: Pick<CiRunHistoryService, 'record' | 'list'>;
   readonly localCiRepository: Pick<ILocalCiExecutionRepository, 'listLocalCiExecutions'>;
   readonly github: Pick<
     GitHubCloudProvider,

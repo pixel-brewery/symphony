@@ -8,17 +8,19 @@ import {
   Injectable,
   signal,
 } from '@angular/core';
-import { DRAWER_REF, DRAWER_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
 import {
   createTrackedSettingsDraft,
   mosaikEventText,
+  SettingsAlertService,
   upsertSettingsItem,
 } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { FEEDBACK_SETTINGS_CONTEXT } from '../ports/FeedbackSettingsContextToken';
 import { FeedbackStore } from '../state/FeedbackStore';
 import type { IFeedbackSettingsEditorRequest } from './IFeedbackSettingsEditorRequest';
+import type { TeamsFeedbackValidationIssue } from './TeamsFeedbackValidationIssue';
 
 // #endregion
 
@@ -29,13 +31,14 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
 
   private readonly _context = inject(FEEDBACK_SETTINGS_CONTEXT);
   private readonly _feedback = inject(FeedbackStore);
-  private readonly _drawerRef = inject(DRAWER_REF);
+  private readonly _dialogRef = inject(DIALOG_REF);
   private readonly _changeDetector = inject(ChangeDetectorRef);
   private readonly _application = inject(ApplicationRef);
+  private readonly _alerts = inject(SettingsAlertService);
   private readonly _draftRevision = signal(0);
   private readonly _busy = signal(false);
   /** Validated request for this editor. @public @readonly */
-  public readonly data = inject<IFeedbackSettingsEditorRequest>(DRAWER_REF_DATA);
+  public readonly data = inject<IFeedbackSettingsEditorRequest>(DIALOG_REF_DATA);
   /** Local save lifecycle. @public @readonly */
   public readonly busy = this._busy.asReadonly();
   /** The existing aggregate settings writer lifecycle. @public @readonly */
@@ -50,15 +53,17 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
   public readonly teamsTargetSources = computed(() => this.resolveTeamsTargetSources());
   /** Enabled GitHub repositories in the selected workspace. @public @readonly */
   public readonly teamsTargetRepositories = computed(() => this.resolveTeamsTargetRepositories());
-  /** Whether the channel has all fields required by the test boundary. @public @readonly */
-  public readonly canTestTeamsFeedback = computed(() => {
+  /** The required details that are still empty, in form order. @public @readonly */
+  public readonly validationIssues = computed(() => {
     this._draftRevision();
-    return this.resolveCanTestTeamsFeedback();
+    return this.resolveValidationIssues();
   });
+  /** Whether the channel has all fields required by the test boundary. @public @readonly */
+  public readonly canTestTeamsFeedback = computed(() => this.validationIssues().length === 0);
   /** Retains the original remove-action visibility. @public @readonly */
   public readonly hasExistingTeamsFeedback = computed(() => Boolean(this.data.sourceId));
-  /** Feedback retains the original Save affordance and validates inside the command. @public @readonly */
-  public readonly canSave = (): boolean => true;
+  /** `Save` stays disabled until every required detail is entered. @public @readonly */
+  public readonly canSave = computed(() => this.validationIssues().length === 0);
   /** Native input normalization shared by the existing form bindings. @public @readonly */
   public readonly eventText =
     () =>
@@ -76,7 +81,7 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
   public readonly testTeamsFeedbackCommand = new Command<void>(() => {
     void this.onExecuteTestTeamsFeedbackCommand();
   });
-  /** Removes only this intake from the latest settings. @public @readonly */
+  /** Removes only this intake from the latest settings after a destructive confirmation. @public @readonly */
   public readonly removeTeamsFeedbackCommand = new Command<void>(() => {
     void this.onExecuteRemoveTeamsFeedbackCommand();
   });
@@ -85,7 +90,7 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
     void this.onExecuteSaveCommand();
   });
   /** Closes the draft without persisting it. @public @readonly */
-  public readonly closeCommand = new Command<void>(() => this._drawerRef.close());
+  public readonly closeCommand = new Command<void>(() => this._dialogRef.close());
 
   // #endregion
 
@@ -137,17 +142,18 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
     }
   }
 
-  private resolveCanTestTeamsFeedback(): boolean {
-    return Boolean(
-      this.teams.displayName.trim() &&
-      this.teams.tenantId.trim() &&
-      this.teams.clientId.trim() &&
-      this.teams.credentialRef.trim() &&
-      this.teams.teamId.trim() &&
-      this.teams.channelId.trim() &&
-      this.teams.targetWorkItemSourceId &&
-      this.teams.targetRepositoryBindingId,
-    );
+  private resolveValidationIssues(): readonly TeamsFeedbackValidationIssue[] {
+    const missing: [TeamsFeedbackValidationIssue, boolean][] = [
+      ['display-name', !this.teams.displayName.trim()],
+      ['tenant-id', !this.teams.tenantId.trim()],
+      ['client-id', !this.teams.clientId.trim()],
+      ['credential-ref', !this.teams.credentialRef.trim()],
+      ['team-id', !this.teams.teamId.trim()],
+      ['channel-id', !this.teams.channelId.trim()],
+      ['target-project', !this.teams.targetWorkItemSourceId],
+      ['target-repository', !this.teams.targetRepositoryBindingId],
+    ];
+    return missing.flatMap(([issue, isMissing]) => (isMissing ? [issue] : []));
   }
 
   private async onExecuteTestTeamsFeedbackCommand(): Promise<boolean> {
@@ -159,6 +165,17 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
 
   private async onExecuteRemoveTeamsFeedbackCommand(): Promise<void> {
     if (!this.data.sourceId) return;
+    const confirmed = await this._alerts.confirm({
+      id: `remove-feedback-intake-${this.data.sourceId}`,
+      header: `Remove ${this.teams.displayName.trim() || 'this intake'}?`,
+      message:
+        'Symphony stops reading this Microsoft Teams channel. Work items it already created stay in GitHub.',
+      tone: 'danger',
+      confirmLabel: 'Remove intake',
+      cancelLabel: 'Keep intake',
+      destructive: true,
+    });
+    if (!confirmed) return;
     const current = this.requireSettings();
     if (
       await this._context.saveSettings({
@@ -168,7 +185,7 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
         ),
       })
     )
-      this._drawerRef.close();
+      this._dialogRef.close();
   }
 
   private async onExecuteSaveCommand(): Promise<void> {
@@ -185,7 +202,7 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
           feedbackIntakeSources: upsertSettingsItem(current.feedbackIntakeSources, source),
         })
       )
-        this._drawerRef.close();
+        this._dialogRef.close();
     } finally {
       this._busy.set(false);
     }
@@ -221,7 +238,7 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
   }
 
   private teamsSource(): ApplicationSettingsDto['feedbackIntakeSources'][number] | undefined {
-    if (!this.resolveCanTestTeamsFeedback()) return undefined;
+    if (this.resolveValidationIssues().length) return undefined;
     return {
       id: this.data.sourceId ?? `feedback-intake-${crypto.randomUUID()}`,
       workspaceId: this.data.workspaceId,
