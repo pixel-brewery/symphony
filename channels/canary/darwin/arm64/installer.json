@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.19",
+  "version": "0.1.20",
   "platform": "darwin",
   "architecture": "arm64",
   "artifact": {
-    "name": "Symphony-darwin-arm64-0.1.19.dmg",
-    "bytes": 172328494,
-    "sha256": "fa13c0f1effe24a308bd204f9fec39822bf0e8eb5b937abbc5b13fdf7c4ff67e",
-    "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.19/Symphony-darwin-arm64-0.1.19.dmg"
+    "name": "Symphony-darwin-arm64-0.1.20.dmg",
+    "bytes": 172328678,
+    "sha256": "6bc4ab721b696ceadda7b04844eb8f1a3159bef9cae18d2251d1c6288ff374bd",
+    "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.20/Symphony-darwin-arm64-0.1.20.dmg"
   }
 }
