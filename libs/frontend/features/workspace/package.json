@@ -14,15 +14,19 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@angular/common": "22.2.3",
     "@angular/core": "22.2.3",
     "@pixel-brewery/mosaik-elements-angular": "0.1.183",
+    "@pixel-brewery/mosaik-elements-foundation": "0.1.183",
     "@symphony/domain-skills": "workspace:*",
+    "@symphony/domain-workspace": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
     "@symphony/frontend-notification": "workspace:*",
     "@symphony/frontend-setting": "workspace:*",
     "@symphony/frontend-ui": "workspace:*",
     "@symphony/ipc-contracts-composition": "workspace:*",
-    "@symphony/ipc-contracts-desktop": "workspace:*"
+    "@symphony/ipc-contracts-desktop": "workspace:*",
+    "rxjs": "7.8.2"
   },
   "devDependencies": {
     "@angular/compiler": "22.2.3",

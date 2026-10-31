@@ -5,13 +5,13 @@ Ein Workspace ist die feste Grenze für ein Unternehmen oder ein Projekt. Er bes
 ## Was das Feature bietet
 
 - Eine Liste aller Workspaces mit einer einzeiligen Zusammenfassung und ihrem Zustand.
-- Workspaces anlegen, umbenennen, einfärben und deaktivieren.
+- Workspaces anlegen, umbenennen, mit Symbol, Emoji oder Monogramm und Farbe gestalten sowie deaktivieren.
 - Die Konfiguration eines Workspace als portables Bündel exportieren und auf diesem oder einem anderen Mac importieren.
 - Sechs Bereiche je Workspace: **AI team**, **Connected services**, **Repositories**, **Delivery destinations**, **Local GitHub Actions** und **Administration**.
 
 ## Die Liste „Workspaces“
 
-Die Einstellungen öffnen sich auf **Workspaces**. Die Gruppe **Workspaces** trägt rechts **Import workspace** und **Add workspace**. Jede Zeile zeigt das Kürzel des Workspace als Kachel, seinen Namen und eine Zusammenfassung, etwa:
+Die Einstellungen öffnen sich auf **Workspaces**. Die Gruppe **Workspaces** trägt rechts **Import workspace** und **Add workspace**. Jede Zeile zeigt die gewählte Workspace-Kachel, seinen Namen und eine Zusammenfassung, etwa:
 
 `2 agents · 1 AI account · 3 repositories, 1 not prepared locally · 4.2 GB of 20 GB`
 
@@ -37,14 +37,30 @@ Unter der Liste erinnert ein Hinweis daran, dass Probleme – etwa ein nicht ang
 | --------------------- | ---------------------------------------------------------------------------------------------- |
 | **Name**              | Pflichtfeld                                                                                    |
 | **Short code**        | Pflichtfeld; wird beim Speichern in Großbuchstaben umgewandelt und auf acht Zeichen gekürzt    |
-| **Color (hex)**       | Farbe als `#` mit sechs Hexadezimalziffern, vorbelegt mit `#4f6bed`                            |
+| **Choose icon**       | öffnet die Auswahl von Symbol, Emoji oder Monogramm samt Farbe; daneben steht die Vorschau     |
 | **Workspace enabled** | „Include this workspace in configuration and task routing.“ Ein neuer Workspace ist aktiviert. |
 
-**Save** prüft die Eingaben. Fehlt etwas oder ist die Farbe ungültig, meldet das Sheet **Check the workspace** mit „Enter a name, a short code and a color such as #4f6bed.“ und bleibt offen. Scheitert das Speichern, meldet es **Unable to save settings.** mit „Your changes are still here. Try again.“. **Cancel** und Escape schließen ohne Änderung.
+**Save** prüft die Eingaben. Fehlt etwas oder ist die Farbe ungültig, meldet das Sheet **Check the workspace** mit „Enter a name and a short code, and choose a valid icon color.“ und bleibt offen. Scheitert das Speichern, meldet es **Unable to save settings.** mit „Your changes are still here. Try again.“. **Cancel** und Escape schließen ohne Änderung.
 
-Ein neuer Workspace beginnt mit 20 GB Speichergrenze, ausgeschalteten lokalen GitHub-Actions-Läufen und ausgeschalteter automatischer Bündelung. Beim Bearbeiten bleiben diese Einstellungen unverändert.
+Ein neuer Workspace beginnt mit 20 GB Speichergrenze, ausgeschalteten lokalen GitHub-Actions-Läufen und ausgeschalteter automatischer Bündelung. Beim Bearbeiten bleiben diese Einstellungen und die bisher gewählte Kachel unverändert, solange du sie nicht selbst änderst.
 
 Ein deaktivierter Workspace wird bei Konfiguration und Aufgabenverteilung nicht berücksichtigt, kann nicht mit **Use only this workspace** in den Fokus genommen werden und liefert keine Hinweise zu Repositories oder Speicher in die Mitteilungszentrale.
+
+### Symbol und Farbe wählen
+
+**Choose icon** öffnet **Choose workspace icon** mit einer Vorschau und drei Möglichkeiten:
+
+| Auswahl      | Bedienung und Regel                                                                                                                                                                |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Icons**    | Ein vorgeschlagenes Symbol wählen oder mit **Search icons** nach einem verfügbaren Symbol suchen.                                                                                  |
+| **Emoji**    | Ein vorgeschlagenes Emoji wählen oder unter **Paste an emoji** genau ein Emoji einfügen. Zusammengehörende Folgen wie Flaggen, Hauttöne und verbundene Emoji zählen als ein Emoji. |
+| **Monogram** | Unter **Letters** ein oder zwei Buchstaben oder Zahlen eingeben; Buchstaben erscheinen in Großschreibung.                                                                          |
+
+Für **Icons** und **Monogram** kannst du eine Farbe aus der Palette oder eine eigene Farbe wählen. Die Kachel zeigt das Symbol beziehungsweise die Buchstaben in dieser Farbe auf einem dezent getönten Grund. Emoji behalten ihre eigenen Farben; die Farbauswahl ist dabei ausgeblendet.
+
+**Save icon** übernimmt die gültige Auswahl in den Workspace-Entwurf. Dauerhaft gilt sie erst nach **Save** im darunterliegenden Workspace-Sheet. **Cancel**, Escape oder das Schließen der Symbolauswahl verwerfen deren Änderungen. Brichst du anschließend das Workspace-Sheet ab, wird auch eine bereits übernommene Auswahl verworfen. Ungültige Eingaben zeigen einen Hinweis; **Save icon** bleibt gesperrt.
+
+Die gespeicherte Kachel erscheint im Workspace-Umschalter samt dessen Menü, in der Einstellungsseitenleiste und in der Workspace-Liste. Ohne eigene Auswahl stehen die ersten beiden Zeichen des Kürzels in Großbuchstaben in der bereits gespeicherten Workspace-Farbe; bei einem neuen Workspace ist diese Farbe `#4f6bed`. Kann ein gespeichertes Symbol nicht dargestellt werden, erscheint das Kürzel. Symbol und Farbe gehören auch zum Export und Import des Workspace.
 
 ## Workspace importieren
 

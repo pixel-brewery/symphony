@@ -1,5 +1,6 @@
 // #region Imports
 
+import { AsyncPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   AvatarComponent,
@@ -9,6 +10,7 @@ import {
   TextComponent,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
+import { WorkspaceAvatarSourcePipe } from '@symphony/frontend-ui';
 import { mosaikEventText } from '../forms/mosaikEventText';
 import { SettingsSectionIconPipe } from '../pipes/SettingsSectionIconPipe';
 import { SettingsViewPresenter } from '../view-presenters/SettingsViewPresenter';
@@ -25,6 +27,7 @@ import { SettingsViewPresenter } from '../view-presenters/SettingsViewPresenter'
   selector: 'symphony-settings-sidebar-view',
   host: { class: 'block' },
   imports: [
+    AsyncPipe,
     AvatarComponent,
     ButtonComponent,
     IconNameDirective,
@@ -32,6 +35,7 @@ import { SettingsViewPresenter } from '../view-presenters/SettingsViewPresenter'
     SettingsSectionIconPipe,
     TextComponent,
     TypographyDirective,
+    WorkspaceAvatarSourcePipe,
   ],
   templateUrl: './SettingsSidebarView.html',
   styleUrl: './SettingsSidebarView.scss',

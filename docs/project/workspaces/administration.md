@@ -33,18 +33,18 @@ Bei `Writes blocked` erscheint unter **When the limit is reached** die Meldung *
 
 ## Workspace-Aktionen
 
-| Aktion                      | Wirkung                                                                                                                                                                  |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Edit workspace**          | öffnet das Sheet **Edit workspace** mit Name, Kürzel, Farbe und **Workspace enabled** ([Workspace anlegen oder bearbeiten](README.md#workspace-anlegen-oder-bearbeiten)) |
-| **Use only this workspace** | „Scope Symphony to …“: Das Hauptfenster zeigt danach nur noch diesen Workspace. Ein deaktivierter Workspace kann nicht so gewählt werden.                                |
-| **Export workspace**        | wählt mit **Choose export destination for …** einen Ordner und schreibt dorthin ein Bündel `<name>-<Zeitstempel>.symphony-workspace.json`                                |
-| **Delete workspace**        | löscht den Workspace nach Rückfrage; gesperrt, solange es der einzige Workspace ist                                                                                      |
+| Aktion                      | Wirkung                                                                                                                                                                                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Edit workspace**          | öffnet das Sheet **Edit workspace** mit Name, Kürzel, **Choose icon** für Symbol und Farbe sowie **Workspace enabled** ([Workspace anlegen oder bearbeiten](README.md#workspace-anlegen-oder-bearbeiten)) |
+| **Use only this workspace** | „Scope Symphony to …“: Das Hauptfenster zeigt danach nur noch diesen Workspace. Ein deaktivierter Workspace kann nicht so gewählt werden.                                                                 |
+| **Export workspace**        | wählt mit **Choose export destination for …** einen Ordner und schreibt dorthin ein Bündel `<name>-<Zeitstempel>.symphony-workspace.json`                                                                 |
+| **Delete workspace**        | löscht den Workspace nach Rückfrage; gesperrt, solange es der einzige Workspace ist                                                                                                                       |
 
 Export und Import schließen einander aus; während des Exports zeigt die Schaltfläche ihren Fortschritt.
 
 ### Was ein Export enthält
 
-Das Bündel enthält die Konfiguration des Workspace: Workspace, Konten ohne gespeicherte Zugangsdaten, Boards, Repositories ohne lokale Pfade und Einrichtungsskripte, GitHub-Actions-Anbindungen, Organisation, Agenten, Team, Lieferablauf, ausgeschaltete Teams-Feedback-Intakes und die geteilten Skills, die das Team verwendet. Auslieferungsziele gehören nicht dazu. Symphony meldet `<Name> exported.` mit „Stored credential fields and machine-local paths were excluded.“ und gegebenenfalls der Zahl der mitgenommenen Skills. Einlesen beschreibt [Workspace importieren](README.md#workspace-importieren).
+Das Bündel enthält die Konfiguration des Workspace: Workspace einschließlich Symbol, Emoji oder Monogramm und Farbe, Konten ohne gespeicherte Zugangsdaten, Boards, Repositories ohne lokale Pfade und Einrichtungsskripte, GitHub-Actions-Anbindungen, Organisation, Agenten, Team, Lieferablauf, ausgeschaltete Teams-Feedback-Intakes und die geteilten Skills, die das Team verwendet. Auslieferungsziele gehören nicht dazu. Symphony meldet `<Name> exported.` mit „Stored credential fields and machine-local paths were excluded.“ und gegebenenfalls der Zahl der mitgenommenen Skills. Einlesen beschreibt [Workspace importieren](README.md#workspace-importieren).
 
 ### Workspace löschen
 

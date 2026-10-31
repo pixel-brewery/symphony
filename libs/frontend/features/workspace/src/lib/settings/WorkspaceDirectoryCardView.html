@@ -71,9 +71,11 @@
       slot="leading"
       class="flex-none"
       aria-hidden="true"
+      [attr.test-id]="'workspace-directory-avatar-' + entry.workspace.id"
       [size]="'medium'"
       [appearance]="'soft'"
       [text]="entry.workspace.shortCode"
+      [src]="(entry.workspace | workspaceAvatarSource | async) ?? undefined"
       [textAccessor]="shortCodeAccessor"
     />
     @if (entry.workspace.enabled) {

@@ -13,6 +13,7 @@ import {
 } from '@symphony/configuration-composition';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { WorkspaceAvatarPicker } from '../appearance/WorkspaceAvatarPicker';
 import type { IWorkspaceSettingsContext } from '../ports/IWorkspaceSettingsContext';
 import { WORKSPACE_CONFIGURATION } from '../ports/WorkspaceConfigurationToken';
 import type { IWorkspaceConfiguration } from '../ports/IWorkspaceConfiguration';
@@ -31,6 +32,7 @@ function arrange(workspaceId?: string) {
         displayName: 'Existing',
         shortCode: 'OLD',
         color: '#123456',
+        avatar: { kind: 'icon', value: 'folder' },
         enabled: true,
         isolation: 'strict',
         storageLimitGiB: 42,
@@ -48,9 +50,11 @@ function arrange(workspaceId?: string) {
   };
   const close = vi.fn();
   const saveSettings = vi.fn<IWorkspaceConfiguration['saveSettings']>(async () => true);
+  const pick = vi.fn<WorkspaceAvatarPicker['pick']>(async () => undefined);
   TestBed.configureTestingModule({
     providers: [
       WorkspaceSettingsEditorViewPresenter,
+      { provide: WorkspaceAvatarPicker, useValue: { pick } },
       { provide: WORKSPACE_SETTINGS_CONTEXT, useValue: context },
       { provide: WORKSPACE_CONFIGURATION, useValue: { saveSettings } },
       { provide: DIALOG_REF_DATA, useValue: { kind: 'workspace', workspaceId } },
@@ -62,6 +66,7 @@ function arrange(workspaceId?: string) {
     settings,
     close,
     saveSettings,
+    pick,
   };
 }
 
@@ -90,11 +95,55 @@ describe('WorkspaceSettingsEditorViewPresenter', () => {
       id: 'workspace-a',
       displayName: 'Renamed',
       shortCode: 'LONGSHOR',
+      color: '#123456',
+      avatar: { kind: 'icon', value: 'folder' },
       storageLimitGiB: 42,
       localCiEnabled: true,
       automaticDeliveryGroupingEnabled: true,
     });
     expect(saved?.activeViewScope.workspaceIds).toEqual(['workspace-a']);
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it('keeps a confirmed icon and color in the draft until the workspace is saved', async () => {
+    // arrange
+    const { presenter, saveSettings, pick } = arrange('workspace-a');
+    pick.mockResolvedValue({ avatar: { kind: 'monogram', value: 'FX' }, color: '#F97316' });
+
+    // act
+    presenter.chooseAvatarCommand.execute();
+    await vi.waitFor(() => expect(presenter.avatarBusy()).toBe(false));
+
+    // assert
+    expect(presenter.workspace.avatar).toEqual({ kind: 'monogram', value: 'FX' });
+    expect(presenter.workspace.color).toBe('#F97316');
+    expect(saveSettings).not.toHaveBeenCalled();
+
+    // act
+    presenter.saveCommand.execute();
+    await vi.waitFor(() => expect(presenter.busy()).toBe(false));
+
+    // assert
+    expect(saveSettings.mock.calls[0]?.[0].workspaces[0]).toMatchObject({
+      color: '#F97316',
+      avatar: { kind: 'monogram', value: 'FX' },
+    });
+  });
+
+  it('retains the original icon when the picker is cancelled and writes nothing on editor cancellation', async () => {
+    // arrange
+    const { presenter, saveSettings, close, pick } = arrange('workspace-a');
+    const original = presenter.workspace;
+
+    // act
+    presenter.chooseAvatarCommand.execute();
+    await vi.waitFor(() => expect(presenter.avatarBusy()).toBe(false));
+    presenter.closeCommand.execute();
+
+    // assert
+    expect(pick).toHaveBeenCalledOnce();
+    expect(presenter.workspace).toBe(original);
+    expect(saveSettings).not.toHaveBeenCalled();
     expect(close).toHaveBeenCalledOnce();
   });
 

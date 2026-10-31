@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { workspaceIsolationModes } from '@symphony/domain-workspace';
 import { identifierSchema } from '@symphony/configuration-core';
 import { runnerImageDefinitionSchema } from '@symphony/configuration-ci';
+import { workspaceAvatarSchema } from './WorkspaceAvatarSchema';
 
 // #endregion
 
@@ -12,6 +13,7 @@ export const workspaceSchema = z.object({
   displayName: identifierSchema,
   shortCode: identifierSchema.max(8),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/u),
+  avatar: workspaceAvatarSchema.optional(),
   enabled: z.boolean(),
   isolation: z.enum(workspaceIsolationModes),
   storageLimitGiB: z.number().int().min(2).max(1_024).default(20),
