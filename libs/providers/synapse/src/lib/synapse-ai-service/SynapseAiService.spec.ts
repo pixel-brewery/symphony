@@ -25,9 +25,11 @@ afterEach(async () => {
 
   for (const root of roots) await ownedTemporaries(root, temporaries);
 
-  for (const directory of temporaries) await rm(directory, { recursive: true, force: true });
+  for (const directory of temporaries)
+    await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 
-  for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true });
+  for (const root of roots.splice(0))
+    await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 
   vi.restoreAllMocks();
   vi.useRealTimers();
