@@ -14,7 +14,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@angular/core": "22.2.0",
+    "@angular/core": "22.2.3",
     "@pixel-brewery/mosaik-elements-angular": "0.1.183",
     "@pixel-brewery/mosaik-elements-foundation": "0.1.183",
     "@symphony/ipc-contracts-core": "workspace:*",
