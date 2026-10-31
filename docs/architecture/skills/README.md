@@ -17,7 +17,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Abschnittsbeitrag `skills`, Suchbeiträge, Werkzeugleistenaktionen, Schrittprojektion, die Sheets für Rollenanweisungen, Katalog, Paketdetails und Import, Lösen einer Zuordnung, Weiterleitung von `/main/skills`, Paletten- und Kontextsuchtreffer.
-- Nicht enthalten: Paketformat, Wurzeln, Validierung und Ausführungsschnappschüsse ([Skill-Modell](../skill-model.md), [Skill-Auflösung](../skill-resolution.md)); wer einen Schritt erledigt ([AI-Team-Einstellungen](../ai-team/README.md)); Sheet-, Rückfrage- und Suchmechanik des Fensters ([Einstellungsfenster](../window-and-navigation/settings-window.md)).
+- Nicht enthalten: Paketformat, Wurzeln, Validierung und Ausführungsschnappschüsse ([Skill-Modell](../skill-model.md), [Skill-Auflösung](../skill-resolution.md)); wer einen Schritt erledigt ([AI-Team-Einstellungen](../ai-team/README.md)); Sheet-, Rückfrage- und Suchmechanik der Einstellungen ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)).
 
 ## Verantwortungsgrenzen
 
