@@ -96,11 +96,18 @@ export class PresenterView {
 
   /**
    * Window shortcuts: ⌘K (Ctrl+K off macOS) toggles the command palette, ⌘N (Ctrl+N) opens the
-   * new-work-item sheet.
+   * new-work-item sheet, and Escape closes the open palette.
    *
    * @param event - Key event that reached the window.
    */
   protected handleShortcut(event: KeyboardEvent): void {
+    // The palette is modal: Escape closes it wherever the focus is, also in the moment before its
+    // search field has taken the focus. The palette's own handler stops an Escape it closed on.
+    if (event.key === 'Escape' && this.palette.isOpen()) {
+      event.preventDefault();
+      this.palette.close();
+      return;
+    }
     const modifier = this.isMacOS ? event.metaKey : event.ctrlKey;
     if (!modifier || event.altKey || event.shiftKey) return;
     const key = event.key.toLowerCase();
