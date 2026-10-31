@@ -221,7 +221,8 @@ describe('StorageGovernor', () => {
       availableFilesystemBytes: () => TEST_AVAILABLE_FILESYSTEM_BYTES,
     });
     expect(restartedGovernor.report().measured).toBe(true);
-  }, 30_000);
+    // Writing and walking 11,000 files takes about 40 s on Windows runners.
+  }, 120_000);
 
   it('splits every usage group into the categories that physically fill it', () => {
     // arrange
