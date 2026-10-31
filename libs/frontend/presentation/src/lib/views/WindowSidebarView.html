@@ -37,9 +37,11 @@
     >
       <mosaik-avatar
         part="workspace-tile"
+        test-id="workspace-switcher-avatar"
         class="flex-none"
         aria-hidden="true"
         [text]="workspace.shortCode"
+        [src]="(workspace | workspaceAvatarSource | async) ?? undefined"
         [textAccessor]="shortCodeAccessor"
         [appearance]="'solid'"
         [variant]="'neutral'"
@@ -86,7 +88,17 @@
             [subLabel]="entry.shortCode"
             [isChecked]="entry.id === workspace.id"
             (click)="workspaceMenu.invoke('close'); presenter.selectWorkspaceCommand.execute(entry.id)"
-          />
+          >
+            <mosaik-avatar
+              slot="icon"
+              class="flex-none"
+              aria-hidden="true"
+              [size]="'small'"
+              [src]="(entry | workspaceAvatarSource | async) ?? undefined"
+              [text]="entry.shortCode"
+              [textAccessor]="shortCodeAccessor"
+            />
+          </mosaik-menu-item>
           }
           <mosaik-divider />
           }

@@ -1,6 +1,6 @@
 // #region Imports
 
-import { NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   AvatarComponent,
@@ -15,7 +15,7 @@ import {
   SettingsGroupComponent,
   SettingsRowComponent,
 } from '@symphony/frontend-setting';
-import { StorageSizePipe } from '@symphony/frontend-ui';
+import { StorageSizePipe, WorkspaceAvatarSourcePipe } from '@symphony/frontend-ui';
 import { WorkspaceDirectoryViewPresenter } from './WorkspaceDirectoryViewPresenter';
 
 // #endregion
@@ -30,6 +30,7 @@ import { WorkspaceDirectoryViewPresenter } from './WorkspaceDirectoryViewPresent
   selector: 'symphony-workspace-directory-card',
   host: { class: 'flex min-w-0 flex-col gap-3' },
   imports: [
+    AsyncPipe,
     AvatarComponent,
     ButtonComponent,
     DotComponent,
@@ -41,6 +42,7 @@ import { WorkspaceDirectoryViewPresenter } from './WorkspaceDirectoryViewPresent
     StorageSizePipe,
     TextComponent,
     TypographyDirective,
+    WorkspaceAvatarSourcePipe,
   ],
   providers: [WorkspaceDirectoryViewPresenter],
   templateUrl: './WorkspaceDirectoryCardView.html',

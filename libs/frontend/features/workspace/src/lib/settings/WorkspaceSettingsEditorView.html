@@ -3,7 +3,7 @@
     slot="header"
     class="flex min-w-0 flex-1"
     [text]="presenter.data.workspaceId ? 'Edit workspace' : 'Add workspace'"
-    [subText]="'Security and ownership boundary'"
+    [subText]="'Name, icon and availability'"
   >
     <mosaik-button
       slot="suffix"
@@ -51,7 +51,7 @@
           [mosaikTypography]="'caption'"
           [variant]="'neutral'"
           [wrap]="true"
-          [text]="'The strict ownership, credential and execution boundary.'"
+          [text]="'Choose how this workspace appears in navigation.'"
         />
       </div>
       <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
@@ -72,23 +72,27 @@
             class="w-full"
             [value]="presenter.workspace.shortCode"
             [attr.aria-label]="'Short code'"
-            (input)="presenter.workspace.shortCode = eventText($event)"
+            (input)="presenter.setShortCodeCommand.execute(eventText($event))"
           />
         </div>
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [text]="'Color (hex)'"
-          />
-          <mosaik-textbox
-            test-id="workspace-color"
-            class="w-full"
-            [value]="presenter.workspace.color"
-            [attr.aria-label]="'Color (hex)'"
-            (input)="presenter.workspace.color = eventText($event)"
-          />
-        </div>
+      </div>
+      <div class="flex min-w-0 items-center gap-2">
+        <mosaik-avatar
+          test-id="workspace-editor-avatar"
+          class="flex-none"
+          aria-hidden="true"
+          [size]="'large'"
+          [src]="(presenter.workspace | workspaceAvatarSource | async) ?? undefined"
+          [text]="presenter.workspace.shortCode"
+          [textAccessor]="shortCodeAccessor"
+        />
+        <mosaik-button
+          test-id="choose-workspace-icon"
+          [label]="'Choose icon'"
+          [appearance]="'outline'"
+          [disabled]="presenter.busy() || presenter.editorBusy() || presenter.avatarBusy()"
+          (click)="presenter.chooseAvatarCommand.execute()"
+        />
       </div>
       <div part="settings-group-rows" class="flex min-w-0 flex-col">
         <symphony-settings-row
@@ -114,7 +118,7 @@
         [iconName]="'errorCircle'"
         [iconSize]="'small'"
         [header]="error === 'save' ? 'Unable to save settings.' : 'Check the workspace'"
-        [content]="error === 'save' ? 'Your changes are still here. Try again.' : 'Enter a name, a short code and a color such as #4f6bed.'"
+        [content]="error === 'save' ? 'Your changes are still here. Try again.' : 'Enter a name and a short code, and choose a valid icon color.'"
       />
       }
     </div>
@@ -134,7 +138,7 @@
       [appearance]="'solid'"
       [variant]="'primary'"
       [isBusy]="presenter.busy()"
-      [disabled]="presenter.busy() || presenter.editorBusy()"
+      [disabled]="presenter.busy() || presenter.editorBusy() || presenter.avatarBusy()"
       (click)="presenter.saveCommand.execute()"
     />
   </div>

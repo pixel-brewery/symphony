@@ -453,7 +453,6 @@ test('opens exactly one workspace organization and projects its delivery routing
     await settings.getByTestId('add-workspace').click();
     await settings.getByTestId('workspace-name').locator('input').fill('Customer workspace');
     await settings.getByTestId('workspace-short-code').locator('input').fill('CUST');
-    await settings.getByTestId('workspace-color').locator('input').fill('#038387');
     await settings.getByTestId('save-settings-editor').click();
     await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
     const addedWorkspaceId = await page.evaluate(async () => {

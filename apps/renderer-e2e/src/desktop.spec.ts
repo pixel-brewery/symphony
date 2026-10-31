@@ -451,7 +451,9 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await settings.getByTestId('add-workspace').click();
     await settings.getByTestId('workspace-name').locator('input').fill('Temporary workspace');
     await settings.getByTestId('workspace-short-code').locator('input').fill('TMP');
-    await settings.getByTestId('workspace-color').locator('input').fill('#038387');
+    await settings.getByTestId('choose-workspace-icon').click();
+    await settings.getByTestId('workspace-avatar-color-14b8a6').click();
+    await settings.getByTestId('workspace-avatar-save').click();
     await settings.getByTestId('save-settings-editor').click();
     await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
     const temporaryWorkspaceId = await page.evaluate(async () => {

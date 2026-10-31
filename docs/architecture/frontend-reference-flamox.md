@@ -478,7 +478,7 @@ inspected were `libs/frontend/setting/src/views/SettingsView.html`,
 page with a `mosaik-searchbox` above a Mosaik Menu of inline nested items with Avatar icons, and a
 Segment on narrow screens. The Settings window has a 232 px sidebar whose empty 52 px first row is
 the drag region for the traffic lights, then `Search settings` (`mosaik-searchbox`), `Workspaces`,
-every workspace with its short-code tile and, under the selected workspace, its six sections as
+every workspace with its tile and, under the selected workspace, its six sections as
 indented rows, and the heading `Symphony` with the global sections. Rows are plain Mosaik Buttons,
 the current one soft. There is no narrow-screen Segment. Constraint: the `Settings` artboard and a
 separate window with a 720 × 520 px minimum. **Superseded on 2026-10-31** for the placement: the
@@ -3105,3 +3105,46 @@ the step they run in; `Import skill`, `Add skills`, `New skill` and refresh are 
 toolbar actions. Moving an active package to another step, formerly a select on its card, is the
 `Use in flow` select of the package sheet. Built-in role instructions are edited in their own sheet
 instead of inline cards.
+
+## 2026-10-31 Workspace icons, emoji, monograms and color
+
+The exact read-only FLAMOX365 reference is the identity user's
+`views/dialogs/AvatarDialogView.{ts,html,scss}`,
+`view-presenters/dialogs/AvatarDialogViewPresenter.ts`,
+`services/AvatarPicker.ts`, `services/AvatarSelectionValidator.ts`,
+`services/AvatarImageService.ts` and `pipes/AvatarIconsPipe.ts`, all under
+`libs/frontend/features/identity/src/lib/user/`. Mosaik's public Avatar,
+Segment, Segment Item, Toggle Button, Color Swatch and Color Picker contracts
+were inspected at the installed `0.1.183` version shared by both applications.
+
+**Adopt:** the workspace picker retains the reference dialog's header, constrained
+scroll-owned content and footer, shared live preview, three representation tabs,
+suggested symbols and case-insensitive alias search, suggested emoji and paste
+field, one-or-two-character Unicode monogram, color swatches and explicit
+confirmation/cancellation. Emoji retain native colors; the palette is hidden
+in that mode. The 256-pixel browser drawing follows the reference's white base,
+14% color tint for symbols and monograms, glyph sizes, centering and platform
+emoji fonts. Mosaik Avatar consumes the resulting PNG through its public `src`;
+there is no View override of Avatar internals.
+
+**Adapt:** this is a workspace identity editor inside the existing workspace
+settings sheet. It returns a structured `{ avatar: { kind, value }, color }`
+selection to that sheet's draft. Only the sheet's existing aggregate save writes
+settings; cancelling either step preserves its corresponding prior state.
+Workspace account, auth, upload and random profile-generation flows do not
+participate. Missing selection starts from the existing short code as a
+monogram, preserving existing workspaces without migration. The existing
+workspace color is the sole persisted color field. The authoritative domain
+validator supplies both the dialog and schema with the same Unicode glyph
+rules. A direct public Mosaik Color Picker supplies custom opaque RGB choices
+in place of FLAMOX365's application-owned color-picker wrapper.
+
+**Adapt:** the same rendering owner supplies the main sidebar's active tile,
+each workspace-menu entry through Menu Item's public `icon` slot, the settings
+sidebar and the workspace directory. Registered icon data is serialized at
+runtime rather than authored as SVG markup in Symphony. Unknown registered
+aliases fall back to the workspace short code without rewriting saved data;
+render failures leave Mosaik's text fallback. A bounded render cache and Angular
+AsyncPipe prevent repeated drawing and stale asynchronous display. These
+workspace-specific persistence and fallback rules are documented in
+[Workspaces](workspaces/README.md#workspace-symbol-und-farbe).

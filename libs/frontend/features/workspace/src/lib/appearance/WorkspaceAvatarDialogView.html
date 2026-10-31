@@ -1,0 +1,169 @@
+<ng-template mosaikDialogHeader>
+  <mosaik-dialog-header
+    [text]="'Choose workspace icon'"
+    [subText]="'Choose an icon, emoji, or monogram.'"
+  >
+    <mosaik-button
+      slot="suffix"
+      test-id="workspace-avatar-close"
+      [iconName]="'clear'"
+      [attr.aria-label]="'Cancel'"
+      [appearance]="'plain'"
+      [size]="'small'"
+      (click)="presenter.closeCommand.execute()"
+    />
+  </mosaik-dialog-header>
+</ng-template>
+<ng-template mosaikDialogContent>
+  <div test-id="workspace-avatar-dialog" class="max-h-[min(28rem,60dvh)] overflow-y-auto px-1 py-2">
+    <div class="flex min-w-0 flex-col gap-2">
+      <div class="flex min-w-0 items-center gap-2">
+        <mosaik-avatar
+          test-id="workspace-avatar-preview"
+          [attr.aria-label]="'Preview'"
+          [src]="(presenter.preview() | workspaceAvatarSource | async) ?? undefined"
+          [text]="presenter.monogram()"
+          [size]="'small'"
+        />
+        <mosaik-text [text]="'Preview'" />
+      </div>
+      <mosaik-segment class="max-w-full" [appearance]="'soft'">
+        <mosaik-segment-item
+          test-id="workspace-avatar-kind-icon"
+          [label]="'Icons'"
+          [isChecked]="presenter.kind() === 'icon'"
+          (checked)="presenter.selectKindCommand.execute('icon')"
+        />
+        <mosaik-segment-item
+          test-id="workspace-avatar-kind-emoji"
+          [label]="'Emoji'"
+          [isChecked]="presenter.kind() === 'emoji'"
+          (checked)="presenter.selectKindCommand.execute('emoji')"
+        />
+        <mosaik-segment-item
+          test-id="workspace-avatar-kind-monogram"
+          [label]="'Monogram'"
+          [isChecked]="presenter.kind() === 'monogram'"
+          (checked)="presenter.selectKindCommand.execute('monogram')"
+        />
+      </mosaik-segment>
+      @if (presenter.kind() !== 'emoji') {
+      <mosaik-text [text]="'Color'" />
+      <div class="flex flex-wrap items-center gap-1">
+        @for (color of presenter.colors; track color) {
+        <mosaik-toggle-button
+          [attr.test-id]="'workspace-avatar-color-' + color.slice(1).toLowerCase()"
+          [attr.aria-label]="'Choose color ' + color"
+          [isChecked]="presenter.color().toLowerCase() === color.toLowerCase()"
+          [appearance]="'plain'"
+          [size]="'small'"
+          (click)="presenter.selectColorCommand.execute(color)"
+        >
+          <mosaik-color-swatch slot="label" [value]="color" />
+        </mosaik-toggle-button>
+        }
+        <mosaik-color-picker
+          test-id="workspace-avatar-color"
+          [attr.aria-label]="'Choose a custom color'"
+          [value]="presenter.color()"
+          [format]="'hex'"
+          [showAlpha]="false"
+          [showInputs]="false"
+          [showPalette]="false"
+          [showEyeDropper]="true"
+          (colorChanged)="presenter.selectColorCommand.execute($event)"
+        />
+      </div>
+      } @switch (presenter.kind()) { @case ('icon') {
+      <mosaik-searchbox
+        test-id="workspace-avatar-search"
+        [attr.aria-label]="'Search icons'"
+        [value]="presenter.search()"
+        [placeholder]="'Search icons'"
+        (input)="presenter.searchCommand.execute(eventText($event))"
+        (cleared)="presenter.searchCommand.execute('')"
+      />
+      <div class="grid grid-cols-6 gap-1 sm:grid-cols-10">
+        @for (icon of presenter.icons | workspaceAvatarIcons: presenter.search(); track icon) {
+        <mosaik-toggle-button
+          [attr.test-id]="'workspace-avatar-icon-' + icon"
+          [attr.aria-label]="'Choose icon ' + icon"
+          [iconName]="icon"
+          [iconSize]="'medium'"
+          [isChecked]="presenter.icon() === icon"
+          [appearance]="'plain'"
+          [size]="'small'"
+          (click)="presenter.selectIconCommand.execute(icon)"
+        />
+        } @empty {
+        <mosaik-text class="col-span-full" [text]="'No icons match your search.'" />
+        }
+      </div>
+      } @case ('emoji') {
+      <div class="grid grid-cols-6 gap-1 sm:grid-cols-10">
+        @for (emoji of presenter.emojis; track emoji; let index = $index) {
+        <mosaik-toggle-button
+          [attr.test-id]="'workspace-avatar-emoji-' + index"
+          [attr.aria-label]="'Choose emoji ' + emoji"
+          [isChecked]="presenter.emoji() === emoji"
+          [appearance]="'plain'"
+          [size]="'small'"
+          (click)="presenter.selectEmojiCommand.execute(emoji)"
+        >
+          <mosaik-emoji slot="label" [emoji]="emoji" [size]="'medium'" />
+        </mosaik-toggle-button>
+        }
+      </div>
+      <mosaik-form-field [error]="presenter.error() === 'emoji' ? 'Enter one emoji.' : undefined">
+        <mosaik-textbox
+          test-id="workspace-avatar-emoji"
+          [label]="'Paste an emoji'"
+          [attr.aria-label]="'Paste an emoji'"
+          [value]="presenter.emoji()"
+          [required]="true"
+          (input)="presenter.selectEmojiCommand.execute(eventText($event))"
+        />
+      </mosaik-form-field>
+      } @case ('monogram') {
+      <mosaik-form-field
+        [hint]="'One or two letters or numbers.'"
+        [error]="presenter.error() === 'monogram' ? 'Enter one or two letters or numbers.' : undefined"
+      >
+        <mosaik-textbox
+          test-id="workspace-avatar-monogram"
+          [label]="'Letters'"
+          [attr.aria-label]="'Letters'"
+          [value]="presenter.monogram()"
+          [required]="true"
+          (input)="presenter.setMonogramCommand.execute(eventText($event))"
+        />
+      </mosaik-form-field>
+      } } @if (presenter.error() === 'icon' || presenter.error() === 'color') {
+      <mosaik-message
+        test-id="workspace-avatar-error"
+        [variant]="'danger'"
+        [content]="presenter.error() === 'icon' ? 'Choose an available icon.' : 'Choose a color.'"
+      />
+      }
+    </div>
+  </div>
+</ng-template>
+<ng-template mosaikDialogFooter>
+  <div class="flex w-full flex-wrap justify-end gap-2">
+    <mosaik-button
+      test-id="workspace-avatar-cancel"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      [size]="'small'"
+      (click)="presenter.closeCommand.execute()"
+    />
+    <mosaik-button
+      test-id="workspace-avatar-save"
+      [label]="'Save icon'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [disabled]="!presenter.applyCommand.canExecute()"
+      (click)="presenter.applyCommand.execute()"
+    />
+  </div>
+</ng-template>

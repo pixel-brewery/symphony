@@ -34,10 +34,10 @@ Symphony öffnet nach dem Start den Bildschirm, den du zuletzt offen hattest, et
 
 ### Workspace wechseln
 
-Die Karte oben in der Seitenleiste zeigt den aktiven Workspace: sein Kürzel als Kachel (die ersten beiden Zeichen in Großbuchstaben), seinen Namen und das erste aktivierte Repository als `owner/name`. Hat der Workspace kein aktiviertes Repository, entfällt diese Zeile.
+Die Karte oben in der Seitenleiste zeigt den aktiven Workspace: seine [gewählte Kachel aus Symbol, Emoji oder Monogramm](../workspaces/README.md#symbol-und-farbe-wählen), seinen Namen und das erste aktivierte Repository als `owner/name`. Ohne eigene Kachel erscheinen die ersten beiden Zeichen seines Kürzels in Großbuchstaben und in seiner Workspace-Farbe. Hat der Workspace kein aktiviertes Repository, entfällt die Repository-Zeile.
 
 1. Wähle den Pfeil **Switch workspace** auf der Karte.
-2. Das Menü listet alle aktivierten Workspaces mit Namen und Kürzel; der aktive Workspace ist markiert.
+2. Das Menü listet alle aktivierten Workspaces mit ihrer Kachel, ihrem Namen und Kürzel; der aktive Workspace ist markiert.
 3. Wähle einen Workspace. Alle Bildschirme und das Laufpanel zeigen danach dessen Arbeit. Die Auswahl wird gespeichert und gilt auch nach einem Neustart.
 
 Der letzte Menüeintrag **Manage workspaces…** öffnet die Einstellungen. Solange kein Workspace aktiv ist, zeigt die Seitenleiste keine Karte.
