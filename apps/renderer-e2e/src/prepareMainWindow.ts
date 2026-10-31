@@ -5,7 +5,9 @@ import type { BrowserWindow } from 'electron';
 
 // #endregion
 
-const RUNNER_TEST_WINDOW = { width: 1040, height: 700 } as const;
+// The largest content size a visible window keeps on the hosted macOS runner's 1024 × 768 screen;
+// a larger window is shrunk by macOS once it is shown, so local hidden runs use the same size.
+const RUNNER_TEST_WINDOW = { width: 1024, height: 674 } as const;
 
 /**
  * Returns the primary renderer at the smallest supported window on local and hosted macOS displays.

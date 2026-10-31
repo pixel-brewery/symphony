@@ -248,7 +248,10 @@ test('resizes the sidebar within its bounds and remembers its width across a rel
     const sidebarBox = (await sidebar.boundingBox())!;
     const toolbarBox = (await toolbar.boundingBox())!;
     expect(toolbarBox.x).toBeGreaterThanOrEqual(sidebarBox.x + sidebarBox.width);
-    expect(toolbarBox.x + toolbarBox.width).toBeCloseTo(1040, 0);
+    expect(toolbarBox.x + toolbarBox.width).toBeCloseTo(
+      await page.evaluate(() => window.innerWidth),
+      0,
+    );
     await expect.poll(() => rememberedSize(page, 'window.sidebar')).toBe('300');
 
     // act
@@ -297,11 +300,11 @@ test('resizes the Inbox list by its divider without moving the sidebar', async (
     const listX = (await list.boundingBox())!.x;
 
     // act
-    await dragDivider(page, divider, listX + 480);
+    await dragDivider(page, divider, listX + 440);
 
     // assert
-    expectSize(await widthOf(list), 480);
-    await expect.poll(() => rememberedSize(page, 'inbox.list')).toBe('480');
+    expectSize(await widthOf(list), 440);
+    await expect.poll(() => rememberedSize(page, 'inbox.list')).toBe('440');
     expect(await widthOf(page.getByTestId('window-sidebar'))).toBe(sidebarWidth);
 
     // act

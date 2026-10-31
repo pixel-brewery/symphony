@@ -178,6 +178,8 @@ Druckstufen eines Kontingents: Anteil an der Grenze ≥ 95 % `critical`, ≥ 80 
 
 ## Lokale GitHub Actions eines Workspace
 
+Die automatische Kandidatensuche bestimmt vor allen GitHub-Abfragen die Workspaces mit `localCiEnabled: true` und liest ausschließlich deren aktivierte GitHub-Actions-Anbindungen. Der aktive Anzeigeumfang des Hauptfensters begrenzt diese Suche nicht. Eine Anbindung eines lokal nicht freigegebenen Workspace wird dafür nicht abgefragt; ihr Zugriffsfehler kann die freigegebenen Workspaces deshalb nicht blockieren. Fehler einer tatsächlich abgefragten Anbindung bleiben Fehler der Kandidatensuche. Die normalen Laufabfragen behalten ihren bestehenden ausgewählten beziehungsweise operativen Umfang.
+
 Der Bereich `local-ci` teilt sich den Presenter mit der Karte **Virtual machines** unter System. Seine Entwürfe (Maschinenwerte, Aktivierung je Workspace, Skripte je Repository) liegen in einem Entwurfsobjekt je Einstellungssitzung und überleben das Neu-Einhängen der Karten. Sobald neue Einstellungen ankommen, werden die Entwürfe aus ihnen neu gebildet. Der Presenter aktualisiert den Speicherstatus alle fünf Sekunden leise.
 
 | Steuerelement         | Vertrag                                                                                                                                                                                                                                                     |
