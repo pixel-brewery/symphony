@@ -10,15 +10,18 @@ import {
   Injector,
   NgZone,
   afterNextRender,
+  computed,
   effect,
   input,
   output,
   signal,
   viewChild,
 } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { DatePipe, DOCUMENT } from '@angular/common';
 import {
+  BadgeComponent,
   ButtonComponent,
+  CardComponent,
   TextComponent,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
@@ -36,7 +39,14 @@ import { orbitNodeVariant } from './orbitNodeVariant';
 /** Accessible ticket and delivery labels over a lazily loaded WebGL world. @public */
 @Component({
   selector: 'symphony-orbit-canvas',
-  imports: [ButtonComponent, TextComponent, TypographyDirective],
+  imports: [
+    BadgeComponent,
+    ButtonComponent,
+    CardComponent,
+    DatePipe,
+    TextComponent,
+    TypographyDirective,
+  ],
   templateUrl: './OrbitCanvasComponent.html',
   styleUrl: './OrbitCanvasComponent.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -74,6 +84,10 @@ export class OrbitCanvasComponent implements AfterViewInit {
   public readonly canvasKey = signal(0);
   /** Shared semantic colour mapping for labels and GPU instances. @public */
   public readonly nodeVariant = orbitNodeVariant;
+  /** Destinations and clusters offered as plain buttons while 3D is unavailable. @public */
+  public readonly fallbackNodes = computed(() =>
+    this.scene().nodes.filter((node) => node.kind !== 'ticket'),
+  );
   private readonly _canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('webgl');
   private readonly _viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
   private _renderer?: OrbitCanvasRenderer;
@@ -211,6 +225,11 @@ export class OrbitCanvasComponent implements AfterViewInit {
   /** Public toolbar zoom in world units. @public */
   public zoomBy(factor: number): void {
     this._renderer?.zoomBy(factor);
+  }
+
+  /** Zooms to a scale of the fitted view (1 is 100 %) along the current direction. @public */
+  public zoomTo(scale: number): void {
+    this._renderer?.zoomTo(scale);
   }
 
   /** Public finder and keyboard navigation focus the same world IDs as raycasting. @public */

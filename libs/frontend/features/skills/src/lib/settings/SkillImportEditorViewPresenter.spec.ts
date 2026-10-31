@@ -4,7 +4,7 @@
 import { ApplicationRef, ChangeDetectorRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { DRAWER_REF, DRAWER_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { SkillStore } from '../catalog/SkillStore';
 import type { ISkillImportPaths } from './ISkillImportPaths';
@@ -25,8 +25,8 @@ function arrange(
     providers: [
       SkillImportEditorViewPresenter,
       { provide: SkillStore, useValue: skills },
-      { provide: DRAWER_REF, useValue: { close } },
-      { provide: DRAWER_REF_DATA, useValue: { kind: 'skill-import' } },
+      { provide: DIALOG_REF, useValue: { close } },
+      { provide: DIALOG_REF_DATA, useValue: { kind: 'skill-import' } },
       { provide: ChangeDetectorRef, useValue: { detectChanges } },
       { provide: ApplicationRef, useValue: { tick: vi.fn() } },
       { provide: SKILL_IMPORT_PATHS, useValue: paths },

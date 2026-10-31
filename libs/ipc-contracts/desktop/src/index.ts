@@ -3,6 +3,8 @@ export { pathSelectionRequestSchema } from './lib/PathSelectionRequestSchema';
 export type { PathSelectionResponse } from './lib/PathSelectionResponse';
 export { pathSelectionResponseSchema } from './lib/PathSelectionResponseSchema';
 export { desktopChannels } from './lib/DesktopChannels';
+export type { DesktopNavigationPath } from './lib/DesktopNavigationPath';
+export { isDesktopNavigationPath } from './lib/isDesktopNavigationPath';
 export { desktopRequestEnvelopeSchema } from './lib/DesktopRequestEnvelopeSchema';
 export type { DesktopRequestMethod } from './lib/DesktopRequestMethod';
 export type { DesktopRequestPayload } from './lib/DesktopRequestPayload';

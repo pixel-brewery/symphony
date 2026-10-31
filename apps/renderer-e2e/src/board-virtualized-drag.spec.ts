@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { expandBoardColumn } from './expandBoardColumn';
 
 // #endregion
 
@@ -32,10 +33,12 @@ test('moves a virtualized board entry between CDK column drop targets', async ()
   // act
   try {
     const page = await app.firstWindow();
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
+    // Qualified starts as a collapsed strip; the card is dragged out of the expanded column.
+    await expandBoardColumn(page, 'qualified');
     const workItemId = 'work-item-138';
     const card = page.getByTestId(`board-item-${workItemId}`);
     await expect(

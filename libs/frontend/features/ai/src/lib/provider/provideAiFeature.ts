@@ -9,6 +9,7 @@ import { AI_CLIENT } from '../ports/AiClientToken';
 import { AI_CONTEXT } from '../ports/AiContextToken';
 import { AI_CONFIGURATION } from '../ports/AiConfigurationToken';
 import { withAiSettings } from './withAiSettings';
+import { withAiNotifications } from './withAiNotifications';
 import { provideAiServiceViews } from './provideAiServiceViews';
 import { AiStore } from '../state/AiStore';
 import { AiContext } from '../adapters/AiContext';
@@ -30,6 +31,7 @@ export function provideAiFeature(): EnvironmentProviders {
         { provide: AI_CONTEXT, useFactory: (): IAiContext => inject(AiContext) },
         { provide: AI_CONFIGURATION, useFactory: (): IAiConfiguration => inject(AiContext) },
         { provide: AI_OPERATIONS, useExisting: AiStore },
+        ...withAiNotifications().provide(),
       ],
       withAiSettings(),
     ),

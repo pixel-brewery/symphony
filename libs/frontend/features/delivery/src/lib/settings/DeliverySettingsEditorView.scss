@@ -1,3 +1,93 @@
 :host {
   display: block;
 }
+
+// The orbit preview at the top of the destination sheet: a small space panel with the chosen
+// body at the centre and the project's other destinations on two rings. No Mosaik component draws
+// an orbit, so the panel is painted here with tokens only; it inverts with the theme.
+[part~='orbit-preview'] {
+  --orbit-preview-ink: var(--mosaik-color-neutral-0);
+  --orbit-inner-rx: 130px;
+  --orbit-inner-ry: 71.5px;
+  --orbit-outer-rx: 180px;
+  --orbit-outer-ry: 99px;
+
+  border-radius: var(--mosaik-layout-radius);
+  background-color: var(--mosaik-color-neutral-900);
+  color: var(--orbit-preview-ink);
+}
+
+[part~='orbit-preview-ring'] {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: var(--mosaik-layout-thickness) solid
+    color-mix(in srgb, var(--orbit-preview-ink) 22%, transparent);
+  border-radius: 50%;
+}
+
+[part~='orbit-preview-ring'][data-ring='inner'] {
+  width: calc(var(--orbit-inner-rx) * 2);
+  height: calc(var(--orbit-inner-ry) * 2);
+}
+
+[part~='orbit-preview-ring'][data-ring='outer'] {
+  width: calc(var(--orbit-outer-rx) * 2);
+  height: calc(var(--orbit-outer-ry) * 2);
+}
+
+[part~='orbit-preview-body'] {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 64px;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+}
+
+[part~='orbit-preview-centre-label'] {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 40px);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  --text-foreground-color: var(--orbit-preview-ink);
+}
+
+// Each destination sits on its ring at the angle bound from the template.
+[part~='orbit-preview-destination'] {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+
+[part~='orbit-preview-destination'][data-ring='inner'] {
+  left: calc(50% + cos(var(--orbit-angle)) * var(--orbit-inner-rx));
+  top: calc(50% + sin(var(--orbit-angle)) * var(--orbit-inner-ry));
+}
+
+[part~='orbit-preview-destination'][data-ring='outer'] {
+  left: calc(50% + cos(var(--orbit-angle)) * var(--orbit-outer-rx));
+  top: calc(50% + sin(var(--orbit-angle)) * var(--orbit-outer-ry));
+}
+
+[part~='orbit-preview-dot'] {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--orbit-preview-ink);
+}
+
+[part~='orbit-preview-label'] {
+  --text-foreground-color: var(--orbit-preview-ink);
+}
+
+[part~='orbit-preview-title'] {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  --text-foreground-color: color-mix(in srgb, var(--orbit-preview-ink) 70%, transparent);
+}

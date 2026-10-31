@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
+import { openSettingsWindow } from './openSettingsWindow';
+import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
@@ -63,12 +65,10 @@ test('breaks measured storage into named shares and never reports an unmeasured 
 
   // assert
   try {
-    const page = await app.firstWindow();
+    const main = await prepareMainWindow(app);
+    const page = await openSettingsWindow(app, main);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
     await page.getByTestId('global-settings-section-system').click();
     await expect(page.getByTestId('storage-safety-card')).toBeVisible();
 
@@ -131,6 +131,16 @@ test('breaks measured storage into named shares and never reports an unmeasured 
     expect(shares.segmentSum).toBe(shares.total);
     expect(shares.localCiShare).toBe(shares.localCiTotal);
     expect(shares.workspacesShare).toBe(shares.workspacesTotal);
+
+    // System is the single storage picture: each workspace's share and Local GitHub Actions
+    // with its breakdown and own limit sit beside the managed limit and the free-space reserve.
+    await expect(page.getByTestId('workspace-storage-shares')).toContainText(
+      'each limit is set in the workspace’s Administration',
+    );
+    await expect(page.getByTestId('local-ci-storage-share')).toContainText('Local GitHub Actions');
+    await expect(page.getByTestId('local-ci-storage-limit')).toBeVisible();
+    await expect(page.getByTestId('managed-storage-limit')).toBeVisible();
+    await expect(page.getByTestId('minimum-free-disk')).toBeVisible();
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();

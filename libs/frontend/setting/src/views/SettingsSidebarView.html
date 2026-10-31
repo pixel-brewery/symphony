@@ -1,0 +1,103 @@
+<aside
+  part="window-sidebar"
+  test-id="settings-sidebar"
+  aria-label="Settings sections"
+  class="box-border flex h-full w-full min-w-0 flex-col"
+>
+  <!-- The 52px header row is the title bar above the sidebar: macOS draws its traffic lights
+       here, so the row stays empty and is a drag region. -->
+  <div part="window-drag-region" class="h-[52px] flex-none"></div>
+
+  <div class="flex-none px-[10px] pb-1">
+    <mosaik-searchbox
+      test-id="settings-search"
+      class="w-full"
+      [placeholder]="'Search settings'"
+      [value]="presenter.searchQuery()"
+      [attr.aria-label]="'Search settings'"
+      (input)="presenter.searchCommand.execute(eventText($event))"
+      (cleared)="presenter.searchCommand.execute('')"
+    />
+  </div>
+
+  <nav
+    aria-label="Settings"
+    test-id="settings-navigation"
+    class="flex min-h-0 flex-1 flex-col gap-px overflow-y-auto px-[10px] pb-1.5"
+  >
+    @if (presenter.workspacesSection(); as section) {
+    <mosaik-button
+      class="w-full"
+      test-id="global-settings-section-workspaces"
+      [label]="section.label"
+      [iconName]="section.id | settingsSectionIcon"
+      [iconSize]="'small'"
+      [appearance]="!presenter.searching() && !presenter.settingsWorkspace() && presenter.globalSettingsSection() === 'workspaces' ? 'soft' : 'plain'"
+      [fit]="'width'"
+      [horizontalContentAlignment]="'left'"
+      [attr.aria-current]="!presenter.searching() && !presenter.settingsWorkspace() && presenter.globalSettingsSection() === 'workspaces' ? 'page' : null"
+      (click)="presenter.selectGlobalSettingsSectionCommand.execute('workspaces')"
+    />
+    @for (workspace of presenter.workspaces(); track workspace.id) {
+    <div part="settings-workspace-row" class="relative mt-[2px]">
+      <mosaik-button
+        class="w-full"
+        [attr.test-id]="'workspace-navigation-item-' + workspace.id"
+        [label]="workspace.displayName"
+        [appearance]="'plain'"
+        [fit]="'width'"
+        [horizontalContentAlignment]="'left'"
+        [attr.aria-expanded]="workspace.id === presenter.expandedWorkspaceId()"
+        (click)="presenter.openSettingsWorkspaceCommand.execute(workspace.id)"
+      />
+      <mosaik-avatar
+        part="workspace-tile"
+        class="pointer-events-none absolute top-1/2 left-1 -translate-y-1/2"
+        aria-hidden="true"
+        [size]="'tiny'"
+        [text]="workspace.shortCode"
+        [textAccessor]="shortCodeAccessor"
+        [appearance]="'solid'"
+        [variant]="'neutral'"
+      />
+    </div>
+    @if (workspace.id === presenter.expandedWorkspaceId()) { @for (section of
+    presenter.catalog.workspaceSections(); track section.id) {
+    <div class="pl-[14px]">
+      <mosaik-button
+        class="w-full"
+        [attr.test-id]="'workspace-settings-section-' + section.id"
+        [label]="section.label"
+        [iconName]="section.id | settingsSectionIcon"
+        [iconSize]="'small'"
+        [appearance]="!presenter.searching() && presenter.settingsWorkspaceId() === workspace.id && presenter.workspaceSettingsSection() === section.id ? 'soft' : 'plain'"
+        [fit]="'width'"
+        [horizontalContentAlignment]="'left'"
+        [attr.aria-current]="!presenter.searching() && presenter.settingsWorkspaceId() === workspace.id && presenter.workspaceSettingsSection() === section.id ? 'page' : null"
+        (click)="presenter.openWorkspaceSectionCommand.execute([workspace.id, section.id])"
+      />
+    </div>
+    } } } } @if (presenter.symphonySections().length) {
+    <mosaik-text
+      class="px-1 pt-[14px] pb-0.5"
+      test-id="settings-navigation-symphony"
+      [mosaikTypography]="'overline'"
+      [variant]="'neutral'"
+      [text]="'Symphony'"
+    />
+    } @for (section of presenter.symphonySections(); track section.id) {
+    <mosaik-button
+      class="w-full"
+      [attr.test-id]="'global-settings-section-' + section.id"
+      [label]="section.label"
+      [iconName]="section.id | settingsSectionIcon"
+      [iconSize]="'small'"
+      [appearance]="!presenter.searching() && !presenter.settingsWorkspace() && presenter.globalSettingsSection() === section.id ? 'soft' : 'plain'"
+      [fit]="'width'"
+      [horizontalContentAlignment]="'left'"
+      [attr.aria-current]="!presenter.searching() && !presenter.settingsWorkspace() && presenter.globalSettingsSection() === section.id ? 'page' : null"
+      (click)="presenter.selectGlobalSettingsSectionCommand.execute(section.id)"
+    />
+    }
+  </nav>
+</aside>

@@ -1,0 +1,42 @@
+:host {
+  display: flex;
+}
+
+// Runs, steps, the dispatch form and the diagnosis sit in framed surfaces, as the artboard draws them.
+[part~='actions-frame'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+[part~='actions-frame'][role='list'] > * + * {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// Section headings are subtitle2 in the semibold weight the artboard uses.
+[part~='actions-section-heading'] {
+  --text-font-weight: 600;
+}
+
+// A run row selects its run, so it reads as clickable.
+[part~='actions-run-row'] {
+  cursor: pointer;
+}
+
+// The log excerpt is a neutral well of caption-sized monospace output.
+[part~='actions-log-excerpt'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border-radius: calc(var(--mosaik-layout-radius) - 2px);
+  // The caption role with the monospace family the shared technical-value class provides.
+  font: var(--mosaik-typography-caption);
+  font-family: var(--technical-value-font-family);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+// Technical lines (branch · revision · trigger, workflow paths) are caption-sized monospace. The
+// typography directive would pin the sans family inline, so the caption role is set here instead.
+[part~='actions-technical'] {
+  font: var(--mosaik-typography-caption);
+  font-family: var(--technical-value-font-family);
+}

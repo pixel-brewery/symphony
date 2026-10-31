@@ -1,0 +1,509 @@
+@if (presenter.selectedWorkflow(); as workflow) {
+<header class="flex min-w-0 items-center gap-1" test-id="actions-workflow-header">
+  <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+    <mosaik-text
+      test-id="actions-workflow-title"
+      [mosaikTypography]="'headline5'"
+      [truncate]="true"
+      [text]="workflow.name"
+    />
+    <mosaik-text
+      part="actions-technical"
+      class="technical-value"
+      test-id="actions-workflow-path"
+      [variant]="'neutral'"
+      [truncate]="true"
+      [text]="workflow.path"
+    />
+  </div>
+  @if (workflow.supportsManualDispatch && workflow.state === 'active') {
+  <div class="flex flex-none items-center gap-1" test-id="workflow-dispatch-available">
+    <mosaik-button
+      [attr.test-id]="'workflow-dispatch-local-' + workflow.id"
+      [label]="'Run locally'"
+      [iconName]="'play'"
+      [iconSize]="'small'"
+      [appearance]="'outline'"
+      [isBusy]="presenter.localWorkflowDispatchBusy()(workflow)"
+      [disabled]="!presenter.localCiEnabled()(workflow) || presenter.localRunnerBusy()"
+      [mosaikTooltip]="!presenter.localCiEnabled()(workflow)
+        ? 'Enable local GitHub Actions for this workspace in Settings'
+        : presenter.localRunnerBusy() && !presenter.localWorkflowDispatchBusy()(workflow)
+          ? 'Another local Action is using the single managed runner'
+          : 'Run on the managed local Linux VM'"
+      (click)="presenter.dispatchWorkflowLocallyCommand.execute(workflow)"
+    />
+    <mosaik-button
+      [attr.test-id]="'workflow-dispatch-remote-' + workflow.id"
+      [label]="'Run on GitHub'"
+      [iconName]="'github'"
+      [iconSize]="'small'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.dispatchingWorkflowId() === workflow.id"
+      [disabled]="!!presenter.dispatchingWorkflowId()"
+      (click)="presenter.dispatchWorkflowCommand.execute(workflow)"
+    />
+  </div>
+  }
+</header>
+
+@if (presenter.dispatchProposal()?.id === workflow.id && presenter.dispatchProposal(); as proposal)
+{
+<section
+  part="actions-frame"
+  class="flex min-w-0 flex-col gap-1.5 p-2"
+  test-id="workflow-dispatch-proposal"
+  aria-label="Run on GitHub"
+>
+  <div class="flex min-w-0 flex-col gap-[2px]">
+    <mosaik-text
+      part="actions-section-heading"
+      [mosaikTypography]="'subtitle2'"
+      [text]="'Run ' + proposal.name + ' on GitHub'"
+    />
+    <mosaik-text
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [text]="'Choose the branch or revision and the workflow inputs.'"
+    />
+  </div>
+  <mosaik-textbox
+    test-id="workflow-dispatch-ref"
+    [label]="'Revision or branch'"
+    [ngModel]="presenter.dispatchRef()"
+    (ngModelChange)="presenter.dispatchRef.set($event)"
+  />
+  @for (input of proposal.inputs ?? []; track input.id) { @if (input.type === 'choice' || input.type
+  === 'boolean') {
+  <mosaik-select
+    [label]="input.description || input.id"
+    [ngModel]="presenter.dispatchInputs()[input.id] ?? input.defaultValue ?? ''"
+    (ngModelChange)="presenter.updateDispatchInputCommand.execute([input.id, $event])"
+  >
+    @for (value of input.type === 'boolean' ? ['true', 'false'] : input.options; track value) {
+    <mosaik-select-item [value]="value" [label]="value" />
+    }
+  </mosaik-select>
+  } @else {
+  <mosaik-textbox
+    [attr.test-id]="'workflow-input-' + input.id"
+    [label]="input.description || input.id"
+    [required]="input.required"
+    [ngModel]="presenter.dispatchInputs()[input.id] ?? ''"
+    (ngModelChange)="presenter.updateDispatchInputCommand.execute([input.id, $event])"
+  />
+  } }
+  <div class="flex items-center justify-end gap-1">
+    <mosaik-button
+      test-id="workflow-dispatch-cancel"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      (click)="presenter.cancelDispatchCommand.execute()"
+    />
+    <mosaik-button
+      test-id="workflow-dispatch-confirm"
+      [label]="'Start workflow'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="!!presenter.dispatchingWorkflowId()"
+      [disabled]="!!presenter.dispatchingWorkflowId() || !presenter.dispatchRef().trim()"
+      (click)="presenter.confirmDispatchCommand.execute()"
+    />
+  </div>
+</section>
+}
+
+<div part="actions-frame" class="flex min-w-0 flex-col px-1 py-0.5" test-id="actions-workflow-runs">
+  @if (presenter.workflowRuns().length) {
+  <mosaik-table
+    aria-label="Workflow runs"
+    [appearance]="'plain'"
+    [columns]="'110px minmax(0, 1fr) 120px 90px 120px'"
+  >
+    <mosaik-table-header>
+      <mosaik-table-header-row>
+        <mosaik-table-header-cell [text]="'Result'" />
+        <mosaik-table-header-cell [text]="'Revision'" />
+        <mosaik-table-header-cell [text]="'Runner'" />
+        <mosaik-table-header-cell [text]="'Duration'" />
+        <mosaik-table-header-cell [text]="'Started'" />
+      </mosaik-table-header-row>
+    </mosaik-table-header>
+    <mosaik-table-body>
+      @for (row of presenter.workflowRuns(); track row.id) {
+      <mosaik-table-body-row
+        part="actions-run-row"
+        tabindex="0"
+        [attr.test-id]="'action-run-' + row.id"
+        [attr.aria-selected]="presenter.selectedRun()?.id === row.id"
+        [isSelected]="presenter.selectedRun()?.id === row.id"
+        (click)="presenter.selectRunCommand.execute(row)"
+        (keydown.enter)="presenter.selectRunCommand.execute(row)"
+      >
+        <mosaik-table-body-cell>
+          @if (row.status === 'in-progress') {
+          <span class="flex items-center gap-1">
+            <mosaik-progress-ring
+              role="img"
+              [attr.aria-label]="'Running'"
+              [isIndeterminate]="true"
+              [variant]="'primary'"
+              [radius]="8"
+              [thickness]="2"
+            />
+            <mosaik-text [mosaikTypography]="'caption'" [text]="'Running'" />
+          </span>
+          } @else {
+          <mosaik-badge
+            [label]="(row.status | actionRunBadge).label"
+            [variant]="(row.status | actionRunBadge).variant"
+            [appearance]="(row.status | actionRunBadge).appearance"
+          />
+          }
+        </mosaik-table-body-cell>
+        <mosaik-table-body-cell>
+          <mosaik-text
+            part="actions-technical"
+            class="technical-value min-w-0"
+            [attr.test-id]="'action-run-branch-' + row.id"
+            [truncate]="true"
+            [text]="row | actionRunRevision"
+          />
+        </mosaik-table-body-cell>
+        <mosaik-table-body-cell [text]="row.runner | actionRunnerLabel" />
+        <mosaik-table-body-cell
+          [text]="(row.startedAt | actionRunDuration: row.finishedAt) || '—'"
+        />
+        <mosaik-table-body-cell
+          [text]="(row.startedAt ?? row.finishedAt) | actionRunStarted: presenter.now()"
+        />
+      </mosaik-table-body-row>
+      }
+    </mosaik-table-body>
+  </mosaik-table>
+  } @else {
+  <mosaik-empty-state
+    test-id="actions-workflow-runs-empty"
+    [iconName]="'executionOutline'"
+    [header]="presenter.selectedWorkflowHasRuns() ? 'No run matches the filter' : 'No workflow runs'"
+    [content]="presenter.selectedWorkflowHasRuns()
+      ? 'Change the filter to see the other runs of this workflow.'
+      : workflow.supportsManualDispatch && workflow.state === 'active'
+        ? 'Run this workflow on GitHub or with the managed local runner to create its first run.'
+        : 'Runs of this workflow appear here.'"
+  />
+  }
+</div>
+
+@if (presenter.selectedRun(); as row) {
+<section
+  class="flex min-w-0 flex-col gap-1.25"
+  test-id="actions-selected-run"
+  [attr.aria-label]="'Run ' + (row.revision | shortRevision)"
+>
+  <div class="flex min-w-0 items-center gap-1">
+    <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+      <mosaik-text
+        part="actions-section-heading"
+        test-id="actions-selected-run-title"
+        [mosaikTypography]="'subtitle2'"
+        [truncate]="true"
+        [text]="'Run '
+          + (row.revision ? (row.revision | shortRevision) : row.run?.runNumber ? '#' + row.run.runNumber : '')
+          + ' · '
+          + (row.status === 'in-progress'
+            ? 'running for ' + (row.startedAt | relativeTime: presenter.now())
+            : row.status === 'queued'
+              ? 'waiting for ' + (row.startedAt | relativeTime: presenter.now())
+              : (row.status | actionRunBadge).label.toLowerCase()
+                + ((row.startedAt | actionRunDuration: row.finishedAt) ? ' after ' + (row.startedAt | actionRunDuration: row.finishedAt) : ''))"
+      />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [truncate]="true"
+        [text]="row.runner === 'github-local' && row.run
+          ? 'GitHub ' + (row.run.status | actionRunBadge).label.toLowerCase()
+            + ' · local runner ' + ((row.runningLocally ? 'in-progress' : (row.localExecution?.state ?? row.status)) | actionRunBadge).label.toLowerCase()
+          : (row.run?.title ?? row.workflowName) + (row.actor ? ' · by ' + row.actor : '')"
+      />
+    </div>
+    @if (presenter.runControls()(row); as controls) {
+    <div class="flex flex-none items-center gap-0.5">
+      @if (controls.canViewLog) {
+      <mosaik-button
+        test-id="actions-run-log"
+        [label]="'View log'"
+        [iconName]="'open'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        (click)="presenter.viewLogCommand.execute(row)"
+      />
+      } @if (controls.canStop) {
+      <mosaik-button
+        test-id="actions-run-stop"
+        [label]="'Stop'"
+        [iconName]="'clear'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
+        (click)="presenter.stopRunCommand.execute(row)"
+      />
+      } @if (controls.canCancel) {
+      <mosaik-button
+        test-id="actions-run-cancel"
+        [label]="'Cancel'"
+        [iconName]="'clear'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
+        (click)="presenter.cancelRunCommand.execute(row)"
+      />
+      } @if (row.run && presenter.localCiEnabled()(row.run) && !row.runningLocally) {
+      <mosaik-button
+        test-id="actions-run-local"
+        [label]="'Rerun locally'"
+        [iconName]="'play'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
+        [disabled]="!controls.canRunLocally"
+        [mosaikTooltip]="controls.canRunLocally ? 'Run this revision on the managed local Linux VM' : 'Another local Action is using the single managed runner'"
+        (click)="presenter.runLocallyCommand.execute(row)"
+      />
+      } @if (row.status !== 'failed') { @if (controls.canRerun) {
+      <mosaik-button
+        test-id="actions-run-rerun"
+        [label]="'Rerun on GitHub'"
+        [iconName]="'sync'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
+        (click)="presenter.rerunCommand.execute(row)"
+      />
+      } @if (controls.canOpenInGitHub) {
+      <mosaik-button
+        test-id="actions-run-open"
+        [label]="'Open in GitHub'"
+        [iconName]="'open'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        (click)="presenter.openInGitHubCommand.execute(row)"
+      />
+      } }
+    </div>
+    }
+  </div>
+
+  @if (row.run) {
+  <div part="actions-frame" class="flex min-w-0 flex-col" role="list" test-id="actions-run-steps">
+    @if (presenter.runDetailsLoading() && !presenter.runSteps().length) { @for (line of [1, 2, 3];
+    track line) {
+    <div class="flex h-[42px] min-w-0 items-center gap-1 px-1.75" aria-hidden="true">
+      <mosaik-skeleton [shape]="'circle'" [width]="'20px'" [height]="'20px'" [shimmer]="true" />
+      <mosaik-skeleton [width]="line === 2 ? '12rem' : '8rem'" [height]="'14px'" [shimmer]="true" />
+    </div>
+    } } @else if (presenter.runDetailsFailed()) {
+    <div class="flex min-w-0 flex-col gap-[2px] px-1.75 py-1.25" test-id="actions-run-steps-failed">
+      <mosaik-text [mosaikTypography]="'body2'" [text]="'Steps unavailable'" />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="'GitHub did not report the jobs of this run. View the log or open the run in GitHub.'"
+      />
+    </div>
+    } @else { @for (step of presenter.runSteps(); track step.id) {
+    <div
+      class="flex min-w-0 items-center gap-1 py-[9px]"
+      role="listitem"
+      [class]="step.nested ? 'pr-1.75 pl-4.75' : 'px-1.75'"
+      [attr.test-id]="'actions-run-step-' + step.id"
+    >
+      @if (step.status === 'in-progress') {
+      <mosaik-progress-ring
+        class="flex-none"
+        role="img"
+        [attr.aria-label]="step.status | ciLogStatusLabel"
+        [isIndeterminate]="true"
+        [variant]="'primary'"
+        [radius]="8"
+        [thickness]="2"
+      />
+      } @else {
+      <mosaik-icon
+        class="flex-none"
+        role="img"
+        [attr.aria-label]="step.status | ciLogStatusLabel"
+        [icon]="(step.status | runStepPresentation).icon"
+        [variant]="(step.status | runStepPresentation).variant"
+        [size]="'small'"
+      />
+      }
+      <mosaik-text
+        class="min-w-0 flex-1"
+        [mosaikTypography]="step.kind === 'job' ? 'subtitle2' : 'body2'"
+        [truncate]="true"
+        [text]="step.name + (step.status === 'skipped' ? ' · skipped' : '')"
+      />
+      <mosaik-text
+        class="flex-none"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="(step.startedAt | actionRunDuration: step.finishedAt) || '—'"
+      />
+    </div>
+    } @empty {
+    <div class="flex min-w-0 flex-col gap-[2px] px-1.75 py-1.25" test-id="actions-run-steps-empty">
+      <mosaik-text [mosaikTypography]="'body2'" [text]="'No jobs reported yet'" />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="'Steps appear when the workflow schedules its first job.'"
+      />
+    </div>
+    } }
+  </div>
+  } @if (presenter.logExcerpt(); as excerpt) {
+  <!-- The log excerpt is technical output read character by character, on a neutral well. -->
+  <pre
+    part="actions-log-excerpt"
+    class="technical-value m-0 overflow-auto px-1.75 py-1.5"
+    test-id="actions-run-log-excerpt"
+  >
+{{ excerpt }}</pre>
+  }
+</section>
+
+@if (row.status === 'failed') {
+<section
+  part="actions-frame"
+  class="flex min-w-0 flex-col gap-1.5 p-2"
+  test-id="actions-diagnosis"
+  aria-label="Diagnosis"
+>
+  <div class="flex min-w-0 items-start gap-1">
+    @if (presenter.diagnosisAgentName(); as agentName) {
+    <mosaik-avatar class="flex-none" [text]="agentName" [size]="'small'" [appearance]="'soft'" />
+    } @else {
+    <mosaik-avatar class="flex-none" [icon]="'sparkle'" [size]="'small'" [appearance]="'soft'" />
+    }
+    <div class="flex min-w-0 flex-1 flex-col gap-0.75">
+      <div class="flex min-w-0 items-center gap-1">
+        <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'Diagnosis'" />
+        @if (presenter.recovery().repair; as repair) {
+        <mosaik-badge
+          test-id="actions-repair-state"
+          [label]="repair.state === 'succeeded' ? 'Repaired' : repair.state === 'failed' || repair.state === 'cancelled' ? 'Repair failed' : 'Repairing'"
+          [variant]="repair.state === 'succeeded' ? 'success' : repair.state === 'failed' || repair.state === 'cancelled' ? 'danger' : 'info'"
+          [appearance]="'soft'"
+        />
+        }
+      </div>
+      @if (presenter.recovery().diagnosis; as diagnosis) { @if (diagnosis.state === 'succeeded') {
+      <mosaik-text
+        test-id="actions-diagnosis-text"
+        [mosaikTypography]="'body2'"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="diagnosis.summary || 'The AI diagnosis reported no explanation.'"
+      />
+      } @else if (diagnosis.state === 'failed' || diagnosis.state === 'cancelled') {
+      <mosaik-text
+        test-id="actions-diagnosis-text"
+        [mosaikTypography]="'body2'"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="diagnosis.error || 'The AI diagnosis did not complete.'"
+      />
+      } @else {
+      <div class="flex min-w-0 items-center gap-1">
+        <mosaik-progress-ring
+          role="img"
+          [attr.aria-label]="'Diagnosing'"
+          [isIndeterminate]="true"
+          [variant]="'primary'"
+          [radius]="8"
+          [thickness]="2"
+        />
+        <mosaik-text
+          test-id="actions-diagnosis-text"
+          [mosaikTypography]="'body2'"
+          [variant]="'neutral'"
+          [text]="'An agent is diagnosing this failure.'"
+        />
+      </div>
+      } } @else {
+      <mosaik-text
+        test-id="actions-diagnosis-text"
+        [mosaikTypography]="'body2'"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="(presenter.failedStep() ? 'The run failed in “' + presenter.failedStep()?.name + '”. ' : '')
+          + 'No AI diagnosis yet: Symphony diagnoses failed checks of its own pull requests when Fix failed checks allows it.'"
+      />
+      }
+    </div>
+  </div>
+  <div class="flex min-w-0 flex-wrap items-center gap-1 pl-5.5">
+    <mosaik-button
+      test-id="actions-fix-with-ai"
+      [label]="'Fix with AI'"
+      [iconName]="'sparkle'"
+      [iconSize]="'small'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.fixingRunId() === row.id"
+      [disabled]="presenter.fixWithAi().state !== 'available' || !!presenter.fixingRunId()"
+      [mosaikTooltip]="presenter.fixWithAi().state === 'available'
+        ? 'An agent revises the pull request with this failure as feedback'
+        : ''"
+      (click)="presenter.fixWithAiCommand.execute()"
+    />
+    @if (presenter.runControls()(row).canRerun) {
+    <mosaik-button
+      test-id="actions-diagnosis-rerun"
+      [label]="'Rerun on GitHub'"
+      [iconName]="'sync'"
+      [iconSize]="'small'"
+      [appearance]="'outline'"
+      (click)="presenter.rerunCommand.execute(row)"
+    />
+    } @if (presenter.runControls()(row).canOpenInGitHub) {
+    <mosaik-button
+      test-id="actions-diagnosis-open"
+      [label]="'Open in GitHub'"
+      [iconName]="'open'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      (click)="presenter.openInGitHubCommand.execute(row)"
+    />
+    }
+  </div>
+  @if (presenter.fixWithAi().state !== 'available') {
+  <div
+    class="flex min-w-0 flex-wrap items-center gap-1 pl-5.5"
+    test-id="actions-fix-with-ai-reason"
+  >
+    <mosaik-text
+      class="min-w-0"
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [wrap]="true"
+      [text]="presenter.fixWithAi().state === 'policy'
+        ? 'Fix with AI needs Fix failed checks set to Repair or Full.'
+        : presenter.fixWithAi().state === 'busy'
+          ? 'An agent is already working on this pull request.'
+          : presenter.fixWithAi().state === 'unavailable'
+            ? 'AI agents are not part of this Symphony setup.'
+            : 'Fix with AI revises Symphony’s own pull requests; this run checked another branch.'"
+    />
+    @if (presenter.fixWithAi().state === 'policy') {
+    <mosaik-button
+      test-id="actions-open-automation-settings"
+      [label]="'Open Automation settings'"
+      [appearance]="'plain'"
+      [size]="'small'"
+      (click)="presenter.openAutomationSettingsCommand.execute()"
+    />
+    }
+  </div>
+  }
+</section>
+} } }

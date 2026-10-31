@@ -22,14 +22,33 @@ export function withPlatformSettings(): readonly IFeature<SettingsFeatureKind>[]
       views: [
         {
           id: 'developer-tools-settings-card',
-          order: 11,
+          order: 20,
           section: {
             scope: 'global',
             id: 'system',
             label: 'System',
-            description: 'Manage tools, storage, updates, and skill imports.',
+            description: 'This Mac: tools, storage, virtual machines, updates and sleep.',
             order: 40,
           },
+          search: [
+            {
+              id: 'developer-tools',
+              label: 'Developer tools',
+              description:
+                'Check the local CLIs Symphony uses for repositories, GitHub, and AI accounts.',
+              group: 'Developer tools',
+              keywords: [
+                'Homebrew',
+                'Git',
+                'GitHub CLI',
+                'gh',
+                'Codex CLI',
+                'Claude Code CLI',
+                'OpenCode CLI',
+                'install',
+              ],
+            },
+          ],
           canActivate: (selection) =>
             selection?.sectionId === 'system' && selection.workspaceId === null,
           loadComponent: () =>
@@ -47,6 +66,18 @@ export function withPlatformSettings(): readonly IFeature<SettingsFeatureKind>[]
             description: 'Choose how Symphony looks.',
             order: 60,
           },
+          search: [
+            {
+              id: 'theme',
+              label: 'Theme',
+              description:
+                'Choose System to switch between light and dark automatically when macOS changes.',
+              group: 'Color theme',
+              keywords: ['light', 'dark', 'system', 'mode', 'appearance'],
+              loadControl: () =>
+                import('../settings/ThemeSegmentView').then((module) => module.ThemeSegmentView),
+            },
+          ],
           canActivate: (selection) =>
             selection?.sectionId === 'appearance' && selection.workspaceId === null,
           loadComponent: () =>

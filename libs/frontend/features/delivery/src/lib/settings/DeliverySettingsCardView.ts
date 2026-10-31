@@ -7,42 +7,40 @@ import {
   effect,
   inject,
 } from '@angular/core';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import {
   AvatarComponent,
+  BadgeComponent,
   ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardHeaderComponent,
-  CellComponent,
-  CellGroupComponent,
   SelectComponent,
   SelectItemComponent,
   TextComponent,
-  IconNameDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { HeadlineComponent } from '@symphony/frontend-ui';
+import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import {
+  SettingsConditionalComponent,
+  SettingsGroupComponent,
+  SettingsRowComponent,
+} from '@symphony/frontend-setting';
 import { DeliverySettingsViewPresenter } from './DeliverySettingsViewPresenter';
 
 // #endregion
 
-/** Preserves the single workspace-card wrapper for the two Delivery-owned sections. @public */
+/** The workspace's `Repositories` and `Delivery destinations` sections. @public */
 @Component({
   selector: 'symphony-delivery-settings-card-view',
   host: { class: 'block' },
   imports: [
     AvatarComponent,
+    BadgeComponent,
     ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardHeaderComponent,
-    CellComponent,
-    CellGroupComponent,
-    HeadlineComponent,
     SelectComponent,
     SelectItemComponent,
+    SettingsConditionalComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
     TextComponent,
-    IconNameDirective,
+    TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: DeliverySettingsViewPresenter }],
   templateUrl: './DeliverySettingsCardView.html',

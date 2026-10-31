@@ -13,12 +13,12 @@ GitHub project status names are never used as internal state enums. Configuratio
 ## Bootstrap behavior
 
 - Columns and simulated items come from the same typed contract used by future tracker adapters.
-- A card click opens the dedicated Mosaik task drawer used by the FLAMOX365 task board pattern; Board content never grows an inline details column.
-- The drawer starts only its own work-item ID and keeps manual execution as the default. It projects the matching execution events as a live timeline, followed by the task result or actionable failure.
-- Each board card projects the latest persisted execution for its work item. Running cards show an indeterminate progress bar plus the newest event; terminal cards show the completed or failed outcome.
+- A card click opens the routed work item screen `/main/board/:workItemId` ([work item screen](board/work-item.md)); Board content never grows an inline details column. The former task drawer is retired.
+- The work item screen loads only its own work-item ID. Its `Activity` merges the latest execution's events with comments and the creation entry, newest first; results and actionable failures appear on the same screen.
+- Each board card projects the latest persisted execution for its work item into one status chip (for example `‹Step› running`, `‹Step› failed`, `Checks failed`) and a five-step delivery progress bar ([Board](board/README.md#kartenprojektion)).
 - Each board card also shows the provider-neutral labels and assignee handles supplied by the tracker. GitHub-specific response shapes remain inside the GitHub adapter.
 - Provider columns keep their original order and are the only columns; Symphony never synthesizes workflow-stage columns. Items the provider reports without a column land in a presenter-owned "No column" bucket that exists only while such items exist.
-- The page header offers a board selector once the selected workspaces expose more than one board (work-item source). Selecting a board shows only its columns and items and makes it the target of new work items; "All boards" merges columns across boards by workflow state and label.
+- The Board's `Filter` menu offers a board selector once the selected workspaces expose more than one board (work-item source). Selecting a board shows only its columns and items and makes it the target of new work items; "All boards" merges columns across boards by workflow state and label.
 - Pushed execution events and local SQLite reconciliation update runtime state without reloading GitHub. The board reloads from GitHub only on initial startup, when the operator uses its refresh action, or at the configurable background interval. That interval is measured in minutes, defaults to 15 minutes, and cannot be configured below 15 minutes.
 - Blocked and failed items use semantic variants plus visible text.
 - FlowBoard runs in Mosaik's controlled mutation mode. Drag-and-drop emits intent first; Symphony writes the provider transition and only the next authoritative projection changes the Angular DOM. Failed writes therefore cannot leave a card in a column the provider rejected.

@@ -1,3 +1,14 @@
 :host {
   display: block;
 }
+
+// The panel is the menu-bar window's raised surface, as drawn on the Tray canvas; the window
+// itself only carries the scheme background.
+[part~='menu-bar-panel'] {
+  background-color: var(--mosaik-scheme-surface);
+}
+
+// The panel's name is set in semibold, as drawn; no Mosaik typography role carries that weight.
+[part~='menu-bar-title'] {
+  --text-font-weight: 600;
+}

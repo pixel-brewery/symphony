@@ -1,3 +1,20 @@
 :host {
-  display: block;
+  display: flex;
+}
+
+// The workflow source list is a neutral-50 pane divided from the content by a hairline.
+[part~='actions-workflow-pane'] {
+  background-color: var(--mosaik-color-neutral-50);
+  border-right: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// The loading frames take the shape of the framed run lists they stand in for.
+[part~='actions-frame'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+[part~='actions-frame'] > * + * {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
 }

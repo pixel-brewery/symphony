@@ -1,0 +1,29 @@
+<div
+  [class]="level() === 'section' ? 'flex min-w-0 items-end gap-1.5' : 'flex min-w-0 items-end gap-1.5 px-[2px]'"
+>
+  <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+    <mosaik-text
+      role="heading"
+      part="settings-group-heading"
+      [attr.aria-level]="level() === 'section' ? 2 : 3"
+      [mosaikTypography]="level() === 'section' ? 'subtitle1' : 'subtitle2'"
+      [wrap]="true"
+      [text]="heading()"
+    />
+    @if (description()) {
+    <mosaik-text
+      [mosaikTypography]="level() === 'section' ? 'body2' : 'caption'"
+      [variant]="'neutral'"
+      [wrap]="true"
+      [text]="description()"
+    />
+    }
+  </div>
+  <ng-content select="[slot=actions]" />
+</div>
+<div
+  [attr.part]="framed() ? 'settings-group-rows' : null"
+  [class]="framed() ? 'flex min-w-0 flex-col' : 'flex min-w-0 flex-col gap-1.5'"
+>
+  <ng-content />
+</div>

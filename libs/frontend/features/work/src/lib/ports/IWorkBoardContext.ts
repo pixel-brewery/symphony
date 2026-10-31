@@ -30,7 +30,11 @@ export interface IWorkBoardContext {
     | undefined
   >;
   readonly settings: Signal<
-    Pick<ApplicationSettingsDto, 'workspaces' | 'activeViewScope'> | undefined
+    | Pick<
+        ApplicationSettingsDto,
+        'workspaces' | 'activeViewScope' | 'connections' | 'agentProfiles'
+      >
+    | undefined
   >;
   readonly availableBoards: Signal<ApplicationSettingsDto['workItemSources']>;
   readonly activeBoard: Signal<ApplicationSettingsDto['workItemSources'][number] | undefined>;

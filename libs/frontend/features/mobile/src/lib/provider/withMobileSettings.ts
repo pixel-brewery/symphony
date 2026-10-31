@@ -31,6 +31,30 @@ export function withMobileSettings(): readonly IFeature<SettingsFeatureKind>[] {
             description: 'Pair phones on the local network.',
             order: 50,
           },
+          search: [
+            {
+              id: 'allow',
+              label: 'Allow mobile access',
+              description: 'Make Symphony available only to phones that you pair and approve.',
+              group: 'Local network access',
+              keywords: ['phone', 'wi-fi', 'network', 'iphone', 'android'],
+            },
+            {
+              id: 'pair',
+              label: 'Pair a phone',
+              description:
+                'Generate a short-lived QR code, then approve the verification request shown here.',
+              group: 'Pair a phone',
+              keywords: ['qr code', 'pairing', 'verification'],
+            },
+            {
+              id: 'revoke',
+              label: 'Paired phones',
+              description: 'Revoke a phone when it should no longer reach this Symphony Desktop.',
+              group: 'Paired phones',
+              keywords: ['revoke'],
+            },
+          ],
           canActivate: (selection) =>
             selection?.sectionId === 'mobile' && selection.workspaceId === null,
           loadComponent: () =>

@@ -24,7 +24,7 @@ export async function prepareMainWindow(app: ElectronApplication): Promise<Page>
     ({ width, height }) => window.innerWidth === width && window.innerHeight === height,
     RUNNER_TEST_WINDOW,
   );
-  await page.getByTestId('orbit-view').waitFor({ state: 'visible' });
+  await page.getByTestId('home-view').waitFor({ state: 'visible' });
   if (process.env['SYMPHONY_E2E_WINDOW_MODE'] === 'hidden') {
     const isNativeWindowVisible = await mainWindow.evaluate((window: BrowserWindow) =>
       window.isVisible(),

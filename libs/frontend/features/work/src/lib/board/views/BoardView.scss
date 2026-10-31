@@ -1,3 +1,50 @@
+// Surfaces the Board artboard paints on plain elements, which no Mosaik input expresses. Every
+// value is a Mosaik token.
+
 :host {
-  display: block;
+  display: flex;
+}
+
+// The filter bar under the window toolbar ends in a hairline, like the toolbar itself.
+[part~='board-filter-bar'] {
+  border-bottom: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// The segment's buttons sit on a neutral track one step darker than the window.
+[part~='board-segment'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+// The columns stand on the quiet neutral canvas, so the white cards lift off it.
+[part~='board-canvas'] {
+  background-color: var(--mosaik-color-neutral-50);
+}
+
+// Column titles are semibold, as drawn.
+[part~='board-column-title'] {
+  --text-font-weight: 600;
+}
+
+// A collapsed column is a rounded neutral strip whose name reads downwards.
+[part~='board-collapsed-column'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border-radius: var(--mosaik-layout-radius);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-foreground);
+  }
+}
+
+[part~='board-collapsed-column-label'] {
+  --text-font-weight: 600;
+  writing-mode: vertical-rl;
+}
+
+// The loading cards take the card surface they stand for.
+[part~='board-skeleton-card'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
 }

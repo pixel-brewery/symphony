@@ -1,108 +1,80 @@
 @let runtimeHealth = presenter.store.runtimeHealth();
-<mosaik-card test-id="developer-tools-health-card">
-  <mosaik-card-header
-    [text]="'Developer tools'"
-    [subText]="'Check the local CLIs Symphony uses for repositories, GitHub, and AI accounts.'"
+<symphony-settings-group
+  test-id="developer-tools-health-card"
+  [level]="'section'"
+  [heading]="'Developer tools'"
+  [description]="'Check the local CLIs Symphony uses for repositories, GitHub, and AI accounts.'"
+>
+  <mosaik-button
+    slot="actions"
+    test-id="refresh-developer-tools"
+    [label]="'Refresh'"
+    [iconName]="'sync'"
+    [iconSize]="'small'"
+    [appearance]="'plain'"
+    [isBusy]="presenter.store.runtimeHealthBusy()"
+    [disabled]="!!presenter.store.runtimeDependencyInstallBusy()"
+    (click)="presenter.refreshRuntimeHealthCommand.execute()"
+  />
+  @if (!runtimeHealth) { @for (row of [1, 2, 3, 4, 5, 6]; track row) {
+  <symphony-settings-row
+    role="status"
+    [attr.test-id]="row === 1 ? 'developer-tools-loading' : null"
+    [attr.aria-label]="row === 1 ? 'Checking developer tools' : null"
+    [label]="''"
   >
-    <mosaik-button
-      slot="suffix"
-      test-id="refresh-developer-tools"
-      [label]="'Refresh'"
-      [iconName]="'sync'"
-      [appearance]="'plain'"
-      [isBusy]="presenter.store.runtimeHealthBusy()"
-      [disabled]="!!presenter.store.runtimeDependencyInstallBusy()"
-      (click)="presenter.refreshRuntimeHealthCommand.execute()"
+    <mosaik-skeleton
+      slot="leading"
+      [shape]="'circle'"
+      [width]="'24px'"
+      [height]="'24px'"
+      [shimmer]="true"
     />
-  </mosaik-card-header>
-  <mosaik-card-content>
-    @if (!runtimeHealth) {
-    <mosaik-cell-group
-      test-id="developer-tools-loading"
-      role="status"
-      aria-label="Checking developer tools"
-    >
-      @for (row of [1, 2, 3, 4, 5, 6]; track row) {
-      <mosaik-cell>
-        <mosaik-skeleton
-          slot="start"
-          [shape]="'circle'"
-          [width]="'24px'"
-          [height]="'24px'"
-          [shimmer]="true"
-        />
-        <div slot="label" class="flex h-3 items-center">
-          <mosaik-skeleton [width]="'8rem'" [height]="'14px'" [shimmer]="true" />
-        </div>
-        <div slot="subLabel" class="flex h-2.5 items-center">
-          <mosaik-skeleton [width]="'18rem'" [height]="'12px'" [shimmer]="true" />
-        </div>
-      </mosaik-cell>
-      }
-    </mosaik-cell-group>
-    } @else {
-    <div class="flex min-w-0 flex-col gap-4">
-      @if (!runtimeHealth.homebrew.available) {
-      <mosaik-banner
-        test-id="homebrew-required"
-        [isOpen]="true"
-        [appearance]="'soft'"
-        [variant]="'warning'"
-        [iconName]="'errorCircle'"
-        [iconSize]="'small'"
-      >
-        <mosaik-banner-header [text]="'Homebrew is required for one-click installation'" />
-        <mosaik-banner-sub-header
-          [text]="'Install Homebrew on this Mac, then refresh this list. Symphony never installs Homebrew automatically.'"
-        />
-      </mosaik-banner>
-      }
-      <mosaik-cell-group test-id="developer-tools-list">
-        @for (item of presenter.runtimeDependencies(); track item.id) {
-        <mosaik-cell
-          [attr.test-id]="'developer-tool-' + item.id"
-          [label]="item.id | runtimeDependencyLabel"
-        >
-          <mosaik-avatar
-            slot="start"
-            [size]="'small'"
-            [appearance]="'soft'"
-            [iconName]="item.id | runtimeDependencyIcon"
-          />
-          <mosaik-text
-            slot="subLabel"
-            [text]="item.health | runtimeDependencyDetails"
-            [wrap]="true"
-          />
-          @if (!item.health.available && item.installCommand) {
-          <mosaik-button
-            slot="end"
-            [attr.test-id]="'install-developer-tool-' + item.id"
-            [label]="'Install with Homebrew'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            [isBusy]="presenter.store.runtimeDependencyInstallBusy() === item.installCommand"
-            [disabled]="!runtimeHealth.homebrew.available || !!presenter.store.runtimeDependencyInstallBusy()"
-            (click)="
-                        presenter.confirmInstallRuntimeDependencyCommand.execute([
-                          item,
-                          item.id === 'git'
-                            ? 'Git'
-                            : item.id === 'github-cli'
-                              ? 'GitHub CLI'
-                              : item.id === 'codex'
-                                ? 'Codex CLI'
-                                : item.id === 'claude'
-                                  ? 'Claude Code CLI'
-                                  : 'OpenCode CLI'
-                        ])
-                      "
-          />
-          }
-        </mosaik-cell>
-        }
-      </mosaik-cell-group>
+    <div slot="detail" class="flex min-w-0 flex-col gap-0.5">
+      <mosaik-skeleton [width]="'8rem'" [height]="'14px'" [shimmer]="true" />
+      <mosaik-skeleton [width]="'18rem'" [height]="'12px'" [shimmer]="true" />
     </div>
+  </symphony-settings-row>
+  } } @else { @for (item of presenter.runtimeDependencies(); track item.id) { @let label = item.id |
+  runtimeDependencyLabel;
+  <symphony-settings-row
+    [attr.test-id]="'developer-tool-' + item.id"
+    [label]="label"
+    [description]="item.health | runtimeDependencyDetails"
+  >
+    <mosaik-avatar
+      slot="leading"
+      class="flex-none"
+      aria-hidden="true"
+      [size]="'small'"
+      [appearance]="'soft'"
+      [iconName]="item.id | runtimeDependencyIcon"
+    />
+    @if (!item.health.available && item.installCommand) {
+    <mosaik-button
+      [attr.test-id]="'install-developer-tool-' + item.id"
+      [label]="'Install with Homebrew'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.store.runtimeDependencyInstallBusy() === item.installCommand"
+      [disabled]="!runtimeHealth.homebrew.available || !!presenter.store.runtimeDependencyInstallBusy()"
+      (click)="presenter.confirmInstallRuntimeDependencyCommand.execute([item, label])"
+    />
     }
-  </mosaik-card-content>
-</mosaik-card>
+  </symphony-settings-row>
+  } }
+</symphony-settings-group>
+@if (runtimeHealth && !runtimeHealth.homebrew.available) {
+<symphony-settings-conditional [condition]="'Without Homebrew'">
+  <mosaik-message
+    test-id="homebrew-required"
+    [appearance]="'soft'"
+    [variant]="'warning'"
+    [fit]="'width'"
+    [iconName]="'errorCircle'"
+    [iconSize]="'small'"
+    [header]="'Homebrew is required for one-click installation'"
+    [content]="'Install Homebrew on this Mac, then refresh this list. Symphony never installs Homebrew automatically.'"
+  />
+</symphony-settings-conditional>
+}

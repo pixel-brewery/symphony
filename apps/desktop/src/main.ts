@@ -13,9 +13,11 @@ import {
   desktopRequestSchemas,
   desktopResponseEnvelopeSchema,
   desktopResponseSchemas,
+  isDesktopNavigationPath,
   pathSelectionRequestSchema,
   pathSelectionResponseSchema,
   updateChannelSchema,
+  type DesktopNavigationPath,
   type DesktopRequestMethod,
   type DesktopRequestPayload,
   type DesktopResponsePayload,
@@ -47,8 +49,11 @@ import {
   safeStorage,
   Tray,
   utilityProcess,
+  type BrowserWindowConstructorOptions,
+  type MenuItemConstructorOptions,
   type MessageBoxOptions,
   type MessageBoxReturnValue,
+  type TitleBarOverlay,
   type UtilityProcess,
   type WebContents,
 } from 'electron';
@@ -95,6 +100,9 @@ const pending = new Map<
   }
 >();
 let mainWindow: BrowserWindow | undefined;
+let settingsWindow: BrowserWindow | undefined;
+/** The Settings window's first renderer load; later navigation waits for it. */
+let settingsWindowLoad: Promise<void> | undefined;
 let menuBarWindow: BrowserWindow | undefined;
 let menuBarTray: Tray | undefined;
 let menuBarStatus: DesktopRequestPayload<'menu-bar.status.set'>['status'] = 'idle';
@@ -142,12 +150,26 @@ const KEEP_AWAKE_REFRESH_INTERVAL_MS = 15_000;
 const ORCHESTRATOR_LOG_MAX_BYTES = 5 * 1024 * 1024;
 const MENU_BAR_WINDOW_WIDTH = 328;
 const MENU_BAR_WINDOW_HEIGHT = 420;
+const SETTINGS_WINDOW_WIDTH = 1000;
+const SETTINGS_WINDOW_HEIGHT = 760;
+const SETTINGS_WINDOW_MIN_WIDTH = 720;
+const SETTINGS_WINDOW_MIN_HEIGHT = 520;
 // Soho's `background` scheme role in each mode. Native windows paint it before the renderer's
 // first frame, so startup and resizing never flash a colour the theme does not use.
 const SOHO_LIGHT_BACKGROUND_COLOR = '#ffffff';
 const SOHO_DARK_BACKGROUND_COLOR = '#0a0a0a';
-// The menu-bar panel always renders the dark scheme (`ShellConfig.resolveInitialThemeMode`).
-const MENU_BAR_WINDOW_BACKGROUND_COLOR = SOHO_DARK_BACKGROUND_COLOR;
+// Soho's `foreground` scheme role: the Windows and Linux window controls draw their symbols in it
+// on the toolbar's background.
+const SOHO_LIGHT_FOREGROUND_COLOR = '#0a0a0a';
+const SOHO_DARK_FOREGROUND_COLOR = '#fafafa';
+// Height of the renderer's unified toolbar and of the sidebar header row beside it, in the main
+// and the Settings window alike.
+const WINDOW_TOOLBAR_HEIGHT = 52;
+// AppKit's window buttons are 16 px tall, so a 18 px top inset centres them in the 52 px sidebar
+// header row; 20 px matches the sidebar's leading inset.
+const TRAFFIC_LIGHT_POSITION = { x: 20, y: (WINDOW_TOOLBAR_HEIGHT - 16) / 2 } as const;
+const rendererRootPath = join(currentDirectory, '../renderer/browser');
+const rendererIndexPath = join(rendererRootPath, 'index.html');
 const hidesWindowsForE2E = process.env['SYMPHONY_E2E_WINDOW_MODE'] === 'hidden';
 
 function azureDevOpsCredentialReference(connectionId: string): string {
@@ -288,7 +310,7 @@ function applyMenuBarStatus(status: DesktopRequestPayload<'menu-bar.status.set'>
 }
 
 function rendererWindows(): readonly BrowserWindow[] {
-  return [mainWindow, menuBarWindow].filter((window): window is BrowserWindow =>
+  return [mainWindow, settingsWindow, menuBarWindow].filter((window): window is BrowserWindow =>
     Boolean(window && !window.isDestroyed()),
   );
 }
@@ -596,13 +618,16 @@ function initializeUpdates(): void {
   const { configurationRoot } = resolvePersistencePaths();
   updateCoordinator = new UpdateCoordinator({
     adapter: new ElectronAutoUpdateAdapter(),
-    installerAdapter: new HttpInstallerUpdateAdapter(),
+    installerAdapter: new HttpInstallerUpdateAdapter(globalThis.fetch, {
+      openPath: (path) => shell.openPath(path),
+    }),
     currentVersion: app.getVersion(),
     channel: readUpdateChannel(configurationRoot),
     updateBaseUrl: __SYMPHONY_UPDATE_BASE_URL__,
     platform: process.platform,
     architecture: process.arch,
     packaged: app.isPackaged,
+    quitApplication: () => app.quit(),
   });
   updateCoordinator.subscribe((state) => {
     for (const window of rendererWindows()) {
@@ -691,7 +716,7 @@ async function coordinateUpdateInstall(): Promise<DesktopResponsePayload<'update
   quitConfirmed = true;
   if (orchestratorRestartTimer) clearTimeout(orchestratorRestartTimer);
   if (updateCheckTimer) clearTimeout(updateCheckTimer);
-  if (updateCoordinator.install()) return { outcome: 'installing' };
+  if (await updateCoordinator.install()) return { outcome: 'installing' };
   quitConfirmed = false;
   scheduleNextUpdateCheck();
   return { outcome: 'not-ready' };
@@ -714,6 +739,16 @@ async function handleDesktopRequest(
     case 'updates.download': {
       if (!updateCoordinator) throw new Error('The Symphony update service is not available.');
       desktopRequestSchemas[method].parse(payload);
+      if (updateCoordinator.download()) {
+        // The person started this download and watches its progress where they started it, which
+        // then offers `Restart to update`; the ready prompt is for silent native downloads.
+        const state = updateCoordinator.snapshot();
+        if (state.kind === 'downloading' && state.targetVersion) {
+          lastPromptedUpdateVersion = state.targetVersion;
+        }
+        return { outcome: 'started' };
+      }
+      // Fallback for an available installer Symphony cannot download itself.
       const downloadUrl = updateCoordinator.availableDownloadUrl();
       return {
         outcome: downloadUrl && openExternalLink(downloadUrl) ? 'opened' : 'not-available',
@@ -733,13 +768,17 @@ async function handleDesktopRequest(
     case 'window.show': {
       const request = desktopRequestSchemas[method].parse(payload);
       menuBarWindow?.hide();
-      await showMainWindow();
-      if (request.route !== 'current') {
-        mainWindow?.webContents.send(
-          desktopChannels.navigate,
-          request.route === 'settings' ? '/main/settings' : '/main/actions',
+      if (request.route === 'settings') await showSettingsWindow();
+      else
+        await showMainWindowAt(
+          request.route === 'current' ? undefined : mainWindowDestination(request.route),
         );
-      }
+      return { completed: true };
+    }
+    case 'settings.open': {
+      const request = desktopRequestSchemas[method].parse(payload);
+      menuBarWindow?.hide();
+      await showSettingsWindow(settingsNavigationPath(request.parameters));
       return { completed: true };
     }
     case 'menu-bar.resize': {
@@ -804,17 +843,12 @@ async function createMenuBarWindow(): Promise<void> {
     fullscreenable: false,
     skipTaskbar: true,
     transparent: false,
-    backgroundColor: MENU_BAR_WINDOW_BACKGROUND_COLOR,
+    // The panel follows the system appearance; `applyNativeThemeToWindows` keeps it current.
+    backgroundColor: themeBackgroundColor(),
     roundedCorners: true,
     hasShadow: true,
     alwaysOnTop: true,
-    webPreferences: {
-      preload: join(currentDirectory, 'preload.cjs'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      webSecurity: true,
-    },
+    webPreferences: rendererWebPreferences(),
   });
   menuBarWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   menuBarWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -833,18 +867,130 @@ async function createMenuBarWindow(): Promise<void> {
   menuBarWindow.on('closed', () => {
     menuBarWindow = undefined;
   });
-  await loadMenuBarRenderer(menuBarWindow);
+  await loadRendererRoute(menuBarWindow, '/menu-bar');
 }
 
-async function loadMenuBarRenderer(window: BrowserWindow): Promise<void> {
+/**
+ * Loads the one renderer bundle into a window, optionally at a hash route such as `/menu-bar` or
+ * `/settings`: from the development server when `SYMPHONY_RENDERER_URL` is set, otherwise from the
+ * packaged files.
+ */
+async function loadRendererRoute(window: BrowserWindow, hash?: string): Promise<void> {
   const developmentUrl = process.env['SYMPHONY_RENDERER_URL'];
   if (developmentUrl) {
+    if (!hash) {
+      await window.loadURL(developmentUrl);
+      return;
+    }
     const url = new URL(developmentUrl);
-    url.hash = '/menu-bar';
+    url.hash = hash;
     await window.loadURL(url.toString());
   } else {
-    const rendererIndexPath = join(currentDirectory, '../renderer/browser/index.html');
-    await window.loadFile(rendererIndexPath, { hash: '/menu-bar' });
+    await window.loadFile(rendererIndexPath, hash ? { hash } : undefined);
+  }
+}
+
+/** The renderer isolation every Symphony window uses. */
+function rendererWebPreferences(): Electron.WebPreferences {
+  return {
+    preload: join(currentDirectory, 'preload.cjs'),
+    contextIsolation: true,
+    nodeIntegration: false,
+    sandbox: true,
+    webSecurity: true,
+  };
+}
+
+/** Keeps a window on its renderer page: new windows and navigation open externally or not at all. */
+function guardRendererNavigation(window: BrowserWindow): void {
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    openExternalLink(url);
+    return { action: 'deny' };
+  });
+  window.webContents.on('will-navigate', (event, url) => {
+    if (url !== window.webContents.getURL()) {
+      event.preventDefault();
+      openExternalLink(url);
+    }
+  });
+}
+
+/** Reloads the packaged renderer index when a file URL below it failed to load (reload on a route). */
+function recoverRendererFileLoads(window: BrowserWindow): void {
+  window.webContents.on(
+    'did-fail-load',
+    (_event, errorCode, _errorDescription, validatedUrl, isMainFrame) => {
+      if (errorCode !== -6 || !isMainFrame || process.env['SYMPHONY_RENDERER_URL']) return;
+      try {
+        const failedUrl = new URL(validatedUrl);
+        const failedPath = fileURLToPath(failedUrl);
+        if (failedUrl.protocol !== 'file:' || !failedPath.startsWith(rendererRootPath)) return;
+        const route = failedUrl.hash.slice(1);
+        if (window.isDestroyed()) return;
+        void window
+          .loadFile(rendererIndexPath, route ? { hash: route } : undefined)
+          .catch(() => undefined);
+      } catch {
+        // Ignore malformed or unrelated failed URLs; navigation remains denied.
+      }
+    },
+  );
+}
+
+function themeBackgroundColor(): string {
+  return nativeTheme.shouldUseDarkColors ? SOHO_DARK_BACKGROUND_COLOR : SOHO_LIGHT_BACKGROUND_COLOR;
+}
+
+/** Windows and Linux window controls, drawn over the right end of the 52 px toolbar. */
+function windowControlsOverlay(): TitleBarOverlay {
+  return {
+    color: themeBackgroundColor(),
+    symbolColor: nativeTheme.shouldUseDarkColors
+      ? SOHO_DARK_FOREGROUND_COLOR
+      : SOHO_LIGHT_FOREGROUND_COLOR,
+    height: WINDOW_TOOLBAR_HEIGHT,
+  };
+}
+
+/**
+ * Platform chrome of the main and the Settings window. macOS keeps its traffic lights inside the
+ * sidebar's header row over a vibrant sidebar material; Windows and Linux keep their native
+ * window controls as a Window Controls Overlay at the right of the toolbar, which reserves
+ * `env(titlebar-area-*)` for them. Frameless windows never draw a menu bar there.
+ */
+function applicationWindowChrome(): BrowserWindowConstructorOptions {
+  if (process.platform === 'darwin') {
+    return {
+      backgroundColor: '#00000000',
+      transparent: true,
+      vibrancy: 'sidebar',
+      visualEffectState: 'followWindow',
+      frame: false,
+      titleBarStyle: 'hiddenInset',
+      titleBarOverlay: true,
+      trafficLightPosition: TRAFFIC_LIGHT_POSITION,
+    };
+  }
+  return {
+    backgroundColor: themeBackgroundColor(),
+    frame: false,
+    // `hiddenInset` exists only on macOS; the overlay controls need `hidden` on Windows and Linux.
+    titleBarStyle: 'hidden',
+    titleBarOverlay: windowControlsOverlay(),
+    autoHideMenuBar: true,
+  };
+}
+
+/** Repaints native window surfaces after the system switches between light and dark. */
+function applyNativeThemeToWindows(): void {
+  if (menuBarWindow && !menuBarWindow.isDestroyed()) {
+    menuBarWindow.setBackgroundColor(themeBackgroundColor());
+  }
+  if (process.platform === 'darwin') return;
+  for (const window of [mainWindow, settingsWindow]) {
+    if (!window || window.isDestroyed()) continue;
+    window.setBackgroundColor(themeBackgroundColor());
+    window.setTitleBarOverlay(windowControlsOverlay());
   }
 }
 
@@ -894,9 +1040,6 @@ async function createMenuBarIntegration(): Promise<void> {
 }
 
 async function createWindow(): Promise<void> {
-  const usesMacOSVibrancy = process.platform === 'darwin';
-  const rendererIndexPath = join(currentDirectory, '../renderer/browser/index.html');
-  const rendererRootPath = join(currentDirectory, '../renderer/browser');
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 940,
@@ -905,67 +1048,24 @@ async function createWindow(): Promise<void> {
     minHeight: 270,
     title: 'Symphony',
     icon: resolveApplicationIconPath(),
-    backgroundColor: usesMacOSVibrancy
-      ? '#00000000'
-      : nativeTheme.shouldUseDarkColors
-        ? SOHO_DARK_BACKGROUND_COLOR
-        : SOHO_LIGHT_BACKGROUND_COLOR,
-    transparent: usesMacOSVibrancy,
-    ...(usesMacOSVibrancy
-      ? {
-          vibrancy: 'sidebar' as const,
-          visualEffectState: 'followWindow' as const,
-        }
-      : {}),
-    frame: false,
-    titleBarStyle: 'hiddenInset',
-    titleBarOverlay: true,
-    // `hiddenInset` places the window buttons against macOS's own title-bar height. Position them
-    // explicitly on the optical centre of Symphony's 78px shell header.
-    trafficLightPosition: { x: 20, y: 31 },
-    webPreferences: {
-      preload: join(currentDirectory, 'preload.cjs'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      webSecurity: true,
-    },
+    ...applicationWindowChrome(),
+    webPreferences: rendererWebPreferences(),
   });
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    openExternalLink(url);
-    return { action: 'deny' };
-  });
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (url !== mainWindow?.webContents.getURL()) {
-      event.preventDefault();
-      openExternalLink(url);
-    }
-  });
-  mainWindow.webContents.on(
-    'did-fail-load',
-    (_event, errorCode, _errorDescription, validatedUrl, isMainFrame) => {
-      if (errorCode !== -6 || !isMainFrame || process.env['SYMPHONY_RENDERER_URL']) return;
-      try {
-        const failedUrl = new URL(validatedUrl);
-        const failedPath = fileURLToPath(failedUrl);
-        if (failedUrl.protocol !== 'file:' || !failedPath.startsWith(rendererRootPath)) return;
-        const route = failedUrl.hash.slice(1);
-        void mainWindow?.loadFile(rendererIndexPath, route ? { hash: route } : undefined);
-      } catch {
-        // Ignore malformed or unrelated failed URLs; navigation remains denied.
-      }
-    },
-  );
+  guardRendererNavigation(mainWindow);
+  recoverRendererFileLoads(mainWindow);
   mainWindow.on('closed', () => {
     void speechRecognitionCoordinator?.dispose();
     mainWindow = undefined;
   });
-  const developmentUrl = process.env['SYMPHONY_RENDERER_URL'];
-  if (developmentUrl) {
-    await mainWindow.loadURL(developmentUrl);
-  } else {
-    await mainWindow.loadFile(rendererIndexPath);
-  }
+  await loadRendererRoute(mainWindow);
+}
+
+/** Brings Symphony to the front on macOS, also when it ran only as a menu-bar extra. */
+async function activateApplication(): Promise<void> {
+  if (process.platform !== 'darwin') return;
+  app.setActivationPolicy('regular');
+  await app.dock?.show();
+  app.focus({ steal: true });
 }
 
 async function showMainWindow(): Promise<void> {
@@ -975,24 +1075,140 @@ async function showMainWindow(): Promise<void> {
   const window = mainWindow;
   if (!window || window.isDestroyed()) return;
   if (hidesWindowsForE2E) return;
-  if (process.platform === 'darwin') {
-    app.setActivationPolicy('regular');
-    await app.dock?.show();
-    app.focus({ steal: true });
+  await activateApplication();
+  if (window.isMinimized()) window.restore();
+  window.show();
+  window.focus();
+}
+
+/** Shows the main window and, when given, opens an in-app destination in it. */
+async function showMainWindowAt(destination?: DesktopNavigationPath): Promise<void> {
+  menuBarWindow?.hide();
+  await showMainWindow();
+  if (destination && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(desktopChannels.navigate, destination);
   }
+}
+
+function mainWindowDestination(
+  route: Exclude<DesktopRequestPayload<'window.show'>['route'], 'current' | 'settings'>,
+): DesktopNavigationPath {
+  switch (route) {
+    case 'actions':
+      return '/main/actions';
+    case 'inbox':
+      return '/main/inbox';
+    case 'notifications':
+      return '/main/home?notifications=open';
+    case 'new-work-item':
+      return '/main/board?create=true';
+  }
+}
+
+/**
+ * The Settings route for a requested location, or `undefined` when no location was requested or
+ * it is not a destination the renderer accepts. The contract restricts keys and values to URL
+ * unreserved characters; `encodeURIComponent` keeps `~` literal where `URLSearchParams` would not.
+ */
+function settingsNavigationPath(
+  parameters: Readonly<Record<string, string>> | undefined,
+): DesktopNavigationPath | undefined {
+  const query = Object.entries(parameters ?? {})
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
+  if (!query) return undefined;
+  const path = `/settings?${query}`;
+  return isDesktopNavigationPath(path) ? path : undefined;
+}
+
+function createSettingsWindow(): BrowserWindow {
+  const window = new BrowserWindow({
+    width: SETTINGS_WINDOW_WIDTH,
+    height: SETTINGS_WINDOW_HEIGHT,
+    show: false,
+    minWidth: SETTINGS_WINDOW_MIN_WIDTH,
+    minHeight: SETTINGS_WINDOW_MIN_HEIGHT,
+    title: 'Settings',
+    icon: resolveApplicationIconPath(),
+    ...applicationWindowChrome(),
+    webPreferences: rendererWebPreferences(),
+  });
+  settingsWindow = window;
+  guardRendererNavigation(window);
+  recoverRendererFileLoads(window);
+  // The renderer document is titled after the application; this window keeps the name of its role.
+  window.on('page-title-updated', (event) => event.preventDefault());
+  window.on('closed', () => {
+    if (settingsWindow !== window) return;
+    settingsWindow = undefined;
+    settingsWindowLoad = undefined;
+  });
+  return window;
+}
+
+/**
+ * Opens the single Settings window, or focuses it when it is already open. A requested location
+ * becomes the first route of a new window and is sent as navigation to an open one; without a
+ * location an open window keeps its current section.
+ */
+async function showSettingsWindow(destination?: DesktopNavigationPath): Promise<void> {
+  let window = settingsWindow && !settingsWindow.isDestroyed() ? settingsWindow : undefined;
+  if (window) {
+    await settingsWindowLoad;
+    if (destination && !window.isDestroyed()) {
+      window.webContents.send(desktopChannels.navigate, destination);
+    }
+  } else {
+    window = createSettingsWindow();
+    // A failed first load stays recoverable through `recoverRendererFileLoads`, as in the main
+    // window, so opening Settings still shows the window.
+    settingsWindowLoad = loadRendererRoute(window, destination ?? '/settings').catch(
+      () => undefined,
+    );
+    await settingsWindowLoad;
+  }
+  if (window.isDestroyed() || hidesWindowsForE2E) return;
+  await activateApplication();
   if (window.isMinimized()) window.restore();
   window.show();
   window.focus();
 }
 
 function configureApplicationMenu(): void {
-  if (process.platform !== 'darwin') return;
+  const settings: MenuItemConstructorOptions = {
+    label: 'Settings…',
+    accelerator: 'CmdOrCtrl+,',
+    click: () => void showSettingsWindow(),
+  };
+  const newWorkItem: MenuItemConstructorOptions = {
+    label: 'New Work Item…',
+    accelerator: 'CmdOrCtrl+N',
+    click: () => void showMainWindowAt('/main/board?create=true'),
+  };
+  if (process.platform !== 'darwin') {
+    // Windows and Linux windows are frameless, so this menu is never drawn as a menu bar; it
+    // carries the shortcuts and the roles of Electron's default menu, which it replaces.
+    Menu.setApplicationMenu(
+      Menu.buildFromTemplate([
+        {
+          label: 'File',
+          submenu: [newWorkItem, settings, { type: 'separator' }, { role: 'quit' }],
+        },
+        { role: 'editMenu' },
+        { role: 'viewMenu' },
+        { role: 'windowMenu' },
+      ]),
+    );
+    return;
+  }
   Menu.setApplicationMenu(
     Menu.buildFromTemplate([
       {
         label: app.name,
         submenu: [
           { role: 'about' },
+          { type: 'separator' },
+          settings,
           { type: 'separator' },
           { role: 'hide' },
           { role: 'hideOthers' },
@@ -1001,7 +1217,7 @@ function configureApplicationMenu(): void {
           { role: 'quit' },
         ],
       },
-      { role: 'fileMenu' },
+      { label: 'File', submenu: [newWorkItem, { type: 'separator' }, { role: 'close' }] },
       { role: 'editMenu' },
       { role: 'viewMenu' },
       { role: 'windowMenu' },
@@ -1016,9 +1232,15 @@ function confirmQuit(): void {
 }
 
 function showLifecycleMessageBox(options: MessageBoxOptions): Promise<MessageBoxReturnValue> {
-  return mainWindow && !mainWindow.isDestroyed()
-    ? dialog.showMessageBox(mainWindow, options)
-    : dialog.showMessageBox(options);
+  // A decision started from the Settings window (such as `Restart to update`) attaches there.
+  const focused = BrowserWindow.getFocusedWindow();
+  const parent =
+    focused && focused === settingsWindow
+      ? focused
+      : mainWindow && !mainWindow.isDestroyed()
+        ? mainWindow
+        : undefined;
+  return parent ? dialog.showMessageBox(parent, options) : dialog.showMessageBox(options);
 }
 
 async function coordinateQuit(): Promise<void> {
@@ -1080,6 +1302,7 @@ async function coordinateQuit(): Promise<void> {
 
     if (result.response === 0) {
       mainWindow?.hide();
+      settingsWindow?.hide();
       return;
     }
     if (canQuitAndResume && result.response === 1) {
@@ -1127,6 +1350,7 @@ app.whenReady().then(async () => {
     app.setActivationPolicy(hidesWindowsForE2E ? 'accessory' : 'regular');
   }
   configureApplicationMenu();
+  nativeTheme.on('updated', applyNativeThemeToWindows);
   initializeSpeechRecognition();
   await Promise.all([
     session.defaultSession.clearCache(),
@@ -1234,12 +1458,16 @@ app.whenReady().then(async () => {
     }
   });
   ipcMain.handle(channels.selectPath, async (event, request: unknown) => {
-    if (!mainWindow || event.sender !== mainWindow.webContents) {
+    // Repository and workspace folders are chosen in the main and the Settings window alike.
+    const owner = [mainWindow, settingsWindow].find(
+      (window) => window && !window.isDestroyed() && event.sender === window.webContents,
+    );
+    if (!owner) {
       throw new Error('Path selection did not originate from the app window.');
     }
 
     const validatedRequest = pathSelectionRequestSchema.parse(request);
-    const result = await dialog.showOpenDialog(mainWindow, {
+    const result = await dialog.showOpenDialog(owner, {
       title: validatedRequest.title,
       defaultPath: validatedRequest.defaultPath,
       filters:

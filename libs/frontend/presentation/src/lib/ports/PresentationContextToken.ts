@@ -5,6 +5,7 @@ import { ApplicationBootstrap } from '@symphony/frontend-core/bootstrap';
 import { CI_OPERATIONS } from '@symphony/frontend-core/ci';
 import { EXECUTION_OPERATIONS } from '@symphony/frontend-core/execution';
 import { ApplicationProjection } from '@symphony/frontend-core/projection';
+import { OrchestrationSynchronizer } from '@symphony/frontend-core/synchronization';
 import { WORKSPACE_SCOPE } from '@symphony/frontend-core/workspace';
 import type { IPresentationContext } from './IPresentationContext';
 
@@ -21,6 +22,7 @@ export const PRESENTATION_CONTEXT = new InjectionToken<IPresentationContext>(
       const execution = inject(EXECUTION_OPERATIONS, { optional: true });
       const ci = inject(CI_OPERATIONS, { optional: true });
       const workspace = inject(WORKSPACE_SCOPE, { optional: true });
+      const synchronization = inject(OrchestrationSynchronizer);
       return {
         snapshot: projection.snapshot,
         settings: projection.settings,
@@ -37,6 +39,11 @@ export const PRESENTATION_CONTEXT = new InjectionToken<IPresentationContext>(
           execution?.removeQueueEntry(entryId) ?? Promise.resolve(false),
         refreshContinuousIntegrationRuns: () =>
           ci?.refreshContinuousIntegrationRuns() ?? Promise.resolve(),
+        // The snapshot goes first: refreshed in parallel it would replace the fresher CI runs.
+        synchronize: async () => {
+          await synchronization.refresh();
+          await (ci?.refreshContinuousIntegrationRuns() ?? Promise.resolve());
+        },
         selectWorkspaceScope: (workspaceId) =>
           workspace?.selectWorkspaceScope(workspaceId) ?? Promise.resolve(),
       };

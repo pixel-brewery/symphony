@@ -1,0 +1,15 @@
+<mosaik-app
+  part="app"
+  class="absolute inset-0 block h-dvh w-screen"
+  test-id="settings-window"
+  [theme]="theme()"
+  [hasNav]="false"
+>
+  <div
+    slot="content"
+    part="window"
+    class="relative isolate flex h-full min-h-0 w-full min-w-0 overflow-hidden"
+  >
+    <symphony-settings-view class="flex h-full min-h-0 w-full min-w-0" />
+  </div>
+</mosaik-app>

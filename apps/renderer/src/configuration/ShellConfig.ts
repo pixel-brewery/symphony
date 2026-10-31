@@ -62,6 +62,7 @@ import {
   reiconAlertCircle,
   reiconArrowRightCircle,
   reiconArrowUpRightSquare,
+  reiconBell,
   reiconBranchUp,
   reiconCheck,
   reiconCheckCircle,
@@ -115,7 +116,7 @@ import { presentationRoutes } from '@symphony/frontend-presentation';
 import { provideSearch } from '@symphony/frontend-search';
 import { provideQuickCreate } from '@symphony/frontend-quick-create';
 import { provideWidget } from '@symphony/frontend-widget';
-import { provideSettings, settingsRoutes } from '@symphony/frontend-setting';
+import { provideSettings, settingsRoutes, settingsWindowRoutes } from '@symphony/frontend-setting';
 import { withPowerSettings } from '@symphony/frontend-interaction';
 import { provideUpdate, withUpdateSettings } from '@symphony/frontend-update';
 import { applicationThemeOverrides } from '@symphony/frontend-ui';
@@ -134,7 +135,6 @@ const SIGNAL_FORM_STATUS_CLASSES: SignalFormsConfig['classes'] = {
 };
 
 function resolveInitialThemeMode(): ThemeMode {
-  if (window.location.hash === '#/menu-bar') return 'dark';
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return resolveThemeMode(readThemePreference(window.localStorage), prefersDark);
 }
@@ -154,10 +154,10 @@ export const shellConfig: ApplicationConfig = {
     provideSearch(),
     provideNavigation(),
     provideRouter(
-      presentationRoutes([
-        ...applicationProductComposition.flatMap((feature) => feature.routes),
-        ...settingsRoutes,
-      ]),
+      presentationRoutes(
+        [...applicationProductComposition.flatMap((feature) => feature.routes), ...settingsRoutes],
+        settingsWindowRoutes,
+      ),
       withHashLocation(),
       withComponentInputBinding(),
     ),
@@ -167,7 +167,7 @@ export const shellConfig: ApplicationConfig = {
       mode: initialThemeMode,
       overrides: applicationThemeOverrides,
     }),
-    provideAppComponent({ hasHeader: true, hasNav: false }),
+    provideAppComponent({ hasHeader: false, hasNav: false }),
     provideBreakpoints(),
     provideAnimate({
       animations: {
@@ -273,6 +273,7 @@ export const shellConfig: ApplicationConfig = {
     provideDefaultIconSet('reicon'),
     provideIcons({
       arrowRight: reiconArrowRightCircle,
+      bell: reiconBell,
       cloudArrowRight: reiconCloudUpload,
       bot: reiconCpu,
       add: reiconAdd,

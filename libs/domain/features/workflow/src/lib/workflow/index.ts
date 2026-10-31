@@ -44,6 +44,8 @@ export * from './IWorkflowRevisions';
 export * from './IWorkflowRouting';
 export * from './IWorkflowRun';
 export * from './IWorkflowStage';
+export * from './IWorkflowStageChange';
+export * from './IWorkflowStageChangeHistory';
 export * from './IWorkflowTransition';
 export * from './MergeMode';
 export * from './MergeModes';

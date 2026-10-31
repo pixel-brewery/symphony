@@ -31,7 +31,9 @@ const renderers = vi.hoisted(() => ({
 
 // The built Angular/Mosaik template is exercised in Electron; this JIT suite owns facade lifecycle only.
 vi.mock('@pixel-brewery/mosaik-elements-angular', () => ({
+  BadgeComponent: class {},
   ButtonComponent: class {},
+  CardComponent: class {},
   TextComponent: class {},
   TypographyDirective: class {},
 }));
@@ -56,6 +58,7 @@ vi.mock('./OrbitCanvasRenderer', () => ({
         setReducedMotion: vi.fn(),
         resize: vi.fn(),
         zoomBy: vi.fn(),
+        zoomTo: vi.fn(),
       };
       renderers.created.push(renderer);
       Object.assign(this, renderer);

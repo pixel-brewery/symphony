@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
+import { openSettingsWindow } from './openSettingsWindow';
 
 // #endregion
 
@@ -52,23 +53,20 @@ test('recovers a Lima runtime alias before clearing local runner data', async ()
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await expect.poll(() => existsSync(alias)).toBe(false);
 
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
-    await page.getByTestId('global-settings-section-automation').click();
-    await expect(page.getByTestId('virtual-machines-card')).toBeVisible();
-    await expect(page.getByTestId('local-ci-machines-empty')).toBeVisible();
-    await page.getByTestId('clear-local-ci-data').click();
-    const confirmation = page.locator('mosaik-message-box').last();
-    await expect(confirmation).toContainText('Clear local runner data?');
-    await confirmation.getByText('Clear runner data', { exact: true }).click();
-    await expect(page.getByTestId('notification-success').last()).toContainText(
-      'Local runner data cleared',
-    );
+    // Virtual machines describe this Mac, so they live under Settings › System.
+    const settings = await openSettingsWindow(app, page);
+    await settings.getByTestId('global-settings-section-system').click();
+    await expect(settings.getByTestId('virtual-machines-card')).toBeVisible();
+    await expect(settings.getByTestId('local-ci-machines-empty')).toBeVisible();
+    await settings.getByTestId('clear-local-ci-data').click();
+    await expect(settings.getByText('Clear local runner data?')).toBeVisible();
+    await settings.getByText('Clear runner data', { exact: true }).last().click();
     await expect.poll(() => existsSync(runtimeRoot)).toBe(false);
     await expect(page.getByTestId('notification-error')).toHaveCount(0);
+    await expect(settings.getByTestId('notification-error')).toHaveCount(0);
     expect(rendererErrors).toEqual([]);
     expect(readFileSync(orchestratorLog, 'utf8')).not.toContain('EISDIR');
   } finally {

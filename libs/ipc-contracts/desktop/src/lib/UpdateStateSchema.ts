@@ -22,7 +22,12 @@ export const updateStateSchema = z.discriminatedUnion('kind', [
     kind: z.literal('available'),
     targetVersion: z.string().min(1).max(100),
   }),
-  updateStateBaseSchema.extend({ kind: z.literal('downloading') }),
+  updateStateBaseSchema.extend({
+    kind: z.literal('downloading'),
+    targetVersion: z.string().min(1).max(100).optional(),
+    /** Downloaded share between 0 and 1; absent while the size is unknown. */
+    progress: z.number().min(0).max(1).optional(),
+  }),
   updateStateBaseSchema.extend({
     kind: z.literal('ready'),
     targetVersion: z.string().min(1).max(100),

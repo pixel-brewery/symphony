@@ -6,6 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
 import { enableArcade } from './enableArcade';
 import { launchArcadeApp } from './launchArcadeApp';
+import { openSettingsWindow } from './openSettingsWindow';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -28,12 +29,14 @@ test('persists a feature contributed through Settings and Navigation across desk
       await expect(page.getByTestId('navigation-arcade')).toHaveCount(0);
 
       // act
-      await enableArcade(page);
+      await enableArcade(first.app, page);
+      const settings = await openSettingsWindow(first.app, page);
+      await settings.getByTestId('global-settings-section-appearance').click();
 
       // assert
-      await expect(page.getByTestId('arcade-settings-card')).toBeVisible();
+      await expect(settings.getByTestId('arcade-settings-card')).toBeVisible();
       await expect.poll(() => arcadeEnabled(page)).toBe(true);
-      await page.screenshot({
+      await settings.screenshot({
         animations: 'disabled',
         path: resolve(first.outputDirectory, 'modular-settings-appearance.png'),
       });
@@ -57,12 +60,15 @@ test('persists a feature contributed through Settings and Navigation across desk
       });
 
       // act
-      await page.getByTestId('global-workspace-filter').click();
-      await page.getByTestId('workspace-menu-settings').click();
-      await page.getByTestId('global-settings-section-appearance').click();
-      await page.getByTestId('arcade-enabled-toggle').click();
+      const settings = await openSettingsWindow(restarted.app, page);
+      await settings.getByTestId('global-settings-section-appearance').click();
+      await settings.getByTestId('arcade-enabled-toggle').click();
 
       // assert
+      await expect(settings.getByTestId('arcade-enabled-toggle')).toHaveJSProperty(
+        'isChecked',
+        false,
+      );
       await expect(page.getByTestId('navigation-arcade')).toHaveCount(0);
       await expect.poll(() => arcadeEnabled(page)).toBe(false);
       passed = true;

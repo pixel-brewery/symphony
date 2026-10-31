@@ -64,6 +64,39 @@ describe('SqliteRuntimeRepositories', () => {
     expect(repository.trust.trustGrant('repository-1')).toBeUndefined();
     expect(repository.verification.verificationPlan('plan-1')?.revision).toBe('abc');
   }, 30_000);
+
+  it('removes the recorded workflow runs of a removed workspace only', () => {
+    // arrange
+    const directory = mkdtempSync(join(tmpdir(), 'symphony-runtime-run-history-'));
+    directories.push(directory);
+    const repository = createRepository(join(directory, 'state.sqlite'));
+    repository.initialize();
+    const run = {
+      id: 'ci-1:7',
+      workspaceId: 'workspace-1',
+      ciBindingId: 'ci-1',
+      repositoryBindingId: 'repository-1',
+      name: 'PR Quality',
+      status: 'succeeded' as const,
+      startedAt: '2026-10-20T10:00:00.000Z',
+    };
+    repository.ciRunHistory.recordRuns(
+      [run, { ...run, id: 'ci-2:8', workspaceId: 'workspace-2' }],
+      '2026-04-14T00:00:00.000Z',
+    );
+    const query = { since: '2026-10-01T00:00:00.000Z', limit: 100 };
+
+    // act
+    repository.removeWorkspace('workspace-1');
+
+    // assert
+    expect(
+      repository.ciRunHistory.listRunHistory({ ...query, workspaceIds: ['workspace-1'] }).runs,
+    ).toEqual([]);
+    expect(
+      repository.ciRunHistory.listRunHistory({ ...query, workspaceIds: ['workspace-2'] }).runs,
+    ).toHaveLength(1);
+  }, 30_000);
 });
 
 function createRepository(path: string): SqliteRuntimeRepositories {

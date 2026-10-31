@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron, type ElectronApplication } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { openSettingsWindow } from './openSettingsWindow';
 
 // #endregion
 
@@ -39,36 +40,36 @@ test('adds and projects a workspace-owned OpenCode account', async () => {
     const page = await mainWindow(app);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
-    await page.getByTestId('open-workspace-settings-personal').click();
-    await expect(page.getByTestId('workspace-card-personal')).toBeVisible();
-    await page.getByTestId('workspace-settings-section-services').click();
-    await page.getByTestId('add-ai-runtime-account-opencode-personal').click();
-    await page.getByTestId('ai-account-name').locator('input').fill('OpenCode account');
-    await page.getByTestId('ai-account-advanced-settings').click();
-    await page.getByTestId('ai-credential-ref').locator('input').fill('env:OPENAI_API_KEY');
-    await page.getByTestId('connect-ai-account').click();
-    await page.getByTestId('cancel-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
-    const accountGroup = page.getByTestId('configured-accounts-personal');
+    await expect(page.getByTestId('navigation-settings')).toBeVisible();
+    const settings = await openSettingsWindow(app, page);
+    settings.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    await settings.getByTestId('workspace-navigation-item-personal').click();
+    await settings.getByTestId('workspace-settings-section-services').click();
+    await expect(settings.getByTestId('workspace-card-personal')).toBeVisible();
+    await settings.getByTestId('add-ai-runtime-account-opencode-personal').click();
+    await expect(settings.getByTestId('ai-provider-opencode')).toHaveJSProperty('isChecked', true);
+    await settings.getByTestId('ai-account-name').locator('input').fill('OpenCode account');
+    await settings.getByTestId('ai-account-advanced-settings').click();
+    await settings.getByTestId('ai-credential-ref').locator('input').fill('env:OPENAI_API_KEY');
+    await settings.getByTestId('save-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    const accountGroup = settings.getByTestId('configured-accounts-personal');
     await expect(accountGroup).toContainText('OpenCode account');
     await expect(accountGroup).toContainText('OpenCode');
 
-    await page.getByTestId('workspace-settings-section-team').click();
-    await page.getByTestId('add-ai-account-personal').click();
-    await page
+    await settings.getByTestId('workspace-settings-section-team').click();
+    await settings.getByTestId('add-ai-account-personal').click();
+    await settings
       .getByTestId('settings-editor-drawer')
       .locator('mosaik-choice[test-id^="ai-account-opencode-"]')
       .click();
-    await page.getByTestId('ai-model-openai/gpt-5.6').click();
-    await page.getByTestId('ai-reasoning-high').click();
-    await page.getByTestId('agent-ai-next').click();
-    await page.getByTestId('ai-display-name').locator('input').fill('OpenCode agent');
-    await page.getByTestId('save-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
-    await expect(page.getByTestId('workspace-ai-banner')).toHaveCount(0);
+    await settings.getByTestId('ai-model-openai/gpt-5.6').click();
+    await settings.getByTestId('ai-reasoning-high').click();
+    // The agent sheet asks its four questions on one page; no step has to be advanced.
+    await settings.getByTestId('ai-display-name').locator('input').fill('OpenCode agent');
+    await settings.getByTestId('save-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await expect(settings.getByTestId('workspace-ai-banner')).toHaveCount(0);
 
     const persisted = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -88,7 +89,7 @@ test('adds and projects a workspace-owned OpenCode account', async () => {
       model: 'openai/gpt-5.6',
       reasoningEffort: 'high',
     });
-    await page.screenshot({
+    await settings.screenshot({
       path: resolve(outputDirectory, 'opencode-settings.png'),
       fullPage: true,
     });
@@ -100,11 +101,8 @@ test('adds and projects a workspace-owned OpenCode account', async () => {
 });
 
 async function mainWindow(app: ElectronApplication) {
-  const existing = app.windows().find((page) => !page.url().includes('#/menu-bar'));
-  return (
-    existing ??
-    (await app.waitForEvent('window', {
-      predicate: (page) => !page.url().includes('#/menu-bar'),
-    }))
-  );
+  const isMainWindow = (page: { url(): string }): boolean =>
+    !page.url().includes('#/menu-bar') && !page.url().includes('#/settings');
+  const existing = app.windows().find(isMainWindow);
+  return existing ?? (await app.waitForEvent('window', { predicate: isMainWindow }));
 }

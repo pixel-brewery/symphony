@@ -6,7 +6,7 @@ import '@angular/compiler';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { DRAWER_REF, DRAWER_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
@@ -53,8 +53,8 @@ function arrange(workspaceId?: string) {
       WorkspaceSettingsEditorViewPresenter,
       { provide: WORKSPACE_SETTINGS_CONTEXT, useValue: context },
       { provide: WORKSPACE_CONFIGURATION, useValue: { saveSettings } },
-      { provide: DRAWER_REF_DATA, useValue: { kind: 'workspace', workspaceId } },
-      { provide: DRAWER_REF, useValue: { close } },
+      { provide: DIALOG_REF_DATA, useValue: { kind: 'workspace', workspaceId } },
+      { provide: DIALOG_REF, useValue: { close } },
     ],
   });
   return {
@@ -112,9 +112,10 @@ describe('WorkspaceSettingsEditorViewPresenter', () => {
     expect(saveSettings).not.toHaveBeenCalled();
     expect(close).not.toHaveBeenCalled();
     expect(presenter.busy()).toBe(false);
+    expect(presenter.error()).toBe('invalid');
   });
 
-  it('prevents a second save while persistence is pending and retains the drawer after rejection', async () => {
+  it('prevents a second save while persistence is pending and retains the sheet after rejection', async () => {
     // arrange
     const { presenter, saveSettings, close } = arrange('workspace-a');
     let finish: (saved: boolean) => void = () => {
@@ -136,5 +137,6 @@ describe('WorkspaceSettingsEditorViewPresenter', () => {
     // assert
     expect(saveSettings).toHaveBeenCalledOnce();
     expect(close).not.toHaveBeenCalled();
+    expect(presenter.error()).toBe('save');
   });
 });

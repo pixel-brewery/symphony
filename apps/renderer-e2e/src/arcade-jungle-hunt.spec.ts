@@ -18,9 +18,9 @@ test('plays Jungle Hunt with original skill selection, live vines, preserved men
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(page);
+    await enableArcade(app, page);
     for (const theme of ['light', 'dark'] as const) {
-      await selectArcadeTheme(page, theme);
+      await selectArcadeTheme(app, page, theme);
       await page.getByTestId('navigation-arcade').click();
       await page.getByTestId('arcade-play-jungle-hunt').click();
       await expect(page.getByTestId('jungle-hunt-view')).toHaveAttribute('data-screen', 'intro');

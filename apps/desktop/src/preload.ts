@@ -13,6 +13,7 @@ import {
   desktopRequestSchemas,
   desktopResponseEnvelopeSchema,
   desktopResponseSchemas,
+  isDesktopNavigationPath,
   pathSelectionRequestSchema,
   pathSelectionResponseSchema,
   powerStateSchema,
@@ -109,7 +110,7 @@ const desktopApi: IDesktopApi = {
   },
   onNavigate(listener) {
     const handler = (_event: Electron.IpcRendererEvent, raw: unknown): void => {
-      if (raw === '/main/settings' || raw === '/main/actions') listener(raw);
+      if (isDesktopNavigationPath(raw)) listener(raw);
     };
     ipcRenderer.on(desktopChannels.navigate, handler);
     return () => ipcRenderer.removeListener(desktopChannels.navigate, handler);

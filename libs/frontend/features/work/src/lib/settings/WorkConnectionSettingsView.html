@@ -1,31 +1,23 @@
 @if(presenter.account(); as account){
-<mosaik-cell [attr.test-id]="'configured-account-' + account.id" [label]="account.displayName">
+<symphony-settings-row
+  [attr.test-id]="'configured-account-' + account.id"
+  [label]="account.displayName"
+  [description]="account.kind === 'azure-devops' ? 'Azure DevOps · ' + account.organization : account.kind === 'github' ? 'GitHub · ' + account.hostname + (account.accountLogin ? ' · @' + account.accountLogin : '') : ''"
+>
   <mosaik-avatar
-    slot="start"
+    slot="leading"
     [size]="'small'"
     [appearance]="'soft'"
-    [iconName]="account.kind | connectionIcon"
+    [icon]="account.kind | connectionIcon"
   />
-  @switch (account.kind) { @case ('azure-devops') {
-  <mosaik-text
-    slot="subLabel"
-    [text]="'Azure DevOps · ' + account.organization"
-    [readonly]="true"
-  />
-  } @case ('github') {
-  <mosaik-text
-    slot="subLabel"
-    [text]="'GitHub · ' + account.hostname + (account.accountLogin ? ' · @' + account.accountLogin : '')"
-    [readonly]="true"
-  />
-  } }
   <mosaik-button
-    slot="end"
     [attr.test-id]="'edit-account-' + account.id"
     [label]="'Edit'"
+    [icon]="'edit'"
+    [iconSize]="'small'"
     [disabled]="!presenter.canEditAccount()"
     [appearance]="'plain'"
     (click)="presenter.openAccountCommand.execute(account)"
   />
-</mosaik-cell>
+</symphony-settings-row>
 }

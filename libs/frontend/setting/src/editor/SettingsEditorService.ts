@@ -2,8 +2,10 @@
 
 import { DOCUMENT } from '@angular/common';
 import { ApplicationRef, Inject, inject, Injectable } from '@angular/core';
-import { DrawerService, type IDrawerRef } from '@pixel-brewery/mosaik-elements-angular';
+import { DialogService, type IDialogRef } from '@pixel-brewery/mosaik-elements-angular';
 import type { WorkspaceSettingsSection } from '../models/WorkspaceSettingsSection';
+import { SETTINGS_SHEET_WIDTH } from '../sheets/SettingsSheetWidth';
+import { showSettingsSheet } from '../sheets/showSettingsSheet';
 import type { ISettingsEditorRequest } from './ISettingsEditorRequest';
 import type { ISettingsEditorResult } from './ISettingsEditorResult';
 import { SettingsEditorRegistry } from './SettingsEditorRegistry';
@@ -11,7 +13,11 @@ import { SettingsEditorRegistry } from './SettingsEditorRegistry';
 // #endregion
 
 /**
- * Preserves one active Settings drawer and follow-up sequencing for feature-owned editors.
+ * Presents feature-owned editors as sheets of the Settings window, keeps one sheet open at a time
+ * and opens a follow-up editor when a sheet closes with one.
+ *
+ * Editors render `mosaikDialogHeader`, `mosaikDialogContent` and `mosaikDialogFooter` templates and
+ * read their request through `DIALOG_REF_DATA` and their sheet through `DIALOG_REF`.
  *
  * @public
  */
@@ -20,10 +26,10 @@ export class SettingsEditorService {
   // #region Fields
 
   private readonly _registry: SettingsEditorRegistry;
-  private readonly _drawers: DrawerService;
+  private readonly _dialogs: DialogService;
   private readonly _application: ApplicationRef;
   private readonly _window: Window;
-  private _active?: IDrawerRef<ISettingsEditorRequest, ISettingsEditorResult>;
+  private _active?: IDialogRef<ISettingsEditorRequest, ISettingsEditorResult>;
   private _opening = false;
 
   // #endregion
@@ -31,19 +37,19 @@ export class SettingsEditorService {
   // #region Ctor
 
   /**
-   * Connects the native drawer and application render lifecycle.
+   * Connects the native dialog service and application render lifecycle.
    *
    * @public
    */
   public constructor(
     @Inject(SettingsEditorRegistry)
     registry: SettingsEditorRegistry = inject(SettingsEditorRegistry),
-    @Inject(DrawerService) drawers: DrawerService = inject(DrawerService),
+    @Inject(DialogService) dialogs: DialogService = inject(DialogService),
     @Inject(ApplicationRef) application: ApplicationRef = inject(ApplicationRef),
     @Inject(DOCUMENT) document: Document = inject(DOCUMENT),
   ) {
     this._registry = registry;
-    this._drawers = drawers;
+    this._dialogs = dialogs;
     this._application = application;
     const browserWindow = document.defaultView;
     if (!browserWindow) throw new Error('Settings editors require a browser window.');
@@ -55,7 +61,7 @@ export class SettingsEditorService {
   // #region Methods
 
   /**
-   * Opens a validated feature editor or draws attention to the existing active drawer.
+   * Opens a validated feature editor as a sheet or draws attention to the sheet already open.
    *
    * @param request - The owning feature's explicit editor request.
    * @param onSection - Optional host navigation applied before this editor or a follow-up opens.
@@ -65,8 +71,8 @@ export class SettingsEditorService {
     request: ISettingsEditorRequest,
     onSection?: (workspaceId: string | undefined, section: WorkspaceSettingsSection) => void,
   ): Promise<void> {
-    if (this._active && this._drawers.isShown(this._active)) {
-      this._active.requestAttention();
+    if (this._active && this._dialogs.isShown(this._active)) {
+      void this._active.requestAttention();
       return;
     }
     if (this._opening) return;
@@ -75,16 +81,19 @@ export class SettingsEditorService {
     try {
       const component = await editor.loadComponent();
       if (editor.workspaceSection) onSection?.(request.workspaceId, editor.workspaceSection);
-      const drawer = this._drawers.show<ISettingsEditorRequest, ISettingsEditorResult>(component, {
-        data: request,
-      });
-      this._active = drawer;
+      const sheet = showSettingsSheet<ISettingsEditorRequest, ISettingsEditorResult>(
+        this._dialogs,
+        component,
+        request,
+        editor.width ?? SETTINGS_SHEET_WIDTH,
+      );
+      this._active = sheet;
       this._window.requestAnimationFrame(() => {
         this._application.tick();
         this._window.requestAnimationFrame(() => this._application.tick());
       });
-      drawer.closed.subscribe((closed) => {
-        if (this._active === drawer) this._active = undefined;
+      sheet.closed.subscribe((closed) => {
+        if (this._active === sheet) this._active = undefined;
         const next = closed?.result?.next;
         if (next) void this.open(next, onSection);
       });

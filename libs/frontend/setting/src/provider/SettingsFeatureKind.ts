@@ -3,4 +3,4 @@
  *
  * @public
  */
-export type SettingsFeatureKind = 'view' | 'editor' | 'route-initializer';
+export type SettingsFeatureKind = 'view' | 'editor' | 'route-initializer' | 'search';

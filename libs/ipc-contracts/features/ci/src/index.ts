@@ -1,6 +1,8 @@
 export { ciDispatchInputSchema } from './lib/CiDispatchInputSchema';
 export { ciPendingApprovalSchema } from './lib/CiPendingApprovalSchema';
 export { ciRunDetailsSchema } from './lib/CiRunDetailsSchema';
+export type { CiRunHistoryDto } from './lib/CiRunHistoryDto';
+export { ciRunHistorySchema } from './lib/CiRunHistorySchema';
 export { ciRunLogChunkSchema } from './lib/CiRunLogChunkSchema';
 export { ciRunLogStateSchema } from './lib/CiRunLogStateSchema';
 export { ciRunSchema } from './lib/CiRunSchema';

@@ -1,6 +1,6 @@
 // #region Imports
 
-import { CommandDirective } from '@symphony/frontend-core';
+import { DecimalPipe, LowerCasePipe } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -11,45 +11,78 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  BadgeComponent,
   ButtonComponent,
   DividerComponent,
-  HintComponent,
   IconComponent,
   IconNameDirective,
-  MenuComponent,
-  MenuItemComponent,
+  ImageComponent,
+  KbdComponent,
   ProgressBarComponent,
   ProgressRingComponent,
+  SegmentComponent,
+  SegmentItemComponent,
   TextComponent,
   ToggleSwitchComponent,
   TooltipDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { MenuBarViewPresenter } from '../view-presenters/MenuBarViewPresenter';
+import { CommandDirective } from '@symphony/frontend-core';
+import { NotificationIconPipe } from '@symphony/frontend-notification';
+import { AgentAvatarSourcePipe, RelativeTimePipe } from '@symphony/frontend-ui';
+import { UpdateActionLabelPipe } from '@symphony/frontend-update';
+import { AgentActivityIconPipe } from '../pipes/AgentActivityIconPipe';
+import { AgentActivityLabelPipe } from '../pipes/AgentActivityLabelPipe';
+import { AgentFinishedWorkLabelPipe } from '../pipes/AgentFinishedWorkLabelPipe';
 import { AutonomyNextCycleLabelPipe } from '../pipes/AutonomyNextCycleLabelPipe';
 import { RailRunStatePresentationPipe } from '../pipes/RailRunStatePresentationPipe';
-import { UpdateActionLabelPipe } from '@symphony/frontend-update';
+import { MenuBarViewPresenter } from '../view-presenters/MenuBarViewPresenter';
 
 // #endregion
 
+/** The main process accepts panel heights between these bounds. */
+const MINIMUM_PANEL_HEIGHT = 180;
+const MAXIMUM_PANEL_HEIGHT = 760;
+
+/**
+ * The menu-bar panel (tray): a 328 px window of its own with the runs, the execution slots, what
+ * needs the user, autonomous work, the update and the application commands with their shortcuts.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-menu-bar-view',
-  host: { class: 'block' },
+  host: {
+    class: 'block',
+    '(document:keydown)': 'onKeydown($event)',
+  },
   imports: [
+    AgentActivityIconPipe,
+    AgentActivityLabelPipe,
+    AgentAvatarSourcePipe,
+    AgentFinishedWorkLabelPipe,
     AutonomyNextCycleLabelPipe,
+    BadgeComponent,
     ButtonComponent,
     CommandDirective,
+    DecimalPipe,
     DividerComponent,
-    HintComponent,
     IconComponent,
     IconNameDirective,
-    MenuComponent,
-    MenuItemComponent,
+    ImageComponent,
+    KbdComponent,
+    LowerCasePipe,
+    NotificationIconPipe,
     ProgressBarComponent,
     ProgressRingComponent,
     RailRunStatePresentationPipe,
+    RelativeTimePipe,
+    SegmentComponent,
+    SegmentItemComponent,
     TextComponent,
     ToggleSwitchComponent,
     TooltipDirective,
+    TypographyDirective,
     UpdateActionLabelPipe,
   ],
   providers: [MenuBarViewPresenter],
@@ -92,13 +125,35 @@ export class MenuBarView {
 
   // #region Methods
 
+  /**
+   * Runs the panel commands for their shortcuts: ⌘O, ⌘N, ⌘, and ⌘Q.
+   *
+   * @param event - The key press anywhere in the panel.
+   */
+  protected onKeydown(event: KeyboardEvent): void {
+    if (!event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+    const command =
+      event.key === 'o' || event.key === 'O'
+        ? this.presenter.openSymphonyCommand
+        : event.key === 'n' || event.key === 'N'
+          ? this.presenter.newWorkItemCommand
+          : event.key === ','
+            ? this.presenter.openSettingsCommand
+            : event.key === 'q' || event.key === 'Q'
+              ? this.presenter.quitSymphonyCommand
+              : undefined;
+    if (!command) return;
+    event.preventDefault();
+    command.execute();
+  }
+
   private schedulePanelResize(): void {
     if (this._resizeFrame !== undefined) window.cancelAnimationFrame(this._resizeFrame);
     this._resizeFrame = window.requestAnimationFrame(() => {
       this._resizeFrame = undefined;
       const height = Math.min(
-        620,
-        Math.max(180, Math.ceil(this._panel().nativeElement.scrollHeight)),
+        MAXIMUM_PANEL_HEIGHT,
+        Math.max(MINIMUM_PANEL_HEIGHT, Math.ceil(this._panel().nativeElement.scrollHeight)),
       );
       if (height === this._requestedHeight) return;
       this._requestedHeight = height;

@@ -11,16 +11,27 @@
       "import": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./views": {
+      "types": "./src/views.ts",
+      "import": "./src/views.ts",
+      "default": "./src/views.ts"
+    }
   },
   "dependencies": {
+    "@angular/cdk": "22.2.0",
+    "@angular/common": "22.2.0",
     "@angular/core": "22.2.0",
+    "@angular/router": "22.2.0",
     "@pixel-brewery/mosaik-elements-angular": "0.1.183",
     "@pixel-brewery/mosaik-elements-foundation": "0.1.183",
     "@symphony/ipc-contracts-core": "workspace:*",
+    "rxjs": "7.8.2",
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@angular/compiler": "22.2.0",
+    "@angular/platform-browser": "22.2.0",
     "vitest": "5.0.5"
   }
 }

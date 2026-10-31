@@ -59,7 +59,9 @@ to Applications, macOS therefore requires an explicit approval under **System Se
 only the browser quarantine with
 `xattr -dr com.apple.quarantine /Applications/Symphony.app`.
 
-Installer-only ARM64 releases are replaced manually. The ZIP and NuGet payloads required by
+Installer-only ARM64 releases are downloaded and verified inside Symphony: the status bar's update
+button downloads the installer, checks its size and SHA-256 digest, and `Restart to update` opens
+it. The ZIP and NuGet payloads required by
 Electron's native automatic updaters are intentionally disabled and remain commented in the
 release configuration for a later support expansion.
 

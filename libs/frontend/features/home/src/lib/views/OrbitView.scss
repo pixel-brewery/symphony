@@ -1,0 +1,37 @@
+// Framed groups as the artboard draws them: a 10px hairline frame without Soho's trailing card
+// inset, so each card's own content padding is the only spacing.
+mosaik-card[part~='orbit-card'] {
+  --card-padding-bottom: 0;
+  --card-border-radius: var(--mosaik-layout-radius);
+  --card-border-color: var(--mosaik-scheme-highlight);
+}
+
+// The inspector pane beside the orbit diagram, separated by the hairline the artboard draws.
+[part~='orbit-inspector'] {
+  border-left: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// The cluster's work items: one row per item with a hairline between rows, as drawn.
+[part~='orbit-cluster-rows'] > mosaik-button {
+  --button-height: auto;
+  --button-min-height: 0;
+  --button-padding-top: 10px;
+  --button-padding-bottom: 10px;
+  --button-padding-left: 14px;
+  --button-padding-right: 14px;
+  --button-border-radius: 0;
+}
+
+[part~='orbit-cluster-rows'] > * + * {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// Toolbar controls use the window's compact 32px control height.
+mosaik-dropdown-button[part~='orbit-toolbar-control'] {
+  --dropdown-button-height: 32px;
+  --dropdown-button-min-height: 32px;
+  --dropdown-button-padding-top: 6px;
+  --dropdown-button-padding-bottom: 6px;
+  --dropdown-button-padding-left: 8px;
+  --dropdown-button-padding-right: 8px;
+}

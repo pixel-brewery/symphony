@@ -1,50 +1,61 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   ButtonComponent,
   CardComponent,
-  CardContentComponent,
+  DividerComponent,
+  DropDownButtonComponent,
   HintComponent,
-  PageComponent,
-  PageContentComponent,
-  PageHeaderComponent,
+  MenuComponent,
+  MenuItemComponent,
+  ProgressBarComponent,
   SelectComponent,
   SelectItemComponent,
   TextBoxComponent,
   TextComponent,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { View, VIEW_PRESENTER, WindowToolbarDirective } from '@symphony/frontend-core';
 import { OrbitCanvasComponent } from '@symphony/frontend-ui';
 import { OrbitViewPresenter } from '../view-presenters/OrbitViewPresenter';
 
 // #endregion
 
-/** Production and delivery share the existing Board ticket selection and filters. */
+/**
+ * The release orbit: the destination with its stage clusters, zoom controls, and an inspector for
+ * the selected cluster, destination or work item. Selection and filters are shared with the Board.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-orbit-view',
   host: {
-    class: 'flex h-full min-h-0 w-full flex-1 flex-col',
+    class: 'flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden',
     '(keydown.escape)': 'presenter.dismissOverlayCommand.execute()',
   },
   imports: [
     FormsModule,
     DatePipe,
+    DecimalPipe,
     RouterLink,
     ButtonComponent,
     CardComponent,
-    CardContentComponent,
+    DividerComponent,
+    DropDownButtonComponent,
     HintComponent,
-    PageComponent,
-    PageContentComponent,
-    PageHeaderComponent,
+    MenuComponent,
+    MenuItemComponent,
+    ProgressBarComponent,
     SelectComponent,
     SelectItemComponent,
     TextBoxComponent,
     TextComponent,
+    TypographyDirective,
+    WindowToolbarDirective,
     OrbitCanvasComponent,
   ],
   providers: [OrbitViewPresenter, { provide: VIEW_PRESENTER, useExisting: OrbitViewPresenter }],
@@ -69,6 +80,11 @@ export class OrbitView extends View<OrbitViewPresenter> {
   /** Changes the camera distance without changing domain positions. @public */
   public zoomBy(factor: number): void {
     this._orbitCanvas()?.zoomBy(factor);
+  }
+
+  /** Returns to a scale of the fitted view (1 is 100 %) along the current direction. @public */
+  public zoomTo(scale: number): void {
+    this._orbitCanvas()?.zoomTo(scale);
   }
 
   // #endregion

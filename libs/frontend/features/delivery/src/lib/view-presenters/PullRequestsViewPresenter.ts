@@ -4,18 +4,17 @@ import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
-  DrawerService,
+  DialogService,
   DropDownButtonComponent,
-  type IDrawerRef,
+  type IDialogRef,
 } from '@pixel-brewery/mosaik-elements-angular';
 import type { ICiRun } from '@symphony/domain-ci';
 import type { IPullRequestSummary } from '@symphony/domain-delivery';
 import {
+  Clock,
   Command,
   ExternalLinkService,
   Hydratable,
-  type IPullRequestActionStatus,
-  resolvePullRequestActionStatus,
   resolvePullRequestRun,
   ViewPresenter,
   WorkspaceScopePresenter,
@@ -26,6 +25,7 @@ import {
   type PullRequestState,
   pullRequestStateOf,
 } from '@symphony/frontend-core/delivery';
+import { EXECUTION_OPERATIONS } from '@symphony/frontend-core/execution';
 import type { ICollectionListMenuSelection } from '@symphony/frontend-ui';
 import { PullRequestCreateDrawerView } from '../views/drawers/PullRequestCreateDrawerView';
 import {
@@ -34,8 +34,19 @@ import {
   type PullRequestSort,
   resolvePullRequestListCommand,
   resolvePullRequestListMenus,
-  SORT_MENU_ID,
 } from './pullRequestListPresentation';
+import {
+  composePullRequestRepairRequest,
+  type IPullRequestRow,
+  isPullRequestInSegment,
+  PULL_REQUEST_SEGMENTS,
+  type PullRequestRepairBlock,
+  type PullRequestSegment,
+  resolvePullRequestChecks,
+  resolvePullRequestDelivery,
+  resolvePullRequestRepairBlock,
+  resolvePullRequestRow,
+} from './pullRequestRowPresentation';
 import { hydratePullRequestsRoute } from './routeHydration';
 import { DELIVERY_VIEW_CONTEXT } from '../ports/DeliveryViewContextToken';
 import { DELIVERY_CI_OPERATIONS } from '../ports/DeliveryCiOperationsToken';
@@ -44,6 +55,17 @@ import { PullRequestStore } from '../state/PullRequestStore';
 
 // #endregion
 
+/**
+ * State and commands of the `Pull requests` screen: the segmented, filterable table of open pull
+ * requests and the inspector of the selected one.
+ *
+ * Query parameters: `view` selects the segment (`needs-action`, `drafts`; `open` by default),
+ * `pullRequest` selects the inspected pull request, `state` and `base` narrow the list the way the
+ * Overview tiles hand them over, `q` is the contextual search and `create=true` opens the authoring
+ * drawer.
+ *
+ * @public
+ */
 @Injectable()
 export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   // #region Fields
@@ -59,16 +81,25 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _pullRequests = inject(PullRequestStore);
   private readonly _context = inject(DELIVERY_VIEW_CONTEXT);
   private readonly _ci = inject(DELIVERY_CI_OPERATIONS);
+  private readonly _execution = inject(EXECUTION_OPERATIONS, { optional: true });
   private readonly _routeHydration = inject(DELIVERY_ROUTE_HYDRATION);
   /** The single Delivery-owned branch-update exclusion signal. @public @readonly */
   public readonly pullRequestBranchUpdatingId = this._pullRequests.pullRequestBranchUpdatingId;
-  private readonly _drawerService = inject(DrawerService);
+  private readonly _dialogService = inject(DialogService);
   private readonly _route = inject(ActivatedRoute);
   private readonly _router = inject(Router);
   private readonly _queryParamMap = toSignal(this._route.queryParamMap, {
     initialValue: this._route.snapshot.queryParamMap,
   });
-  private _activeDrawer?: IDrawerRef<undefined>;
+  private _activeSheet?: IDialogRef<undefined>;
+
+  /**
+   * Current time for the relative `Updated` column, ticking with the shared clock.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly now = inject(Clock).now;
 
   /**
    * The pull requests.
@@ -77,6 +108,22 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
    * @readonly
    */
   public readonly pullRequests = computed(() => this._context.snapshot()?.pullRequests ?? []);
+
+  /**
+   * Enabled GitHub repositories of the selected workspaces, named in the toolbar subtitle.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly repositories = computed(() => {
+    const workspaceIds = new Set(this._context.selectedWorkspaceIds());
+    return (this._context.settings()?.repositoryBindings ?? []).filter(
+      (repository) =>
+        repository.enabled &&
+        repository.provider === 'github' &&
+        workspaceIds.has(repository.workspaceId),
+    );
+  });
 
   /**
    * The authors.
@@ -127,6 +174,22 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   public readonly sort = signal<PullRequestSort>('updated-descending');
 
   /**
+   * The segment the table is narrowed to.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly segment = signal<PullRequestSegment>('open');
+
+  /**
+   * Every segment in display order.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly segments = PULL_REQUEST_SEGMENTS;
+
+  /**
    * The normalized contextual search query.
    *
    * @public
@@ -137,7 +200,7 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   );
 
   /**
-   * The list menus.
+   * The State, Base, Author and Sort menus of the filter action.
    *
    * @public
    * @readonly
@@ -153,73 +216,18 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   );
 
   /**
-   * The filter menus grouped by the Toolbar filter action.
+   * Whether any filter or the contextual search narrows the list.
    *
    * @public
    * @readonly
    */
-  public readonly filterMenus = computed(() =>
-    this.listMenus().filter((menu) => menu.id !== SORT_MENU_ID),
+  public readonly hasActiveFilters = computed(
+    () =>
+      Boolean(this.selectedAuthor()) ||
+      Boolean(this.selectedState()) ||
+      Boolean(this.selectedBase()) ||
+      Boolean(this.searchQuery()),
   );
-
-  /**
-   * The non-filter menus retained by the collection header.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly sortMenus = computed(() =>
-    this.listMenus().filter((menu) => menu.id === SORT_MENU_ID),
-  );
-
-  /**
-   * The pull request key.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly pullRequestKey = (pullRequest: IPullRequestSummary): string => pullRequest.id;
-
-  /**
-   * The visible pull requests.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly visiblePullRequests = computed(() => {
-    const selectedAuthor = this.selectedAuthor();
-    const selectedState = this.selectedState();
-    const selectedBase = this.selectedBase();
-    const searchQuery = this.searchQuery();
-    const pullRequests = this.pullRequests().filter(
-      (pullRequest) =>
-        (!selectedAuthor || pullRequest.author === selectedAuthor) &&
-        (!selectedState || pullRequestStateOf(pullRequest) === selectedState) &&
-        (!selectedBase || pullRequest.baseBranchStatus === selectedBase) &&
-        (!searchQuery ||
-          [
-            pullRequest.number,
-            pullRequest.title,
-            pullRequest.author,
-            pullRequest.sourceBranch,
-            pullRequest.targetBranch,
-            pullRequest.state,
-          ]
-            .join(' ')
-            .toLocaleLowerCase()
-            .includes(searchQuery)),
-    );
-    return pullRequests.toSorted((left, right) => {
-      switch (this.sort()) {
-        case 'created-ascending':
-          return left.createdAt.localeCompare(right.createdAt);
-        case 'created-descending':
-          return right.createdAt.localeCompare(left.createdAt);
-        case 'updated-descending':
-          return right.updatedAt.localeCompare(left.updatedAt);
-      }
-    });
-  });
 
   /**
    * The local runner busy.
@@ -246,6 +254,180 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   public readonly canCreatePullRequest = this._context.canCreatePullRequest;
 
   /**
+   * Whether a refresh started from this screen is running.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly isRefreshing = signal(false);
+
+  /**
+   * Pull request whose AI repair is being requested.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly repairingPullRequestId = signal<string | undefined>(undefined);
+
+  /**
+   * Every pull request in scope with its checks, merge state and delivery.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly rows = computed<readonly IPullRequestRow[]>(() => {
+    const snapshot = this._context.snapshot();
+    const settings = this._context.settings();
+    const runId = this._ci?.localCiRunningRunId();
+    const startedAt = this._ci?.localCiStartedAt();
+    const activeLocalRun = runId && startedAt ? { runId, startedAt } : undefined;
+    return this.pullRequests().map((pullRequest) =>
+      resolvePullRequestRow(
+        pullRequest,
+        this._ci
+          ? resolvePullRequestChecks(
+              pullRequest,
+              snapshot?.ciRuns ?? [],
+              snapshot?.localCiExecutions ?? [],
+              activeLocalRun,
+            )
+          : [],
+        resolvePullRequestDelivery(
+          pullRequest,
+          snapshot?.executions ?? [],
+          snapshot?.workItems ?? [],
+          settings?.agentProfiles ?? [],
+        ),
+      ),
+    );
+  });
+
+  /**
+   * Number of pull requests in each segment.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly segmentCounts = computed<Readonly<Record<PullRequestSegment, number>>>(() => {
+    const rows = this.rows();
+    return {
+      open: rows.filter((row) => isPullRequestInSegment(row, 'open')).length,
+      'needs-action': rows.filter((row) => isPullRequestInSegment(row, 'needs-action')).length,
+      drafts: rows.filter((row) => isPullRequestInSegment(row, 'drafts')).length,
+    };
+  });
+
+  /**
+   * The rows of the selected segment that match every filter, in the selected order.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly visibleRows = computed<readonly IPullRequestRow[]>(() => {
+    const segment = this.segment();
+    const selectedAuthor = this.selectedAuthor();
+    const selectedState = this.selectedState();
+    const selectedBase = this.selectedBase();
+    const searchQuery = this.searchQuery();
+    const rows = this.rows().filter(
+      ({ pullRequest, needsAction }) =>
+        isPullRequestInSegment({ pullRequest, needsAction }, segment) &&
+        (!selectedAuthor || pullRequest.author === selectedAuthor) &&
+        (!selectedState || pullRequestStateOf(pullRequest) === selectedState) &&
+        (!selectedBase || pullRequest.baseBranchStatus === selectedBase) &&
+        (!searchQuery ||
+          [
+            pullRequest.number,
+            pullRequest.title,
+            pullRequest.author,
+            pullRequest.sourceBranch,
+            pullRequest.targetBranch,
+            pullRequest.state,
+          ]
+            .join(' ')
+            .toLocaleLowerCase()
+            .includes(searchQuery)),
+    );
+    return rows.toSorted(({ pullRequest: left }, { pullRequest: right }) => {
+      switch (this.sort()) {
+        case 'created-ascending':
+          return left.createdAt.localeCompare(right.createdAt);
+        case 'created-descending':
+          return right.createdAt.localeCompare(left.createdAt);
+        case 'updated-descending':
+          return right.updatedAt.localeCompare(left.updatedAt);
+      }
+    });
+  });
+
+  /**
+   * The pull request the operator selected; the inspector falls back to the first visible row.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly selectedPullRequestId = signal<string | undefined>(undefined);
+
+  /**
+   * The row the inspector shows: the selected one while it is visible, otherwise the first one.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly selectedRow = computed<IPullRequestRow | undefined>(() => {
+    const rows = this.visibleRows();
+    const id = this.selectedPullRequestId();
+    return rows.find((row) => row.pullRequest.id === id) ?? rows[0];
+  });
+
+  /**
+   * Repository of the inspected pull request.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly selectedRepository = computed(() => {
+    const repositoryBindingId = this.selectedRow()?.pullRequest.repositoryBindingId;
+    return this._context
+      .settings()
+      ?.repositoryBindings.find((repository) => repository.id === repositoryBindingId);
+  });
+
+  /**
+   * Why `Repair with AI` cannot start for the inspected pull request, or `undefined` when it can.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly repairBlock = computed<PullRequestRepairBlock | undefined>(() => {
+    const row = this.selectedRow();
+    if (!row) return undefined;
+    const settings = this._context.settings();
+    return resolvePullRequestRepairBlock(
+      row.pullRequest,
+      row.delivery,
+      settings?.runtime?.agenticDelivery,
+      settings?.ciBindings ?? [],
+      this._execution !== null,
+    );
+  });
+
+  /**
+   * The run `Run checks locally` acts on for the inspected pull request: its first failed check,
+   * otherwise its newest run.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly selectedChecksRun = computed<ICiRun | undefined>(() => {
+    const row = this.selectedRow();
+    if (!row) return undefined;
+    return (
+      row.checks.find((check) => check.state === 'failed')?.run ?? this.resolveRun(row.pullRequest)
+    );
+  });
+
+  /**
    * Resets every pull-request narrowing while preserving the workspace scope and sort order.
    *
    * @public
@@ -267,9 +449,17 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _run = computed(
     () => (pullRequest: IPullRequestSummary) => this.resolveRun(pullRequest),
   );
-
-  private readonly _actionStatus = computed(
-    () => (pullRequest: IPullRequestSummary) => this.resolveActionStatus(pullRequest),
+  private readonly _selectSegmentCommand: Command<PullRequestSegment> = new Command(
+    (segment) => void this.onExecuteSelectSegmentCommand(segment),
+  );
+  private readonly _selectPullRequestCommand: Command<string> = new Command((id) =>
+    this.selectedPullRequestId.set(id),
+  );
+  private readonly _openWorkItemCommand: Command<string> = new Command(
+    (workItemId) => void this.onExecuteOpenWorkItemCommand(workItemId),
+  );
+  private readonly _repairWithAiCommand: Command<IPullRequestRow> = new Command(
+    (row) => void this.onExecuteRepairWithAiCommand(row),
   );
 
   private readonly _openInGitHubCommand: Command<IPullRequestSummary> = new Command(
@@ -313,6 +503,14 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
       const base = this._queryParamMap().get('base');
       this.selectedBase.set(isPullRequestBaseFilter(base) ? base : undefined);
     });
+    effect(() => {
+      const view = this._queryParamMap().get('view');
+      this.segment.set(isPullRequestSegment(view) ? view : 'open');
+    });
+    effect(() => {
+      const pullRequest = this._queryParamMap().get('pullRequest');
+      if (pullRequest) this.selectedPullRequestId.set(pullRequest);
+    });
   }
 
   // #endregion
@@ -347,7 +545,7 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
     return this._activateListMenuOptionCommand;
   }
   /**
-   * The run projection.
+   * The run projection: the newest workflow run of a pull request's branch.
    *
    * @public
    * @readonly
@@ -356,13 +554,40 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
     return this._run;
   }
   /**
-   * The actionStatus projection.
+   * Selects a segment and keeps it in the `view` query parameter.
    *
    * @public
    * @readonly
    */
-  public get actionStatus() {
-    return this._actionStatus;
+  public get selectSegmentCommand(): Command<PullRequestSegment> {
+    return this._selectSegmentCommand;
+  }
+  /**
+   * Selects the pull request the inspector shows.
+   *
+   * @public
+   * @readonly
+   */
+  public get selectPullRequestCommand(): Command<string> {
+    return this._selectPullRequestCommand;
+  }
+  /**
+   * Opens the work item a pull request delivers on the Board.
+   *
+   * @public
+   * @readonly
+   */
+  public get openWorkItemCommand(): Command<string> {
+    return this._openWorkItemCommand;
+  }
+  /**
+   * Asks the Solver to repair the failed checks of a pull request on its retained branch.
+   *
+   * @public
+   * @readonly
+   */
+  public get repairWithAiCommand(): Command<IPullRequestRow> {
+    return this._repairWithAiCommand;
   }
   /**
    * The openInGitHub command.
@@ -462,12 +687,18 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
-   * Refreshes.
+   * Refreshes the pull requests and their workflow runs.
    *
    * @private
    */
   private async onExecuteRefreshCommand(): Promise<void> {
-    await this.loadCurrentPullRequests();
+    if (this.isRefreshing()) return;
+    this.isRefreshing.set(true);
+    try {
+      await this.loadCurrentPullRequests();
+    } finally {
+      this.isRefreshing.set(false);
+    }
   }
 
   /**
@@ -527,6 +758,63 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
+   * Selects a segment; the `view` query parameter keeps it across back and forward.
+   *
+   * @param segment - Segment.
+   * @private
+   */
+  private async onExecuteSelectSegmentCommand(segment: PullRequestSegment): Promise<void> {
+    this.segment.set(segment);
+    await this._router.navigate([], {
+      relativeTo: this._route,
+      queryParams: { view: segment === 'open' ? null : segment },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  /**
+   * Opens the work item on the Board.
+   *
+   * @param workItemId - Work item id.
+   * @private
+   */
+  private async onExecuteOpenWorkItemCommand(workItemId: string): Promise<void> {
+    await this._router.navigate(['/main/board'], { queryParams: { item: workItemId } });
+  }
+
+  /**
+   * Starts an AI revision of the delivered work item that repairs the failed checks on the retained
+   * branch, but only where the automation policy allows AI to repair failed checks.
+   *
+   * @param row - Row.
+   * @private
+   */
+  private async onExecuteRepairWithAiCommand(row: IPullRequestRow): Promise<void> {
+    const workItemId = row.delivery.workItemId;
+    if (!this._execution || !workItemId || this.repairingPullRequestId()) return;
+    if (row.checksSummary.state !== 'failing') return;
+    const settings = this._context.settings();
+    const block = resolvePullRequestRepairBlock(
+      row.pullRequest,
+      row.delivery,
+      settings?.runtime?.agenticDelivery,
+      settings?.ciBindings ?? [],
+      true,
+    );
+    if (block) return;
+    this.repairingPullRequestId.set(row.pullRequest.id);
+    try {
+      await this._execution.startSolver(
+        false,
+        workItemId,
+        composePullRequestRepairRequest(row.pullRequest, row.checksSummary),
+      );
+    } finally {
+      this.repairingPullRequestId.set(undefined);
+    }
+  }
+
+  /**
    * Runs.
    *
    * @param pullRequest - Pull request.
@@ -535,25 +823,6 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   private resolveRun(pullRequest: IPullRequestSummary): ICiRun | undefined {
     if (!this._ci) return undefined;
     return resolvePullRequestRun(pullRequest, this._context.snapshot()?.ciRuns ?? []);
-  }
-
-  /**
-   * Returns the action status.
-   *
-   * @param pullRequest - Pull request.
-   * @private
-   */
-  private resolveActionStatus(
-    pullRequest: IPullRequestSummary,
-  ): IPullRequestActionStatus | undefined {
-    const runId = this._ci?.localCiRunningRunId();
-    const startedAt = this._ci?.localCiStartedAt();
-    return resolvePullRequestActionStatus(
-      pullRequest,
-      this._context.snapshot()?.ciRuns ?? [],
-      this._context.snapshot()?.localCiExecutions ?? [],
-      runId && startedAt ? { runId, startedAt } : undefined,
-    );
   }
 
   /**
@@ -637,20 +906,27 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
-   * Opens the authoring drawer; a second request raises the drawer that is already open.
+   * Opens the `New pull request` sheet; a second request draws attention to the sheet that is
+   * already open. A stray click beside the sheet keeps what was typed; Escape and `Cancel` close it.
    *
    * @private
    */
   private onExecuteCreatePullRequestCommand(): void {
     if (!this.canCreatePullRequest()) return;
-    if (this._activeDrawer && this._drawerService.isShown(this._activeDrawer)) {
-      this._activeDrawer.requestAttention();
+    if (this._activeSheet && this._dialogService.isShown(this._activeSheet)) {
+      void this._activeSheet.requestAttention();
       return;
     }
-    const drawer = this._drawerService.show<undefined>(PullRequestCreateDrawerView);
-    this._activeDrawer = drawer;
-    drawer.closed.subscribe(() => {
-      if (this._activeDrawer === drawer) this._activeDrawer = undefined;
+    const sheet = this._dialogService.show<undefined>(PullRequestCreateDrawerView, {
+      hasBackdrop: true,
+      backdropStrategy: 'own',
+      clickOutsideToClose: false,
+      pressEscapeToClose: true,
+      size: { width: '640px' },
+    });
+    this._activeSheet = sheet;
+    sheet.closed.subscribe(() => {
+      if (this._activeSheet === sheet) this._activeSheet = undefined;
     });
   }
 
@@ -694,4 +970,8 @@ function isPullRequestState(value: string | null): value is PullRequestState {
 
 function isPullRequestBaseFilter(value: string | null): value is PullRequestBaseFilter {
   return value !== null && value in BASE_FILTER_LABELS;
+}
+
+function isPullRequestSegment(value: string | null): value is PullRequestSegment {
+  return value !== null && (PULL_REQUEST_SEGMENTS as readonly string[]).includes(value);
 }

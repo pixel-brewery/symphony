@@ -9,56 +9,77 @@ import {
 } from '@angular/core';
 import {
   AvatarComponent,
-  AvatarGroupComponent,
   ButtonComponent,
   CardComponent,
-  CardContentComponent,
-  CardHeaderComponent,
-  CellComponent,
-  CellGroupComponent,
+  ChipComponent,
+  DividerComponent,
+  DotComponent,
   ExpanderComponent,
+  IconComponent,
+  IconNameDirective,
   TextComponent,
   TooltipDirective,
-  IconNameDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { AgentAvatarSourcePipe, HeadlineComponent } from '@symphony/frontend-ui';
-import { ConnectionIconPipe } from '@symphony/frontend-ui';
-import { ConnectionProviderLabelPipe } from '@symphony/frontend-ui';
-import { PositionAuthorityLabelPipe } from '@symphony/frontend-ui';
-import { RouteCostClassLabelPipe } from '@symphony/frontend-ui';
-import { RouteCostPolicyLabelPipe } from '@symphony/frontend-ui';
-import { RouteStrategyLabelPipe } from '@symphony/frontend-ui';
-import { SkillFlowRoleLabelPipe } from '@symphony/frontend-ui';
+import { SettingsGroupComponent, SettingsRowComponent } from '@symphony/frontend-setting';
+import {
+  AgentFigureComponent,
+  ConnectionIconPipe,
+  ConnectionProviderLabelPipe,
+  PositionAuthorityLabelPipe,
+  RouteCostClassLabelPipe,
+  RouteCostPolicyLabelPipe,
+  RouteStrategyLabelPipe,
+  SkillFlowRoleLabelPipe,
+} from '@symphony/frontend-ui';
+import { AgentAvailabilityLabelPipe } from '../pipes/AgentAvailabilityLabelPipe';
+import { AgentAvailabilityVariantPipe } from '../pipes/AgentAvailabilityVariantPipe';
+import { AgentBackupNamesPipe } from '../pipes/AgentBackupNamesPipe';
+import { AgentModelLabelPipe } from '../pipes/AgentModelLabelPipe';
+import { SettingNamePipe } from '../pipes/SettingNamePipe';
+import { SkillFlowRoleLabelsPipe } from '../pipes/SkillFlowRoleLabelsPipe';
 import { TeamSettingsViewPresenter } from './TeamSettingsViewPresenter';
 
 // #endregion
 
-/** Actual Team workspace card, loaded through the native Settings slot. @public */
+/**
+ * The `AI team` section of a workspace in the Settings window: the delivery flow with who does each
+ * step, the agent cards and the technical AI setup.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-team-settings-card',
-  host: { class: 'block' },
+  host: { class: 'block min-w-0' },
   imports: [
-    AgentAvatarSourcePipe,
+    AgentAvailabilityLabelPipe,
+    AgentAvailabilityVariantPipe,
+    AgentBackupNamesPipe,
+    AgentFigureComponent,
+    AgentModelLabelPipe,
     AvatarComponent,
-    AvatarGroupComponent,
     ButtonComponent,
     CardComponent,
-    CardContentComponent,
-    CardHeaderComponent,
-    CellComponent,
-    CellGroupComponent,
+    ChipComponent,
     ConnectionIconPipe,
     ConnectionProviderLabelPipe,
+    DividerComponent,
+    DotComponent,
     ExpanderComponent,
-    HeadlineComponent,
+    IconComponent,
+    IconNameDirective,
     PositionAuthorityLabelPipe,
     RouteCostClassLabelPipe,
     RouteCostPolicyLabelPipe,
     RouteStrategyLabelPipe,
+    SettingNamePipe,
+    SettingsGroupComponent,
+    SettingsRowComponent,
     SkillFlowRoleLabelPipe,
+    SkillFlowRoleLabelsPipe,
     TextComponent,
     TooltipDirective,
-    IconNameDirective,
+    TypographyDirective,
   ],
   providers: [TeamSettingsViewPresenter],
   templateUrl: './TeamSettingsCardView.html',
@@ -67,12 +88,26 @@ import { TeamSettingsViewPresenter } from './TeamSettingsViewPresenter';
 })
 export class TeamSettingsCardView {
   // #region Fields
-  /** Feature-owned organization and commands. @protected @readonly */
+
+  /**
+   * Feature-owned organization, projections and commands.
+   *
+   * @protected
+   * @readonly
+   */
   protected readonly presenter = inject(TeamSettingsViewPresenter);
+
   private readonly _changeDetector = inject(ChangeDetectorRef);
+
   // #endregion
+
   // #region Ctor
-  /** Reuses the existing rendered organization refresh behavior. @public */
+
+  /**
+   * Reuses the existing rendered organization refresh behavior.
+   *
+   * @public
+   */
   public constructor() {
     effect(() => {
       const workspace = this.presenter.workspace();
@@ -81,5 +116,6 @@ export class TeamSettingsCardView {
       window.requestAnimationFrame(() => this._changeDetector.detectChanges());
     });
   }
+
   // #endregion
 }

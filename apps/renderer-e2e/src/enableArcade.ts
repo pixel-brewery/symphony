@@ -1,16 +1,24 @@
 // #region Imports
 
-import { expect, type Page } from '@playwright/test';
+import { expect, type ElectronApplication, type Page } from '@playwright/test';
+import { closeSettingsWindow } from './closeSettingsWindow';
+import { openSettingsWindow } from './openSettingsWindow';
 
 // #endregion
 
-/** Enables the optional Arcade destination through the persisted Appearance setting. @public */
-export async function enableArcade(page: Page): Promise<void> {
-  await page.getByTestId('global-workspace-filter').click();
-  await page.getByTestId('workspace-menu-settings').click();
-  await expect(page.getByTestId('settings-view')).toBeVisible();
-  await page.getByTestId('global-settings-section-appearance').click();
-  const toggle = page.getByTestId('arcade-enabled-toggle');
+/**
+ * Enables the optional Arcade destination through Settings › Appearance › `Show Arcade`, which
+ * applies at once, waits until the main window shows Arcade in its navigation and closes Settings
+ * again, so later input belongs to the main window.
+ *
+ * @param app - The launched application.
+ * @param page - The main window.
+ * @public
+ */
+export async function enableArcade(app: ElectronApplication, page: Page): Promise<void> {
+  const settings = await openSettingsWindow(app, page);
+  await settings.getByTestId('global-settings-section-appearance').click();
+  const toggle = settings.getByTestId('arcade-enabled-toggle');
   await expect(toggle).toBeVisible();
   if (
     (await toggle.evaluate((element) =>
@@ -20,11 +28,17 @@ export async function enableArcade(page: Page): Promise<void> {
     await toggle.click();
   await expect(toggle).toHaveJSProperty('isChecked', true);
   await expect(page.getByTestId('navigation-arcade')).toBeVisible();
-  const notifications = page.getByTestId('notification-success');
+  await dismissNotifications(settings);
+  await closeSettingsWindow(app);
+}
+
+/** Closes the success notices the change raised in the Settings window. */
+async function dismissNotifications(settings: Page): Promise<void> {
+  const notifications = settings.getByTestId('notification-success');
   await expect(notifications.first()).toBeVisible();
   while ((await notifications.count()) > 0) {
     const count = await notifications.count();
-    await page.keyboard.press('Escape');
+    await settings.keyboard.press('Escape');
     await expect.poll(() => notifications.count()).toBeLessThan(count);
   }
 }

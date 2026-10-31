@@ -1,343 +1,648 @@
-<mosaik-page
-  class="flex h-full min-h-0 w-full flex-1 overflow-hidden"
-  test-id="pull-requests-view"
-  [attr.aria-busy]="presenter.isHydrating()"
+@let repositories = presenter.repositories(); @let counts = presenter.segmentCounts(); @let
+repositoryLabel = repositories.length === 1 ? repositories[0]?.owner + '/' + repositories[0]?.name :
+repositories.length > 1 ? repositories.length + ' repositories' : '';
+<!-- The title, the repository and the open count live in the window toolbar; the refresh and the
+     filter menu are its contextual actions. The sync note is the status bar's. -->
+<ng-template
+  symphonyWindowToolbar
+  [toolbarTitle]="'Pull requests'"
+  [toolbarSubtitle]="presenter.isHydrating()
+      ? repositoryLabel
+      : (repositoryLabel ? repositoryLabel + ' · ' : '') + counts.open + ' open'"
 >
-  @if (!presenter.isHydrating()) { @if (presenter.remoteData(); as remoteData) { @if
-  (remoteData.state !== 'current') {
-  <mosaik-page-pre-content [inset]="'horizontal'">
-    <mosaik-banner
-      test-id="pull-requests-stale-data"
-      [isOpen]="true"
-      [appearance]="'soft'"
-      [variant]="'warning'"
-      [iconName]="'errorCircle'"
-      [iconSize]="'small'"
-    >
-      <mosaik-banner-header
-        [text]="remoteData.reason === 'rate-limited'
-          ? 'GitHub request limit reached'
-          : remoteData.state === 'stale'
-            ? 'Pull request update paused'
-            : 'Pull requests are temporarily unavailable'"
-      />
-      <mosaik-banner-sub-header
-        [text]="remoteData.state === 'stale'
-          ? 'Pull requests were last updated ' + (remoteData.lastSuccessfulRefreshAt | date: 'medium') + '. ' +
-            (remoteData.reason === 'rate-limited'
-              ? remoteData.retryAt
-                ? 'Try again after ' + (remoteData.retryAt | date: 'medium') + '.'
-                : 'Use Refresh later to try again.'
-              : 'Use Refresh to try again.')
-          : remoteData.reason === 'rate-limited'
-            ? remoteData.retryAt
-              ? 'Try again after ' + (remoteData.retryAt | date: 'medium') + '.'
-              : 'Use Refresh later to try again.'
-            : 'GitHub could not refresh pull requests. Use Refresh to try again.'"
-      />
-    </mosaik-banner>
-  </mosaik-page-pre-content>
-  } } }
-  <!-- The title row is static, so it renders while the route loads; its actions stay disabled until
-       the pull requests and their filters are known. -->
-  <mosaik-page-header
-    slot="header"
-    [inset]="'all'"
-    test-id="pull-requests-page-header"
-    [text]="'Pull Requests'"
+  <mosaik-dropdown-button
+    #filterMenu
+    test-id="pull-requests-filter"
+    aria-label="Filter and sort pull requests"
+    [iconName]="'filter'"
+    [iconSize]="'small'"
+    [caretVisible]="false"
+    [disabled]="presenter.isHydrating()"
+    [appearance]="presenter.hasActiveFilters() ? 'soft' : 'plain'"
+    [dropDownPlacement]="'bottom-end'"
+    [dropDownMaxHeight]="'20rem'"
+    [mosaikTooltip]="'Filter and sort'"
   >
-    <symphony-page-toolbar test-id="pull-requests-page-toolbar" [ariaLabel]="'Pull Requests'">
-      <mosaik-button
-        slot="start"
-        test-id="create-pull-request"
-        [iconName]="'add'"
-        [disabled]="presenter.isHydrating() || !presenter.canCreatePullRequest()"
-        [appearance]="'solid'"
-        [variant]="'primary'"
-        [attr.aria-label]="presenter.canCreatePullRequest()
-            ? 'New pull request'
-            : 'Connect a GitHub repository to create'"
-        [mosaikTooltip]="presenter.canCreatePullRequest()
-            ? 'New pull request'
-            : 'Connect a GitHub repository to create'"
-        (click)="presenter.createPullRequestCommand.execute()"
-      />
-      <mosaik-dropdown-button
-        #filterMenu
-        slot="end"
-        test-id="pull-requests-filter"
-        aria-label="Filter pull requests"
-        [iconName]="'filter'"
-        [caretVisible]="false"
-        [disabled]="presenter.isHydrating()"
-        [appearance]="'outline'"
-        [dropDownPlacement]="'bottom-end'"
-        [dropDownMaxHeight]="'20rem'"
-        [mosaikTooltip]="'Filter pull requests'"
+    <mosaik-menu>
+      @for (menu of presenter.listMenus(); track menu.id) {
+      <mosaik-menu-item
+        [attr.test-id]="menu.testId ?? null"
+        [label]="menu.label"
+        [subLabel]="menu.subLabel"
+        menu-mode="popover"
       >
-        <mosaik-menu>
-          @for (menu of presenter.filterMenus(); track menu.id) {
+        <mosaik-menu slot="submenu">
+          @for (option of menu.options; track option.id) {
           <mosaik-menu-item
-            [attr.test-id]="menu.testId ?? null"
-            [label]="menu.label"
-            [subLabel]="menu.subLabel"
-            menu-mode="popover"
-          >
-            <mosaik-menu slot="submenu">
-              @for (option of menu.options; track option.id) {
-              <mosaik-menu-item
-                force-close="true"
-                [attr.test-id]="option.testId ?? null"
-                [label]="option.label"
-                [isChecked]="option.checked"
-                (activated)="presenter.activateListMenuOptionCommand.execute({ menuId: menu.id, optionId: option.id }); filterMenu.invoke('close')"
-              />
-              }
-            </mosaik-menu>
-          </mosaik-menu-item>
+            force-close="true"
+            [attr.test-id]="option.testId ?? null"
+            [label]="option.label"
+            [isChecked]="option.checked"
+            (activated)="presenter.activateListMenuOptionCommand.execute({ menuId: menu.id, optionId: option.id }); filterMenu.invoke('close')"
+          />
           }
         </mosaik-menu>
-      </mosaik-dropdown-button>
-      <mosaik-button
-        slot="end"
-        test-id="refresh-pull-requests"
-        [iconName]="'sync'"
-        [disabled]="presenter.isHydrating()"
-        [appearance]="'outline'"
-        [mosaikTooltip]="'Refresh pull requests'"
-        (click)="presenter.refreshCommand.execute()"
-      />
-    </symphony-page-toolbar>
-  </mosaik-page-header>
+      </mosaik-menu-item>
+      }
+    </mosaik-menu>
+  </mosaik-dropdown-button>
+  <mosaik-button
+    test-id="refresh-pull-requests"
+    aria-label="Refresh pull requests"
+    [iconName]="'sync'"
+    [iconSize]="'small'"
+    [appearance]="'plain'"
+    [isBusy]="presenter.isRefreshing()"
+    [disabled]="presenter.isHydrating() || presenter.isRefreshing()"
+    [mosaikTooltip]="'Refresh pull requests'"
+    (click)="presenter.refreshCommand.execute()"
+  />
+</ng-template>
 
-  <mosaik-page-content class="flex min-h-0 flex-1 flex-col overflow-hidden" [inset]="'none'">
-    @if (presenter.isHydrating()) {
-    <symphony-collection-list
-      test-id="pull-requests-loading-skeleton"
-      aria-label="Loading pull requests"
-      [isLoading]="true"
-      [items]="[]"
-      [itemKey]="presenter.pullRequestKey"
-      [heading]="''"
-      [headingIcon]="'branch'"
-      [headingIconVariant]="'success'"
-      [menus]="presenter.sortMenus()"
-      [listLabel]="'Loading pull requests'"
+<section
+  class="flex min-h-0 min-w-0 flex-1"
+  test-id="pull-requests-view"
+  aria-label="Pull requests"
+  [attr.aria-busy]="presenter.isHydrating()"
+>
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+    <div
+      part="pull-requests-bar"
+      class="flex min-w-0 flex-none items-center gap-1 px-2.5 py-[14px]"
     >
-      <!-- One pull request row: the status icon, the title line and the number line, in the
-           row's own padding and gap. -->
-      <ng-template symphonyCollectionListLoadingItem let-row>
-        <li class="relative flex min-w-0 items-start gap-2 px-2 py-2">
-          <div class="mt-1 flex h-3 w-3 flex-none items-center justify-center">
-            <mosaik-skeleton
-              [shape]="'circle'"
-              [width]="'18px'"
-              [height]="'18px'"
-              [shimmer]="true"
+      <div
+        part="segment-track"
+        role="group"
+        aria-label="Pull request views"
+        test-id="pull-requests-segment"
+        class="flex min-w-0 items-center gap-[2px] p-[2px]"
+      >
+        @for (segment of presenter.segments; track segment) {
+        <mosaik-button
+          [attr.test-id]="'pull-requests-segment-' + segment"
+          [label]="(segment === 'open' ? 'Open' : segment === 'needs-action' ? 'Needs action' : 'Drafts') +
+            (presenter.isHydrating() ? '' : ' · ' + counts[segment])"
+          [appearance]="presenter.segment() === segment ? 'outline' : 'plain'"
+          [attr.aria-pressed]="presenter.segment() === segment"
+          (click)="presenter.selectSegmentCommand.execute(segment)"
+        />
+        }
+      </div>
+      <span class="flex-1"></span>
+      <mosaik-button
+        test-id="create-pull-request"
+        [label]="'New pull request'"
+        [iconName]="'add'"
+        [iconSize]="'small'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [disabled]="presenter.isHydrating() || !presenter.canCreatePullRequest()"
+        [attr.aria-label]="presenter.canCreatePullRequest()
+          ? 'New pull request'
+          : 'Connect a GitHub repository to create'"
+        [mosaikTooltip]="presenter.canCreatePullRequest() ? '' : 'Connect a GitHub repository to create'"
+        (click)="presenter.createPullRequestCommand.execute()"
+      />
+    </div>
+
+    @if (!presenter.isHydrating()) { @if (presenter.remoteData(); as remoteData) { @if
+    (remoteData.state !== 'current') {
+    <div class="flex-none px-2.5 pt-1.5">
+      <mosaik-banner
+        test-id="pull-requests-stale-data"
+        [isOpen]="true"
+        [appearance]="'soft'"
+        [variant]="'warning'"
+        [iconName]="'warning'"
+        [iconSize]="'small'"
+      >
+        <mosaik-banner-header
+          [text]="remoteData.reason === 'rate-limited'
+            ? 'GitHub request limit reached'
+            : remoteData.reason === 'authentication-required'
+              ? 'Sign in to GitHub again'
+              : remoteData.state === 'stale'
+                ? 'Pull request sync paused'
+                : 'Pull requests are temporarily unavailable'"
+        />
+        <mosaik-banner-sub-header
+          [text]="(remoteData.state === 'stale' && remoteData.lastSuccessfulRefreshAt
+              ? 'These pull requests were last synced ' + (remoteData.lastSuccessfulRefreshAt | relativeTime: presenter.now() : 'ago') + '. '
+              : 'GitHub could not refresh the pull requests. ') +
+            (remoteData.reason === 'rate-limited' && remoteData.retryAt
+              ? 'Try again after ' + (remoteData.retryAt | date: 'shortTime') + '.'
+              : 'Retry to sync them again.')"
+        />
+        <mosaik-button
+          slot="actions"
+          test-id="pull-requests-sync-retry"
+          [label]="'Retry'"
+          [iconName]="'sync'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          [isBusy]="presenter.isRefreshing()"
+          [disabled]="presenter.isRefreshing()"
+          (click)="presenter.refreshCommand.execute()"
+        />
+      </mosaik-banner>
+    </div>
+    } } }
+
+    <div class="flex min-h-0 flex-1 flex-col overflow-auto px-1.5 py-1">
+      @if (presenter.isHydrating()) {
+      <mosaik-table
+        test-id="pull-requests-loading-skeleton"
+        aria-label="Loading pull requests"
+        [columns]="'minmax(0, 1fr) 90px 130px 130px 64px 96px 32px'"
+        [appearance]="'plain'"
+      >
+        <mosaik-table-header>
+          <mosaik-table-header-row>
+            <mosaik-table-header-cell [text]="'Pull request'" />
+            <mosaik-table-header-cell [text]="'Item'" />
+            <mosaik-table-header-cell [text]="'Checks'" />
+            <mosaik-table-header-cell [text]="'Merge'" />
+            <mosaik-table-header-cell [text]="'Agent'" />
+            <mosaik-table-header-cell [text]="'Updated'" />
+            <mosaik-table-header-cell [text]="''" />
+          </mosaik-table-header-row>
+        </mosaik-table-header>
+        <mosaik-table-body>
+          @for (row of [0, 1, 2, 3]; track row) {
+          <mosaik-table-body-row [disabled]="true">
+            <mosaik-table-body-cell>
+              <div class="flex min-w-0 flex-col gap-0.5 py-[2px]">
+                <mosaik-skeleton
+                  [width]="row % 2 ? '58%' : '72%'"
+                  [height]="'14px'"
+                  [shimmer]="true"
+                />
+                <mosaik-skeleton [width]="'9rem'" [height]="'12px'" [shimmer]="true" />
+              </div>
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              <mosaik-skeleton [width]="'56px'" [height]="'12px'" [shimmer]="true" />
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              <mosaik-skeleton [width]="'64px'" [height]="'20px'" [shimmer]="true" />
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              <mosaik-skeleton [width]="'72px'" [height]="'20px'" [shimmer]="true" />
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              <mosaik-skeleton
+                [shape]="'circle'"
+                [width]="'24px'"
+                [height]="'24px'"
+                [shimmer]="true"
+              />
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              <mosaik-skeleton [width]="'60px'" [height]="'12px'" [shimmer]="true" />
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell />
+          </mosaik-table-body-row>
+          }
+        </mosaik-table-body>
+      </mosaik-table>
+      } @else if (presenter.visibleRows().length) {
+      <mosaik-table
+        test-id="pull-requests-list"
+        aria-label="Pull requests"
+        [columns]="'minmax(0, 1fr) 90px 130px 130px 64px 96px 32px'"
+        [appearance]="'plain'"
+      >
+        <mosaik-table-header>
+          <mosaik-table-header-row>
+            <mosaik-table-header-cell [text]="'Pull request'" />
+            <mosaik-table-header-cell [text]="'Item'" />
+            <mosaik-table-header-cell [text]="'Checks'" />
+            <mosaik-table-header-cell [text]="'Merge'" />
+            <mosaik-table-header-cell [text]="'Agent'" />
+            <mosaik-table-header-cell [text]="'Updated'" />
+            <mosaik-table-header-cell [text]="''" />
+          </mosaik-table-header-row>
+        </mosaik-table-header>
+        <mosaik-table-body>
+          @for (row of presenter.visibleRows(); track row.pullRequest.id) { @let pullRequest =
+          row.pullRequest;
+          <mosaik-table-body-row
+            #pullRequestRow
+            part="pull-request-row"
+            tabindex="0"
+            [attr.test-id]="'pull-request-' + pullRequest.id"
+            [attr.aria-label]="pullRequest.title + ', #' + pullRequest.number"
+            [isSelected]="presenter.selectedRow()?.pullRequest?.id === pullRequest.id"
+            (click)="presenter.selectPullRequestCommand.execute(pullRequest.id)"
+            (keydown.enter)="presenter.selectPullRequestCommand.execute(pullRequest.id)"
+            (keydown.space)="$event.preventDefault(); presenter.selectPullRequestCommand.execute(pullRequest.id)"
+            (contextmenu)="presenter.selectPullRequestCommand.execute(pullRequest.id); presenter.openContextActionsCommand.execute([$event, contextActions])"
+          >
+            <mosaik-table-body-cell>
+              <div class="flex min-w-0 flex-col gap-[2px]">
+                <mosaik-text
+                  [attr.test-id]="'pull-request-title-' + pullRequest.id"
+                  [text]="pullRequest.title"
+                  [mosaikTypography]="'subtitle2'"
+                  [truncate]="true"
+                />
+                <mosaik-text
+                  part="technical-caption"
+                  class="technical-value"
+                  [text]="'#' + pullRequest.number + ' · ' + pullRequest.sourceBranch"
+                  [variant]="'neutral'"
+                  [truncate]="true"
+                />
+              </div>
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              @if (row.delivery.workItemKey; as workItemKey) {
+              <mosaik-text
+                part="technical-caption"
+                class="technical-value"
+                [attr.test-id]="'pull-request-item-' + pullRequest.id"
+                [text]="workItemKey"
+                [truncate]="true"
+              />
+              } @else {
+              <mosaik-text [text]="'—'" [variant]="'neutral'" [attr.aria-label]="'No work item'" />
+              }
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              @if (row.checksSummary.state === 'none') {
+              <mosaik-text [text]="'—'" [variant]="'neutral'" [attr.aria-label]="'No checks'" />
+              } @else {
+              <mosaik-badge
+                [attr.test-id]="'pull-request-checks-' + pullRequest.id"
+                [label]="row.checksSummary.state === 'failing'
+                  ? row.checksSummary.failing + ' failing'
+                  : row.checksSummary.state === 'running'
+                    ? 'Running'
+                    : row.checksSummary.state === 'passed'
+                      ? 'Passed'
+                      : 'Cancelled'"
+                [icon]="row.checksSummary.state === 'failing' ? 'errorCircle' : ''"
+                [appearance]="row.checksSummary.state === 'cancelled' ? 'outline' : 'soft'"
+                [variant]="row.checksSummary.state | pullRequestChecksVariant"
+              />
+              }
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              @if (row.mergeState === 'unknown') {
+              <mosaik-text
+                [text]="'—'"
+                [variant]="'neutral'"
+                [attr.aria-label]="'Merge state unknown'"
+              />
+              } @else {
+              <mosaik-badge
+                [attr.test-id]="'pull-request-merge-' + pullRequest.id"
+                [label]="row.mergeState | pullRequestMergeStateLabel"
+                [appearance]="row.mergeState === 'mergeable' || row.mergeState === 'draft' || row.mergeState === 'closed'
+                  ? 'outline'
+                  : 'soft'"
+                [variant]="row.mergeState | pullRequestMergeStateVariant"
+              />
+              }
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              @if (row.delivery.agentName; as agentName) {
+              <mosaik-avatar
+                [text]="agentName"
+                [size]="'small'"
+                [appearance]="'soft'"
+                [attr.aria-label]="agentName"
+                [mosaikTooltip]="agentName"
+              />
+              } @else {
+              <mosaik-text [text]="'—'" [variant]="'neutral'" [attr.aria-label]="'No agent'" />
+              }
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell
+              [text]="pullRequest.updatedAt | relativeTime: presenter.now() : 'ago'"
+            />
+            <mosaik-table-body-cell>
+              <mosaik-dropdown-button
+                #contextActions
+                [attr.test-id]="'pull-request-actions-' + pullRequest.id"
+                aria-label="More actions"
+                [caretVisible]="false"
+                [iconName]="'more-horizontal'"
+                [size]="'tiny'"
+                [iconSize]="'small'"
+                [appearance]="'plain'"
+                [dropDownPlacement]="'bottom-end'"
+                [dropDownMaxWidth]="'18rem'"
+                [mosaikTooltip]="'More actions'"
+                [mosaikTooltipPlacement]="'top'"
+                [symphonyHoverRevealFor]="pullRequestRow"
+                (click)="$event.stopPropagation()"
+                (pointerdown)="$event.stopPropagation()"
+                (keydown)="$event.stopPropagation()"
+              >
+                <mosaik-menu>
+                  <mosaik-menu-item
+                    [attr.test-id]="'pull-request-action-open-' + pullRequest.id"
+                    [label]="'Open in GitHub'"
+                    [iconName]="'open'"
+                    [appearance]="'plain'"
+                    (activated)="presenter.openInGitHubCommand.execute(pullRequest); contextActions.invoke('close')"
+                  />
+                  @if (row.delivery.workItemId; as workItemId) {
+                  <mosaik-menu-item
+                    [attr.test-id]="'pull-request-action-work-item-' + pullRequest.id"
+                    [label]="'Open work item'"
+                    [subLabel]="row.delivery.workItemKey ?? ''"
+                    [iconName]="'board'"
+                    [appearance]="'plain'"
+                    (activated)="presenter.openWorkItemCommand.execute(workItemId); contextActions.invoke('close')"
+                  />
+                  }
+                  <mosaik-menu-item
+                    [attr.test-id]="'pull-request-action-update-branch-' + pullRequest.id"
+                    [label]="presenter.branchUpdating(pullRequest) ? 'Updating branch…' : 'Update branch'"
+                    [iconName]="'sync'"
+                    [appearance]="'plain'"
+                    [variant]="pullRequest.baseBranchStatus === 'behind' ? 'highlight' : 'neutral'"
+                    [disabled]="pullRequest.baseBranchStatus !== 'behind' || presenter.pullRequestBranchUpdatingId() !== undefined"
+                    (activated)="presenter.updateBranch(pullRequest); contextActions.invoke('close')"
+                  />
+                  @if (presenter.run()(pullRequest); as run) {
+                  <mosaik-divider />
+                  @if (run.status === 'queued' || run.status === 'in-progress') {
+                  <mosaik-menu-item
+                    [attr.test-id]="'pull-request-action-cancel-remote-' + pullRequest.id"
+                    [label]="'Cancel remote run'"
+                    [iconName]="'clear'"
+                    [appearance]="'plain'"
+                    [variant]="'danger'"
+                    (activated)="presenter.cancelRemoteRunCommand.execute(run); contextActions.invoke('close')"
+                  />
+                  } @else {
+                  <mosaik-menu-item
+                    [attr.test-id]="'pull-request-action-run-remote-' + pullRequest.id"
+                    [label]="'Run remotely'"
+                    [iconName]="'cloudArrowRight'"
+                    [appearance]="'plain'"
+                    [variant]="'highlight'"
+                    (activated)="presenter.runRemotelyCommand.execute(run); contextActions.invoke('close')"
+                  />
+                  } @if (presenter.localCiEnabled()(run)) { @if (presenter.isRunningLocally()(run))
+                  {
+                  <mosaik-menu-item
+                    [attr.test-id]="'pull-request-action-stop-local-' + pullRequest.id"
+                    [label]="'Stop local runner'"
+                    [iconName]="'clear'"
+                    [appearance]="'plain'"
+                    [variant]="'danger'"
+                    (activated)="presenter.stopLocalRunCommand.execute(run); contextActions.invoke('close')"
+                  />
+                  } @else {
+                  <mosaik-menu-item
+                    [attr.test-id]="'pull-request-action-run-local-' + pullRequest.id"
+                    [label]="'Run locally'"
+                    [iconName]="'arrowRight'"
+                    [appearance]="'plain'"
+                    [disabled]="presenter.localRunnerBusy()"
+                    (activated)="presenter.runLocallyCommand.execute(run); contextActions.invoke('close')"
+                  />
+                  } } }
+                </mosaik-menu>
+              </mosaik-dropdown-button>
+            </mosaik-table-body-cell>
+          </mosaik-table-body-row>
+          }
+        </mosaik-table-body>
+      </mosaik-table>
+      } @else if (presenter.hasActiveFilters()) {
+      <mosaik-empty-state
+        test-id="pull-request-filters-empty-state"
+        [iconName]="'branch'"
+        [header]="'No pull requests match your filters'"
+        [content]="'Reset all filters to see every pull request in this view.'"
+      >
+        <mosaik-button
+          slot="actions"
+          test-id="reset-pull-request-filters"
+          [label]="'Reset all filters'"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [command]="{ click: presenter.resetFiltersCommand }"
+        />
+      </mosaik-empty-state>
+      } @else if (presenter.segment() === 'needs-action' && counts.open) {
+      <mosaik-empty-state
+        test-id="pull-requests-needs-action-empty-state"
+        [iconName]="'checkmarkCircle'"
+        [header]="'Nothing needs action'"
+        [content]="'Pull requests with failing checks, conflicts or a branch behind its base appear here.'"
+      />
+      } @else if (presenter.segment() === 'drafts' && counts.open) {
+      <mosaik-empty-state
+        test-id="pull-requests-drafts-empty-state"
+        [iconName]="'branch'"
+        [header]="'No draft pull requests'"
+        [content]="'Pull requests opened as drafts appear here until they are ready for review.'"
+      />
+      } @else {
+      <mosaik-empty-state
+        test-id="pull-requests-empty-state"
+        [iconName]="'branch'"
+        [header]="'No open pull requests'"
+        [content]="'Open pull requests from the selected GitHub repositories will appear here.'"
+      />
+      }
+    </div>
+  </div>
+
+  @if (!presenter.isHydrating()) { @if (presenter.selectedRow(); as row) { @let pullRequest =
+  row.pullRequest;
+  <aside
+    part="pull-request-inspector"
+    class="flex w-[360px] min-h-0 flex-none flex-col overflow-auto"
+    test-id="pull-request-inspector"
+    [attr.aria-label]="'Pull request #' + pullRequest.number"
+  >
+    <div class="flex min-w-0 flex-col gap-2.5 p-3">
+      <div class="flex min-w-0 flex-col gap-0.5">
+        @if (presenter.selectedRepository(); as repository) {
+        <mosaik-text
+          part="technical-caption"
+          class="technical-value"
+          [text]="repository.owner + '/' + repository.name + ' #' + pullRequest.number"
+          [variant]="'neutral'"
+          [truncate]="true"
+        />
+        } @else {
+        <mosaik-text
+          part="technical-caption"
+          class="technical-value"
+          [text]="'#' + pullRequest.number"
+          [variant]="'neutral'"
+        />
+        }
+        <mosaik-text
+          test-id="pull-request-inspector-title"
+          role="heading"
+          aria-level="2"
+          [text]="pullRequest.title"
+          [mosaikTypography]="'headline6'"
+          [wrap]="true"
+        />
+        <mosaik-text
+          part="technical-caption"
+          class="technical-value"
+          [text]="pullRequest.sourceBranch + ' → ' + pullRequest.targetBranch"
+          [variant]="'neutral'"
+          [wrap]="true"
+        />
+      </div>
+
+      @if (row.checksSummary.state === 'failing') { @let repair = row.delivery.repairExecution;
+      <mosaik-message
+        test-id="pull-request-failing-checks"
+        [variant]="'danger'"
+        [icon]="'errorCircle'"
+        [header]="row.checksSummary.failing + (row.checksSummary.failing === 1 ? ' check failing' : ' checks failing')"
+        [content]="repair && (repair.state === 'queued' || repair.state === 'running' || repair.state === 'waiting')
+          ? (repair.skillFlowRole === 'ci-diagnosis' ? 'AI is diagnosing the failure.' : 'AI is repairing the failure.')
+          : repair && (repair.state === 'failed' || repair.state === 'cancelled')
+            ? 'CI repair stopped' + (repair.error ? ': ' + repair.error : '.')
+            : row.checksSummary.failingNames.join(', ') + ' failed on ' + pullRequest.sourceBranch + '.'"
+      />
+      } @if (row.mergeState === 'behind') {
+      <mosaik-message
+        test-id="pull-request-behind-base"
+        [variant]="'warning'"
+        [icon]="'warning'"
+        [header]="'Behind base'"
+        [content]="pullRequest.targetBranch + ' has moved on. Update the branch before merging.'"
+      />
+      } @else if (row.mergeState === 'conflict') {
+      <mosaik-message
+        test-id="pull-request-conflict"
+        [variant]="'danger'"
+        [icon]="'errorCircle'"
+        [header]="'Conflicts with ' + pullRequest.targetBranch"
+        [content]="'Resolve the conflicts in GitHub or on the branch before merging.'"
+      />
+      } @if (row.checks.length) {
+      <div class="flex min-w-0 flex-col gap-[10px]">
+        <mosaik-text part="section-heading" [text]="'Checks'" [mosaikTypography]="'subtitle2'" />
+        <div part="checks-list" class="flex min-w-0 flex-col" test-id="pull-request-checks">
+          @for (check of row.checks; track check.run.id) {
+          <div
+            class="flex min-w-0 items-center gap-1 px-[14px] py-[10px]"
+            [attr.test-id]="'pull-request-check-' + check.run.id"
+          >
+            @if (check.state === 'in-progress') {
+            <mosaik-progress-ring
+              class="flex-none"
+              [attr.aria-label]="check.state | ciRunStatusLabel"
+              [isIndeterminate]="true"
+              [variant]="'info'"
+              [radius]="8"
+              [thickness]="2"
+            />
+            } @else {
+            <mosaik-icon
+              class="flex-none"
+              [icon]="check.state | pullRequestCheckIcon"
+              [size]="'small'"
+              [variant]="check.state === 'failed' ? 'danger' : 'default'"
+              [label]="check.state | ciRunStatusLabel"
+            />
+            }
+            <mosaik-text
+              class="min-w-0 flex-1"
+              [text]="check.run.name"
+              [mosaikTypography]="'body2'"
+              [truncate]="true"
+            />
+            <mosaik-text
+              class="flex-none"
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="(check.source === 'local' ? 'Local runner · ' : '') +
+                ((check.startedAt | checkDuration: check.finishedAt) || (check.state | ciRunStatusLabel))"
             />
           </div>
-          <div class="flex min-w-0 flex-1 flex-col gap-1">
-            <div class="flex h-2.5 items-center">
-              <mosaik-skeleton
-                [width]="row % 2 ? '34%' : '46%'"
-                [height]="'14px'"
-                [shimmer]="true"
-              />
-            </div>
-            <div class="flex h-3 items-center">
-              <mosaik-skeleton
-                [width]="row % 3 ? '22rem' : '17rem'"
-                [height]="'14px'"
-                [shimmer]="true"
-              />
-            </div>
-          </div>
-        </li>
-      </ng-template>
-    </symphony-collection-list>
-    } @else if (presenter.pullRequests().length) {
-    <symphony-collection-list
-      test-id="pull-requests-list"
-      aria-label="Open pull requests"
-      [items]="presenter.visiblePullRequests()"
-      [itemKey]="presenter.pullRequestKey"
-      [heading]="presenter.visiblePullRequests().length + ' Open'"
-      [headingIcon]="'branch'"
-      [headingIconVariant]="'success'"
-      [menus]="presenter.sortMenus()"
-      [listLabel]="'Open pull request results'"
-      (menuOptionActivated)="presenter.activateListMenuOptionCommand.execute($event)"
-    >
-      <ng-template [symphonyCollectionListItem]="presenter.visiblePullRequests()" let-pullRequest>
-        <li
-          #pullRequestRow
-          class="relative flex min-w-0 items-start gap-2 px-2 py-2"
-          [attr.test-id]="'pull-request-' + pullRequest.id"
-          (contextmenu)="presenter.openContextActionsCommand.execute([$event, contextActions])"
-        >
-          <mosaik-icon
-            class="mt-1 flex-none"
-            [icon]="'branch'"
-            [appearance]="'plain'"
-            [variant]="pullRequest.draft | booleanVariant: 'neutral' : 'success'"
-            [size]="'small'"
-          />
-          <div class="flex min-w-0 flex-1 flex-col gap-1">
-            <div class="flex min-w-0 flex-wrap items-baseline gap-2">
-              <mosaik-anchor
-                class="min-w-0"
-                [attr.test-id]="'pull-request-link-' + pullRequest.id"
-                [label]="pullRequest.title"
-                [href]="pullRequest.externalUrl"
-                [target]="'_blank'"
-                [rel]="'noreferrer'"
-                [underline]="'hover'"
-              />
-              @if (pullRequest.draft) {
-              <mosaik-badge [label]="'Draft'" [appearance]="'soft'" [variant]="'neutral'" />
-              } @if (pullRequest.baseBranchStatus === 'conflicting') {
-              <mosaik-badge [label]="'Conflicting'" [appearance]="'soft'" [variant]="'warning'" />
-              } @else if (pullRequest.baseBranchStatus === 'behind') {
-              <mosaik-badge [label]="'Behind base'" [appearance]="'soft'" [variant]="'warning'" />
-              }
-            </div>
-            <span>
-              #{{ pullRequest.number }} opened {{ pullRequest.createdAt | timeAgo }} @if
-              (pullRequest.author) { by {{ pullRequest.author }} }
-            </span>
-            @if (presenter.actionStatus()(pullRequest); as action) {
-            <div
-              class="flex min-w-0 items-center gap-2"
-              [attr.test-id]="'pull-request-action-status-' + pullRequest.id"
-              aria-live="polite"
-            >
-              @if (action.active) {
-              <mosaik-progress-ring
-                [attr.aria-label]="action.state | ciRunStatusLabel"
-                [isIndeterminate]="true"
-                [variant]="'neutral'"
-                [radius]="7"
-                [thickness]="2"
-              />
-              }
-              <span class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
-                >{{ action.run.name }}</span
-              >
-              <mosaik-badge
-                [label]="
-                  (action.source === 'local' ? 'Local runner' : 'GitHub') +
-                  ' · ' +
-                  action.state | ciRunStatusLabel
-                "
-                [appearance]="'soft'"
-                [variant]="action.state | ciRunStatusVariant"
-              />
-            </div>
-            }
-          </div>
-          <mosaik-dropdown-button
-            #contextActions
-            class="flex-none self-center"
-            [attr.test-id]="'pull-request-actions-' + pullRequest.id"
-            aria-label="More actions"
-            [caretVisible]="false"
-            [iconName]="'more-horizontal'"
-            [size]="'tiny'"
-            [iconSize]="'small'"
-            [appearance]="'plain'"
-            [dropDownPlacement]="'bottom-end'"
-            [dropDownMaxWidth]="'18rem'"
-            [mosaikTooltip]="'More actions'"
-            [mosaikTooltipPlacement]="'top'"
-            [symphonyHoverRevealFor]="pullRequestRow"
-            (click)="$event.stopPropagation()"
-            (pointerdown)="$event.stopPropagation()"
-            (keydown)="$event.stopPropagation()"
-          >
-            <mosaik-menu>
-              <mosaik-menu-item
-                [attr.test-id]="'pull-request-action-open-' + pullRequest.id"
-                [label]="'Open in GitHub'"
-                [iconName]="'branch'"
-                [appearance]="'plain'"
-                (activated)="presenter.openInGitHubCommand.execute(pullRequest); contextActions.invoke('close')"
-              />
-              <mosaik-menu-item
-                [attr.test-id]="'pull-request-action-update-branch-' + pullRequest.id"
-                [label]="presenter.branchUpdating(pullRequest) ? 'Updating branch…' : 'Update branch'"
-                [iconName]="'sync'"
-                [appearance]="'plain'"
-                [variant]="pullRequest.baseBranchStatus === 'behind' ? 'highlight' : 'neutral'"
-                [disabled]="pullRequest.baseBranchStatus !== 'behind' || presenter.pullRequestBranchUpdatingId() !== undefined"
-                (activated)="presenter.updateBranch(pullRequest); contextActions.invoke('close')"
-              />
-              @if (presenter.run()(pullRequest); as run) {
-              <mosaik-divider />
-              @if (run.status === 'queued' || run.status === 'in-progress') {
-              <mosaik-menu-item
-                [attr.test-id]="'pull-request-action-cancel-remote-' + pullRequest.id"
-                [label]="'Cancel remote run'"
-                [iconName]="'clear'"
-                [appearance]="'plain'"
-                [variant]="'danger'"
-                (activated)="presenter.cancelRemoteRunCommand.execute(run); contextActions.invoke('close')"
-              />
-              } @else {
-              <mosaik-menu-item
-                [attr.test-id]="'pull-request-action-run-remote-' + pullRequest.id"
-                [label]="'Run remotely'"
-                [iconName]="'cloudArrowRight'"
-                [appearance]="'plain'"
-                [variant]="'highlight'"
-                (activated)="presenter.runRemotelyCommand.execute(run); contextActions.invoke('close')"
-              />
-              } @if (presenter.localCiEnabled()(run)) { @if (presenter.isRunningLocally()(run)) {
-              <mosaik-menu-item
-                [attr.test-id]="'pull-request-action-stop-local-' + pullRequest.id"
-                [label]="'Stop local runner'"
-                [iconName]="'clear'"
-                [appearance]="'plain'"
-                [variant]="'danger'"
-                (activated)="presenter.stopLocalRunCommand.execute(run); contextActions.invoke('close')"
-              />
-              } @else {
-              <mosaik-menu-item
-                [attr.test-id]="'pull-request-action-run-local-' + pullRequest.id"
-                [label]="'Run locally'"
-                [iconName]="'arrowRight'"
-                [appearance]="'plain'"
-                [disabled]="presenter.localRunnerBusy()"
-                (activated)="presenter.runLocallyCommand.execute(run); contextActions.invoke('close')"
-              />
-              } } }
-            </mosaik-menu>
-          </mosaik-dropdown-button>
-        </li>
-      </ng-template>
-      <ng-template symphonyCollectionListEmpty>
-        <mosaik-empty-state
-          test-id="pull-request-filters-empty-state"
-          [iconName]="'branch'"
-          [header]="'No pull requests match your filters'"
-          [content]="'Reset all filters to see every open pull request.'"
-        >
-          <mosaik-button
-            slot="actions"
-            test-id="reset-pull-request-filters"
-            [label]="'Reset all filters'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            [command]="{ click: presenter.resetFiltersCommand }"
-          />
-        </mosaik-empty-state>
-      </ng-template>
-    </symphony-collection-list>
-    } @else {
-    <mosaik-empty-state
-      [iconName]="'branch'"
-      [header]="'No open pull requests'"
-      [content]="'Open pull requests from the selected GitHub repositories will appear here.'"
-    />
-    }
-  </mosaik-page-content>
-</mosaik-page>
+          }
+        </div>
+      </div>
+      }
+
+      <div class="flex min-w-0 flex-col gap-1">
+        @if (row.checksSummary.state === 'failing') { @let repairBlock = presenter.repairBlock();
+        <mosaik-button
+          test-id="pull-request-repair-with-ai"
+          [label]="'Repair with AI'"
+          [iconName]="'sparkle'"
+          [iconSize]="'small'"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [fit]="'width'"
+          [isBusy]="presenter.repairingPullRequestId() === pullRequest.id"
+          [disabled]="!!repairBlock || presenter.repairingPullRequestId() !== undefined"
+          [mosaikTooltip]="repairBlock === 'policy'
+            ? 'Allow AI to repair failed checks for this repository in Settings › Automation.'
+            : repairBlock === 'not-delivered'
+              ? 'Only pull requests Symphony delivered from a work item can be repaired by AI.'
+              : repairBlock === 'busy'
+                ? 'The work item is already running.'
+                : repairBlock === 'unavailable'
+                  ? 'This window cannot start AI runs.'
+                  : 'Ask the agent to fix the failed checks on this branch.'"
+          (click)="presenter.repairWithAiCommand.execute(row)"
+        />
+        } @if (presenter.selectedChecksRun(); as checksRun) { @if
+        (presenter.localCiEnabled()(checksRun)) { @if (presenter.isRunningLocally()(checksRun)) {
+        <mosaik-button
+          test-id="pull-request-stop-local-checks"
+          [label]="'Stop local run'"
+          [iconName]="'clear'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          [variant]="'danger'"
+          [fit]="'width'"
+          (click)="presenter.stopLocalRunCommand.execute(checksRun)"
+        />
+        } @else {
+        <mosaik-button
+          test-id="pull-request-run-checks-locally"
+          [label]="'Run checks locally'"
+          [iconName]="'play'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          [fit]="'width'"
+          [disabled]="presenter.localRunnerBusy()"
+          [mosaikTooltip]="presenter.localRunnerBusy() ? 'The local runner is busy with another run.' : checksRun.name"
+          (click)="presenter.runLocallyCommand.execute(checksRun)"
+        />
+        } } } @if (row.mergeState === 'behind') {
+        <mosaik-button
+          test-id="pull-request-update-branch"
+          [label]="presenter.branchUpdating(pullRequest) ? 'Updating branch…' : 'Update branch'"
+          [iconName]="'sync'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          [fit]="'width'"
+          [isBusy]="presenter.branchUpdating(pullRequest)"
+          [disabled]="presenter.pullRequestBranchUpdatingId() !== undefined"
+          (click)="presenter.updateBranch(pullRequest)"
+        />
+        }
+        <mosaik-button
+          test-id="pull-request-open-in-github"
+          [label]="'Open in GitHub'"
+          [iconName]="'open'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          [fit]="'width'"
+          (click)="presenter.openInGitHubCommand.execute(pullRequest)"
+        />
+      </div>
+    </div>
+  </aside>
+  } }
+</section>

@@ -2,46 +2,55 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import {
   ButtonComponent,
   CardComponent,
   CardContentComponent,
-  HintComponent,
-  PageComponent,
-  PageContentComponent,
-  PageHeaderComponent,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
+  IconNameDirective,
+  MessageComponent,
   SelectComponent,
   SelectItemComponent,
   TextBoxComponent,
   TextComponent,
-  ToggleSwitchComponent,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { SettingsConditionalComponent } from '@symphony/frontend-setting';
 import { AgentFigureComponent } from '@symphony/frontend-ui';
 import { SetupViewPresenter } from '../view-presenters/SetupViewPresenter';
 
 // #endregion
 
-/** A reviewable project construction surface. */
+/**
+ * `Build your project team`: a sheet of the Settings window that connects a repository, a ticket
+ * source and one employee, proposes the configuration and applies it on request.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-setup-view',
   imports: [
-    FormsModule,
-    RouterLink,
+    AgentFigureComponent,
     ButtonComponent,
     CardComponent,
     CardContentComponent,
-    HintComponent,
-    PageComponent,
-    PageContentComponent,
-    PageHeaderComponent,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
+    FormsModule,
+    IconNameDirective,
+    MessageComponent,
     SelectComponent,
     SelectItemComponent,
+    SettingsConditionalComponent,
     TextBoxComponent,
     TextComponent,
-    ToggleSwitchComponent,
-    AgentFigureComponent,
+    TypographyDirective,
   ],
   providers: [SetupViewPresenter, { provide: VIEW_PRESENTER, useExisting: SetupViewPresenter }],
   templateUrl: './SetupView.html',

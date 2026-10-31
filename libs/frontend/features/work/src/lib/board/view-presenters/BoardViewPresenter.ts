@@ -1,8 +1,8 @@
 // #region Imports
 
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   DialogService,
   DrawerService,
@@ -36,13 +36,14 @@ import {
   UNASSIGNED_BOARD_COLUMN_ID,
   ViewPresenter,
   watchCreateIntent,
+  workItemIdsInProgress,
   workItemIdsNeedingAttention,
   Command,
 } from '@symphony/frontend-core';
 import { NotificationService } from '@symphony/frontend-notification';
 import { LocalExecutionApprovalService } from '../services/LocalExecutionApprovalService';
 import { DeliveryGroupModeDialogView } from '../views/dialogs/DeliveryGroupModeDialogView';
-import { TaskDialogView } from '../views/dialogs/TaskDialogView';
+import { NewWorkItemSheet } from '../services/NewWorkItemSheet';
 import { resolveBoardContextActions, type IBoardContextAction } from './boardContextAction';
 import {
   resolveBoardPullRequest,
@@ -50,6 +51,8 @@ import {
   type IBoardPullRequestAction,
 } from './boardPullRequestAction';
 import { toggleAssigneeMutation } from './toggleAssigneeMutation';
+import { resolveBoardCardState, type IBoardCardState } from './boardCard';
+import type { BoardSegment } from './BoardSegment';
 import type { ITaskRuntimeState } from '../pipes/ITaskRuntimeState';
 import type { IDeliveryGroupDrawerData } from './IDeliveryGroupDrawerData';
 import type { DeliveryGroupAssessmentMode } from './DeliveryGroupAssessmentMode';
@@ -82,11 +85,15 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _boardRoute = inject(WORK_BOARD_ROUTE);
   private readonly _boardSelection = inject(WORK_BOARD_SELECTION);
   private _openedRouteItem = '';
+  private _appliedAttention: string | null = null;
+  private readonly _createIntent = signal(false);
   private readonly _landscape = inject(WorkFilterStore);
   /** Shared stage selection with the landscape. @public */ public readonly selectedStageId =
     this._landscape.stageId;
   /** Clear the landscape's stage filter from this view. @public */ public readonly clearStageFilterCommand =
     new Command<void>(() => this._landscape.stageId.set(undefined));
+  /** Clears the contextual search query (`q`) the board was opened with. @public */
+  public readonly clearSearchCommand = new Command<void>(() => this._landscape.query.set(''));
   private readonly _dialogService = inject(DialogService);
   private readonly _drawerService = inject(DrawerService);
   private readonly _localExecutionApproval = inject(LocalExecutionApprovalService);
@@ -94,12 +101,13 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _externalLinks = inject(ExternalLinkService);
   private readonly _notifications = inject(NotificationService);
   private readonly _route = inject(ActivatedRoute);
+  private readonly _router = inject(Router);
   private readonly _columnCollapse = inject(BoardColumnCollapseStore);
 
   private readonly _queryParamMap = toSignal(this._route.queryParamMap, {
     initialValue: this._route.snapshot.queryParamMap,
   });
-  private _activeDrawer?: IDrawerRef<{ mode: 'create' } | { mode: 'edit'; workItemId: string }>;
+  private readonly _newWorkItemSheet = inject(NewWorkItemSheet);
   private _activeProcessDrawer?: IDrawerRef<{ workItemId: string }>;
   private _activeGroupDrawer?: IDrawerRef<IDeliveryGroupDrawerData>;
   private _processDrawerPending = false;
@@ -255,6 +263,47 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   public readonly attentionOnly = signal(false);
 
   /**
+   * Narrows the board to the items an agent works on right now (`Agents running`).
+   *
+   * @public
+   * @readonly
+   */
+  public readonly runningOnly = signal(false);
+
+  /**
+   * Narrows the board to the items assigned to the signed-in GitHub account (`Mine`).
+   *
+   * @public
+   * @readonly
+   */
+  public readonly mineOnly = signal(false);
+
+  /**
+   * Segment of the filter bar that is active.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly segment = computed<BoardSegment>(() =>
+    this.attentionOnly()
+      ? 'attention'
+      : this.runningOnly()
+        ? 'running'
+        : this.mineOnly()
+          ? 'mine'
+          : 'all',
+  );
+
+  /**
+   * Repository the board is narrowed to through the repository chip; undefined shows every
+   * repository.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly selectedRepository = signal<string | undefined>(undefined);
+
+  /**
    * The selected column.
    *
    * @public
@@ -271,6 +320,53 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
       readiness: this._context.snapshot()?.workItemReadiness ?? [],
     }),
   );
+  private readonly _runningWorkItemIds = computed(() =>
+    workItemIdsInProgress(this.workItems(), this._context.snapshot()?.executions ?? []),
+  );
+
+  /**
+   * Number of items in the `Needs you` segment, over the whole board scope.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly attentionCount = computed(() => this._attentionWorkItemIds().size);
+
+  /**
+   * Number of items in the `Agents running` segment, over the whole board scope.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly runningCount = computed(() => this._runningWorkItemIds().size);
+
+  /**
+   * GitHub logins the selected workspaces are signed in with, lower-cased; `Mine` matches the
+   * items assigned to one of them.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly viewerLogins = computed<ReadonlySet<string>>(() => {
+    const workspaceIds = new Set(this.selectedWorkspaceIds());
+    return new Set(
+      (this._context.settings()?.connections ?? []).flatMap((connection) =>
+        connection.kind === 'github' &&
+        (!workspaceIds.size || workspaceIds.has(connection.workspaceId)) &&
+        connection.accountLogin?.trim()
+          ? [connection.accountLogin.trim().toLocaleLowerCase()]
+          : [],
+      ),
+    );
+  });
+
+  /**
+   * Whether `Mine` can be offered: the settings name the signed-in GitHub account.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly canShowMine = computed(() => this.viewerLogins().size > 0);
   private readonly _contextActionBusyIds = signal<ReadonlySet<string>>(new Set());
 
   /**
@@ -315,6 +411,18 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   });
 
   /**
+   * Repositories of the board's items, for the repository chip.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly availableRepositories = computed(() =>
+    [
+      ...new Set(this.workItems().flatMap((item) => (item.repository ? [item.repository] : []))),
+    ].sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' })),
+  );
+
+  /**
    * The selected assignee.
    *
    * @public
@@ -336,8 +444,23 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
       Boolean(this.selectedLabel()) ||
       Boolean(this.selectedAssigneeLogin()) ||
       Boolean(this.selectedColumnId()) ||
+      Boolean(this.selectedRepository()) ||
       this.attentionOnly() ||
+      this.runningOnly() ||
+      this.mineOnly() ||
       Boolean(this.selectedStageId()),
+  );
+
+  /**
+   * Number of filters set through the `Filter` menu, shown on its button.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly activeFilterCount = computed(
+    () =>
+      [this.selectedColumnId(), this.selectedLabel(), this.selectedAssigneeLogin()].filter(Boolean)
+        .length,
   );
 
   /**
@@ -351,9 +474,22 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     const query = this.searchQuery().trim().toLocaleLowerCase();
     const selectedLabel = this.selectedLabel();
     const selectedAssigneeLogin = this.selectedAssigneeLogin();
+    const selectedRepository = this.selectedRepository();
     const attentionIds = this.attentionOnly() ? this._attentionWorkItemIds() : undefined;
+    const runningIds = this.runningOnly() ? this._runningWorkItemIds() : undefined;
+    const viewerLogins = this.mineOnly() ? this.viewerLogins() : undefined;
     return this.workItems().filter((item) => {
       if (attentionIds && !attentionIds.has(item.id)) return false;
+      if (runningIds && !runningIds.has(item.id)) return false;
+      if (
+        viewerLogins &&
+        !this.resolveAssignees(item).some((assignee) =>
+          viewerLogins.has(assignee.login.toLocaleLowerCase()),
+        )
+      ) {
+        return false;
+      }
+      if (selectedRepository && item.repository !== selectedRepository) return false;
       if (stageId && item.stageId !== stageId) return false;
       if (selectedLabel && !item.labels.includes(selectedLabel)) return false;
       if (
@@ -642,6 +778,99 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   });
 
   /**
+   * Card state per work item - status chip, delivery progress and avatar - resolved once per
+   * snapshot like the findings: every rendered card reads it on each change-detection pass.
+   */
+  private readonly _cardStateByWorkItem = computed(() => {
+    const snapshot = this._context.snapshot();
+    const stages = snapshot?.workflow.stages ?? [];
+    const executions = this._executionsByWorkItem();
+    const runtime = this._runtimeStatuses();
+    const attention = this._attentionWorkItemIds();
+    const pullRequests = this._pullRequestByWorkItem();
+    const layout = this._columnLayout();
+    const columnLabels = new Map(layout.columns.map((column) => [column.id, column.label]));
+    const readinessByWorkItem = new Map(
+      (snapshot?.workItemReadiness ?? []).map((entry) => [entry.workItemId, entry]),
+    );
+    const agentNames = new Map(
+      (this._context.settings()?.agentProfiles ?? []).map((profile) => [
+        profile.id,
+        profile.displayName,
+      ]),
+    );
+    return new Map<string, IBoardCardState>(
+      this.allWorkItems().map((item) => {
+        const latest = runtime.get(item.id)?.execution;
+        const agentProfileId = latest?.bindingSnapshot?.agentProfileId;
+        const agentName = agentProfileId ? agentNames.get(agentProfileId) : undefined;
+        const readiness = readinessByWorkItem.get(item.id);
+        const pullRequest = pullRequests.get(item.id);
+        const coordination = this.resolveExternalCoordination(item);
+        return [
+          item.id,
+          resolveBoardCardState({
+            item,
+            stages,
+            executions: executions.get(item.id) ?? [],
+            needsAttention: attention.has(item.id),
+            columnLabel: columnLabels.get(layout.columnIdFor(item)) ?? '',
+            ...(readiness ? { readiness } : {}),
+            ...(pullRequest ? { pullRequest } : {}),
+            ...(coordination
+              ? {
+                  coordination: {
+                    action: coordination.action,
+                    ...(coordination.owner ? { owner: coordination.owner } : {}),
+                  },
+                }
+              : {}),
+            ...(agentName ? { agentName } : {}),
+          }),
+        ] as const;
+      }),
+    );
+  });
+
+  /**
+   * Columns the board collapses until the operator expands them: the columns before analysed
+   * work and the finished work (`Backlog`, `Qualified`, `Done` in the shipped process). They are
+   * read from the workflow - its initial stage, stages that only analyse, and terminal stages -
+   * because stages are configuration.
+   */
+  private readonly _collapsedByDefaultColumnIds = computed(() => {
+    const workflow = this._context.snapshot()?.workflow;
+    const stageIds = new Set(
+      (workflow?.stages ?? [])
+        .filter(
+          (stage) =>
+            stage.id === workflow?.initialStageId ||
+            stage.kind === 'terminal' ||
+            (stage.roles?.includes('analyze') && !stage.roles.includes('solve')),
+        )
+        .map((stage) => stage.id),
+    );
+    return new Set(
+      this.allColumns()
+        .filter((column) => column.stageId && stageIds.has(column.stageId))
+        .map((column) => column.id),
+    );
+  });
+
+  /** Whether a search, a segment or a filter narrows the board to the items that match it. */
+  private readonly _narrowedToMatches = computed(
+    () =>
+      Boolean(this.searchQuery().trim()) ||
+      this.attentionOnly() ||
+      this.runningOnly() ||
+      this.mineOnly() ||
+      Boolean(this.selectedLabel()) ||
+      Boolean(this.selectedAssigneeLogin()) ||
+      Boolean(this.selectedColumnId()) ||
+      Boolean(this.selectedStageId()),
+  );
+
+  /**
    * Columns the card may be moved to: every column of its own board, in board order. A merged
    * board shows one column per stage across boards, so the target is resolved back to the
    * column of the item's own board - the only value its provider accepts.
@@ -740,6 +969,19 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _setColumnExpandedCommand: Command<unknown> = new Command(
     (event) => void this.onExecuteSetColumnExpandedCommand(event),
   );
+  private readonly _expandColumnCommand: Command<string> = new Command((columnId) =>
+    this.onExecuteSetColumnExpandedCommand({ columnKey: columnId, isExpanded: true }),
+  );
+  private readonly _collapseColumnCommand: Command<string> = new Command((columnId) =>
+    this.onExecuteSetColumnExpandedCommand({ columnKey: columnId, isExpanded: false }),
+  );
+  private readonly _selectSegmentCommand: Command<BoardSegment> = new Command((segment) =>
+    this.onExecuteSelectSegmentCommand(segment),
+  );
+  private readonly _filterByRepositoryCommand: Command<string | undefined> = new Command(
+    (repository) => this.selectedRepository.set(repository),
+  );
+  private readonly _cardState = computed(() => (item: IWorkItem) => this.resolveCardState(item));
   private readonly _isBoardSelected = computed(
     () => (sourceId: string) => this.resolveIsBoardSelected(sourceId),
   );
@@ -859,8 +1101,8 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     (id) => void this.onExecuteOpenProcessCommand(id),
     computed(() => this.workflowAvailable),
   );
-  private readonly _createTaskCommand: Command<void> = new Command(
-    () => void this.onExecuteCreateTaskCommand(),
+  private readonly _createTaskCommand: Command<IBoardColumn | undefined> = new Command(
+    (column) => void this.onExecuteCreateTaskCommand(column),
   );
   private readonly _refreshCommand: Command<void> = new Command(
     () => void this.onExecuteRefreshCommand(),
@@ -883,11 +1125,19 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
       ) {
         this._openedRouteItem = key;
         this._work.selectWorkItem(id);
+        // A work-item bookmark opens the work item's own screen in place of the board entry.
         if (process) this._openProcessCommand.execute(id);
-        else this._openTaskCommand.execute(id);
+        else this.openWorkItemScreen(id, true);
       }
     });
-    watchCreateIntent(() => this.onExecuteCreateTaskCommand());
+    // `?create=true` (menu, ⌘N, tray, other screens) waits for the configuration that names the
+    // boards; without a board to create on, a notice says why instead of dropping the request.
+    watchCreateIntent(() => this._createIntent.set(true));
+    effect(() => {
+      if (!this._createIntent() || !this._context.settings()) return;
+      this._createIntent.set(false);
+      untracked(() => this.onExecuteCreateIntent());
+    });
     effect(() => {
       const query = this._queryParamMap().get('q');
       if (query !== null) this.searchQuery.set(query);
@@ -898,15 +1148,22 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     });
     effect(() => {
       const parameters = this._queryParamMap();
-      const attention = parameters.get('attention') === 'true';
-      this.attentionOnly.set(attention);
-      if (attention) {
-        // An explicit attention drill-down replaces a previous stage or column drill-down.
-        if (parameters.get('column') === null) this.selectedColumnId.set(undefined);
-        if (parameters.get('q') === null) this.searchQuery.set('');
-        this._landscape.stageId.set(undefined);
-        this.selectedLabel.set(undefined);
-      }
+      // Only a change of `attention` itself selects or ends `Needs you`: a later address change
+      // that only sets other keys (a palette search, an opened work item) keeps the segment the
+      // person is looking at, and repeating the same address does not undo a segment they chose.
+      const attention = parameters.get('attention');
+      if (attention === this._appliedAttention) return;
+      this._appliedAttention = attention;
+      if (attention === 'false') this.attentionOnly.set(false);
+      if (attention !== 'true') return;
+      this.attentionOnly.set(true);
+      this.runningOnly.set(false);
+      this.mineOnly.set(false);
+      // An explicit attention drill-down replaces a previous stage or column drill-down.
+      if (parameters.get('column') === null) this.selectedColumnId.set(undefined);
+      if (parameters.get('q') === null) this.searchQuery.set('');
+      this._landscape.stageId.set(undefined);
+      this.selectedLabel.set(undefined);
     });
     effect(() => {
       const selectedColumnId = this.selectedColumnId();
@@ -925,6 +1182,15 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
       if (selectedLabel && !this.availableLabels().includes(selectedLabel)) {
         this.selectedLabel.set(undefined);
       }
+    });
+    effect(() => {
+      const selectedRepository = this.selectedRepository();
+      if (selectedRepository && !this.availableRepositories().includes(selectedRepository)) {
+        this.selectedRepository.set(undefined);
+      }
+    });
+    effect(() => {
+      if (this.mineOnly() && !this.canShowMine()) this.mineOnly.set(false);
     });
     effect(() => {
       const selectedAssigneeLogin = this.selectedAssigneeLogin();
@@ -990,6 +1256,51 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    */
   public get setColumnExpandedCommand(): Command<unknown> {
     return this._setColumnExpandedCommand;
+  }
+  /**
+   * Expands one collapsed column; its narrow strip is the control.
+   *
+   * @public
+   * @readonly
+   */
+  public get expandColumnCommand(): Command<string> {
+    return this._expandColumnCommand;
+  }
+  /**
+   * Collapses one expanded column into its narrow strip.
+   *
+   * @public
+   * @readonly
+   */
+  public get collapseColumnCommand(): Command<string> {
+    return this._collapseColumnCommand;
+  }
+  /**
+   * Switches the filter-bar segment.
+   *
+   * @public
+   * @readonly
+   */
+  public get selectSegmentCommand(): Command<BoardSegment> {
+    return this._selectSegmentCommand;
+  }
+  /**
+   * Narrows the board to one repository; undefined shows every repository.
+   *
+   * @public
+   * @readonly
+   */
+  public get filterByRepositoryCommand(): Command<string | undefined> {
+    return this._filterByRepositoryCommand;
+  }
+  /**
+   * The card-state projection: status chip, delivery progress and avatar of one card.
+   *
+   * @public
+   * @readonly
+   */
+  public get cardState() {
+    return this._cardState;
   }
   /**
    * The isBoardSelected projection.
@@ -1318,7 +1629,7 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    * @public
    * @readonly
    */
-  public get createTaskCommand(): Command<void> {
+  public get createTaskCommand(): Command<IBoardColumn | undefined> {
     return this._createTaskCommand;
   }
   /**
@@ -1590,21 +1901,32 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     const group = this._context
       .snapshot()
       ?.deliveryGroups?.find((candidate) => candidate.id === itemKey);
-    const proposal = group ? undefined : this.criticalPathProposalFor(itemKey);
-    if (proposal) {
-      await this.openDeliveryGroupDrawer(undefined, proposal.id, {
-        requestedWorkItemId: itemKey,
-        requestedColumnId: toColumnKey,
-        requestedColumnLabel: this.allColumns().find((column) => column.id === toColumnKey)?.label,
-      });
-      return;
-    }
-    const columnLabel = this.allColumns().find((column) => column.id === toColumnKey)?.label;
     if (group) {
       await this.moveDeliveryGroup(group, toColumnKey);
       return;
     }
-    await this._work.moveWorkItem(itemKey, toColumnKey, columnLabel);
+    const item = this._workItemsById().get(itemKey);
+    if (!item) return;
+    // Under `All boards` a visible column merges the columns of several boards and carries the id
+    // of the first one; the move goes to the card's own board column of that stage instead.
+    const target = this._columnLayout().providerColumnFor(item, toColumnKey);
+    const proposal = this.criticalPathProposalFor(itemKey);
+    if (proposal) {
+      await this.openDeliveryGroupDrawer(undefined, proposal.id, {
+        requestedWorkItemId: itemKey,
+        ...(target ? { requestedColumnId: target.id, requestedColumnLabel: target.label } : {}),
+      });
+      return;
+    }
+    if (!target) {
+      const label = this.allColumns().find((column) => column.id === toColumnKey)?.label;
+      this._notifications.showInfo(
+        'Not moved',
+        `The board of ${item.externalId} has no ${label ?? 'such'} column.`,
+      );
+      return;
+    }
+    await this._work.moveWorkItem(item.id, target.id, target.label);
   }
 
   /**
@@ -1670,7 +1992,37 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    * @private
    */
   private resolveIsColumnExpanded(columnId: string): boolean {
-    return this._columnCollapse.isExpanded(columnId);
+    // A column collapsed only by default opens while a search, segment or filter narrows the
+    // board and the column holds a match, so a drill-down never hides what it found. An explicit
+    // choice of the operator still wins.
+    const expandedByDefault =
+      !this._collapsedByDefaultColumnIds().has(columnId) ||
+      (this._narrowedToMatches() && this.resolveItems(columnId).length > 0);
+    return this._columnCollapse.isExpanded(columnId, expandedByDefault);
+  }
+
+  /**
+   * Returns the card state of one item.
+   *
+   * @param item - Item.
+   * @private
+   */
+  private resolveCardState(item: IWorkItem): IBoardCardState | undefined {
+    return this._cardStateByWorkItem().get(item.id);
+  }
+
+  /**
+   * Switches the segment. The segments are exclusive views of the board, so choosing one clears
+   * the others; `All` clears them all.
+   *
+   * @param segment - Segment.
+   * @private
+   */
+  private onExecuteSelectSegmentCommand(segment: BoardSegment): void {
+    if (segment === 'mine' && !this.canShowMine()) return;
+    this.attentionOnly.set(segment === 'attention');
+    this.runningOnly.set(segment === 'running');
+    this.mineOnly.set(segment === 'mine');
   }
 
   /**
@@ -2101,17 +2453,6 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     this.deliveryGroupActionsBusy(group);
 
   /**
-   * Aligns every member to the root column from the group menu.
-   *
-   * @param group - Delivery group.
-   * @public
-   * @readonly
-   */
-  public readonly alignDeliveryGroup = async (group: IDeliveryGroup): Promise<void> => {
-    await this.runExclusively(group.id, () => this._work.alignDeliveryGroup(group.id));
-  };
-
-  /**
    * Opens the context actions.
    *
    * @param event - Event.
@@ -2308,14 +2649,27 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    * @private
    */
   private onExecuteOpenTaskFromCardCommand(event: MouseEvent, workItemId: string): void {
-    const originatedInContextActions = event
+    const originatedInControl = event
       .composedPath()
       .some(
         (target) =>
           target instanceof HTMLElement &&
-          target.matches('mosaik-dropdown-button, mosaik-menu, mosaik-menu-item'),
+          target.matches(
+            'mosaik-dropdown-button, mosaik-menu, mosaik-menu-item, mosaik-button, mosaik-checkbox',
+          ),
       );
-    if (!originatedInContextActions) this.onExecuteOpenTaskCommand(workItemId);
+    if (originatedInControl) return;
+    // Command-, Control- or Shift-click adds the card to the delivery selection, as in a macOS
+    // list; a plain click opens the work item.
+    if (event.metaKey || event.ctrlKey || event.shiftKey) {
+      this._selectedItemKeys.update((current) =>
+        current.includes(workItemId)
+          ? current.filter((selectedId) => selectedId !== workItemId)
+          : [...current, workItemId],
+      );
+      return;
+    }
+    this.onExecuteOpenTaskCommand(workItemId);
   }
 
   /**
@@ -2387,27 +2741,26 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
-   * Opens the task.
+   * Opens the work item's own screen.
    *
    * @param id - Id.
    * @private
    */
   private onExecuteOpenTaskCommand(id: string): void {
-    if (this._activeDrawer) {
-      this._activeDrawer.requestAttention();
-      return;
-    }
-
     this._work.selectWorkItem(id);
-    const drawer = this._drawerService.show<{ mode: 'edit'; workItemId: string }>(TaskDialogView, {
-      data: { mode: 'edit', workItemId: id },
-      size: { width: '82%' },
-      maxSize: { width: '92rem' },
-    });
-    this._activeDrawer = drawer;
-    drawer.closed.subscribe(() => {
-      if (this._activeDrawer === drawer) this._activeDrawer = undefined;
-    });
+    this.openWorkItemScreen(id, false);
+  }
+
+  /**
+   * Navigates to the work-item screen, `/main/board/<work item id>`; the router encodes the id
+   * as one URL segment.
+   *
+   * @param id - Work-item id.
+   * @param replaceUrl - Whether the board entry that asked for it is replaced in the history.
+   * @private
+   */
+  private openWorkItemScreen(id: string, replaceUrl: boolean): void {
+    void this._router.navigate(['/main/board', id], replaceUrl ? { replaceUrl } : {});
   }
 
   /**
@@ -2445,24 +2798,46 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
-   * Creates the task.
+   * Answers `?create=true`: opens the new-work-item sheet, or says why no board can receive the
+   * work item.
    *
    * @private
    */
-  private onExecuteCreateTaskCommand(): void {
-    if (!this.canCreateWorkItem()) return;
-    if (this._activeDrawer && this._drawerService.isShown(this._activeDrawer)) {
-      this._activeDrawer.requestAttention();
+  private onExecuteCreateIntent(): void {
+    if (this.canCreateWorkItem()) {
+      this.onExecuteCreateTaskCommand();
       return;
     }
+    const settings = this._context.settings();
+    const workspaces = settings?.activeViewScope.workspaceIds.length ?? 0;
+    if (this._context.availableBoards().length > 1)
+      this._notifications.showWarning(
+        'Select one board to create a work item',
+        'Several boards are in view. Choose one under Filter › Board, then create the work item.',
+      );
+    else if (!workspaces)
+      this._notifications.showWarning(
+        'Select one board to create a work item',
+        'No workspace is selected. Choose a workspace in the sidebar, then create the work item.',
+      );
+    else
+      this._notifications.showWarning(
+        'Select one board to create a work item',
+        'None of the selected workspaces has a board. Connect one in Settings › Connected services, or use only one workspace.',
+      );
+  }
 
-    const drawer = this._drawerService.show<{ mode: 'create' }>(TaskDialogView, {
-      data: { mode: 'create' },
-    });
-    this._activeDrawer = drawer;
-    drawer.closed.subscribe(() => {
-      if (this._activeDrawer === drawer) this._activeDrawer = undefined;
-    });
+  /**
+   * Opens the new-work-item sheet, preselecting the column whose `+` was used.
+   *
+   * @param column - Column header the request came from; none for the toolbar action.
+   * @private
+   */
+  private onExecuteCreateTaskCommand(column?: IBoardColumn): void {
+    if (!this.canCreateWorkItem()) return;
+    this._newWorkItemSheet.open(
+      column ? { columnId: column.id, ...(column.stageId ? { stageId: column.stageId } : {}) } : {},
+    );
   }
 
   /**

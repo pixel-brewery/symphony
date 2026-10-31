@@ -12,12 +12,12 @@ import {
   CardContentComponent,
   CardHeaderComponent,
   CheckboxComponent,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
   DismissComponent,
   DividerComponent,
-  DrawerContentDirective,
-  DrawerFooterDirective,
-  DrawerHeaderComponent,
-  DrawerHeaderDirective,
   EmptyStateComponent,
   ExpanderComponent,
   FormFieldComponent,
@@ -42,6 +42,11 @@ import { PullRequestCreateDrawerViewPresenter } from '../../view-presenters/Pull
 
 // #endregion
 
+/**
+ * The `New pull request` sheet: base and compare, what the range carries, and the description.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-pull-request-create-drawer-view',
   host: { class: 'block' },
@@ -55,12 +60,12 @@ import { PullRequestCreateDrawerViewPresenter } from '../../view-presenters/Pull
     CardHeaderComponent,
     CheckboxComponent,
     DatePipe,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
     DismissComponent,
     DividerComponent,
-    DrawerContentDirective,
-    DrawerFooterDirective,
-    DrawerHeaderComponent,
-    DrawerHeaderDirective,
     EmptyStateComponent,
     ExpanderComponent,
     FormField,

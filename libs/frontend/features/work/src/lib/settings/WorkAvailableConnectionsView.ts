@@ -1,19 +1,15 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import {
-  AvatarComponent,
-  ButtonComponent,
-  CellComponent,
-  IconNameDirective,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { AvatarComponent, ButtonComponent } from '@pixel-brewery/mosaik-elements-angular';
+import { SettingsRowComponent } from '@symphony/frontend-setting';
 import { WorkConnectionsSettingsViewPresenter } from './WorkConnectionsSettingsViewPresenter';
 // #endregion
 /** Contents-only feature contribution to the existing Services card. @public */
 @Component({
   selector: 'symphony-work-available-connections-view',
-  host: { class: 'contents' },
-  imports: [AvatarComponent, ButtonComponent, CellComponent, IconNameDirective],
+  host: { class: 'block min-w-0' },
+  imports: [AvatarComponent, ButtonComponent, SettingsRowComponent],
   providers: [WorkConnectionsSettingsViewPresenter],
   templateUrl: './WorkAvailableConnectionsView.html',
   styleUrl: './WorkAvailableConnectionsView.scss',

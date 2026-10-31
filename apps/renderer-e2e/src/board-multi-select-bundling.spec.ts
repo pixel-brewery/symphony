@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron, type ElectronApplication } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { expandBoardColumn } from './expandBoardColumn';
 
 // #endregion
 
@@ -38,10 +39,12 @@ test('bundles two natively selected cards into an attested delivery group', asyn
     const page = await mainWindow(app);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
 
+    // Backlog starts as a collapsed strip; the selected cards live in it.
+    await expandBoardColumn(page, 'backlog');
     const rootItemId = 'work-item-142';
     const memberItemId = 'work-item-overflow-1';
     const rootCard = page.getByTestId(`board-item-${rootItemId}`);
@@ -49,13 +52,17 @@ test('bundles two natively selected cards into an attested delivery group', asyn
     await expect(rootCard).toBeVisible();
     await expect(memberCard).toBeVisible();
 
-    // The board runs the native flow-board multi-selection: every card renders its own
-    // selection checkbox in the shadow `selection` part, and the selected state lives on the
-    // card host as `aria-selected`.
+    // At rest the cards show no selection checkbox, as drawn. Command-click (Control-click off
+    // macOS) starts a selection without opening the card; from then on the board runs the native
+    // flow-board multi-selection, so every card renders its own checkbox in the shadow
+    // `selection` part, and the selected state lives on the card host as `aria-selected`.
     const rootCheckbox = rootCard.locator('[part="selectionCheckbox"]');
-    await expect(rootCheckbox).toBeVisible();
-    await rootCheckbox.click();
+    await expect(rootCheckbox).toHaveCount(0);
+    await rootCard.getByTestId(`board-item-title-${rootItemId}`).click({
+      modifiers: ['ControlOrMeta'],
+    });
     await expect(rootCard).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByTestId('board-view')).toBeVisible();
 
     // One selected ticket cannot deliver alone; the action names the current count.
     const deliverTogether = page.getByTestId('board-deliver-selected');

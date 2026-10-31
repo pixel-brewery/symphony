@@ -159,7 +159,7 @@ describe('applicationProductComposition', () => {
     expect(widgets.some((widget) => widget.id === 'actions')).toBe(false);
     expect(TestBed.inject(CiStore, null)).toBeNull();
     expect(TestBed.inject(APPLICATION_BOOTSTRAP_CI, null)).toBeNull();
-    expect(TestBed.inject(Router).url).toBe('/main/orbit');
+    expect(TestBed.inject(Router).url).toBe('/main/home');
   });
 
   it('removes Home routes and contributions and routes every fallback to another selected page', async () => {
@@ -220,7 +220,7 @@ describe('applicationProductComposition', () => {
     expect(search.some((provider) => provider.id === 'work.search')).toBe(false);
     expect(action).toBeUndefined();
     expect(widgets.some((widget) => widget.id === 'board')).toBe(false);
-    expect(TestBed.inject(Router).url).toBe('/main/orbit');
+    expect(TestBed.inject(Router).url).toBe('/main/home');
   });
 
   it('omits Automation policy, storage and state while retaining CI cards and its persisted root', () => {
@@ -240,7 +240,10 @@ describe('applicationProductComposition', () => {
     const sections = catalog.globalSections();
     const views = TestBed.inject(ViewSlotRegistry).getViews(SettingsViewSlot.Global)();
     // assert
-    expect(sections.some((section) => section.id === 'automation')).toBe(true);
+    // Virtual machines describe this Mac and belong to System, which CI keeps contributing; with
+    // Automation omitted nothing else fills an Automation section.
+    expect(sections.some((section) => section.id === 'automation')).toBe(false);
+    expect(sections.some((section) => section.id === 'system')).toBe(true);
     expect(views.some((view) => view.id === 'virtual-machines-card')).toBe(true);
     expect(views.some((view) => view.id === 'AutomationPolicySettingsView')).toBe(false);
     expect(views.some((view) => view.id === 'StorageSafetySettingsView')).toBe(false);

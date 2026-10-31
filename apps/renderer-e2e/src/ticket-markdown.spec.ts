@@ -3,6 +3,7 @@
 import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
+import { expandBoardColumn } from './expandBoardColumn';
 
 // #endregion
 
@@ -34,7 +35,7 @@ test('renders Markdown in external ticket bodies', async () => {
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.message));
 
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
 
@@ -79,23 +80,28 @@ test('renders Markdown in external ticket bodies', async () => {
     await assigneeFilter.click();
     await page.getByTestId('board-assignee-filter-all').click();
     await expect(page.getByTestId('board-assignee-filter-all')).toBeHidden();
+    // Without a filter, Qualified (138) and Backlog (142) return to their collapsed strips.
+    await expect(page.getByTestId('board-item-work-item-138')).toHaveCount(0);
+    await expandBoardColumn(page, 'qualified');
     await expect(page.getByTestId('board-item-work-item-138')).toBeVisible();
-    await expect(page.getByTestId('board-item-labels-work-item-142')).toContainText(
-      'orchestration',
-    );
-    const assigneeGroup = page.getByTestId('board-item-assignees-work-item-142');
-    const assigneeAvatars = assigneeGroup.locator('mosaik-avatar');
-    await expect(assigneeGroup).toBeVisible();
-    await expect(assigneeAvatars).toHaveCount(2);
-    await expect(assigneeAvatars.nth(0)).toHaveAttribute('aria-label', 'Octo Operator');
-    await expect(assigneeAvatars.nth(1)).toHaveAttribute('aria-label', 'Workspace Owner');
-    await assigneeAvatars.nth(0).hover();
-    // The tooltip surface is portal-projected to <body>; the role locator finds the one
-    // rendered instance instead of hidden slot copies inside menu items.
-    await expect(page.getByRole('tooltip', { name: 'Octo Operator' })).toBeVisible();
+    await expandBoardColumn(page, 'backlog');
     await page.getByTestId('board-item-work-item-142').click();
-    await page.getByTestId('task-description-section').click();
+    // The work-item screen shows the description at once, rendered from Markdown, with the
+    // labels beside the status and the assignees in the inspector.
+    await expect(page.getByTestId('work-item-view')).toBeVisible();
     await expect(page.getByTestId('task-drawer-description')).toBeVisible();
+    await expect(page.getByTestId('work-item-label-orchestration')).toBeVisible();
+    await expect
+      .poll(() =>
+        page
+          .getByTestId('task-metadata')
+          .locator('[test-id^="work-item-assignee-"]')
+          .evaluateAll((rows) => rows.map((row) => row.getAttribute('test-id'))),
+      )
+      .toEqual(['work-item-assignee-octo-operator', 'work-item-assignee-workspace-owner']);
+    await expect(
+      page.getByTestId('work-item-assignee-octo-operator').locator('mosaik-avatar'),
+    ).toHaveJSProperty('text', 'Octo Operator');
 
     const renderedMarkdown = await page
       .getByTestId('task-drawer-description')
@@ -123,9 +129,12 @@ test('renders Markdown in external ticket bodies', async () => {
     expect(renderedMarkdown.text).not.toContain('**managed workspaces**');
     expect(renderedMarkdown.text).toContain('<strong>not trusted</strong>');
 
-    // The discussion travels with the complete item: oldest comment first, author and
-    // instant beside a Markdown body.
-    await expect(page.getByTestId('task-activity-section')).toContainText('Activity · 4');
+    // The discussion travels with the complete item into the activity, newest first, with the
+    // author and instant beside a Markdown body.
+    await expect(
+      page.getByTestId('task-drawer-events').locator('[data-activity-kind="comment"]'),
+    ).toHaveCount(3);
+    await expect(page.getByTestId('task-activity-opened')).toBeVisible();
     const firstComment = page.getByTestId('task-drawer-comment-comment-142-1');
     await expect(firstComment).toContainText('Workspace Owner');
     const firstCommentMarkdown = await firstComment
@@ -140,13 +149,10 @@ test('renders Markdown in external ticket bodies', async () => {
       'Drift detection first, recovery guidance second.',
     );
 
-    // Comments render through the Mosaik comment element, and wide content (code lines,
-    // tables) scrolls inside the comment instead of making the whole dialog scrollable.
+    // Wide content (code lines, tables) scrolls inside the comment instead of making the whole
+    // screen scroll sideways.
     const analysisComment = page.getByTestId('task-drawer-comment-comment-142-3');
     await expect(analysisComment).toContainText('Symphony analysis');
-    expect(await analysisComment.evaluate((element) => element.tagName.toLowerCase())).toBe(
-      'mosaik-comment',
-    );
     const horizontalOverflow = await page
       .getByTestId('task-drawer')
       .evaluate((drawer, commentTestId) => {
@@ -159,7 +165,7 @@ test('renders Markdown in external ticket bodies', async () => {
     expect(horizontalOverflow.drawer).toBe(0);
     expect(horizontalOverflow.comment).toBe(0);
 
-    await page.getByTestId('task-drawer-comments').scrollIntoViewIfNeeded();
+    await page.getByTestId('task-drawer-events').scrollIntoViewIfNeeded();
     await page.screenshot({
       path: resolve('output/playwright', 'board-task-drawer-comments.png'),
       fullPage: true,

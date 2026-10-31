@@ -6,6 +6,7 @@
   min-height: 0;
 }
 
+// The orbit diagram sits on the quiet neutral canvas the artboard draws beside the inspector.
 [data-orbit-viewport] {
   position: relative;
   isolation: isolate;
@@ -13,7 +14,7 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: var(--mosaik-scheme-background);
+  background: var(--mosaik-color-neutral-50);
   color: var(--mosaik-scheme-foreground);
 }
 
@@ -33,19 +34,76 @@ canvas {
 [data-orbit-label] {
   position: absolute;
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   justify-content: center;
   pointer-events: none;
 }
 
-[data-orbit-label] > mosaik-button {
+// Labels hug the object they name: a cluster badge on the right of its anchor starts at it.
+[data-orbit-label][data-align='start'] {
+  justify-content: flex-start;
+}
+
+[data-orbit-label][data-align='end'] {
+  justify-content: flex-end;
+}
+
+[data-orbit-label][data-kind='group'] {
+  align-items: center;
+}
+
+[data-orbit-label][data-kind='ticket'] {
+  align-items: stretch;
+}
+
+[data-orbit-label][data-kind='ticket'] > mosaik-button {
   display: block;
   width: 100%;
   pointer-events: auto;
 }
 
+// The cluster badge sits on a surface pill, as drawn, so the belt never shows through it.
+[part~='orbit-cluster-label'] {
+  display: flex;
+  border-radius: calc(var(--mosaik-layout-radius) * 2.6);
+  background: var(--mosaik-scheme-surface);
+  pointer-events: auto;
+}
+
+[part~='orbit-cluster-label'] > mosaik-button {
+  --button-height: auto;
+  --button-min-height: 0;
+  --button-padding-top: 0;
+  --button-padding-bottom: 0;
+  --button-padding-left: 0;
+  --button-padding-right: 0;
+  --button-border-radius: calc(var(--mosaik-layout-radius) * 2.6);
+}
+
+// The destination's name card: two centred lines on the surface, its button filling the card.
+[part~='orbit-body-label'] {
+  --card-padding-bottom: 0;
+  --card-border-radius: var(--mosaik-layout-radius);
+  --card-border-color: var(--mosaik-scheme-highlight);
+
+  display: block;
+  pointer-events: auto;
+}
+
+[part~='orbit-body-label'] > mosaik-button {
+  --button-height: auto;
+  --button-min-height: 0;
+  --button-padding-top: 6px;
+  --button-padding-bottom: 6px;
+  --button-padding-left: 12px;
+  --button-padding-right: 12px;
+  --button-gap: 0;
+
+  display: block;
+}
+
 [data-orbit-fallback] {
-  background: var(--mosaik-scheme-background);
+  background: var(--mosaik-color-neutral-50);
 }
 
 [data-orbit-flybys] {

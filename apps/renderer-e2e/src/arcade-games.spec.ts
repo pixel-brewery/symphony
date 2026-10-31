@@ -6,6 +6,8 @@ import { expect, test, type ElectronApplication, type Page } from '@playwright/t
 import { enableArcade } from './enableArcade';
 import { expectArcadePlayfield } from './expectArcadePlayfield';
 import { launchArcadeApp } from './launchArcadeApp';
+import { closeSettingsWindow } from './closeSettingsWindow';
+import { openSettingsWindow } from './openSettingsWindow';
 import { prepareMainWindow } from './prepareMainWindow';
 import { selectArcadeTheme } from './selectArcadeTheme';
 
@@ -60,110 +62,56 @@ async function activateGodMode(page: Page): Promise<void> {
   await expect(page.getByTestId('notification-success')).toHaveCount(0);
 }
 
-async function expectCenteredCoverTiles(page: Page): Promise<void> {
+const GAMES = [
+  'pong',
+  'breakout',
+  'pitfall',
+  'pitfall-ii',
+  'river-raid',
+  'seaquest',
+  'jungle-hunt',
+  'realsports-boxing',
+] as const;
+
+/**
+ * The catalog is a grid of equal game cards in the drawn order: at most four per row, each with a
+ * 16:10 cover well and its `Play` button inside the card, without horizontal scrolling.
+ */
+async function expectGameCards(page: Page, columns: number): Promise<void> {
   await expect
     .poll(async () => {
-      const gallery = await page.getByTestId('arcade-gallery').evaluate((element) => {
-        const bounds = element.getBoundingClientRect();
-        const style = getComputedStyle(element);
-        return {
-          x: bounds.x + Number.parseFloat(style.paddingLeft),
-          y: bounds.y + Number.parseFloat(style.paddingTop),
-          width:
-            element.clientWidth -
-            Number.parseFloat(style.paddingLeft) -
-            Number.parseFloat(style.paddingRight),
-          height:
-            element.clientHeight -
-            Number.parseFloat(style.paddingTop) -
-            Number.parseFloat(style.paddingBottom),
-          scrollTop: element.scrollTop,
-          scrollWidth: element.scrollWidth,
-          clientWidth: element.clientWidth,
-        };
-      });
-      const group = await page.getByTestId('arcade-tiles').boundingBox();
-      if (!group || gallery.scrollTop !== 0) return false;
-      const expectedTop = gallery.y + Math.max(0, (gallery.height - group.height) / 2);
-      if (
-        Math.abs(group.x + group.width / 2 - gallery.x - gallery.width / 2) > 1 ||
-        Math.abs(group.y - expectedTop) > 1 ||
-        group.x < gallery.x - 1 ||
-        group.x + group.width > gallery.x + gallery.width + 1 ||
-        gallery.scrollWidth > gallery.clientWidth + 1
-      )
-        return false;
-      const tiles: { x: number; y: number; width: number; height: number }[] = [];
-      for (const game of [
-        'pitfall',
-        'pitfall-ii',
-        'breakout',
-        'realsports-boxing',
-        'jungle-hunt',
-        'pong',
-        'seaquest',
-        'river-raid',
-      ]) {
-        const tile = await page.getByTestId(`arcade-play-${game}`).boundingBox();
+      const cards: { x: number; y: number; width: number; height: number }[] = [];
+      for (const game of GAMES) {
+        const card = await page.getByTestId(`arcade-game-${game}`).boundingBox();
         const cover = await page.getByTestId(`arcade-cover-${game}`).boundingBox();
-        if (!tile || !cover) return false;
+        const play = await page.getByTestId(`arcade-play-${game}`).boundingBox();
+        if (!card || !cover || !play) return 'missing';
+        if (Math.abs(cover.width / cover.height - 16 / 10) > 0.02) return `cover ${game}`;
         if (
-          Math.abs(tile.x - cover.x) > 1 ||
-          Math.abs(tile.y - cover.y) > 1 ||
-          Math.abs(tile.width - cover.width) > 1 ||
-          Math.abs(tile.height - cover.height) > 1
+          cover.x < card.x ||
+          cover.x + cover.width > card.x + card.width + 1 ||
+          play.x + play.width > card.x + card.width + 1 ||
+          play.y + play.height > card.y + card.height + 1 ||
+          play.y < cover.y + cover.height
         )
-          return false;
-        tiles.push(tile);
+          return `layout ${game}`;
+        cards.push(card);
       }
-      const leaderboard = await page.getByTestId('arcade-open-leaderboard').boundingBox();
-      if (!leaderboard) return false;
-      tiles.push(leaderboard);
-      const first = tiles[0];
-      if (!first || Math.abs(first.y - group.y) > 1) return false;
-      const columnGap = await page
-        .getByTestId('arcade-tiles')
-        .evaluate((element) => Number.parseFloat(getComputedStyle(element).columnGap));
-      const rows: (typeof tiles)[] = [];
-      for (const tile of tiles) {
-        if (
-          tile.width <= 0 ||
-          tile.height <= 0 ||
-          Math.abs(tile.width / tile.height - 120 / 155) > 0.01 ||
-          Math.abs(tile.width - first.width) > 1 ||
-          Math.abs(tile.height - first.height) > 1 ||
-          tile.height > 241 ||
-          tile.x < group.x - 1 ||
-          tile.x + tile.width > group.x + group.width + 1 ||
-          tile.y + tile.height > group.y + group.height + 1
-        )
-          return false;
-        const previousRow = rows.at(-1);
-        const previousTile = previousRow?.at(-1);
-        if (previousTile && Math.abs(tile.y - previousTile.y) <= 1) {
-          if (tile.x < previousTile.x + previousTile.width - 1) return false;
-          previousRow?.push(tile);
-        } else {
-          if (previousTile && tile.y < previousTile.y + previousTile.height - 1) return false;
-          rows.push([tile]);
-        }
+      const first = cards[0]!;
+      if (cards.some((card) => Math.abs(card.width - first.width) > 1)) return 'widths';
+      const perRow = cards.filter((card) => Math.abs(card.y - first.y) <= 1).length;
+      for (let index = 1; index < cards.length; index += 1) {
+        const previous = cards[index - 1]!;
+        const card = cards[index]!;
+        const sameRow = Math.abs(card.y - previous.y) <= 1;
+        if (sameRow ? card.x <= previous.x : card.y <= previous.y) return 'order';
       }
-      if (
-        tiles.length * first.width + (tiles.length - 1) * columnGap <= gallery.width + 1 &&
-        rows.length !== 1
-      )
-        return false;
-      return rows.every((row) => {
-        const left = row[0];
-        const right = row.at(-1);
-        return (
-          left !== undefined &&
-          right !== undefined &&
-          Math.abs((left.x + right.x + right.width) / 2 - group.x - group.width / 2) <= 1
-        );
-      });
+      const overflow = await page
+        .getByTestId('arcade-view')
+        .evaluate((element) => element.scrollWidth > element.clientWidth + 1);
+      return overflow ? 'overflow' : perRow;
     })
-    .toBe(true);
+    .toBe(columns);
 }
 
 test('loads all eight bundled game covers and opens every game in light and dark themes', async () => {
@@ -179,16 +127,19 @@ test('loads all eight bundled game covers and opens every game in light and dark
       window.location.hash = '#/main/arcade/pitfall';
     });
     await expect(page).toHaveURL(/#\/main\/home$/);
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await enableArcade(page);
+    await expect(page.getByTestId('home-view')).toBeVisible();
+    await enableArcade(app, page);
+    // God mode is shown and entered in the Arcade card of the Settings window.
+    const settings = await openSettingsWindow(app, page);
+    await settings.getByTestId('global-settings-section-appearance').click();
     const godModeKeys = Array.from({ length: 10 }, (_, index) =>
-      page.getByTestId(`arcade-god-mode-key-${index}`),
+      settings.getByTestId(`arcade-god-mode-key-${index}`),
     );
-    await expect(page.getByTestId('arcade-god-mode-sequence')).toBeVisible();
+    await expect(settings.getByTestId('arcade-god-mode-sequence')).toBeVisible();
     const idleKeyBackground = await godModeKeys[0]!.evaluate(
       (element) => getComputedStyle(element).backgroundColor,
     );
-    await page.keyboard.press('ArrowUp');
+    await settings.keyboard.press('ArrowUp');
     await expect(godModeKeys[0]!).toHaveJSProperty('variant', 'success');
     await expect(godModeKeys[1]!).toHaveJSProperty('variant', 'default');
     await expect
@@ -198,70 +149,63 @@ test('loads all eight bundled game covers and opens every game in light and dark
     await expect
       .poll(() => godModeKeys[0]!.evaluate((element) => getComputedStyle(element).backgroundColor))
       .toBe(idleKeyBackground);
-    await activateGodMode(page);
+    await activateGodMode(settings);
     for (const key of godModeKeys) await expect(key).toHaveJSProperty('variant', 'success');
     for (const key of godModeKeys)
       await expect
         .poll(() => key.evaluate((element) => getComputedStyle(element).backgroundColor))
         .not.toBe(idleKeyBackground);
-    await page.keyboard.press('KeyX');
+    await settings.keyboard.press('KeyX');
     for (const key of godModeKeys) await expect(key).toHaveJSProperty('variant', 'success');
-    await page.screenshot({ path: resolve(outputDirectory, 'arcade-settings-enabled.png') });
+    await settings.screenshot({ path: resolve(outputDirectory, 'arcade-settings-enabled.png') });
+    await closeSettingsWindow(app);
     for (const theme of ['light', 'dark'] as const) {
       // act
       await resizeGame(app, page, 1440, 900);
-      await selectArcadeTheme(page, theme);
+      await selectArcadeTheme(app, page, theme);
       await page.getByTestId('navigation-arcade').click();
 
       // assert
-      for (const game of [
-        'pitfall',
-        'pitfall-ii',
-        'breakout',
-        'realsports-boxing',
-        'jungle-hunt',
-        'pong',
-        'seaquest',
-        'river-raid',
-      ]) {
+      await expect(page.getByTestId('window-title-text')).toHaveJSProperty('text', 'Arcade');
+      await expect(page.getByTestId('window-subtitle')).toHaveJSProperty('text', '8 games');
+      await expect(
+        page.getByTestId('window-toolbar').getByTestId('arcade-open-leaderboard'),
+      ).toBeVisible();
+      for (const game of GAMES) {
         const cover = page.getByTestId(`arcade-cover-${game}`);
         await expect(cover).toBeVisible();
         await expect(cover).toHaveJSProperty('state', 'done');
         await expect(cover).toHaveJSProperty('fit', 'contain');
         await expect(cover).toHaveJSProperty('src', `arcade/${game}.webp`);
       }
-      await expectCenteredCoverTiles(page);
+      await expect(page.getByTestId('arcade-players-pong')).toHaveJSProperty('text', '2 players');
+      await expect(page.getByTestId('arcade-players-breakout')).toHaveJSProperty(
+        'text',
+        '1–4 players',
+      );
+      await expect(page.getByTestId('arcade-players-pitfall')).toHaveJSProperty('text', '1 player');
+      await expectGameCards(page, 4);
       await page.screenshot({ path: resolve(outputDirectory, `arcade-catalog-${theme}.png`) });
       await resizeGame(app, page, 940, 700);
-      await expectCenteredCoverTiles(page);
+      await expectGameCards(page, 2);
       await page.screenshot({
         path: resolve(outputDirectory, `arcade-catalog-${theme}-wrapped.png`),
       });
       await resizeGame(app, page, 500, 700);
-      await expectCenteredCoverTiles(page);
+      await expectGameCards(page, 1);
       await page.screenshot({
         path: resolve(outputDirectory, `arcade-catalog-${theme}-compact.png`),
       });
-      await expect(page.getByTestId('arcade-play-pitfall')).toBeInViewport();
-      await page.getByTestId('arcade-open-leaderboard').scrollIntoViewIfNeeded();
-      await expect(page.getByTestId('arcade-open-leaderboard')).toBeInViewport();
-      await page.getByTestId('arcade-play-pitfall').scrollIntoViewIfNeeded();
-      await expect(page.getByTestId('arcade-play-pitfall')).toBeInViewport();
-      await page.getByTestId('arcade-play-pitfall').focus();
-      await page.keyboard.press('Tab');
-      await expect(page.getByTestId('arcade-play-pitfall-ii').getByRole('button')).toBeFocused();
-      await page.keyboard.press('Tab');
-      await expect(page.getByTestId('arcade-play-breakout').getByRole('button')).toBeFocused();
-      await page.keyboard.press('Tab');
-      await expect(
-        page.getByTestId('arcade-play-realsports-boxing').getByRole('button'),
-      ).toBeFocused();
-      for (const game of ['jungle-hunt', 'pong', 'seaquest', 'river-raid']) {
+      await page.getByTestId('arcade-play-realsports-boxing').scrollIntoViewIfNeeded();
+      await expect(page.getByTestId('arcade-play-realsports-boxing')).toBeInViewport();
+      await page.getByTestId('arcade-play-pong').scrollIntoViewIfNeeded();
+      await expect(page.getByTestId('arcade-play-pong')).toBeInViewport();
+      await page.getByTestId('arcade-play-pong').focus();
+      for (const game of GAMES.slice(1)) {
         await page.keyboard.press('Tab');
         await expect(page.getByTestId(`arcade-play-${game}`).getByRole('button')).toBeFocused();
       }
-      await page.keyboard.press('Tab');
-      await expect(page.getByTestId('arcade-open-leaderboard').getByRole('button')).toBeFocused();
+      await resizeGame(app, page, 1440, 900);
       for (const [game, title, key] of [
         ['pitfall', 'Pitfall!', 'Enter'],
         ['pitfall-ii', 'Pitfall II: Lost Caverns', 'Space'],
@@ -308,7 +252,7 @@ test('restores new-game results beside existing Arcade history after restarting 
   try {
     let page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(page);
+    await enableArcade(app, page);
     await page.evaluate(() => {
       localStorage.setItem(
         'symphony.arcade.leaderboard.v1',
@@ -361,7 +305,7 @@ test('restores new-game results beside existing Arcade history after restarting 
     page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
     for (const theme of ['light', 'dark'] as const) {
-      await selectArcadeTheme(page, theme);
+      await selectArcadeTheme(app, page, theme);
       await page.getByTestId('navigation-arcade').click();
       await page.getByTestId('arcade-open-leaderboard').click();
 
@@ -411,7 +355,7 @@ test('plays Breakout with mouse and keys through a full match and configures par
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(page);
+    await enableArcade(app, page);
     await openGame(page, 'breakout');
     await expect(page.getByTestId('breakout-menu-dialog')).toBeVisible();
     await expect(page.locator('.cdk-overlay-backdrop').last()).toBeVisible();
@@ -605,7 +549,7 @@ test('plays RealSports Boxing with two people through a TKO, rematch and compute
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(page);
+    await enableArcade(app, page);
     await openGame(page, 'realsports-boxing');
     await page.getByTestId('boxing-instructions').click();
     await expect(page.getByTestId('realsports-boxing-view')).toHaveAttribute(

@@ -4,19 +4,16 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import {
   AvatarComponent,
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardHeaderComponent,
-  CellComponent,
-  CellGroupComponent,
-  SkeletonComponent,
-  TextComponent,
   IconNameDirective,
+  MessageComponent,
+  SkeletonComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  SettingsConditionalComponent,
+  SettingsGroupComponent,
+  SettingsRowComponent,
+} from '@symphony/frontend-setting';
 import { RuntimeDependencyDetailsPipe } from '../pipes/RuntimeDependencyDetailsPipe';
 import { RuntimeDependencyIconPipe } from '../pipes/RuntimeDependencyIconPipe';
 import { RuntimeDependencyLabelPipe } from '../pipes/RuntimeDependencyLabelPipe';
@@ -25,30 +22,25 @@ import { DeveloperToolsSettingsViewPresenter } from './DeveloperToolsSettingsVie
 // #endregion
 
 /**
- * Feature-owned Settings card composed by the native host.
+ * System › `Developer tools`: the local CLIs with their state and one-click Homebrew installs.
  *
  * @public
  */
 @Component({
   selector: 'symphony-developer-tools-settings',
-  host: { class: 'contents' },
+  host: { class: 'flex min-w-0 flex-col gap-2' },
   imports: [
     AvatarComponent,
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
     ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardHeaderComponent,
-    CellComponent,
-    CellGroupComponent,
-    SkeletonComponent,
-    TextComponent,
+    IconNameDirective,
+    MessageComponent,
     RuntimeDependencyDetailsPipe,
     RuntimeDependencyIconPipe,
     RuntimeDependencyLabelPipe,
-    IconNameDirective,
+    SettingsConditionalComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
+    SkeletonComponent,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: DeveloperToolsSettingsViewPresenter }],
   templateUrl: './DeveloperToolsSettingsView.html',

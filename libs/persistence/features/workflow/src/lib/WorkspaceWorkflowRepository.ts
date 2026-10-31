@@ -1,8 +1,16 @@
 // #region Imports
 
-import type { IWorkflowRecordRepository } from '@symphony/application-workflow';
+import type {
+  IWorkflowRecordRepository,
+  IWorkflowStageChangeQuery,
+  IWorkflowStageHistoryRepository,
+} from '@symphony/application-workflow';
 import type { WorkspaceDatabaseRegistry } from '@symphony/persistence-core';
-import type { IWorkflowAuditEntry, IWorkflowRecord } from '@symphony/domain-workflow';
+import type {
+  IWorkflowAuditEntry,
+  IWorkflowRecord,
+  IWorkflowStageChangeHistory,
+} from '@symphony/domain-workflow';
 import { SqliteWorkflowRepository } from './SqliteWorkflowRepository';
 
 // #endregion
@@ -12,7 +20,9 @@ import { SqliteWorkflowRepository } from './SqliteWorkflowRepository';
  *
  * @public
  */
-export class WorkspaceWorkflowRepository implements IWorkflowRecordRepository {
+export class WorkspaceWorkflowRepository
+  implements IWorkflowRecordRepository, IWorkflowStageHistoryRepository
+{
   // #region Fields
 
   private readonly _workflowWorkspaces = new Map<string, string>();
@@ -121,6 +131,44 @@ export class WorkspaceWorkflowRepository implements IWorkflowRecordRepository {
   }
 
   /**
+   * Lists the recorded stage changes of the scope from the scoped workspace databases and the
+   * pre-workspace database, newest first and at most `limit` of them.
+   *
+   * @param query - Scope, lower bound and maximum.
+   * @returns The changes and the instant from which they are complete.
+   * @public
+   */
+  public listStageChanges(query: IWorkflowStageChangeQuery): IWorkflowStageChangeHistory {
+    const configured = new Set(this._registry.workspaceIds());
+    const sources = [
+      ...query.workspaceIds
+        .filter((workspaceId) => configured.has(workspaceId))
+        .map((workspaceId) => this.repositoryFor(workspaceId).listStageChanges(query)),
+      ...(this._legacy ? [this._legacy.listStageChanges(query)] : []),
+    ];
+    const merged = sources
+      .flatMap((source) => source.changes)
+      .toSorted((left, right) => right.changedAt.localeCompare(left.changedAt));
+    const kept = merged.slice(0, query.limit);
+    const cut = merged.length > query.limit;
+    const truncatedAt = [
+      ...sources.flatMap((source) =>
+        source.truncated && source.recordedSince ? [source.recordedSince] : [],
+      ),
+      ...(cut && kept.length ? [kept.at(-1)!.changedAt] : []),
+    ].toSorted();
+    const earliest = sources
+      .flatMap((source) => (source.recordedSince ? [source.recordedSince] : []))
+      .toSorted()[0];
+    const recordedSince = truncatedAt.length ? truncatedAt.at(-1) : earliest;
+    return {
+      changes: kept,
+      ...(recordedSince ? { recordedSince } : {}),
+      truncated: truncatedAt.length > 0,
+    };
+  }
+
+  /**
    * Returns the next workflow audit sequence.
    *
    * @public
@@ -138,7 +186,7 @@ export class WorkspaceWorkflowRepository implements IWorkflowRecordRepository {
   }
 
   private repositoryFor(workspaceId: string): SqliteWorkflowRepository {
-    return new SqliteWorkflowRepository(this._registry.databaseFor(workspaceId));
+    return new SqliteWorkflowRepository(this._registry.databaseFor(workspaceId), workspaceId);
   }
 
   // #endregion

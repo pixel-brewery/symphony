@@ -7,6 +7,7 @@ import type { IOrbitNode } from './IOrbitNode';
 
 /** Shared semantic colour meaning for world bodies and public Mosaik labels. @public */
 export function orbitNodeVariant(node: IOrbitNode): Variant {
+  if (node.tone) return node.tone;
   if (node.deliveryState === 'failed') return 'danger';
   if (node.deliveryState === 'pending' || node.deliveryState === 'stale') return 'warning';
   if (node.kind === 'production') return 'warning';

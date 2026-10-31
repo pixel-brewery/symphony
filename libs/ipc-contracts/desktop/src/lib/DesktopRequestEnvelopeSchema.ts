@@ -21,6 +21,7 @@ export const desktopRequestEnvelopeSchema = z.object({
     'speech.start',
     'speech.stop',
     'speech.cancel',
+    'settings.open',
   ]),
   payload: z.unknown(),
 });

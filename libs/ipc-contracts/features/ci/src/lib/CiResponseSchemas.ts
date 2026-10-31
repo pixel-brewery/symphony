@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { runnerImageDefinitionSchema } from '@symphony/configuration-ci';
 import { ciRunDetailsSchema } from './CiRunDetailsSchema';
+import { ciRunHistorySchema } from './CiRunHistorySchema';
 import { ciRunLogChunkSchema } from './CiRunLogChunkSchema';
 import { ciRunSchema } from './CiRunSchema';
 import { ciWorkflowSchema } from './CiWorkflowSchema';
@@ -38,6 +39,7 @@ export const ciResponseSchemas = {
       .optional(),
     remoteData: remoteDataStatusSchema,
   }),
+  'ci.runs.history.list': ciRunHistorySchema,
   'ci.workflow.dispatch': ciRunSchema,
   'ci.workflow.local.run': localCiExecutionSchema,
   'ci.approval.review': z.object({ completed: z.literal(true) }),

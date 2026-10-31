@@ -9,26 +9,26 @@ import {
 } from '@angular/core';
 import {
   ButtonComponent,
-  DismissComponent,
-  DrawerContentDirective,
-  DrawerFooterDirective,
-  DrawerHeaderComponent,
-  DrawerHeaderDirective,
-  HintComponent,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
+  IconNameDirective,
+  MessageComponent,
   SkeletonComponent,
   TextBoxComponent,
   TextComponent,
   ToggleSwitchComponent,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { mosaikEventText } from '@symphony/frontend-setting';
-import { HeadlineComponent } from '@symphony/frontend-ui';
+import { mosaikEventText, SettingsRowComponent } from '@symphony/frontend-setting';
 import { WorkspaceSettingsEditorViewPresenter } from './WorkspaceSettingsEditorViewPresenter';
 
 // #endregion
 
 /**
- * Workspace-owned create and edit drawer.
+ * Workspace-owned `Add workspace` / `Edit workspace` sheet.
  *
  * @public
  */
@@ -37,17 +37,18 @@ import { WorkspaceSettingsEditorViewPresenter } from './WorkspaceSettingsEditorV
   host: { class: 'block' },
   imports: [
     ButtonComponent,
-    DismissComponent,
-    DrawerContentDirective,
-    DrawerFooterDirective,
-    DrawerHeaderComponent,
-    DrawerHeaderDirective,
-    HeadlineComponent,
-    HintComponent,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
+    IconNameDirective,
+    MessageComponent,
+    SettingsRowComponent,
     SkeletonComponent,
     TextBoxComponent,
     TextComponent,
     ToggleSwitchComponent,
+    TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: WorkspaceSettingsEditorViewPresenter }],
   templateUrl: './WorkspaceSettingsEditorView.html',
@@ -66,7 +67,7 @@ export class WorkspaceSettingsEditorView extends View<WorkspaceSettingsEditorVie
   // #region Ctor
 
   /**
-   * Preserves the existing drawer's native render scheduling after hydration.
+   * Preserves the sheet's native render scheduling after hydration.
    *
    * @public
    */

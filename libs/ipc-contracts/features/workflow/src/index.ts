@@ -6,5 +6,8 @@ export { workflowProcessSchema } from './lib/WorkflowProcessSchema';
 export type { WorkflowRecordDto } from './lib/WorkflowRecordDto';
 export { workflowRecordSchema } from './lib/WorkflowRecordSchema';
 export { workflowStageIdSchema } from './lib/WorkflowStageIdSchema';
+export { workflowStageChangeSchema } from './lib/WorkflowStageChangeSchema';
+export type { WorkflowStageChangeHistoryDto } from './lib/WorkflowStageChangeHistoryDto';
+export { workflowStageChangeHistorySchema } from './lib/WorkflowStageChangeHistorySchema';
 export { workflowRequestSchemas } from './lib/WorkflowRequestSchemas';
 export { workflowResponseSchemas } from './lib/WorkflowResponseSchemas';

@@ -1,0 +1,217 @@
+//
+// macOS window chrome for the main window and the Settings window: a source-list sidebar, a 52px
+// unified toolbar and a 28px status bar along the bottom edge. The chrome regions are plain
+// elements marked with `part` names, so this sheet owns their surfaces in one countable place, and
+// the Mosaik controls inside them get the compact macOS density through their public custom
+// properties only. Every value is a Mosaik token; nothing here introduces a colour of its own.
+//
+
+// --- Surfaces ---------------------------------------------------------------------------------
+
+[part~='window-sidebar'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border-right: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+[part~='window-sidebar-footer'] {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+[part~='window-toolbar'] {
+  border-bottom: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+[part~='window-content'] {
+  background-color: var(--mosaik-scheme-background);
+}
+
+[part~='window-status-bar'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  color: var(--mosaik-scheme-lowlight);
+  font: var(--mosaik-typography-caption);
+}
+
+// The workspace switcher is a framed surface on the sidebar fill.
+[part~='workspace-switcher'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+// The two-segment run switch sits on a neutral track one step darker than the sidebar.
+[part~='run-switch'] {
+  background-color: var(--mosaik-color-neutral-200);
+  border-radius: calc(var(--mosaik-layout-radius) - 2px);
+}
+
+// --- Control density --------------------------------------------------------------------------
+
+// Sidebar rows and toolbar controls use the compact 32px macOS control height; content keeps the
+// Soho defaults.
+[part~='window-sidebar'] mosaik-button,
+[part~='window-toolbar'] mosaik-button {
+  --button-height: 32px;
+  --button-min-height: 32px;
+  --button-icon-min-width: 32px;
+  --button-icon-min-height: 32px;
+  // A labelled button is its 20px line plus padding plus the 1px border on each side.
+  --button-padding-top: 5px;
+  --button-padding-bottom: 5px;
+  --button-padding-left: 8px;
+  --button-padding-right: 8px;
+}
+
+[part~='window-sidebar'] mosaik-dropdown-button,
+[part~='window-toolbar'] mosaik-dropdown-button {
+  --dropdown-button-height: 32px;
+  --dropdown-button-min-height: 32px;
+  --dropdown-button-icon-min-width: 32px;
+  --dropdown-button-icon-min-height: 32px;
+  --dropdown-button-padding-top: 5px;
+  --dropdown-button-padding-bottom: 5px;
+  --dropdown-button-padding-left: 8px;
+  --dropdown-button-padding-right: 8px;
+}
+
+[part~='window-toolbar'] mosaik-searchbox {
+  --searchbox-height: 32px;
+}
+
+// The selected source-list row sits one neutral step darker than the chrome fill.
+[part~='window-sidebar'] mosaik-button[appearance='soft'] {
+  --button-background-color: var(--mosaik-color-neutral-200);
+}
+
+// The run switch: 24px segments on the neutral track; the selected one is a raised surface.
+[part~='run-switch'] mosaik-button {
+  --button-height: 24px;
+  --button-min-height: 24px;
+  --button-padding-top: 2px;
+  --button-padding-bottom: 2px;
+  --button-font-size: 12px;
+  --button-font-line-height: 16px;
+}
+
+[part~='run-switch'] mosaik-button[appearance='soft'] {
+  --button-background-color: var(--mosaik-scheme-surface);
+  --button-shadow: var(--mosaik-elevation-light);
+}
+
+// Status bar controls are 24px.
+[part~='window-status-bar'] mosaik-button {
+  --button-height: 24px;
+  --button-min-height: 24px;
+  --button-icon-min-width: 24px;
+  --button-icon-min-height: 24px;
+  --button-padding-top: 4px;
+  --button-padding-bottom: 4px;
+  --button-padding-left: 4px;
+  --button-padding-right: 4px;
+  --button-font-size: 12px;
+  --button-font-line-height: 16px;
+}
+
+[part~='window-status-bar'] mosaik-button[appearance='soft'] {
+  --button-background-color: var(--mosaik-color-neutral-200);
+  --button-padding-left: 8px;
+  --button-padding-right: 8px;
+}
+
+// --- Window dragging --------------------------------------------------------------------------
+
+// The toolbar and the sidebar header are the window's title bar; their controls stay clickable.
+[part~='window-drag-region'] {
+  app-region: drag;
+  -webkit-app-region: drag;
+
+  mosaik-button,
+  mosaik-searchbox,
+  mosaik-dropdown-button,
+  [part~='window-no-drag'] {
+    app-region: no-drag;
+    -webkit-app-region: no-drag;
+  }
+}
+
+// Choice groups whose options are cards: at most three per row in equal columns.
+[part~='choice-cards'] mosaik-choice-group::part(root) {
+  display: grid;
+  grid-template-columns: repeat(var(--choice-cards-columns, 3), minmax(0, 1fr));
+}
+
+[part~='choice-cards'] mosaik-choice {
+  min-width: 0;
+}
+
+// Workspace tiles: the short code on a 28px rounded square, as in the workspace switcher and the
+// Settings sidebar. The avatar keeps its solid neutral appearance; only its geometry changes.
+[part~='workspace-tile'] {
+  --avatar-background-color: var(--mosaik-color-neutral-900);
+  --avatar-foreground-color: var(--mosaik-scheme-background);
+  --avatar-diameter: 28px;
+  --avatar-border-radius: calc(var(--mosaik-layout-radius) - 3px);
+  --avatar-font-size: 11px;
+  --avatar-font-weight: 600;
+  --avatar-font-letter-spacing: 0.02em;
+  --avatar-padding-left: 0px;
+  --avatar-padding-right: 0px;
+}
+
+[part~='workspace-tile'][size='tiny'] {
+  --avatar-diameter: 20px;
+  --avatar-border-radius: calc(var(--mosaik-layout-radius) - 5px);
+  --avatar-font-size: 9px;
+}
+
+// --- Settings group-and-row layout ------------------------------------------------------------
+
+// The framed list of rows inside a Settings group, with a hairline between rows.
+[part~='settings-group-rows'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+[part~='settings-group-rows'] > * + * {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// A framed group without rows draws nothing.
+[part~='settings-group-rows']:empty {
+  display: none;
+}
+
+[part~='settings-group-heading'] {
+  --text-font-weight: 600;
+}
+
+// A state that appears only in some situations: a dashed frame labelled with its condition.
+[part~='settings-conditional'] {
+  border: var(--mosaik-layout-thickness) dashed var(--mosaik-color-neutral-300);
+  border-radius: calc(var(--mosaik-layout-radius) + 2px);
+}
+
+// The part of a search result's label that matches the query.
+mark[part~='settings-search-match'] {
+  background-color: var(--mosaik-color-warning-200);
+  color: inherit;
+  border-radius: calc(var(--mosaik-layout-radius) - 7px);
+  padding: 0 2px;
+}
+
+// Settings sheets: the macOS sheet density as drawn — a compact header, the content and a footer
+// with the buttons below a hairline. Only the dialog's public custom properties change.
+mosaik-dialog[part~='settings-sheet'] {
+  --dialog-padding-top: 18px;
+  --dialog-padding-right: 22px;
+  --dialog-padding-bottom: 14px;
+  --dialog-padding-left: 22px;
+  --dialog-gap: 14px;
+  --dialog-border-radius: calc(var(--mosaik-layout-radius) + 2px);
+  --dialog-border-color: var(--mosaik-scheme-highlight);
+  --dialog-shadow: var(--mosaik-elevation-bold);
+  // The overlay's `maxSize` caps only its pane; the dialog surface needs its own limit so a tall
+  // sheet keeps its header and buttons inside the 760px window and scrolls its content instead.
+  --dialog-max-height: 88dvh;
+}

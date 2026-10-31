@@ -3,7 +3,7 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  AnchorComponent,
+  AvatarComponent,
   BadgeComponent,
   BannerComponent,
   BannerHeaderComponent,
@@ -16,53 +16,60 @@ import {
   IconNameDirective,
   MenuComponent,
   MenuItemComponent,
-  PageComponent,
-  PageContentComponent,
-  PageHeaderComponent,
-  PagePreContentComponent,
+  MessageComponent,
   ProgressRingComponent,
   SkeletonComponent,
-  TimeAgoPipe,
+  TableBodyCellComponent,
+  TableBodyComponent,
+  TableBodyRowComponent,
+  TableComponent,
+  TableHeaderCellComponent,
+  TableHeaderComponent,
+  TableHeaderRowComponent,
+  TextComponent,
   TooltipDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
 import {
   CommandDirective,
   View,
   VIEW_PRESENTER,
+  WindowToolbarDirective,
   WorkspaceScopePresenter,
 } from '@symphony/frontend-core';
 import {
-  BooleanVariantPipe,
   CiRunStatusLabelPipe,
-  CiRunStatusVariantPipe,
-  CollectionListComponent,
-  CollectionListEmptyDirective,
-  CollectionListItemDirective,
-  CollectionListLoadingItemDirective,
   HoverRevealForDirective,
-  PageToolbarComponent,
+  RelativeTimePipe,
 } from '@symphony/frontend-ui';
+import { CheckDurationPipe } from '../pipes/CheckDurationPipe';
+import { PullRequestCheckIconPipe } from '../pipes/PullRequestCheckIconPipe';
+import { PullRequestChecksVariantPipe } from '../pipes/PullRequestChecksVariantPipe';
+import { PullRequestMergeStateLabelPipe } from '../pipes/PullRequestMergeStateLabelPipe';
+import { PullRequestMergeStateVariantPipe } from '../pipes/PullRequestMergeStateVariantPipe';
 import { PullRequestsViewPresenter } from '../view-presenters/PullRequestsViewPresenter';
 
 // #endregion
 
+/**
+ * The `Pull requests` screen: a segment and a table of the open pull requests with an inspector of
+ * the selected one; the title, the subtitle, the filter menu and the refresh live in the window
+ * toolbar.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-pull-requests-view',
-  host: { class: 'flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden' },
+  host: { class: 'flex min-h-0 w-full min-w-0 flex-1 overflow-hidden' },
   imports: [
-    AnchorComponent,
+    AvatarComponent,
     BadgeComponent,
     BannerComponent,
     BannerHeaderComponent,
     BannerSubHeaderComponent,
-    BooleanVariantPipe,
     ButtonComponent,
+    CheckDurationPipe,
     CiRunStatusLabelPipe,
-    CiRunStatusVariantPipe,
-    CollectionListComponent,
-    CollectionListEmptyDirective,
-    CollectionListItemDirective,
-    CollectionListLoadingItemDirective,
     CommandDirective,
     DatePipe,
     DividerComponent,
@@ -73,15 +80,25 @@ import { PullRequestsViewPresenter } from '../view-presenters/PullRequestsViewPr
     IconNameDirective,
     MenuComponent,
     MenuItemComponent,
-    PageComponent,
-    PageContentComponent,
-    PageHeaderComponent,
-    PagePreContentComponent,
-    PageToolbarComponent,
+    MessageComponent,
     ProgressRingComponent,
+    PullRequestCheckIconPipe,
+    PullRequestChecksVariantPipe,
+    PullRequestMergeStateLabelPipe,
+    PullRequestMergeStateVariantPipe,
+    RelativeTimePipe,
     SkeletonComponent,
-    TimeAgoPipe,
+    TableBodyCellComponent,
+    TableBodyComponent,
+    TableBodyRowComponent,
+    TableComponent,
+    TableHeaderCellComponent,
+    TableHeaderComponent,
+    TableHeaderRowComponent,
+    TextComponent,
     TooltipDirective,
+    TypographyDirective,
+    WindowToolbarDirective,
   ],
   providers: [
     WorkspaceScopePresenter,

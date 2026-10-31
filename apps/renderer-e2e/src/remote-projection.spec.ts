@@ -3,6 +3,7 @@
 import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
+import { expandBoardColumn } from './expandBoardColumn';
 
 // #endregion
 
@@ -33,12 +34,14 @@ test('restores work items and explains a provider request limit after restart', 
     });
     try {
       const page = await onlineApp.firstWindow();
-      await expect(page.getByTestId('orbit-view')).toBeVisible();
+      await expect(page.getByTestId('home-view')).toBeVisible();
       await page.getByTestId('navigation-home').click();
       await expect(page.getByTestId('home-view')).toBeVisible();
       await page.getByTestId('navigation-board').click();
       const currentBoardItem = page.getByTestId('board-item-work-item-142');
       await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
+      // The item rests in Backlog, which the board starts collapsed.
+      await expandBoardColumn(page, 'backlog');
       await expect(currentBoardItem).toBeVisible();
       await expect(currentBoardItem).toContainText('Add deterministic workspace reconciliation');
       await expect(page.getByTestId('work-items-stale-data')).toHaveCount(0);
@@ -53,13 +56,14 @@ test('restores work items and explains a provider request limit after restart', 
     });
     try {
       const page = await offlineApp.firstWindow();
-      await expect(page.getByTestId('orbit-view')).toBeVisible();
+      await expect(page.getByTestId('home-view')).toBeVisible();
       await page.getByTestId('navigation-home').click();
       await expect(page.getByTestId('home-view')).toBeVisible();
       await page.getByTestId('navigation-board').click();
 
       const restoredBoardItem = page.getByTestId('board-item-work-item-142');
       await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
+      await expandBoardColumn(page, 'backlog');
       await expect(restoredBoardItem).toBeVisible();
       await expect(restoredBoardItem).toContainText('Add deterministic workspace reconciliation');
       const staleBanner = page.getByTestId('work-items-stale-data');

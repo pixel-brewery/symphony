@@ -1,34 +1,26 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ViewSlotOutletComponent } from '@pixel-brewery/mosaik-elements-angular';
 import {
-  CardComponent,
-  CardContentComponent,
-  CardHeaderComponent,
-  CellGroupComponent,
-  DividerComponent,
-  ViewSlotOutletComponent,
-} from '@pixel-brewery/mosaik-elements-angular';
-import { SettingsSelectionDirective, SettingsViewSlot } from '@symphony/frontend-setting';
-import { HeadlineComponent } from '@symphony/frontend-ui';
+  SettingsGroupComponent,
+  SettingsSelectionDirective,
+  SettingsViewSlot,
+} from '@symphony/frontend-setting';
 import { WorkspaceServicesViewPresenter } from './WorkspaceServicesViewPresenter';
 
 // #endregion
 
-/** Keeps the original workspace card and group geometry around native feature fragments. @public */
+/**
+ * The workspace's `Connected services` section: boards, configured accounts, feedback intake and
+ * the services that can still be connected, each group contributed by its owning feature.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-workspace-services-card-view',
   host: { class: 'block' },
-  imports: [
-    CardComponent,
-    CardContentComponent,
-    CardHeaderComponent,
-    CellGroupComponent,
-    DividerComponent,
-    HeadlineComponent,
-    SettingsSelectionDirective,
-    ViewSlotOutletComponent,
-  ],
+  imports: [SettingsGroupComponent, SettingsSelectionDirective, ViewSlotOutletComponent],
   providers: [WorkspaceServicesViewPresenter],
   templateUrl: './WorkspaceServicesCardView.html',
   styleUrl: './WorkspaceServicesCardView.scss',

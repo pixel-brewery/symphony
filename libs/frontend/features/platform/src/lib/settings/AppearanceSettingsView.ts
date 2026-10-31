@@ -2,27 +2,19 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { ViewSlotOutletComponent } from '@pixel-brewery/mosaik-elements-angular';
 import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
-  ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
-  SelectComponent,
-  SelectItemComponent,
-  ViewSlotOutletComponent,
-} from '@pixel-brewery/mosaik-elements-angular';
-import { HeadlineComponent } from '@symphony/frontend-ui';
-import { SettingsViewSlot } from '@symphony/frontend-setting';
+  SettingsGroupComponent,
+  SettingsRowComponent,
+  SettingsViewSlot,
+} from '@symphony/frontend-setting';
 import { AppearanceSettingsViewPresenter } from './AppearanceSettingsViewPresenter';
+import { ThemeSegmentView } from './ThemeSegmentView';
 
 // #endregion
 
 /**
- * Feature-owned Settings card composed by the native host.
+ * Appearance › `Color theme`, followed by the cards other features add to Appearance.
  *
  * @public
  */
@@ -30,18 +22,10 @@ import { AppearanceSettingsViewPresenter } from './AppearanceSettingsViewPresent
   selector: 'symphony-appearance-settings',
   host: { class: 'contents' },
   imports: [
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
-    ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    SelectComponent,
-    SelectItemComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
+    ThemeSegmentView,
     ViewSlotOutletComponent,
-    HeadlineComponent,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: AppearanceSettingsViewPresenter }],
   templateUrl: './AppearanceSettingsView.html',

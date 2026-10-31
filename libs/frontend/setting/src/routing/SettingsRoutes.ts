@@ -1,19 +1,18 @@
 // #region Imports
 
 import type { Routes } from '@angular/router';
+import { openSettingsWindowGuard } from './openSettingsWindowGuard';
 
 // #endregion
 
 /**
- * Exposes the generic settings host and preserves existing Projects bookmarks.
+ * Main-window routes that lead to Settings: they open the Settings window and keep existing
+ * bookmarks and deep links working.
  *
  * @public
  */
 export const settingsRoutes: Routes = [
-  {
-    path: 'settings',
-    loadComponent: () => import('../views/SettingsView').then((module) => module.SettingsView),
-  },
+  { path: 'settings', canActivate: [openSettingsWindowGuard], children: [] },
   // Send former Projects bookmarks to the configuration surface that owns the same state.
-  { path: 'projects', pathMatch: 'full', redirectTo: 'settings' },
+  { path: 'projects', canActivate: [openSettingsWindowGuard], children: [] },
 ];

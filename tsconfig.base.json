@@ -174,7 +174,9 @@
       "@symphony/frontend-presentation/context": ["libs/frontend/presentation/src/context.ts"],
       "@symphony/frontend-feature-ci/presentation": [
         "libs/frontend/features/ci/src/presentation.ts"
-      ]
+      ],
+      "@symphony/frontend-notification/views": ["libs/frontend/notification/src/views.ts"],
+      "@symphony/frontend-search/views": ["libs/frontend/search/src/views.ts"]
     }
   }
 }

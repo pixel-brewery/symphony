@@ -29,4 +29,23 @@ describe('orbitNodeVariant', () => {
       'secondary',
     );
   });
+
+  it('lets the cluster tone of a ticket or cluster label win over its work stage', () => {
+    // arrange
+    const node: IOrbitNode = {
+      id: 'ticket:a',
+      kind: 'ticket',
+      label: 'A',
+      stageKind: 'automated',
+      position: { x: 0, y: 0, z: 0 },
+    };
+    // act
+    const attention = orbitNodeVariant({ ...node, tone: 'danger' });
+    const neutral = orbitNodeVariant({ ...node, tone: 'neutral' });
+    const done = orbitNodeVariant({ ...node, kind: 'group', tone: 'success' });
+    // assert
+    expect(attention).toBe('danger');
+    expect(neutral).toBe('neutral');
+    expect(done).toBe('success');
+  });
 });

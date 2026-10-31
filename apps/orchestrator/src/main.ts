@@ -2,6 +2,7 @@
 import { externalWriteOperationSchema } from '@symphony/ipc-contracts-ci';
 import { deliveryOperationSchema } from '@symphony/ipc-contracts-delivery';
 import {
+  CiRunHistoryService,
   ExternalWriteService,
   ContinuousIntegrationProjectionService,
 } from '@symphony/application-ci';
@@ -34,6 +35,7 @@ import { RepositoryRuntimeService } from '@symphony/application-workspace';
 import {
   WorkflowEngineService,
   WorkflowMaintenanceService,
+  WorkflowStageHistoryService,
   type IWorkflowReporter,
 } from '@symphony/application-workflow';
 import {
@@ -348,6 +350,21 @@ const agentAccountCooldowns = new AgentAccountCooldowns(routeTelemetryRepository
 });
 
 runtimeRepositories.initialize();
+
+const workflowStageHistory = new WorkflowStageHistoryService({
+  repository: workflowRepository,
+  clock: { now: () => new Date().toISOString() },
+});
+
+const ciRunHistory = new CiRunHistoryService({
+  repository: runtimeRepositories.ciRunHistory,
+  clock: { now: () => new Date().toISOString() },
+  reportRecordFailure: (cause) =>
+    logger.error({
+      event: 'ci-run-history.record-failed',
+      error: cause instanceof Error ? cause.message : 'Unknown run-history persistence error',
+    }),
+});
 
 const remoteProjectionCache = new SqliteRemoteProjectionCache(legacyDatabase);
 
@@ -791,6 +808,7 @@ const remoteProjectionQueries = new RemoteProjectionService({
     ...remoteProjectionDependencies,
     ci: github,
     repository: new SqliteContinuousIntegrationProjectionRepository(remoteProjectionCache),
+    runHistory: ciRunHistory,
   }),
   includePullRequestStatus: true,
   includeContinuousIntegrationStatus: true,
@@ -997,6 +1015,7 @@ const localCiRequests = createManagedLocalCiRequests({
 
 const ciFeature = provideCiOrchestratorFeature({
   settingsState: settingsState,
+  runHistory: ciRunHistory,
   localCiRepository: runtimeRepositories.localCi,
   github: github,
   snapshotService: snapshotService,
@@ -1074,6 +1093,7 @@ const workflowFeature = provideWorkflowOrchestratorFeature({
   service: service,
   workflowEngine: workflowEngine,
   settingsState: settingsState,
+  stageHistory: workflowStageHistory,
 });
 
 const mobileRuntime = createMobileGateway({

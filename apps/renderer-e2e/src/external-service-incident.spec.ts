@@ -6,7 +6,7 @@ import { expect, test, _electron as electron } from '@playwright/test';
 
 // #endregion
 
-test('home centres a relevant external-service incident below its panorama', async () => {
+test('Overview shows a relevant external-service incident between the greeting and the cards', async () => {
   // arrange
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
@@ -36,8 +36,7 @@ test('home centres a relevant external-service incident below its panorama', asy
   // assert
   try {
     const page = await app.firstWindow();
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('navigation-home').click();
+    // Symphony opens on Overview.
     await expect(page.getByTestId('home-view')).toBeVisible();
     const banner = page.getByTestId('home-external-service-incident');
     await expect(banner).toBeVisible();
@@ -48,20 +47,17 @@ test('home centres a relevant external-service incident below its panorama', asy
     );
 
     const geometry = await page.evaluate(() => {
-      const pageContent = document.querySelector('mosaik-page-content')?.getBoundingClientRect();
-      const panorama = document.querySelector('[test-id="home-panorama"]')?.getBoundingClientRect();
-      const incident = document
-        .querySelector('[test-id="home-external-service-incident"]')
-        ?.getBoundingClientRect();
+      const bounds = (testId: string) =>
+        document.querySelector(`[test-id="${testId}"]`)?.getBoundingClientRect();
       return {
-        pageCenter: pageContent ? pageContent.x + pageContent.width / 2 : 0,
-        bannerCenter: incident ? incident.x + incident.width / 2 : 0,
-        panoramaBottom: panorama?.bottom ?? 0,
-        bannerTop: incident?.top ?? 0,
+        greetingBottom: bounds('home-greeting')?.bottom ?? 0,
+        bannerTop: bounds('home-external-service-incident')?.top ?? 0,
+        bannerBottom: bounds('home-external-service-incident')?.bottom ?? 0,
+        cardsTop: bounds('home-waiting-card')?.top ?? 0,
       };
     });
-    expect(geometry.bannerCenter).toBeCloseTo(geometry.pageCenter, 0);
-    expect(geometry.bannerTop).toBeGreaterThan(geometry.panoramaBottom);
+    expect(geometry.bannerTop).toBeGreaterThan(geometry.greetingBottom);
+    expect(geometry.bannerBottom).toBeLessThan(geometry.cardsTop);
   } finally {
     await app.close();
     rmSync(configurationRoot, { force: true, recursive: true });

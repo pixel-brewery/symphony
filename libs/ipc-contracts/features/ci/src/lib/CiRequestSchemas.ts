@@ -21,6 +21,12 @@ export const ciRequestSchemas = {
     repositoryBindingIds: z.array(z.string().min(1)).min(1).max(100).readonly(),
   }),
   'ci.runs.refresh': z.object({ includeWorkflowCatalog: z.boolean().optional() }),
+  'ci.runs.history.list': z.object({
+    /** One configured workspace; every workspace of the active scope when omitted. */
+    workspaceId: z.string().min(1).optional(),
+    /** Earliest run start of interest. */
+    since: z.iso.datetime({ offset: true }),
+  }),
   'ci.workflow.dispatch': z.object({
     inputs: z.record(z.string(), z.string()).optional(),
     workflowId: z.string().min(1),

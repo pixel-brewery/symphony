@@ -159,6 +159,7 @@ export class ContinuousIntegrationProjectionService {
         this._dependencies.ci?.listWorkflows?.() ?? Promise.resolve([]),
         this._dependencies.ci?.listRuns() ?? Promise.resolve([]),
       ]);
+      this._dependencies.runHistory?.record(ciRuns);
       this.assertContinuousIntegrationScope(scope);
       const refreshedAt = this._dependencies.clock.now();
       const projection: IContinuousIntegrationProjection = {
@@ -192,6 +193,7 @@ export class ContinuousIntegrationProjectionService {
   }> {
     try {
       const ciRuns = await (this._dependencies.ci?.listRuns() ?? Promise.resolve([]));
+      this._dependencies.runHistory?.record(ciRuns);
       this.assertContinuousIntegrationScope(scope);
       const previous =
         this._continuousIntegrationProjectionScope === scope.continuousIntegration

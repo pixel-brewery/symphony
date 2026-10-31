@@ -23,4 +23,6 @@ export const workflowSchema = `      CREATE TABLE IF NOT EXISTS work_item_workfl
       ) STRICT;
       CREATE INDEX IF NOT EXISTS idx_workflow_audit_work_item
         ON workflow_audit(work_item_id, sequence);
+      CREATE INDEX IF NOT EXISTS idx_workflow_audit_kind_occurred
+        ON workflow_audit(json_extract(payload, '$.kind'), occurred_at);
 `;

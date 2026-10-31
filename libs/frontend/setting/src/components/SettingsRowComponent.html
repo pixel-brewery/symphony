@@ -1,0 +1,24 @@
+<ng-content select="[slot=leading]" />
+<div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+  @if (labelParts().length) {
+  <span class="min-w-0" [mosaikTypography]="'body2'"
+    >@for (part of labelParts(); track $index) { @if (part.match) {<mark
+      part="settings-search-match"
+      >{{ part.text }}</mark
+    >} @else {{{ part.text }}} }</span
+  >
+  } @else {
+  <mosaik-text [mosaikTypography]="'body2'" [wrap]="true" [text]="label()" />
+  } @if (description()) {
+  <mosaik-text
+    [mosaikTypography]="'caption'"
+    [variant]="'neutral'"
+    [wrap]="true"
+    [text]="description()"
+  />
+  }
+  <ng-content select="[slot=detail]" />
+</div>
+<div class="flex flex-none items-center gap-1">
+  <ng-content />
+</div>

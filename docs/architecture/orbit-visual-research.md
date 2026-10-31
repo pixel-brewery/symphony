@@ -201,6 +201,13 @@ Orbit startet keinen Einrichtungsablauf und zeigt kein „Connect a project“.
 
 ## Navigation und Interaktion
 
+> Stand 2026-10-31: Symphony startet auf Overview (`/main/home`). Die Navigation
+> ist die Seitenleiste des Hauptfensters mit Overview, der Gruppe `Delivery`
+> (Inbox, Board, Pull requests, Actions, Orbit) und `More` (Arcade); das
+> Workspace-Menü und die Shell-Rail sind durch Workspace-Umschalter und Laufpanel
+> ersetzt. Verbindlich ist [Fensterrahmen und Navigation](window-and-navigation/README.md);
+> der folgende Abschnitt gibt den damaligen Recherchestand wieder.
+
 **Overview und Orbit bleiben getrennte Hauptziele** neben Board, Pull Requests
 und Actions. Overview: /main/home; Orbit: /main/orbit; Board: /main/board.
 Die integrierte App startet entsprechend dem angenommenen Umsetzungsplan unter

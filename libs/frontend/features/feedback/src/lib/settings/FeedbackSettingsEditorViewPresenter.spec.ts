@@ -5,11 +5,12 @@
 import { ApplicationRef, ChangeDetectorRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { DRAWER_REF, DRAWER_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
 } from '@symphony/configuration-composition';
+import { SettingsAlertService } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FEEDBACK_SETTINGS_CONTEXT } from '../ports/FeedbackSettingsContextToken';
@@ -20,7 +21,12 @@ import { FeedbackSettingsEditorViewPresenter } from './FeedbackSettingsEditorVie
 // #endregion
 
 function arrange(
-  options: { enabled?: boolean; test?: () => Promise<boolean>; save?: boolean } = {},
+  options: {
+    enabled?: boolean;
+    test?: () => Promise<boolean>;
+    save?: boolean;
+    confirmed?: boolean;
+  } = {},
 ) {
   const initial = createDefaultApplicationSettings('/tmp');
   const settings = signal<ApplicationSettingsDto>(
@@ -115,6 +121,7 @@ function arrange(
   };
   const testFeedbackIntake = vi.fn(options.test ?? (async () => true));
   const close = vi.fn();
+  const confirm = vi.fn<SettingsAlertService['confirm']>(async () => options.confirmed ?? true);
   TestBed.configureTestingModule({
     providers: [
       FeedbackSettingsEditorViewPresenter,
@@ -124,12 +131,13 @@ function arrange(
         useValue: { feedbackIntakeTestBusy: signal(false), testFeedbackIntake },
       },
       {
-        provide: DRAWER_REF_DATA,
+        provide: DIALOG_REF_DATA,
         useValue: { kind: 'teams-feedback', workspaceId: 'personal', sourceId: 'feedback' },
       },
-      { provide: DRAWER_REF, useValue: { close } },
+      { provide: DIALOG_REF, useValue: { close } },
       { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn() } },
       { provide: ApplicationRef, useValue: { tick: vi.fn() } },
+      { provide: SettingsAlertService, useValue: { confirm } },
     ],
   });
   return {
@@ -138,6 +146,7 @@ function arrange(
     saveSettings,
     testFeedbackIntake,
     close,
+    confirm,
   };
 }
 
@@ -150,14 +159,40 @@ describe('FeedbackSettingsEditorViewPresenter', () => {
     // arrange
     const { presenter } = arrange();
     expect(presenter.canTestTeamsFeedback()).toBe(true);
+    expect(presenter.canSave()).toBe(true);
 
     // act
     presenter.teams.channelId = '  ';
+    presenter.teams.teamId = '';
 
     // assert
     expect(presenter.canTestTeamsFeedback()).toBe(false);
+    expect(presenter.canSave()).toBe(false);
+    expect(presenter.validationIssues()).toEqual(['team-id', 'channel-id']);
     presenter.teams.channelId = 'changed';
+    presenter.teams.teamId = 'team';
     expect(presenter.canTestTeamsFeedback()).toBe(true);
+    expect(presenter.validationIssues()).toEqual([]);
+  });
+
+  it('removes the intake only after a destructive confirmation', async () => {
+    // arrange
+    const { presenter, saveSettings, confirm, close } = arrange({ confirmed: false });
+
+    // act
+    presenter.removeTeamsFeedbackCommand.execute();
+    await vi.waitFor(() => expect(confirm).toHaveBeenCalledOnce());
+    await Promise.resolve();
+
+    // assert
+    expect(confirm.mock.calls[0]?.[0]).toMatchObject({
+      header: 'Remove Channel?',
+      tone: 'danger',
+      confirmLabel: 'Remove intake',
+      destructive: true,
+    });
+    expect(saveSettings).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
   });
 
   it('does not enable or persist a channel after its connection test fails', async () => {

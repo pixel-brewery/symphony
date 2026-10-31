@@ -6,3 +6,6 @@ export { SqliteLocalCiExecutionRepository } from './lib/SqliteLocalCiExecutionRe
 export { WorkspaceLocalCiExecutionRepository } from './lib/WorkspaceLocalCiExecutionRepository';
 export { localCiExecutionSchema } from './lib/LocalCiExecutionSchema';
 export { SqliteContinuousIntegrationProjectionRepository } from './lib/SqliteContinuousIntegrationProjectionRepository';
+export { ciRunHistorySchema } from './lib/CiRunHistorySchema';
+export { SqliteCiRunHistoryRepository } from './lib/SqliteCiRunHistoryRepository';
+export { WorkspaceCiRunHistoryRepository } from './lib/WorkspaceCiRunHistoryRepository';

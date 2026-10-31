@@ -26,40 +26,46 @@ function launch(): Promise<ElectronApplication> {
   });
 }
 
-test('keeps a collapsed board column collapsed across a restart', async () => {
+test('collapses Backlog, Qualified and Done by default and keeps every toggle across a restart', async () => {
   // arrange
   mkdirSync(outputDirectory, { recursive: true });
   rmSync(configurationRoot, { force: true, recursive: true });
 
-  let collapsedColumnKey = '';
   // act
   const first = await launch();
   // assert
   try {
     const page = await first.firstWindow();
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
 
-    const column = page.locator('mosaik-flow-board-column').first();
-    await expect(column).toBeVisible();
-    collapsedColumnKey = await column.evaluate(
-      (element) => (element as HTMLElement & { columnKey?: string }).columnKey ?? '',
-    );
-    expect(collapsedColumnKey).not.toBe('');
+    // The columns before analysed work and the finished work start as narrow strips with their
+    // count and name; the columns of active delivery start expanded.
+    for (const columnId of ['backlog', 'qualified', 'done']) {
+      const strip = page.getByTestId(`board-column-${columnId}`);
+      await expect(strip).toHaveAttribute('aria-expanded', 'false');
+      await expect(strip.locator('symphony-board-column-entry')).toHaveCount(0);
+      const count = page.getByTestId(`board-column-count-${columnId}`);
+      await expect
+        .poll(() => count.evaluate((element) => (element as { text?: string }).text ?? ''))
+        .toMatch(/^\d+$/u);
+    }
+    const ready = page.locator('mosaik-flow-board-column[column-key="ready"]');
+    await expect(ready).toHaveJSProperty('isExpanded', true);
 
-    // The collapse control lives in the column's shadow root; Mosaik exposes it as `part="toggle"`.
-    await column.locator('[part~="toggle"]').click();
-    await expect
-      .poll(() =>
-        column.evaluate(
-          (element) => (element as HTMLElement & { isExpanded?: boolean }).isExpanded,
-        ),
-      )
-      .toBe(false);
-    await expect(column.locator('cdk-virtual-scroll-viewport')).toHaveCount(0);
-    await expect(column.locator('symphony-board-column-entry')).toHaveCount(0);
+    // A strip expands its column; an expanded column collapses through the plain chevron beside
+    // its `+`.
+    await page.getByTestId('board-column-backlog').click();
+    const backlog = page.locator('mosaik-flow-board-column[column-key="backlog"]');
+    await expect(backlog).toHaveJSProperty('isExpanded', true);
+    await expect(page.getByTestId('board-column-viewport-backlog')).toBeVisible();
+
+    await page.getByTestId('board-column-collapse-ready').click();
+    await expect(page.getByTestId('board-column-ready')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('mosaik-flow-board-column[column-key="ready"]')).toHaveCount(0);
+    await page.screenshot({ path: resolve(outputDirectory, 'board-column-collapse.png') });
   } finally {
     await first.close();
   }
@@ -67,44 +73,25 @@ test('keeps a collapsed board column collapsed across a restart', async () => {
   const second = await launch();
   try {
     const page = await second.firstWindow();
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
 
-    const columns = page.locator('mosaik-flow-board-column');
-    await expect(columns.first()).toBeVisible();
-    await expect
-      .poll(() =>
-        columns.evaluateAll(
-          (elements, columnKey) =>
-            elements
-              .filter(
-                (element) =>
-                  (element as HTMLElement & { columnKey?: string }).columnKey === columnKey,
-              )
-              .map((element) => (element as HTMLElement & { isExpanded?: boolean }).isExpanded),
-          collapsedColumnKey,
-        ),
-      )
-      .toEqual([false]);
-    const collapsedColumn = page.locator(
-      `mosaik-flow-board-column[column-key="${collapsedColumnKey}"]`,
+    // Both explicit choices survive the restart; the untouched defaults stay as they were.
+    await expect(page.locator('mosaik-flow-board-column[column-key="backlog"]')).toHaveJSProperty(
+      'isExpanded',
+      true,
     );
-    await expect(collapsedColumn.locator('cdk-virtual-scroll-viewport')).toHaveCount(0);
-    // Only the collapsed column is restored; every other column stays open.
-    expect(
-      await columns.evaluateAll(
-        (elements, columnKey) =>
-          elements
-            .filter(
-              (element) =>
-                (element as HTMLElement & { columnKey?: string }).columnKey !== columnKey,
-            )
-            .every((element) => (element as HTMLElement & { isExpanded?: boolean }).isExpanded),
-        collapsedColumnKey,
-      ),
-    ).toBe(true);
+    await expect(page.getByTestId('board-column-ready')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.getByTestId('board-column-qualified')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    await expect(page.getByTestId('board-column-done')).toHaveAttribute('aria-expanded', 'false');
+    await expect(
+      page.locator('mosaik-flow-board-column[column-key="acceptance"]'),
+    ).toHaveJSProperty('isExpanded', true);
   } finally {
     await second.close();
     rmSync(configurationRoot, { force: true, recursive: true });

@@ -1,11 +1,12 @@
 // #region Imports
 
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DRAWER_REF, type IDrawerRef } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import type { SkillFlowRole } from '@symphony/domain-skills';
 import { Hydratable, ViewPresenter, Command } from '@symphony/frontend-core';
 import { skillFlowOptions, skillFlowRoleFromEvent } from './skillFlowPresentation';
 import { SkillStore } from '../catalog/SkillStore';
+import type { ISkillCatalogEditorRequest } from '../settings/ISkillCatalogEditorRequest';
 
 // #endregion
 
@@ -20,7 +21,8 @@ export class SkillCatalogDialogViewPresenter extends Hydratable(ViewPresenter) {
    * @readonly
    */
   public readonly store = inject(SkillStore);
-  private readonly _drawerRef = inject(DRAWER_REF) as IDrawerRef<undefined>;
+  private readonly _dialogRef = inject(DIALOG_REF);
+  private readonly _request = inject<ISkillCatalogEditorRequest>(DIALOG_REF_DATA);
 
   /**
    * The search query.
@@ -173,7 +175,7 @@ export class SkillCatalogDialogViewPresenter extends Hydratable(ViewPresenter) {
    * @private
    */
   private resolveSelectedRole(skillId: string): SkillFlowRole | undefined {
-    return this._selectedRoles()[skillId];
+    return this._selectedRoles()[skillId] ?? this._request.role;
   }
 
   /**
@@ -221,7 +223,7 @@ export class SkillCatalogDialogViewPresenter extends Hydratable(ViewPresenter) {
    * @private
    */
   private onExecuteCloseCommand(): void {
-    this._drawerRef.close();
+    this._dialogRef.close();
   }
 
   // #endregion

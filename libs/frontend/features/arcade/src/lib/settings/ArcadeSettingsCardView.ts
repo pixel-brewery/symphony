@@ -1,18 +1,10 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import {
-  CardComponent,
-  CardContentComponent,
-  CardHeaderComponent,
-  CellComponent,
-  CellGroupComponent,
-  DividerComponent,
-  KbdComponent,
-  TextComponent,
-  ToggleSwitchComponent,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { KbdComponent } from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { SettingsGroupComponent, SettingsRowComponent } from '@symphony/frontend-setting';
+import { ArcadeEnabledToggleView } from './ArcadeEnabledToggleView';
 import { ArcadeSettingsCardViewPresenter } from './ArcadeSettingsCardViewPresenter';
 
 // #endregion
@@ -24,18 +16,8 @@ import { ArcadeSettingsCardViewPresenter } from './ArcadeSettingsCardViewPresent
  */
 @Component({
   selector: 'symphony-arcade-settings-card-view',
-  host: { class: 'contents' },
-  imports: [
-    CardComponent,
-    CardContentComponent,
-    CardHeaderComponent,
-    CellComponent,
-    CellGroupComponent,
-    DividerComponent,
-    KbdComponent,
-    TextComponent,
-    ToggleSwitchComponent,
-  ],
+  host: { class: 'flex min-w-0 flex-col' },
+  imports: [ArcadeEnabledToggleView, KbdComponent, SettingsGroupComponent, SettingsRowComponent],
   providers: [{ provide: VIEW_PRESENTER, useClass: ArcadeSettingsCardViewPresenter }],
   templateUrl: './ArcadeSettingsCardView.html',
   styleUrl: './ArcadeSettingsCardView.scss',

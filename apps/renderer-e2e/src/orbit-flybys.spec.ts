@@ -71,6 +71,8 @@ test('flies saved project pilots without changing work, respects reduced motion,
           ?.reload(),
       page.url(),
     );
+    // Symphony opens on Overview; Orbit is a Delivery entry in the sidebar.
+    await page.getByTestId('navigation-orbit').click();
     const canvas = page.getByTestId('orbit-canvas');
     const flights = page.getByTestId(/^orbit-flyby-shuttle-/u);
     await expect(canvas).toHaveAttribute('data-crew-count', '5');
@@ -150,8 +152,8 @@ test('flies saved project pilots without changing work, respects reduced motion,
       .toBeGreaterThan(normalSize * 1.2);
     const closeSize = Number(await rocket.getAttribute('data-projected-size'));
     await page.screenshot({ path: resolve(root, 'rockets-close-light.png'), fullPage: true });
-    await page.getByTestId('landscape-zoom-out').click();
-    await page.getByTestId('landscape-zoom-out').click();
+    // `100 %` returns to the fitted distance.
+    await page.getByTestId('landscape-zoom-reset').click();
     await expect
       .poll(async () => Number(await rocket.getAttribute('data-projected-size')))
       .toBeLessThan(closeSize * 0.85);

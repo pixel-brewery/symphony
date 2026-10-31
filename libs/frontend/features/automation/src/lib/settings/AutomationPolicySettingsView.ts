@@ -1,56 +1,52 @@
 // #region Imports
 
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
-  DividerComponent,
-  FileBoxComponent,
-  HintComponent,
+  CodeComponent,
+  IconComponent,
+  IconNameDirective,
   NumberBoxComponent,
+  SegmentComponent,
+  SegmentItemComponent,
   TextComponent,
   ToggleSwitchComponent,
-  IconNameDirective,
+  TooltipDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { HeadlineComponent } from '@symphony/frontend-ui';
-import { DisplayNamesPipe } from '../pipes/DisplayNamesPipe';
+import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { SettingsGroupComponent, SettingsRowComponent } from '@symphony/frontend-setting';
+import { AgenticSwitchLabelPipe } from '../pipes/AgenticSwitchLabelPipe';
 import { AutomationPolicySettingsViewPresenter } from './AutomationPolicySettingsViewPresenter';
 
 // #endregion
 
 /**
- * Feature-owned Settings card composed by the native host.
+ * The `Automation` section of the Settings window: how far the AI team may work on its own, in
+ * every workspace.
  *
  * @public
  */
 @Component({
   selector: 'symphony-automation-policy-settings',
-  host: { class: 'contents' },
+  host: { class: 'block min-w-0' },
   imports: [
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
+    AgenticSwitchLabelPipe,
     ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    DividerComponent,
-    FileBoxComponent,
-    HintComponent,
+    CodeComponent,
+    IconComponent,
+    IconNameDirective,
+    NgTemplateOutlet,
     NumberBoxComponent,
+    SegmentComponent,
+    SegmentItemComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
     TextComponent,
     ToggleSwitchComponent,
-    HeadlineComponent,
-    DisplayNamesPipe,
-    IconNameDirective,
+    TooltipDirective,
+    TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: AutomationPolicySettingsViewPresenter }],
   templateUrl: './AutomationPolicySettingsView.html',

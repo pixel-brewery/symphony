@@ -12,9 +12,11 @@ export const desktopRequestSchemas = {
   'updates.channel.set': z.object({ channel: updateChannelSchema }),
   'updates.install': z.object({}),
   'window.show': z.object({
-    route: z.enum(['current', 'settings', 'actions']).default('current'),
+    route: z
+      .enum(['current', 'settings', 'actions', 'inbox', 'notifications', 'new-work-item'])
+      .default('current'),
   }),
-  'menu-bar.resize': z.object({ height: z.number().int().min(180).max(620) }),
+  'menu-bar.resize': z.object({ height: z.number().int().min(180).max(760) }),
   'menu-bar.status.set': z.object({ status: z.enum(['idle', 'running', 'failed']) }),
   'app.quit': z.object({}),
   'power.get': z.object({}),
@@ -22,4 +24,17 @@ export const desktopRequestSchemas = {
   'speech.start': z.object({ locale: z.string().trim().min(2).max(35) }),
   'speech.stop': z.object({}),
   'speech.cancel': z.object({}),
+  'settings.open': z.object({
+    /**
+     * Settings location to show, as the Settings route reads it: `workspace`, `section` and the
+     * section's own keys such as `repository` or `target`.
+     */
+    parameters: z
+      .record(
+        z.string().regex(/^[a-z][a-zA-Z-]{0,31}$/u),
+        z.string().regex(/^[A-Za-z0-9._~-]{1,200}$/u),
+      )
+      .refine((record) => Object.keys(record).length <= 8)
+      .optional(),
+  }),
 } as const;

@@ -2,6 +2,8 @@
 
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
 import { Command, ViewPresenter } from '@symphony/frontend-core';
 import { NotificationService } from '@symphony/frontend-notification';
 import type { IApplicationSettings, ProviderConnection } from '@symphony/configuration-composition';
@@ -15,6 +17,7 @@ import type { ResponsePayload } from '@symphony/ipc-contracts-composition';
 import { createSetupTeam } from '@symphony/frontend-feature-team';
 import { WORK_ONBOARDING_CONTEXT } from '../ports/WorkOnboardingContextToken';
 import { WORK_ONBOARDING_CLIENT } from '../ports/WorkOnboardingClientToken';
+import type { ISetupSheetRequest } from '../models/ISetupSheetRequest';
 
 // #endregion
 
@@ -31,6 +34,11 @@ export class SetupViewPresenter extends ViewPresenter {
   private readonly _client = inject(WORK_ONBOARDING_CLIENT);
   private readonly _notifications = inject(NotificationService);
   private readonly _router = inject(Router);
+  private readonly _desktop = inject(DESKTOP_CLIENT, { optional: true });
+  private readonly _sheet = inject(DIALOG_REF, { optional: true });
+  private readonly _request = inject<ISetupSheetRequest | null>(DIALOG_REF_DATA, {
+    optional: true,
+  });
   private readonly _id = crypto.randomUUID();
   /**
    * The local configuration proposal before explicit application.
@@ -457,6 +465,27 @@ export class SetupViewPresenter extends ViewPresenter {
    */
   public readonly changedCommand = new Command<void>(() => void this.changed());
   /**
+   * Leaves the draft unapplied and closes the sheet.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly leaveDraftCommand = new Command<void>(() => this._sheet?.close());
+  /**
+   * Closes the sheet and opens the workspace's expert settings in the Settings window: its
+   * connected services, where accounts, repositories and work sources are configured.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly openExpertSettingsCommand = new Command<void>(() => {
+    this._sheet?.close();
+    const workspace = this.workspaceId();
+    void this._router.navigate(['/settings'], {
+      queryParams: workspace ? { workspace, section: 'services' } : { section: 'workspaces' },
+    });
+  });
+  /**
    * The authenticated accounts projection or command.
    *
    * @public
@@ -493,8 +522,11 @@ export class SetupViewPresenter extends ViewPresenter {
     try {
       await this.store.initialize();
       this.base.set(this.store.settings());
+      const requested = this.base()?.workspaces.find(
+        (workspace) => workspace.id === this._request?.workspaceId,
+      )?.id;
       const workspaceId =
-        this.store.selectedWorkspaceIds()[0] ?? this.base()?.workspaces[0]?.id ?? '';
+        requested ?? this.store.selectedWorkspaceIds()[0] ?? this.base()?.workspaces[0]?.id ?? '';
       this.workspaceId.set(workspaceId);
       this.cliAccountId.set(this.cliAccounts()[0]?.id ?? '');
       this.repositoryId.set(this.repositories()[0]?.id ?? '');
@@ -621,9 +653,7 @@ export class SetupViewPresenter extends ViewPresenter {
         this.store.startAnalyzer &&
         (await this.store.startAnalyzer(false, this.ticketId(), undefined, 'once'))
       )
-        void this._router.navigate(['/main/board'], {
-          queryParams: { item: this.ticketId(), process: 'true' },
-        });
+        this.showAnalysis();
       else
         this.error.set(
           'The analysis could not start. Check the selected ticket, account and skill in expert settings, then retry.',
@@ -666,5 +696,20 @@ export class SetupViewPresenter extends ViewPresenter {
     if (!repository) throw new Error('Choose a repository.');
     return repository;
   }
+  /**
+   * Shows the started analysis: as a sheet of the Settings window the main window comes forward,
+   * where the board shows the running analysis; as a page the board opens on the ticket.
+   */
+  private showAnalysis(): void {
+    if (this._sheet) {
+      this._sheet.close();
+      void this._desktop?.request('window.show', { route: 'current' });
+      return;
+    }
+    void this._router.navigate(['/main/board'], {
+      queryParams: { item: this.ticketId(), process: 'true' },
+    });
+  }
+
   // #endregion
 }

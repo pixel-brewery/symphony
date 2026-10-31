@@ -2,6 +2,7 @@
 
 import { inject, Injectable, type Signal } from '@angular/core';
 import { Command, ViewPresenter } from '@symphony/frontend-core';
+import { ArcadeGameIds } from '../games/ArcadeGameIds';
 import { ARCADE_GOD_MODE_STATE } from '../god-mode/ArcadeGodModeStateToken';
 import { ARCADE_SETTINGS_CONTEXT } from './ArcadeSettingsContextToken';
 
@@ -25,6 +26,16 @@ export class ArcadeSettingsCardViewPresenter extends ViewPresenter {
   // #endregion
 
   // #region Properties
+
+  /**
+   * The number of bundled games `Show Arcade` adds to the navigation.
+   *
+   * @public
+   * @readonly
+   */
+  public get arcadeGameCount(): number {
+    return ArcadeGameIds.length;
+  }
 
   /**
    * Whether the persisted preference exposes Arcade in navigation.

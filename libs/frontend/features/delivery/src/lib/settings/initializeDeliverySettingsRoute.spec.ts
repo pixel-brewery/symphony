@@ -6,7 +6,7 @@ import '@angular/compiler';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { convertToParamMap } from '@angular/router';
+import { convertToParamMap, DefaultUrlSerializer, Router, type UrlTree } from '@angular/router';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
@@ -138,5 +138,64 @@ describe('initializeDeliverySettingsRoute', () => {
     expect(openEditor).not.toHaveBeenCalled();
     expect(session.workspaceId()).toBe('personal');
     expect(deliverySettingsDraftFor(session).deliveryRepositoryId()).toBe('');
+  });
+
+  it('removes the destination keys once the sheet is open so the same request opens it again', () => {
+    // arrange
+    const settings = applicationSettingsSchema.parse(createDefaultApplicationSettings());
+    settings.repositoryBindings = [
+      {
+        id: 'repository',
+        workspaceId: 'personal',
+        sourceControlConnectionId: 'github',
+        displayName: 'Repository',
+        provider: 'github',
+        host: 'github.com',
+        owner: 'example',
+        name: 'repository',
+        defaultBranch: 'main',
+        localPath: '',
+        enabled: true,
+      },
+    ];
+    const request = {
+      section: 'delivery',
+      workspace: 'personal',
+      repository: 'repository',
+      target: 'new',
+      production: 'true',
+    };
+    const session = new SettingsHostSession();
+    const parameters = signal(convertToParamMap(request));
+    const openEditor = vi.fn();
+    const navigateByUrl = vi.fn<(url: UrlTree) => Promise<boolean>>(async () => true);
+    const router = {
+      url: '/settings?workspace=personal&section=delivery&repository=repository&target=new&production=true',
+      parseUrl: (url: string) => new DefaultUrlSerializer().parse(url),
+      navigateByUrl,
+    };
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: DELIVERY_SETTINGS_CONTEXT, useValue: { settings: signal(settings) } },
+        { provide: Router, useValue: router },
+      ],
+    });
+    TestBed.runInInjectionContext(() =>
+      initializeDeliverySettingsRoute({ session, parameters, openEditor }),
+    );
+
+    // act
+    TestBed.tick();
+    parameters.set(convertToParamMap({ section: 'delivery', workspace: 'personal' }));
+    TestBed.tick();
+    parameters.set(convertToParamMap(request));
+    TestBed.tick();
+
+    // assert
+    expect(navigateByUrl.mock.calls[0]![0].toString()).toBe(
+      '/settings?workspace=personal&section=delivery',
+    );
+    expect(openEditor).toHaveBeenCalledTimes(2);
+    expect(deliverySettingsDraftFor(session).deliveryRepositoryId()).toBe('repository');
   });
 });

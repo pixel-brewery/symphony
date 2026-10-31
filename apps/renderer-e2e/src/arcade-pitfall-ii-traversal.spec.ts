@@ -18,8 +18,8 @@ test('walks into the Lost Caverns and swims its upper river with continuous came
   try {
     const page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await enableArcade(page);
-    await selectArcadeTheme(page, 'light');
+    await enableArcade(app, page);
+    await selectArcadeTheme(app, page, 'light');
     for (const key of [
       'ArrowUp',
       'ArrowUp',

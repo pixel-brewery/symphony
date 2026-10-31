@@ -12,6 +12,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@symphony/frontend-core/delivery': resolve('libs/frontend/core/src/delivery.ts'),
+      '@symphony/frontend-notification/views': resolve('libs/frontend/notification/src/views.ts'),
+      '@symphony/frontend-search/views': resolve('libs/frontend/search/src/views.ts'),
       '@symphony/frontend-core/testing/orchestration': resolve(
         'libs/frontend/core/src/testing-orchestration.ts',
       ),

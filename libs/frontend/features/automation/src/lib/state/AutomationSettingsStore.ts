@@ -1,10 +1,16 @@
 // #region Imports
 
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
-import { MessageBoxService } from '@pixel-brewery/mosaik-elements-angular';
-import { defaultAgenticDeliveryPolicy } from '@symphony/domain-automation';
+import { computed, effect, inject, Injectable, Injector, signal } from '@angular/core';
+import {
+  defaultAgenticDeliveryPolicy,
+  type IAgenticDeliveryPolicy,
+} from '@symphony/domain-automation';
 import { Command } from '@symphony/frontend-core';
-import { mosaikEventValue, type SettingsHostSession } from '@symphony/frontend-setting';
+import {
+  mosaikEventValue,
+  SettingsAlertService,
+  type SettingsHostSession,
+} from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { AUTOMATION_SETTINGS_CONTEXT } from '../ports/AutomationSettingsContextToken';
 import { AUTOMATION_PATH_SELECTOR } from '../ports/AutomationPathSelectorToken';
@@ -12,7 +18,10 @@ import { AUTOMATION_PATH_SELECTOR } from '../ports/AutomationPathSelectorToken';
 // #endregion
 
 /**
- * Owns one runtime policy draft across every card in a Settings route.
+ * Owns the runtime policy shown across every card in a Settings route. The Automation section
+ * applies each change at once through `applyRuntime` / `applyAgenticDelivery`: the control shows
+ * the new value immediately, saves it, and returns to the stored value when saving fails. Saves are
+ * queued so quick successive changes build on each other.
  *
  * @public
  */
@@ -22,9 +31,11 @@ export class AutomationSettingsStore {
 
   private readonly _context = inject(AUTOMATION_SETTINGS_CONTEXT);
   private readonly _client = inject(AUTOMATION_PATH_SELECTOR);
-  private readonly _messageBoxService = inject(MessageBoxService);
+  private readonly _injector = inject(Injector);
   private _session: SettingsHostSession | undefined;
   private _settings: ApplicationSettingsDto | undefined;
+  private _saveQueue: Promise<unknown> = Promise.resolve();
+  private readonly _pendingSaves = signal(0);
 
   /**
    * The runtime.
@@ -134,7 +145,9 @@ export class AutomationSettingsStore {
   public constructor() {
     effect(() => {
       const settings = this._context.settings();
-      if (!settings || settings === this._settings) return;
+      // While changes are still being saved, the controls keep showing them; the stored values
+      // take over once the queue is empty.
+      if (!settings || settings === this._settings || this._pendingSaves() > 0) return;
       this._settings = settings;
       this.runtime.set({ ...settings.runtime });
     });
@@ -233,6 +246,49 @@ export class AutomationSettingsStore {
   }
 
   /**
+   * Applies runtime values at once and saves them; restores the stored values when saving fails.
+   *
+   * @param patch - The changed runtime values.
+   * @returns Whether the values were saved.
+   * @public
+   */
+  public applyRuntime(
+    patch: Partial<Omit<ApplicationSettingsDto['runtime'], 'agenticDelivery'>>,
+  ): Promise<boolean> {
+    this.runtime.update((current) => ({ ...current, ...patch }));
+    return this.enqueueSave(
+      (runtime) => ({ ...runtime, ...patch }),
+      (current, stored) => ({
+        ...current,
+        ...Object.fromEntries(
+          Object.keys(patch).map((key) => [key, stored[key as keyof typeof stored]]),
+        ),
+      }),
+    );
+  }
+
+  /**
+   * Applies a change of the agentic-delivery policy at once and saves it; restores the stored
+   * policy when saving fails.
+   *
+   * @param update - Derives the changed policy from a policy.
+   * @returns Whether the policy was saved.
+   * @public
+   */
+  public applyAgenticDelivery(
+    update: (policy: IAgenticDeliveryPolicy) => IAgenticDeliveryPolicy,
+  ): Promise<boolean> {
+    this.runtime.update((current) => ({
+      ...current,
+      agenticDelivery: update(current.agenticDelivery),
+    }));
+    return this.enqueueSave(
+      (runtime) => ({ ...runtime, agenticDelivery: update(runtime.agenticDelivery) }),
+      (current, stored) => ({ ...current, agenticDelivery: { ...stored.agenticDelivery } }),
+    );
+  }
+
+  /**
    * Chooses the workspace root.
    *
    * @private
@@ -245,9 +301,8 @@ export class AutomationSettingsStore {
       defaultPath: this.runtime().workspaceRoot || undefined,
     });
     if (session !== this._session) return;
-    if (!result.canceled && result.paths[0]) {
-      this.runtime.update((current) => ({ ...current, workspaceRoot: result.paths[0]! }));
-    }
+    const workspaceRoot = result.paths[0];
+    if (!result.canceled && workspaceRoot) await this.applyRuntime({ workspaceRoot });
   }
 
   /**
@@ -312,20 +367,53 @@ export class AutomationSettingsStore {
    *
    * @private
    */
-  private onExecuteConfirmClearWorkspacesCommand(): void {
-    const confirmation = this._messageBoxService.show({
+  private async onExecuteConfirmClearWorkspacesCommand(): Promise<void> {
+    // The alert sheet service is resolved when it is needed, so cards that never ask stay
+    // independent of the window's dialog service.
+    const confirmed = await this._injector.get(SettingsAlertService).confirm({
       id: 'clear-workspaces-confirmation',
       header: 'Clear inactive execution workspaces?',
       message:
         'Running executions are preserved. Local uncommitted changes in inactive managed workspaces may be removed.',
-      buttons: 'yesNo',
-      variant: 'danger',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Clear workspaces', noLabel: 'Keep workspaces' },
+      confirmLabel: 'Clear workspaces',
+      cancelLabel: 'Keep workspaces',
+      destructive: true,
     });
-    confirmation.closed.subscribe((result) => {
-      if (result?.reason === 'positive') void this._context.clearWorkspaces();
+    if (confirmed) await this._context.clearWorkspaces();
+  }
+
+  /**
+   * Saves one change after the changes before it, on the latest stored settings.
+   *
+   * @param change - Applies the change to the stored runtime policy.
+   * @param restore - Puts the stored values back into the shown policy after a failed save.
+   * @private
+   */
+  private enqueueSave(
+    change: (runtime: ApplicationSettingsDto['runtime']) => ApplicationSettingsDto['runtime'],
+    restore: (
+      current: ApplicationSettingsDto['runtime'],
+      stored: ApplicationSettingsDto['runtime'],
+    ) => ApplicationSettingsDto['runtime'],
+  ): Promise<boolean> {
+    this._pendingSaves.update((count) => count + 1);
+    const save = this._saveQueue.then(async () => {
+      const settings = this._context.settings();
+      if (!settings) return false;
+      try {
+        const saved = await this._context.saveSettings({
+          ...settings,
+          runtime: change(settings.runtime),
+        });
+        if (!saved) this.runtime.update((current) => restore(current, settings.runtime));
+        return saved;
+      } catch {
+        this.runtime.update((current) => restore(current, settings.runtime));
+        return false;
+      }
     });
+    this._saveQueue = save.finally(() => this._pendingSaves.update((count) => count - 1));
+    return save;
   }
 
   private requireSettings(): ApplicationSettingsDto {

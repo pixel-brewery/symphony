@@ -2,8 +2,10 @@
 
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test, _electron as electron, type ElectronApplication } from '@playwright/test';
+import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { openSettingsWindow } from './openSettingsWindow';
+import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
@@ -33,28 +35,29 @@ test('shows developer-tool health without treating the OpenCode app as a CLI', a
 
   // assert
   try {
-    const page = await mainWindow(app);
+    const main = await prepareMainWindow(app);
+    const page = await openSettingsWindow(app, main);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
     await page.getByTestId('global-settings-section-system').click();
     await expect(page.getByTestId('developer-tools-health-card')).toBeVisible();
-    await expect(page.getByTestId('developer-tools-list')).toBeVisible();
     for (const tool of ['homebrew', 'git', 'github-cli', 'codex', 'claude', 'opencode']) {
       await expect(page.getByTestId(`developer-tool-${tool}`)).toBeVisible();
     }
 
     await page.getByTestId('refresh-developer-tools').click();
-    await expect(page.getByTestId('developer-tools-list')).toBeVisible();
+    await expect(page.getByTestId('developer-tool-homebrew')).toBeVisible();
     const installOpenCode = page.getByTestId('install-developer-tool-opencode');
     if (await installOpenCode.isVisible()) {
       await installOpenCode.click();
-      const confirmation = page.locator('mosaik-message-box').last();
+      // The confirmation is an alert sheet of the Settings window.
+      const confirmation = page.getByTestId('settings-alert-install-runtime-dependency-opencode');
+      await expect(confirmation).toBeVisible();
       await expect(confirmation).toContainText('Install OpenCode CLI?');
-      await expect(confirmation).toContainText('Install with Homebrew');
-      await confirmation.getByText('Cancel', { exact: true }).click();
+      await expect(
+        page.getByTestId('settings-alert-install-runtime-dependency-opencode-confirm'),
+      ).toHaveJSProperty('label', 'Install with Homebrew');
+      await page.getByTestId('settings-alert-install-runtime-dependency-opencode-cancel').click();
       await expect(confirmation).toHaveCount(0);
 
       const settings = await page.evaluate(async () => {
@@ -73,23 +76,10 @@ test('shows developer-tool health without treating the OpenCode app as a CLI', a
       await expect(page.getByTestId('missing-ai-runtime-opencode')).toBeVisible();
       await expect(page.getByTestId('install-ai-runtime-opencode')).toBeVisible();
     }
-    await page.screenshot({
-      path: resolve(outputDirectory, 'developer-tools-health.png'),
-      fullPage: true,
-    });
+    await page.screenshot({ path: resolve(outputDirectory, 'developer-tools-health.png') });
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();
     rmSync(configurationRoot, { force: true, recursive: true });
   }
 });
-
-async function mainWindow(app: ElectronApplication) {
-  const existing = app.windows().find((page) => !page.url().includes('#/menu-bar'));
-  return (
-    existing ??
-    (await app.waitForEvent('window', {
-      predicate: (page) => !page.url().includes('#/menu-bar'),
-    }))
-  );
-}

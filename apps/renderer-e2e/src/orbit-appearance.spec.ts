@@ -4,6 +4,8 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { closeSettingsWindow } from './closeSettingsWindow';
+import { openSettingsWindow } from './openSettingsWindow';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -69,6 +71,8 @@ test('keeps employee identities in workspace settings and follows the page Soho 
           ?.reload(),
       page.url(),
     );
+    // Symphony opens on Overview; Orbit is a Delivery entry in the sidebar.
+    await page.getByTestId('navigation-orbit').click();
     const canvas = page.getByTestId('orbit-canvas');
     const webgl = page.getByTestId('orbit-webgl');
     await expect(canvas).toHaveAttribute('data-render-state', 'ready');
@@ -88,19 +92,18 @@ test('keeps employee identities in workspace settings and follows the page Soho 
     await page.evaluate(() => {
       location.hash = '/main/team';
     });
-    await expect(page).toHaveURL(/\/main\/settings/u);
-    await expect(page.getByTestId('settings-view')).toBeVisible();
+    // The former Team route leads to Settings, which is its own window.
+    await expect
+      .poll(() => app.windows().some((window) => window.url().includes('#/settings')))
+      .toBe(true);
+    await closeSettingsWindow(app);
     await page.getByTestId('navigation-orbit').click();
     await expect(canvas).toHaveAttribute('data-render-state', 'ready');
     await expect(page.getByTestId('employee-details')).toHaveCount(0);
     await expect(page.getByTestId('orbit-view').locator('symphony-agent-figure')).toHaveCount(0);
-    await page.getByTestId('orbit-explorer-toggle').click();
-    await page.getByTestId('orbit-explorer-kind').click();
-    await expect(page.getByTestId(/^orbit-explorer-kind-/u)).toHaveCount(2);
-    await expect(page.getByTestId('orbit-explorer-kind-tickets')).toBeVisible();
-    await expect(page.getByTestId('orbit-explorer-kind-targets')).toBeVisible();
-    await page.getByTestId('orbit-explorer-kind-tickets').click();
-    await page.getByTestId('orbit-explorer-close').click();
+    // Work items are listed by stage cluster in the inspector; destinations in the toolbar menu.
+    await expect(page.getByTestId('orbit-cluster-details')).toBeVisible();
+    await expect(page.getByTestId('orbit-show-on-board')).toBeVisible();
     await page.getByTestId('orbit-label-production').click();
     const production = page.getByTestId('orbit-label-production');
     await expect(production).toHaveAttribute('data-selected', 'true');
@@ -142,9 +145,10 @@ test('keeps employee identities in workspace settings and follows the page Soho 
       await expect
         .poll(() => page.evaluate(() => document.documentElement.getAttribute('theme-mode')))
         .toBe(mode);
+      // The diagram sits on the neutral-50 canvas of the Orbit artboard.
       await expect(canvas).toHaveCSS(
         'background-color',
-        mode === 'light' ? 'rgb(255, 255, 255)' : 'rgb(10, 10, 10)',
+        mode === 'light' ? 'rgb(250, 250, 250)' : 'rgb(23, 23, 23)',
       );
       await expect(canvas).toHaveAttribute('data-render-state', 'ready');
       const sun = await captureSun();
@@ -171,35 +175,40 @@ test('keeps employee identities in workspace settings and follows the page Soho 
         },
         { url: page.url(), x: bounds.x + 2, y: bounds.y + 2 },
       );
-      expect(pixel).toEqual(mode === 'light' ? [255, 255, 255, 255] : [10, 10, 10, 255]);
+      expect(pixel).toEqual(mode === 'light' ? [250, 250, 250, 255] : [23, 23, 23, 255]);
       await page.screenshot({ path: resolve(root, `soho-${mode}-selected.png`), fullPage: true });
     }
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
-    await page.getByTestId(`open-workspace-settings-${employees[0]!.workspaceId}`).click();
-    await page.getByTestId('workspace-settings-section-team').click();
+    const settingsWindow = await openSettingsWindow(app, page);
+    await settingsWindow
+      .getByTestId(`open-workspace-settings-${employees[0]!.workspaceId}`)
+      .click();
+    await settingsWindow.getByTestId('workspace-settings-section-team').click();
+    // Each AI team card draws the agent's own, still character figure in its colour beside the
+    // agent's name.
     for (const employee of employees) {
-      const avatar = page.getByTestId('agent-avatar-' + employee.id);
+      const figure = settingsWindow.getByTestId('agent-avatar-' + employee.id);
       const character =
         employee.color === 'coral'
           ? 'orange'
           : employee.color === 'violet'
             ? 'purple'
             : employee.color;
-      await expect(avatar).toHaveJSProperty('src', `figures/${character}-48.png`);
-      await expect(avatar).toHaveAttribute('aria-label', employee.displayName);
-      await avatar.scrollIntoViewIfNeeded();
+      await expect(settingsWindow.getByTestId('workspace-agent-' + employee.id)).toContainText(
+        employee.displayName,
+      );
+      await figure.scrollIntoViewIfNeeded();
+      await expect(figure.locator('[data-figure]')).toHaveAttribute('data-agent-id', employee.id);
+      const image = figure.locator('[data-figure-image]');
+      await expect(image).toHaveAttribute('src', `figures/${character}.png`);
       await expect
         .poll(() =>
-          avatar.locator('img').evaluate((image: HTMLImageElement) => ({
-            loaded: image.complete,
-            width: image.naturalWidth,
-            height: image.naturalHeight,
-          })),
+          image.evaluate((element: HTMLImageElement) =>
+            element.complete ? element.naturalWidth : 0,
+          ),
         )
-        .toEqual({ loaded: true, width: 48, height: 48 });
+        .toBeGreaterThan(0);
     }
-    await page
+    await settingsWindow
       .getByTestId(`workspace-agents-${employees[0]!.workspaceId}`)
       .screenshot({ path: resolve(root, 'team-character-avatars.png') });
     // assert

@@ -6,6 +6,7 @@ export type { ICiDispatchInput } from './lib/ICiDispatchInput';
 export type { ICiPendingApproval } from './lib/ICiPendingApproval';
 export type { ICiRun } from './lib/ICiRun';
 export type { ICiRunDetails } from './lib/ICiRunDetails';
+export type { ICiRunHistory } from './lib/ICiRunHistory';
 export type { ICiRunJob } from './lib/ICiRunJob';
 export type { ICiRunLogChunk } from './lib/ICiRunLogChunk';
 export type { ICiRunStep } from './lib/ICiRunStep';

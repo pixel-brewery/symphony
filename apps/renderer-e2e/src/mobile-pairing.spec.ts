@@ -3,6 +3,8 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
+import { openSettingsWindow } from './openSettingsWindow';
+import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
@@ -37,12 +39,10 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
 
   // act
   try {
-    const desktop = await app.firstWindow();
+    const main = await prepareMainWindow(app);
+    const desktop = await openSettingsWindow(app, main);
     const desktopErrors: string[] = [];
     desktop.on('pageerror', (error) => desktopErrors.push(error.stack ?? error.message));
-    await expect(desktop.getByTestId('orbit-view')).toBeVisible();
-    await desktop.getByTestId('global-workspace-filter').click();
-    await desktop.getByTestId('workspace-menu-settings').click();
     await desktop.getByTestId('global-settings-section-mobile').click();
     const accessToggle = desktop.getByTestId('mobile-access-toggle');
     await expect(accessToggle).toHaveJSProperty('isChecked', false);
@@ -64,20 +64,17 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
         const qrCodeBox = qrCode.getBoundingClientRect();
         const pairingAddressBox = pairingAddressControl.getBoundingClientRect();
         return {
-          addressBelowQrCode: pairingAddressBox.top >= qrCodeBox.bottom,
+          addressBesideQrCode: pairingAddressBox.left >= qrCodeBox.right,
           addressWithinContainer:
             pairingAddressBox.left >= containerBox.left &&
             pairingAddressBox.right <= containerBox.right,
         };
       });
     expect(desktopPairingGeometry).toEqual({
-      addressBelowQrCode: true,
+      addressBesideQrCode: true,
       addressWithinContainer: true,
     });
-    await desktop.screenshot({
-      path: resolve(outputDirectory, 'desktop-mobile-pairing.png'),
-      fullPage: true,
-    });
+    await desktop.screenshot({ path: resolve(outputDirectory, 'desktop-mobile-pairing.png') });
 
     const mobile = await browser.newPage({
       viewport: { width: 393, height: 852 },

@@ -1,12 +1,20 @@
 // #region Imports
 
-import { ApplicationRef, computed, DestroyRef, effect, inject, Injectable } from '@angular/core';
-import { MessageBoxService } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  ApplicationRef,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  Injectable,
+  untracked,
+} from '@angular/core';
 import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
 import {
   mosaikEventText,
   mosaikEventValue,
   SETTINGS_WORKSPACE_CONTEXT,
+  SettingsAlertService,
   SettingsHostSession,
 } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
@@ -41,7 +49,7 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _selection = inject(SETTINGS_WORKSPACE_CONTEXT, { optional: true });
   private readonly _runtimeWorkspaceRoot = inject(CI_RUNTIME_WORKSPACE_ROOT, { optional: true });
   private readonly _draft = ciSettingsDraftFor(this._session);
-  private readonly _messageBoxService = inject(MessageBoxService);
+  private readonly _alerts = inject(SettingsAlertService);
   private readonly _application = inject(ApplicationRef);
   /** The existing CI operation and local-runner state owner. @public @readonly */
   public readonly store = inject(CiStore);
@@ -137,8 +145,8 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
     () => void this.onExecuteSaveLocalCiCommand(),
   );
 
-  private readonly _saveWorkspaceLocalCiCommand: Command<string> = new Command(
-    (workspaceId) => void this.onExecuteSaveWorkspaceLocalCiCommand(workspaceId),
+  private readonly _commitSetupScriptCommand: Command<string> = new Command(
+    (repositoryBindingId) => void this.onExecuteCommitSetupScriptCommand(repositoryBindingId),
   );
 
   private readonly _workspaceLocalCiEnabled = computed(
@@ -211,8 +219,14 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
       const settings = this._context.settings();
       if (!settings) return;
       if (this._draft.settings !== settings) {
+        const previous = this._draft.settings;
         this._draft.settings = settings;
-        this.localCi.set({ ...settings.localCi });
+        // Saving settles one machine change while the next slider step may already be waiting:
+        // only adopt the stored machine settings when nothing local is ahead of the last ones.
+        const localCiAhead =
+          previous !== undefined &&
+          JSON.stringify(untracked(() => this.localCi())) !== JSON.stringify(previous.localCi);
+        if (!localCiAhead) this.localCi.set({ ...settings.localCi });
         this.workspaceLocalCi.set(
           Object.fromEntries(
             settings.workspaces.map((workspace) => [workspace.id, workspace.localCiEnabled]),
@@ -373,13 +387,14 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
-   * The saveWorkspaceLocalCi command.
+   * Saves one repository's setup script once its editor loses focus, restoring the stored script
+   * when saving fails.
    *
    * @public
    * @readonly
    */
-  public get saveWorkspaceLocalCiCommand(): Command<string> {
-    return this._saveWorkspaceLocalCiCommand;
+  public get commitSetupScriptCommand(): Command<string> {
+    return this._commitSetupScriptCommand;
   }
 
   /**
@@ -732,31 +747,62 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
-   * Local GitHub Actions of one workspace: its activation and its repositories' setup scripts.
+   * Saves one repository's setup script, trimmed, when it differs from the stored script. An empty
+   * script removes the field. A failed save restores the stored script in the editor.
    *
-   * @param workspaceId - Workspace id.
+   * @param repositoryBindingId - Repository binding id.
    * @private
    */
-  private async onExecuteSaveWorkspaceLocalCiCommand(workspaceId: string): Promise<void> {
-    const current = this.requireSettings();
-    const enabled = this.resolveWorkspaceLocalCiEnabled(workspaceId);
-    const scripts = this.setupScripts();
-    await this._configuration.saveSettings({
+  private async onExecuteCommitSetupScriptCommand(repositoryBindingId: string): Promise<void> {
+    const current = this._context.settings();
+    const binding = current?.repositoryBindings.find((item) => item.id === repositoryBindingId);
+    if (!current || !binding) return;
+    const stored = binding.localCiSetupScript ?? '';
+    const script = (this.setupScripts()[repositoryBindingId] ?? '').trim();
+    if (script === stored.trim()) return;
+    const rest = { ...binding };
+    delete rest.localCiSetupScript;
+    const saved = await this._configuration.saveSettings({
       ...current,
-      workspaces: current.workspaces.map((workspace) =>
-        workspace.id === workspaceId ? { ...workspace, localCiEnabled: enabled } : workspace,
+      repositoryBindings: current.repositoryBindings.map((item) =>
+        item.id === repositoryBindingId
+          ? script
+            ? { ...rest, localCiSetupScript: script }
+            : rest
+          : item,
       ),
-      repositoryBindings: current.repositoryBindings.map((binding) => {
-        if (binding.workspaceId !== workspaceId) return binding;
-        const script = scripts[binding.id]?.trim();
-        const rest = { ...binding };
-        delete rest.localCiSetupScript;
-        return script ? { ...rest, localCiSetupScript: script } : rest;
-      }),
     });
-    if (enabled && !this.store.runnerImageCatalog() && !this.store.runnerImageBusy()) {
-      await this.store.refreshRunnerImages();
+    if (!saved)
+      this.setupScripts.update((scripts) => ({ ...scripts, [repositoryBindingId]: stored }));
+  }
+
+  /**
+   * Saves a workspace's activation as soon as it changes. A failed save shows the stored value
+   * again; turning local runs on loads the runner image catalog.
+   *
+   * @param workspaceId - Workspace id.
+   * @param enabled - Enabled.
+   * @private
+   */
+  private async saveWorkspaceLocalCi(workspaceId: string, enabled: boolean): Promise<void> {
+    const current = this._context.settings();
+    const workspace = current?.workspaces.find((item) => item.id === workspaceId);
+    if (!current || !workspace || workspace.localCiEnabled === enabled) return;
+    const saved = await this._configuration.saveSettings({
+      ...current,
+      workspaces: current.workspaces.map((item) =>
+        item.id === workspaceId ? { ...item, localCiEnabled: enabled } : item,
+      ),
+    });
+    if (!saved) {
+      this.workspaceLocalCi.update((values) => ({
+        ...values,
+        [workspaceId]: workspace.localCiEnabled,
+      }));
+      return;
     }
+    if (enabled && !this.store.runnerImageCatalog() && !this.store.runnerImageBusy())
+      await this.store.refreshRunnerImages();
   }
 
   /**
@@ -778,6 +824,7 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
    */
   private onExecuteUpdateWorkspaceLocalCiCommand(workspaceId: string, enabled: boolean): void {
     this.workspaceLocalCi.update((current) => ({ ...current, [workspaceId]: enabled }));
+    void this.saveWorkspaceLocalCi(workspaceId, enabled);
   }
 
   /**
@@ -820,7 +867,7 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
     if (this.runnerImageBusy()) return 'Loading the published runner image releases…';
     if (this.runnerImageEntries().length) return undefined;
     if (!this.resolveWorkspaceLocalCiEnabled(workspaceId)) {
-      return 'Enable local runs for this workspace and save to load the published runner image releases.';
+      return 'Enable local runs for this workspace to load the published runner image releases.';
     }
     return 'No releases loaded yet. Choose Refresh catalog to read them from GitHub.';
   }
@@ -887,18 +934,19 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
    * @private
    */
   private onExecuteConfirmRemoveLocalCiInstanceCommand(name: string): void {
-    const confirmation = this._messageBoxService.show({
-      id: 'remove-local-ci-instance-confirmation',
-      header: 'Remove this machine?',
-      message: `${name} and its disk will be deleted. The next run that needs it provisions a new machine.`,
-      buttons: 'yesNo',
-      variant: 'danger',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Remove machine', noLabel: 'Keep machine' },
-    });
-    confirmation.closed.subscribe((result) => {
-      if (result?.reason === 'positive') void this.store.removeLocalCiInstance(name);
-    });
+    void this._alerts
+      .confirm({
+        id: 'remove-local-ci-instance-confirmation',
+        header: 'Remove this machine?',
+        message: `${name} and its disk will be deleted. The next run that needs it provisions a new machine.`,
+        tone: 'danger',
+        confirmLabel: 'Remove machine',
+        cancelLabel: 'Keep machine',
+        destructive: true,
+      })
+      .then((confirmed) => {
+        if (confirmed) void this.store.removeLocalCiInstance(name);
+      });
   }
 
   /**
@@ -940,19 +988,20 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
    * @private
    */
   private onExecuteConfirmClearLocalCiDataCommand(): void {
-    const confirmation = this._messageBoxService.show({
-      id: 'clear-local-ci-data-confirmation',
-      header: 'Clear local runner data?',
-      message:
-        'Inactive Linux instances, cached base images, and runner tools will be removed. The next local run downloads the verified tooling and image again.',
-      buttons: 'yesNo',
-      variant: 'danger',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Clear runner data', noLabel: 'Keep data' },
-    });
-    confirmation.closed.subscribe((result) => {
-      if (result?.reason === 'positive') void this.store.clearLocalCiData();
-    });
+    void this._alerts
+      .confirm({
+        id: 'clear-local-ci-data-confirmation',
+        header: 'Clear local runner data?',
+        message:
+          'Inactive Linux instances, cached base images, and runner tools will be removed. The next local run downloads the verified tooling and image again.',
+        tone: 'danger',
+        confirmLabel: 'Clear runner data',
+        cancelLabel: 'Keep data',
+        destructive: true,
+      })
+      .then((confirmed) => {
+        if (confirmed) void this.store.clearLocalCiData();
+      });
   }
 
   private localCiHostCapacity(): ILocalCiHostCapacity | undefined {

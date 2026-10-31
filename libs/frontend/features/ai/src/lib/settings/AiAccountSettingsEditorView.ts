@@ -1,5 +1,6 @@
 // #region Imports
 
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -7,31 +8,16 @@ import {
   effect,
   inject,
 } from '@angular/core';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { AiAccountSettingsEditorViewPresenter } from './AiAccountSettingsEditorViewPresenter';
 import {
-  AiAccountStatusPipe,
-  AiRuntimeStatusPipe,
-  AiValidationIssuesLabelPipe,
-  ConnectionIconPipe,
-  HeadlineComponent,
-} from '@symphony/frontend-ui';
-import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
-  CellComponent,
-  CellGroupComponent,
   ChoiceComponent,
   ChoiceGroupComponent,
-  DismissComponent,
-  DrawerContentDirective,
-  DrawerFooterDirective,
-  DrawerHeaderComponent,
-  DrawerHeaderDirective,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
   ExpanderComponent,
-  HintComponent,
+  MessageComponent,
   PasswordBoxComponent,
   SelectComponent,
   SelectItemComponent,
@@ -39,12 +25,20 @@ import {
   TextBoxComponent,
   TextComponent,
   TypographyDirective,
-  IconNameDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
+import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { SettingsConditionalComponent, SettingsRowComponent } from '@symphony/frontend-setting';
+import {
+  AiAccountStatusPipe,
+  AiRuntimeStatusPipe,
+  AiValidationIssuesLabelPipe,
+  ConnectionIconPipe,
+} from '@symphony/frontend-ui';
+import { AiAccountSettingsEditorViewPresenter } from './AiAccountSettingsEditorViewPresenter';
 
 // #endregion
 
-/** Feature-owned Settings drawer using the existing Mosaik anatomy. @public */
+/** The `Connect AI account` / `Edit AI account` sheet of the Settings window. @public */
 @Component({
   selector: 'symphony-ai-settings-editor-view',
   host: { class: 'block' },
@@ -52,31 +46,26 @@ import {
     AiAccountStatusPipe,
     AiRuntimeStatusPipe,
     AiValidationIssuesLabelPipe,
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
     ButtonComponent,
-    CellComponent,
-    CellGroupComponent,
-    ConnectionIconPipe,
     ChoiceComponent,
     ChoiceGroupComponent,
-    DismissComponent,
-    DrawerContentDirective,
-    DrawerFooterDirective,
-    DrawerHeaderComponent,
-    DrawerHeaderDirective,
+    ConnectionIconPipe,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
     ExpanderComponent,
-    HeadlineComponent,
-    HintComponent,
+    MessageComponent,
+    NgTemplateOutlet,
     PasswordBoxComponent,
     SelectComponent,
     SelectItemComponent,
+    SettingsConditionalComponent,
+    SettingsRowComponent,
     SkeletonComponent,
     TextBoxComponent,
     TextComponent,
     TypographyDirective,
-    IconNameDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: AiAccountSettingsEditorViewPresenter }],
   templateUrl: './AiAccountSettingsEditorView.html',
@@ -88,7 +77,7 @@ export class AiAccountSettingsEditorView extends View<AiAccountSettingsEditorVie
   private readonly _changeDetector = inject(ChangeDetectorRef);
   // #endregion
   // #region Ctor
-  /** Retains native drawer rendering after the existing hydration lifecycle. @public */
+  /** Retains native sheet rendering after the existing hydration lifecycle. @public */
   public constructor() {
     super();
     effect(() => {

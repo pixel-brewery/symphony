@@ -3,48 +3,43 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
+  AvatarComponent,
   ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
-  NumberBoxComponent,
   IconNameDirective,
+  MessageComponent,
+  NumberBoxComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
 import {
-  HeadlineComponent,
-  StorageBreakdownComponent,
-  StorageSizePipe,
-} from '@symphony/frontend-ui';
+  SettingsConditionalComponent,
+  SettingsGroupComponent,
+  SettingsRowComponent,
+} from '@symphony/frontend-setting';
+import { StorageBreakdownComponent, StorageSizePipe } from '@symphony/frontend-ui';
+import { StorageShareSummaryPipe } from '../pipes/StorageShareSummaryPipe';
 import { StorageSafetySettingsViewPresenter } from './StorageSafetySettingsViewPresenter';
 
 // #endregion
 
 /**
- * Feature-owned Settings card composed by the native host.
+ * System › `Storage`: the single storage picture of this Mac with its hard limits.
  *
  * @public
  */
 @Component({
   selector: 'symphony-storage-safety-settings',
-  host: { class: 'contents' },
+  host: { class: 'flex min-w-0 flex-col gap-2' },
   imports: [
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
+    AvatarComponent,
     ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    NumberBoxComponent,
-    HeadlineComponent,
-    StorageBreakdownComponent,
-    StorageSizePipe,
     IconNameDirective,
+    MessageComponent,
+    NumberBoxComponent,
+    SettingsConditionalComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
+    StorageBreakdownComponent,
+    StorageShareSummaryPipe,
+    StorageSizePipe,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: StorageSafetySettingsViewPresenter }],
   templateUrl: './StorageSafetySettingsView.html',

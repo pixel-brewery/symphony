@@ -1,45 +1,41 @@
 @if (presenter.workspace(); as item) {
-<mosaik-expander
+<symphony-settings-group
+  [heading]="'Feedback intake'"
+  [description]="'Turn requested FLAMOX365 feedback from Microsoft Teams into tickets'"
   [attr.test-id]="'feedback-intake-settings-' + item.id"
-  [header]="'Feedback intake'"
-  [subHeader]="'Turn requested FLAMOX365 feedback from Microsoft Teams into tickets'"
 >
-  <div class="pt-4">
-    <mosaik-cell-group [attr.test-id]="'configured-feedback-intake-' + item.id">
-      @for (source of presenter.sources(); track source.id) { @let targetRepository =
-      presenter.repository()(source.targetRepositoryBindingId);
-      <mosaik-cell
-        [attr.test-id]="'configured-feedback-intake-' + source.id"
-        [label]="source.displayName"
-        [subLabel]="'Microsoft Teams · ' + (source.enabled ? 'Enabled' : 'Disabled') + ' · ' + (targetRepository ? targetRepository.owner + '/' + targetRepository.name : 'Target unavailable')"
-      >
-        <mosaik-avatar slot="start" [size]="'small'" [appearance]="'soft'" [iconName]="'flow'" />
-        <mosaik-button
-          slot="end"
-          [attr.test-id]="'edit-feedback-intake-' + source.id"
-          [label]="'Edit'"
-          [appearance]="'plain'"
-          (click)="presenter.openTeamsFeedbackCommand.execute([item.id, source.id])"
-        />
-      </mosaik-cell>
-      }
-      <mosaik-cell
-        [attr.test-id]="'microsoft-teams-feedback-' + item.id"
-        [label]="'Microsoft Teams'"
-        [subLabel]="'Read one Teams channel for @Symphony feedback requests'"
-      >
-        <mosaik-avatar slot="start" [size]="'small'" [appearance]="'soft'" [iconName]="'flow'" />
-        <mosaik-button
-          slot="end"
-          [attr.test-id]="'add-teams-feedback-intake-' + item.id"
-          [label]="'Connect'"
-          [iconName]="'add'"
-          [appearance]="'solid'"
-          [variant]="'primary'"
-          (click)="presenter.openTeamsFeedbackCommand.execute([item.id])"
-        />
-      </mosaik-cell>
-    </mosaik-cell-group>
-  </div>
-</mosaik-expander>
+  @for (source of presenter.sources(); track source.id) { @let targetRepository =
+  presenter.repository()(source.targetRepositoryBindingId);
+  <symphony-settings-row
+    [attr.test-id]="'configured-feedback-intake-' + source.id"
+    [label]="source.displayName"
+    [description]="'Microsoft Teams · ' + (source.enabled ? 'Enabled' : 'Disabled') + ' · ' + (targetRepository ? targetRepository.owner + '/' + targetRepository.name : 'Target unavailable')"
+  >
+    <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'soft'" [icon]="'flow'" />
+    <mosaik-button
+      [attr.test-id]="'edit-feedback-intake-' + source.id"
+      [label]="'Edit'"
+      [icon]="'edit'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      (click)="presenter.openTeamsFeedbackCommand.execute([item.id, source.id])"
+    />
+  </symphony-settings-row>
+  }
+  <symphony-settings-row
+    [attr.test-id]="'microsoft-teams-feedback-' + item.id"
+    [label]="'Microsoft Teams'"
+    [description]="'Read one Teams channel for @Symphony feedback requests'"
+  >
+    <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'outline'" [icon]="'flow'" />
+    <mosaik-button
+      [attr.test-id]="'add-teams-feedback-intake-' + item.id"
+      [label]="'Connect'"
+      [icon]="'add'"
+      [iconSize]="'small'"
+      [appearance]="'outline'"
+      (click)="presenter.openTeamsFeedbackCommand.execute([item.id])"
+    />
+  </symphony-settings-row>
+</symphony-settings-group>
 }

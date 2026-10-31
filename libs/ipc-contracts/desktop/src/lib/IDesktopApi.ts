@@ -1,5 +1,6 @@
 // #region Imports
 
+import type { DesktopNavigationPath } from './DesktopNavigationPath';
 import type { DesktopRequestMethod } from './DesktopRequestMethod';
 import type { DesktopRequestPayload } from './DesktopRequestPayload';
 import type { DesktopResponsePayload } from './DesktopResponsePayload';
@@ -20,5 +21,9 @@ export interface IDesktopApi {
   onUpdateState(listener: (state: UpdateState) => void): () => void;
   onPowerState(listener: (state: PowerState) => void): () => void;
   onSpeechRecognitionEvent(listener: (event: SpeechRecognitionEvent) => void): () => void;
-  onNavigate(listener: (path: '/main/settings' | '/main/actions') => void): () => void;
+  /**
+   * Receives in-app destinations the main process asks this window to open, such as the Inbox
+   * from the menu-bar extra or a Settings section in the Settings window.
+   */
+  onNavigate(listener: (path: DesktopNavigationPath) => void): () => void;
 }

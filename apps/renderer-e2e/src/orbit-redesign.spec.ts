@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { openSettingsWindow } from './openSettingsWindow';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -139,7 +140,13 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
         .find((window) => !window.webContents.getURL().includes('/menu-bar'))
         ?.reload(),
     );
+    // Symphony opens on Overview; Orbit is a Delivery entry in the sidebar.
+    await expect(page.getByTestId('home-view')).toBeVisible();
+    await page.getByTestId('navigation-orbit').click();
     await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('window-title-text')).toHaveJSProperty('text', 'Orbit');
+    await expect(page.getByTestId('orbit-destination-menu')).toBeVisible();
+    await expect(page.getByTestId('orbit-inspector')).toContainText('Selected cluster');
     const canvas = page.getByTestId('orbit-canvas');
     const webgl = page.getByTestId('orbit-webgl');
     await expect(canvas).toHaveAttribute('data-ticket-count', '1000');
@@ -211,22 +218,21 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
     await page.getByTestId('landscape-fit').click();
     await expect.poll(camera).not.toBe(zoomedCamera);
     await expect(canvas).toHaveAttribute('data-render-state', 'ready');
-    const groupCounts = page.getByTestId(/^orbit-group-count-group:belt:/u);
+    // Stage clusters: one `Label · count` badge per cluster around the destination.
+    const groupCounts = page.getByTestId(/^orbit-group-count-group:/u);
     await expect.poll(() => groupCounts.count()).toBeGreaterThan(0);
     const readableGroups = await groupCounts.evaluateAll((elements) =>
       elements.map((element) => {
-        const range = document.createRange();
-        range.selectNodeContents(element);
-        const text = range.getBoundingClientRect();
+        const badge = element.getBoundingClientRect();
         const label = element.closest('[data-orbit-label]')!.getBoundingClientRect();
         return {
-          count: Number.parseInt(element.textContent ?? '', 10),
-          visible: text.width > 0 && text.height > 0,
+          count: Number(element.getAttribute('data-count')),
+          visible: badge.width > 0 && badge.height > 0,
           contained:
-            text.left >= label.left - 1 &&
-            text.top >= label.top - 1 &&
-            text.right <= label.right + 1 &&
-            text.bottom <= label.bottom + 1,
+            badge.left >= label.left - 1 &&
+            badge.top >= label.top - 1 &&
+            badge.right <= label.right + 1 &&
+            badge.bottom <= label.bottom + 1,
         };
       }),
     );
@@ -234,7 +240,10 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
       readableGroups.every((group) => group.count > 0 && group.visible && group.contained),
     ).toBe(true);
     await page.screenshot({ path: resolve(root, 'orbit-3d-1000-tickets.png'), fullPage: true });
-    await page.getByTestId('orbit-label-production').click();
+    // With 1,000 tickets the Sun's label yields to the planets around it, so Production is
+    // reached through the toolbar's destination menu.
+    await page.getByTestId('orbit-destination-menu').click();
+    await page.getByTestId('orbit-explorer-target-scene-production').click();
     await expect(page.getByTestId('delivery-target-details')).toBeVisible();
     await expect(page.getByTestId('delivery-target-unconfirmed')).toBeVisible();
     await page.getByTestId('orbit-close-delivery-target-details').click();
@@ -243,7 +252,9 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
       .getByTestId('landscape-search')
       .locator('input')
       .fill('Queued reconciliation task 997');
-    await page.getByTestId('orbit-explorer-toggle').click();
+    await expect(page.getByTestId('landscape-ticket-details')).toBeVisible();
+    // The inspector's cluster list reaches the same work item from the keyboard.
+    await page.getByTestId('orbit-close-landscape-ticket-details').click();
     await page.getByTestId('orbit-explorer-ticket-work-item-overflow-997').focus();
     await page.getByTestId('orbit-explorer-ticket-work-item-overflow-997').press('Enter');
     await expect(page.getByTestId('landscape-ticket-details')).toBeVisible();
@@ -270,8 +281,9 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
     );
     await expect(canvas).toHaveAttribute('data-render-state', 'ready');
     const focusedCamera = await camera();
-    await page.getByTestId('landscape-zoom-out').click();
+    await page.getByTestId('landscape-zoom-reset').click();
     await expect.poll(camera).not.toBe(focusedCamera);
+    await expect(page.getByTestId('landscape-zoom-reset')).toHaveJSProperty('label', '100 %');
     const manualCamera = await camera();
     await loseContext();
     await page.getByTestId('orbit-webgl-retry').click();
@@ -312,29 +324,42 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
       ).orchestration.request('settings.get', {});
       return settings.agentProfiles.find((agent) => agent.displayName === 'Employee 0')!;
     });
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
-    await page.getByTestId('open-workspace-settings-' + agentBeforeEditing.workspaceId).click();
-    await page.getByTestId('workspace-settings-section-team').click();
-    await page.getByTestId('edit-agent-account-' + agentBeforeEditing.id).click();
-    await expect(page.getByTestId('settings-editor-drawer')).toBeVisible();
-    await page.getByTestId('agent-ai-next').click();
-    await expect(page.getByTestId('ai-display-name').locator('input')).toHaveValue('Employee 0');
-    const characterPicker = page.getByTestId('agent-character-picker');
+    // Settings is its own window.
+    const settingsWindow = await openSettingsWindow(app, page);
+    await settingsWindow
+      .getByTestId('open-workspace-settings-' + agentBeforeEditing.workspaceId)
+      .click();
+    await settingsWindow.getByTestId('workspace-settings-section-team').click();
+    await settingsWindow.getByTestId('edit-agent-account-' + agentBeforeEditing.id).click();
+    await expect(settingsWindow.getByTestId('settings-editor-drawer')).toBeVisible();
+    await expect(settingsWindow.getByTestId('ai-display-name').locator('input')).toHaveValue(
+      'Employee 0',
+    );
+    const characterPicker = settingsWindow.getByTestId('agent-character-picker');
     await expect(
-      page.getByTestId(/^agent-character-(blue|mint|coral|violet|gold|rose)$/u),
+      settingsWindow.getByTestId(/^agent-character-(blue|mint|coral|violet|gold|rose)$/u),
     ).toHaveCount(6);
-    await expect(page.getByTestId('agent-appearance-preview')).toHaveCount(0);
+    // The sheet previews the agent card being built, figure included.
+    await expect(settingsWindow.getByTestId('agent-appearance-preview')).toHaveCount(1);
     await expect(characterPicker).toHaveJSProperty('value', 'mint');
-    await expect(page.getByTestId('agent-character-mint')).toHaveJSProperty('isChecked', true);
-    await page.getByTestId('agent-character-blue').focus();
-    await page.getByTestId('agent-character-blue').press('Space');
+    await expect(settingsWindow.getByTestId('agent-character-mint')).toHaveJSProperty(
+      'isChecked',
+      true,
+    );
+    await settingsWindow.getByTestId('agent-character-blue').focus();
+    await settingsWindow.getByTestId('agent-character-blue').press('Space');
     await expect(characterPicker).toHaveJSProperty('value', 'blue');
-    await expect(page.getByTestId('agent-character-blue')).toHaveJSProperty('isChecked', true);
-    await expect(page.getByTestId('agent-character-mint')).toHaveJSProperty('isChecked', false);
-    await page.getByTestId('ai-display-name').locator('input').fill('Unsaved name');
-    await page.getByTestId('cancel-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await expect(settingsWindow.getByTestId('agent-character-blue')).toHaveJSProperty(
+      'isChecked',
+      true,
+    );
+    await expect(settingsWindow.getByTestId('agent-character-mint')).toHaveJSProperty(
+      'isChecked',
+      false,
+    );
+    await settingsWindow.getByTestId('ai-display-name').locator('input').fill('Unsaved name');
+    await settingsWindow.getByTestId('cancel-settings-editor').click();
+    await expect(settingsWindow.getByTestId('settings-editor-drawer')).toHaveCount(0);
     expect(
       await page.evaluate(async (id) => {
         const settings = await (
@@ -344,11 +369,15 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
       }, agentBeforeEditing.id),
     ).toEqual(agentBeforeEditing);
 
-    await page.getByTestId('edit-agent-account-' + agentBeforeEditing.id).click();
-    await page.getByTestId('agent-ai-next').click();
+    await settingsWindow.getByTestId('edit-agent-account-' + agentBeforeEditing.id).click();
     await expect(characterPicker).toHaveJSProperty('value', 'mint');
-    await expect(page.getByTestId('agent-character-mint')).toHaveJSProperty('isChecked', true);
-    await expect(page.getByTestId('agent-wizard').locator('input[type=file]')).toHaveCount(0);
+    await expect(settingsWindow.getByTestId('agent-character-mint')).toHaveJSProperty(
+      'isChecked',
+      true,
+    );
+    await expect(
+      settingsWindow.getByTestId('agent-wizard').locator('input[type=file]'),
+    ).toHaveCount(0);
     for (const [colour, character] of [
       ['mint', 'mint'],
       ['coral', 'orange'],
@@ -357,20 +386,25 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
       ['rose', 'rose'],
       ['blue', 'blue'],
     ]) {
-      const choice = page.getByTestId('agent-character-' + colour);
+      const choice = settingsWindow.getByTestId('agent-character-' + colour);
       await choice.click();
       await expect(characterPicker).toHaveJSProperty('value', colour);
       await expect(choice).toHaveJSProperty('isChecked', true);
       await expect(
-        page.getByTestId('agent-character-preview-' + colour).locator('[data-figure-image]'),
+        settingsWindow
+          .getByTestId('agent-character-preview-' + colour)
+          .locator('[data-figure-image]'),
       ).toHaveAttribute('src', new RegExp('figures/' + character + '\\.png', 'u'));
     }
-    await page.getByTestId('agent-character-picker').screenshot({
+    await settingsWindow.getByTestId('agent-character-picker').screenshot({
       path: resolve(root, 'original-character-picker.png'),
     });
-    await page.screenshot({ path: resolve(root, 'agent-identity-appearance.png'), fullPage: true });
-    await page.getByTestId('save-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await settingsWindow.screenshot({
+      path: resolve(root, 'agent-identity-appearance.png'),
+      fullPage: true,
+    });
+    await settingsWindow.getByTestId('save-settings-editor').click();
+    await expect(settingsWindow.getByTestId('settings-editor-drawer')).toHaveCount(0);
     expect(
       await page.evaluate(async (id) => {
         const settings = await (
@@ -417,14 +451,13 @@ test('operates a real 3D orbit with 1,000 tickets, 25 employees and shared workf
     app = await electron.launch(launchOptions);
     page = await prepareMainWindow(app);
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
-    await page.getByTestId('open-workspace-settings-personal').click();
-    await page.getByTestId('workspace-settings-section-team').click();
-    await expect(page.getByTestId('agent-avatar-' + persisted.id)).toHaveJSProperty(
-      'src',
-      'figures/blue-48.png',
-    );
+    const restartedSettings = await openSettingsWindow(app, page);
+    await restartedSettings.getByTestId('open-workspace-settings-personal').click();
+    await restartedSettings.getByTestId('workspace-settings-section-team').click();
+    // The AI team card draws the persisted character as the agent's still figure.
+    await expect(
+      restartedSettings.getByTestId('agent-avatar-' + persisted.id).locator('[data-figure-image]'),
+    ).toHaveAttribute('src', 'figures/blue.png');
     expect(
       await page.evaluate(async () => {
         const settings = await (
@@ -545,7 +578,7 @@ test('keeps a setup draft unsaved and applies one CLI account before a real read
         .find((window) => !window.webContents.getURL().includes('/menu-bar'))
         ?.reload(),
     );
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     const before = await page.evaluate(async () =>
       JSON.stringify(
         await (window as unknown as { orchestration: IOrchestrationApi }).orchestration.request(
@@ -555,9 +588,14 @@ test('keeps a setup draft unsaved and applies one CLI account before a real read
       ),
     );
     // act
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-setup').click();
-    await expect(page.getByTestId('setup-apply')).toHaveJSProperty('disabled', false);
+    // `/main/setup` opens the `Build your project team` sheet in the Settings window.
+    await page.evaluate(() => {
+      location.hash = '/main/setup';
+    });
+    const isSettings = (candidate: { url(): string }) => candidate.url().includes('#/settings');
+    await expect.poll(() => app.windows().some(isSettings)).toBe(true);
+    const setupWindow = app.windows().find(isSettings)!;
+    await expect(setupWindow.getByTestId('setup-apply')).toHaveJSProperty('disabled', false);
     const draft = await page.evaluate(async () =>
       JSON.stringify(
         await (window as unknown as { orchestration: IOrchestrationApi }).orchestration.request(
@@ -567,13 +605,11 @@ test('keeps a setup draft unsaved and applies one CLI account before a real read
       ),
     );
     expect(draft).toBe(before);
-    await page.getByTestId('setup-apply').click();
-    await expect(page.getByTestId('setup-first-analysis')).toBeVisible();
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await page.getByTestId('setup-analyse').click();
-    await expect(page).toHaveURL(/\/main\/board/u);
-    await expect(page.getByTestId('board-view')).toBeVisible();
-    await expect(page.getByTestId('process-drawer')).toBeVisible();
+    await setupWindow.getByTestId('setup-apply').click();
+    await expect(setupWindow.getByTestId('setup-first-analysis')).toBeVisible();
+    await setupWindow.getByTestId('setup-analyse').click();
+    // The started analysis closes the sheet and brings the main window forward.
+    await expect(setupWindow.getByTestId('setup-apply')).toHaveCount(0);
     const activeAnalysis = await page.evaluate(async () => {
       const snapshot = await (
         window as unknown as { orchestration: IOrchestrationApi }
@@ -589,9 +625,7 @@ test('keeps a setup draft unsaved and applies one CLI account before a real read
         workItemId: execution.workItemId,
       };
     });
-    await page.screenshot({ path: resolve(root, 'setup-board-process.png'), fullPage: true });
-    await page.getByTestId('process-drawer-close').click();
-    await expect(page.getByTestId('process-drawer')).toHaveCount(0);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.getByTestId('navigation-orbit').click();
     const orbit = page.getByTestId('orbit-canvas');
     await expect(orbit).toHaveAttribute('data-render-state', 'ready');

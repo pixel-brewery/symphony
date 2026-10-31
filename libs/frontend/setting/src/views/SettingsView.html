@@ -1,90 +1,94 @@
-<mosaik-page
-  class="mx-auto w-full max-w-[1240px] pb-24"
+<div
   test-id="settings-view"
+  class="flex h-full min-h-0 w-full min-w-0"
   [attr.aria-busy]="presenter.isHydrating()"
 >
-  <mosaik-page-header
-    [text]="presenter.settingsWorkspace()?.displayName ?? 'Settings'"
-    [subText]="presenter.selectedSection()?.description ?? ''"
-    [inset]="'all'"
-  >
-    <div slot="suffix" class="contents">
-      <mosaik-view-slot-outlet
-        class="contents"
-        [slot]="headerActionsSlot"
-        [symphonySettingsSelection]="{ workspaceId: presenter.settingsWorkspaceId(), sectionId: presenter.settingsWorkspace() ? presenter.workspaceSettingsSection() : presenter.globalSettingsSection() }"
-      />
-    </div>
-  </mosaik-page-header>
-  <mosaik-page-content [inset]="'all'">
-    <div
-      class="grid min-w-0 grid-cols-[minmax(220px,280px)_minmax(0,1fr)] items-start gap-4 max-[800px]:grid-cols-1"
+  <symphony-settings-sidebar-view class="flex w-[232px] flex-none" />
+
+  <div part="window-content" class="flex min-w-0 flex-1 flex-col">
+    <!-- The toolbar is the window's title bar: the section's name and one-line description, then
+         the section's actions. On Windows and Linux the native window buttons take its right edge. -->
+    <header
+      part="window-toolbar window-drag-region"
+      test-id="settings-toolbar"
+      class="flex h-[52px] flex-none items-center gap-1 pr-[calc(16px+var(--window-controls-overlay-right,0px))] pl-2.5"
     >
-      <aside class="sticky top-2 min-w-0 max-[800px]:static" aria-label="Settings sections">
-        <mosaik-menu>
-          @for (section of presenter.catalog.globalSections(); track section.id) { @if(section.id
-          === 'workspaces') {
-          <mosaik-menu-item
-            [attr.test-id]="'global-settings-section-' + section.id"
-            [label]="section.label"
-            [subLabel]="section.description"
-            [textOverflow]="'wrap'"
-            [isActive]="presenter.globalSettingsSection() === section.id && !presenter.settingsWorkspace()"
-            [isExpanded]="presenter.workspaces().length > 0 && presenter.workspaceNavigationExpanded()"
-            menu-mode="inline"
-            (click)="presenter.selectGlobalSettingsSectionCommand.execute(section.id)"
-          >
-            @for(workspace of presenter.workspaces(); track workspace.id) {
-            <mosaik-menu-item
-              [attr.test-id]="'workspace-navigation-item-' + workspace.id"
-              [label]="workspace.displayName"
-              [subLabel]="workspace.shortCode"
-              [textOverflow]="'wrap'"
-              [isActive]="presenter.settingsWorkspaceId() === workspace.id"
-              (click)="$event.stopPropagation(); presenter.openSettingsWorkspaceCommand.execute(workspace.id)"
-            />
-            }
-          </mosaik-menu-item>
-          } @else {
-          <mosaik-menu-item
-            [attr.test-id]="'global-settings-section-' + section.id"
-            [label]="section.label"
-            [subLabel]="section.description"
-            [textOverflow]="'wrap'"
-            [isActive]="presenter.globalSettingsSection() === section.id && !presenter.settingsWorkspace()"
-            (click)="presenter.selectGlobalSettingsSectionCommand.execute(section.id)"
-          />
-          } }
-        </mosaik-menu>
-      </aside>
-      <section class="w-full min-w-0">
-        <div class="flex min-w-0 flex-col gap-4">
-          @if(presenter.settingsWorkspace()) {
-          <mosaik-segment class="w-full" [appearance]="'soft'">
-            @for(section of presenter.catalog.workspaceSections(); track section.id) {
-            <mosaik-segment-item
-              [attr.test-id]="'workspace-settings-section-' + section.id"
-              [label]="section.label"
-              [isChecked]="presenter.workspaceSettingsSection() === section.id"
-              (checked)="presenter.selectWorkspaceSettingsSectionCommand.execute(section.id)"
-            />
-            }
-          </mosaik-segment>
-          <mosaik-view-slot-outlet
-            class="contents"
-            [slot]="workspaceSlot"
-            [symphonySettingsWorkspace]="presenter.settingsWorkspaceId()"
-            [symphonySettingsSection]="presenter.workspaceSettingsSection()"
-          />
-          } @else {
-          <mosaik-view-slot-outlet
-            class="contents"
-            [slot]="globalSlot"
-            [symphonySettingsSelection]="{ workspaceId: null, sectionId: presenter.globalSettingsSection() }"
-          />
-          }
-        </div>
-      </section>
-    </div>
-  </mosaik-page-content>
-</mosaik-page>
+      <div class="flex min-w-0 flex-1 flex-col" test-id="settings-title">
+        @if (presenter.searching()) {
+        <mosaik-text
+          role="heading"
+          aria-level="1"
+          test-id="settings-title-text"
+          [mosaikTypography]="'subtitle2'"
+          [truncate]="true"
+          [text]="'Search settings'"
+        />
+        <mosaik-text
+          test-id="settings-subtitle"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [truncate]="true"
+          [text]="presenter.searchResultCount() + (presenter.searchResultCount() === 1 ? ' result' : ' results') + ' for “' + presenter.searchQuery().trim() + '” across every workspace and this Mac'"
+        />
+        } @else if (presenter.selectedSection(); as section) {
+        <mosaik-text
+          role="heading"
+          aria-level="1"
+          test-id="settings-title-text"
+          [mosaikTypography]="'subtitle2'"
+          [truncate]="true"
+          [text]="section.label"
+        />
+        <mosaik-text
+          test-id="settings-subtitle"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [truncate]="true"
+          [text]="presenter.settingsWorkspace() ? presenter.settingsWorkspace()!.displayName + ' · ' + section.description : section.description"
+        />
+        }
+      </div>
+      @if (!presenter.searching()) {
+      <div
+        part="window-no-drag"
+        test-id="settings-toolbar-actions"
+        class="flex flex-none items-center gap-0.5"
+      >
+        <mosaik-view-slot-outlet
+          class="contents"
+          [slot]="headerActionsSlot"
+          [symphonySettingsSelection]="{ workspaceId: presenter.settingsWorkspaceId(), sectionId: presenter.settingsWorkspace() ? presenter.workspaceSettingsSection() : presenter.globalSettingsSection() }"
+        />
+        @if (toolbar.actions(); as actions) {
+        <ng-container [ngTemplateOutlet]="actions" />
+        }
+      </div>
+      }
+    </header>
+
+    <main
+      part="route-scroll"
+      test-id="settings-content"
+      class="relative flex min-h-0 flex-1 flex-col overflow-auto"
+    >
+      <div class="box-border flex w-full max-w-[700px] min-w-0 flex-col gap-3 px-[36px] pt-3 pb-5">
+        @if (presenter.searching()) {
+        <symphony-settings-search-view />
+        } @else if (presenter.settingsWorkspace()) {
+        <mosaik-view-slot-outlet
+          class="contents"
+          [slot]="workspaceSlot"
+          [symphonySettingsWorkspace]="presenter.settingsWorkspaceId()"
+          [symphonySettingsSection]="presenter.workspaceSettingsSection()"
+        />
+        } @else {
+        <mosaik-view-slot-outlet
+          class="contents"
+          [slot]="globalSlot"
+          [symphonySettingsSelection]="{ workspaceId: null, sectionId: presenter.globalSettingsSection() }"
+        />
+        }
+      </div>
+    </main>
+  </div>
+</div>

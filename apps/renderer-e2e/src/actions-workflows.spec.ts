@@ -36,7 +36,7 @@ test('navigates repository workflows and exposes remote and managed-local dispat
   // assert
   try {
     const configurationPage = await app.firstWindow();
-    await expect(configurationPage.getByTestId('orbit-view')).toBeVisible();
+    await expect(configurationPage.getByTestId('home-view')).toBeVisible();
     await configurationPage.evaluate(async (localPath) => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const current = await api.request('settings.get', {});
@@ -88,7 +88,7 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await expect(page.getByTestId('presenter-route-scroll')).toHaveAttribute('aria-busy', 'false', {
       timeout: 30_000,
     });
@@ -105,12 +105,38 @@ test('navigates repository workflows and exposes remote and managed-local dispat
 
     await page.getByTestId('navigation-actions').click();
     await expect(page).toHaveURL(/\/main\/actions/u);
-    await expect(page.getByTestId('actions-workflow-browser')).toBeVisible({ timeout: 15_000 });
+    // Actions opens on `All runs`: every running and queued run, then the finished history.
+    await expect(page.getByTestId('actions-scope-all')).toHaveAttribute('aria-current', 'page', {
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId('window-title-text')).toHaveJSProperty('text', 'Actions');
+    await expect(page.getByTestId('actions-running-heading')).toHaveJSProperty(
+      'text',
+      'Running now · 1',
+    );
+    const queuedRun = page.getByTestId('actions-running-actions-ci:7001');
+    await expect(queuedRun).toContainText('Deploy Dev');
+    await expect(page.getByTestId('actions-running-cancel-actions-ci:7001')).toBeVisible();
+    await expect(page.getByTestId('actions-history-actions-ci:7000')).toBeVisible();
+    await expect(page.getByTestId('actions-history-actions-ci:7002')).toBeVisible();
+    await page.screenshot({
+      animations: 'disabled',
+      path: resolve(outputDirectory, 'actions-all-runs.png'),
+      fullPage: true,
+    });
+
+    // `View log` opens the Action drawer of the run without leaving `All runs`.
+    await page.getByTestId('actions-running-log-actions-ci:7001').click();
+    await expect(page.getByTestId('action-detail-drawer')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('action-detail-drawer')).toHaveCount(0);
+
     const filterMenu = page.getByTestId('actions-filter');
     await expect(filterMenu).toHaveAttribute('has-icon', '');
     await filterMenu.click();
     await expect(page.getByTestId('actions-status-filter')).toBeVisible();
     await expect(page.getByTestId('actions-author-filter')).toBeVisible();
+    await expect(page.getByTestId('actions-sort')).toBeVisible();
     await page.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'actions-filter-menu.png'),
@@ -121,17 +147,25 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     await expect(allStatusesOption).toBeVisible();
     await allStatusesOption.click();
     await expect(filterMenu).toHaveJSProperty('isDropDownOpen', false);
-    await expect(page.getByTestId('actions-sort')).toBeVisible();
-    await page.getByTestId('actions-workflow-select').click();
+
+    // The workflow list orders its entries by state and selects a workflow into the URL.
     await expect(page.getByTestId('actions-workflow-actions-ci:101')).toContainText('PR Quality');
+    await expect(page.getByTestId('actions-workflow-health-actions-ci:101')).toHaveAttribute(
+      'aria-label',
+      'Latest run passed',
+    );
     await page.getByTestId('actions-workflow-actions-ci:102').click();
+    await expect(page).toHaveURL(/workflow=actions-ci(?::|%3A)102/u);
+    await expect(page.getByTestId('actions-workflow-title')).toHaveJSProperty('text', 'Deploy Dev');
+    await expect(page.getByTestId('actions-workflow-path')).toHaveJSProperty(
+      'text',
+      '.github/workflows/deploy.yml',
+    );
+    await expect(page.getByTestId('action-run-actions-ci:7001')).toBeVisible();
     await expect(page.getByTestId('workflow-dispatch-available')).toBeVisible();
     await page.getByTestId('workflow-dispatch-remote-actions-ci:102').click();
     await expect(page.getByTestId('workflow-dispatch-ref').locator('input')).toHaveValue('main');
     await page.getByTestId('workflow-dispatch-ref').locator('input').fill('release/preview');
-    await expect(page.getByTestId('actions-workflow-browser')).toContainText('Deploy Dev');
-    await expect(page.getByTestId('actions-workflow-browser')).toContainText('workflow runs');
-    await expect(page.getByTestId('workspace-rail')).toHaveCount(0);
     await page.getByTestId('workflow-dispatch-confirm').click();
     await expect(page.getByTestId('notification-success').last()).toContainText(
       'started on GitHub Actions',
@@ -140,18 +174,29 @@ test('navigates repository workflows and exposes remote and managed-local dispat
       'disabled',
       true,
     );
-    const railToggle = page.getByTestId('toggle-rail');
-    await expect(page.getByTestId('workspace-rail')).toHaveCount(0);
-    await expect(railToggle).toHaveAttribute('aria-label', 'Open workspace rail');
-    await railToggle.click();
-    await expect(page.getByTestId('workspace-rail')).toBeVisible();
     await page.getByTestId('rail-run-segment-actions').click();
-    await expect(page.getByTestId('rail-run-list')).toContainText('Deploy Dev');
+    await expect(page.getByTestId('run-panel')).toBeVisible();
     await page.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'actions-manual-run-rail.png'),
       fullPage: true,
     });
+
+    // Back returns to `All runs`; Forward restores the workflow.
+    await page.getByTestId('navigate-back').click();
+    await expect(page.getByTestId('actions-scope-all')).toHaveAttribute('aria-current', 'page');
+    await page.getByTestId('navigate-forward').click();
+    await expect(page.getByTestId('actions-workflow-title')).toHaveJSProperty('text', 'Deploy Dev');
+
+    // The palette's `Run <workflow> on GitHub` opens the same confirmation once.
+    await page.evaluate(() => {
+      location.hash = '/main/actions?workflow=actions-ci%3A101&dispatch=github';
+    });
+    await expect(page.getByTestId('workflow-dispatch-proposal')).toBeVisible();
+    await expect(page.getByTestId('actions-workflow-title')).toHaveJSProperty('text', 'PR Quality');
+    await expect(page).not.toHaveURL(/dispatch=/u);
+    await page.getByTestId('workflow-dispatch-cancel').click();
+    await expect(page.getByTestId('workflow-dispatch-proposal')).toHaveCount(0);
 
     const runId = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -162,6 +207,9 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     }, runId);
     const flow = page.getByTestId('ci-job-flow');
     await expect(flow).toBeVisible();
+    // The link also selects the run's workflow and the run behind the drawer.
+    await expect(page.getByTestId('actions-workflow-title')).toHaveJSProperty('text', 'PR Quality');
+    await expect(page.getByTestId(`action-run-${runId}`)).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByTestId(/^ci-graph-job-/u)).toHaveCount(5);
     await expect(page.getByTestId(/^ci-graph-dependency-/u)).toHaveCount(4);
     await expect

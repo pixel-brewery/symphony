@@ -16,4 +16,6 @@ export interface IOrbitRenderFrame {
   readonly assetState: 'loading' | 'ready' | 'unavailable';
   readonly flybys?: readonly IOrbitFlybyLabel[];
   readonly activeFlybyCount?: number;
+  /** Camera distance relative to the fitted view: 1 is 100 %, 2 is twice as close. */
+  readonly zoom?: number;
 }

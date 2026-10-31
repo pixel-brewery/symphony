@@ -1,30 +1,32 @@
 @if(presenter.account(); as account){
-<mosaik-cell [attr.test-id]="'configured-account-' + account.id" [label]="account.displayName">
+<symphony-settings-row
+  [attr.test-id]="'configured-account-' + account.id"
+  [label]="account.displayName"
+  [description]="presenter.aiAccountSummary()(account)"
+>
   <mosaik-avatar
-    slot="start"
+    slot="leading"
     [size]="'small'"
     [appearance]="'soft'"
-    [iconName]="account.kind | connectionIcon"
+    [icon]="account.kind | connectionIcon"
   />
-  <mosaik-text slot="subLabel" [text]="presenter.aiAccountSummary()(account)" [readonly]="true" />
   <mosaik-button
-    slot="end"
     [attr.test-id]="'edit-account-' + account.id"
     [label]="'Edit'"
+    [icon]="'edit'"
+    [iconSize]="'small'"
     [appearance]="'plain'"
     (click)="presenter.openAccountCommand.execute(account)"
   />
-
   <mosaik-button
-    slot="end"
     [attr.test-id]="'remove-account-' + account.id"
-    [iconName]="'delete'"
+    [icon]="'delete'"
+    [iconSize]="'small'"
     [appearance]="'plain'"
     [variant]="'danger'"
+    [attr.aria-label]="'Remove account: ' + account.displayName"
     [disabled]="presenter.store.configurationBusy()"
     (click)="presenter.confirmRemoveAiAccountCommand.execute(account)"
-  >
-    <span slot="label" class="sr-only">Remove account: {{ account.displayName }}</span>
-  </mosaik-button>
-</mosaik-cell>
+  />
+</symphony-settings-row>
 }

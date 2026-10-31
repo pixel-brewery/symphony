@@ -22,6 +22,10 @@ export * from './theme/theme-preference';
 export * from './presentation/Hydratable';
 export * from './presentation/View';
 export * from './presentation/ViewPresenterToken';
+export * from './presentation/WindowToolbar';
+export * from './presentation/WindowToolbarDirective';
+export * from './time/Clock';
+export * from './time/formatRelativeTime';
 export * from './presentation/IHydratablePresenter';
 export * from './state/AiUsageProvider';
 export * from './commands/AsyncCommand';
@@ -92,3 +96,5 @@ export { AUTOMATION_PREPARATION } from './state/AutomationPreparationToken';
 
 export type { IWorkConnectionOperations } from './state/IWorkConnectionOperations';
 export { WORK_CONNECTION_OPERATIONS } from './state/WorkConnectionOperationsToken';
+export type { IInboxSummary } from './state/IInboxSummary';
+export { INBOX_SUMMARY } from './state/InboxSummaryToken';

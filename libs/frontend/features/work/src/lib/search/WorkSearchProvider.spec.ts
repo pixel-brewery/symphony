@@ -53,6 +53,30 @@ describe('WorkSearchProvider', () => {
     expect(internalId).toBeUndefined();
     expect(body).toEqual({ path: '/main/board', queryParams: { q: 'Detailed statement' } });
   });
+
+  it('lists the palette rows from the scoped board the Board shows', () => {
+    // arrange
+    const provider = new WorkSearchProvider(
+      { snapshot: signal({ workItems: [] }) },
+      {
+        snapshot: signal({
+          boardColumns: [{ id: 'todo', label: 'TODO' }],
+          executions: [],
+          workflow: { stages: [] },
+        }),
+        scopedWorkItems: signal([{ ...workItem(), boardColumnId: 'todo' }]),
+        activeBoard: signal(undefined),
+      },
+    );
+
+    // act
+    const results = provider.paletteResults('visible', 'visible');
+
+    // assert
+    expect(results.map((result) => [result.id, result.reference, result.facts?.[0]])).toEqual([
+      ['work-item:local-id-unsearchable', 'TASK-901', 'TODO'],
+    ]);
+  });
 });
 
 function workItem(): IWorkItem {

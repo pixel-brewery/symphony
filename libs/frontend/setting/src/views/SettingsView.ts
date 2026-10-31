@@ -1,5 +1,6 @@
 // #region Imports
 
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -8,26 +9,25 @@ import {
   inject,
 } from '@angular/core';
 import {
-  MenuComponent,
-  MenuItemComponent,
-  PageComponent,
-  PageContentComponent,
-  PageHeaderComponent,
-  SegmentComponent,
-  SegmentItemComponent,
+  TextComponent,
+  TypographyDirective,
   ViewSlotOutletComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { View, VIEW_PRESENTER, WindowToolbar } from '@symphony/frontend-core';
 import { SettingsHostSession } from '../context/SettingsHostSession';
 import { SettingsSelectionDirective } from '../context/SettingsSelectionDirective';
 import { SettingsViewSlot } from '../constants/SettingsViewSlot';
 import { SettingsWorkspaceContextDirective } from '../context/SettingsWorkspaceContextDirective';
+import { SettingsSearchIndex } from '../search/SettingsSearchIndex';
 import { SettingsViewPresenter } from '../view-presenters/SettingsViewPresenter';
+import { SettingsSearchView } from './SettingsSearchView';
+import { SettingsSidebarView } from './SettingsSidebarView';
 
 // #endregion
 
 /**
- * Settings route host for independently contributed sections and cards.
+ * The Settings window's body: the sidebar, a 52px toolbar with the section's name and one-line
+ * description, and the selected section's feature-contributed cards or the search results.
  *
  * @public
  */
@@ -35,19 +35,18 @@ import { SettingsViewPresenter } from '../view-presenters/SettingsViewPresenter'
   selector: 'symphony-settings-view',
   host: { class: 'block' },
   imports: [
-    MenuComponent,
-    MenuItemComponent,
-    PageComponent,
-    PageContentComponent,
-    PageHeaderComponent,
-    SegmentComponent,
-    SegmentItemComponent,
-    ViewSlotOutletComponent,
+    NgTemplateOutlet,
+    SettingsSearchView,
     SettingsSelectionDirective,
+    SettingsSidebarView,
     SettingsWorkspaceContextDirective,
+    TextComponent,
+    TypographyDirective,
+    ViewSlotOutletComponent,
   ],
   providers: [
     SettingsHostSession,
+    SettingsSearchIndex,
     SettingsViewPresenter,
     { provide: VIEW_PRESENTER, useExisting: SettingsViewPresenter },
   ],
@@ -59,6 +58,15 @@ export class SettingsView extends View<SettingsViewPresenter> {
   // #region Fields
 
   private readonly _changeDetector = inject(ChangeDetectorRef);
+
+  /**
+   * Contextual actions a section registered through `WindowToolbarDirective`.
+   *
+   * @protected
+   * @readonly
+   */
+  protected readonly toolbar = inject(WindowToolbar);
+
   /**
    * Global feature-card extension point.
    *
@@ -66,8 +74,10 @@ export class SettingsView extends View<SettingsViewPresenter> {
    * @readonly
    */
   protected readonly globalSlot = SettingsViewSlot.Global;
+
   /** Header actions owned by their contributing features. @protected @readonly */
   protected readonly headerActionsSlot = SettingsViewSlot.HeaderActions;
+
   /**
    * Workspace feature-card extension point.
    *
