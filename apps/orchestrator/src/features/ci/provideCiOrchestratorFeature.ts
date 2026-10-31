@@ -4,6 +4,7 @@ import { type ICiRunDetails } from '@symphony/domain-ci';
 import { type IProvideCiOrchestratorFeatureDependencies } from './IProvideCiOrchestratorFeatureDependencies';
 import { ciRequestSchemas, ciResponseSchemas } from '@symphony/ipc-contracts-ci';
 import { createOrchestratorRequestHandler } from '../../transport/createOrchestratorRequestHandler';
+import { resolveRequestedWorkspaceIds } from '../../composition/resolveRequestedWorkspaceIds';
 // #endregion
 
 /**
@@ -15,6 +16,8 @@ export function provideCiOrchestratorFeature(
   dependencies: IProvideCiOrchestratorFeatureDependencies,
 ) {
   const {
+    settingsState,
+    runHistory,
     localCiRepository,
     github,
     snapshotService,
@@ -45,10 +48,12 @@ export function provideCiOrchestratorFeature(
       ciRequestSchemas['ci.runs.refresh'],
       ciResponseSchemas['ci.runs.refresh'],
       async (input) => {
-        const result =
-          process.env['SYMPHONY_CONNECTION_MODE'] === 'simulated'
-            ? simulatedContinuousIntegration()
-            : await snapshotService.refreshContinuousIntegration(input.includeWorkflowCatalog);
+        const simulated = process.env['SYMPHONY_CONNECTION_MODE'] === 'simulated';
+        const result = simulated
+          ? simulatedContinuousIntegration()
+          : await snapshotService.refreshContinuousIntegration(input.includeWorkflowCatalog);
+        // The provider read records its runs itself; the simulated read bypasses it.
+        if (simulated) runHistory.record(result.ciRuns);
         const activeLocalCiRun = activeLocalCiRuns().entries().next().value;
         return {
           ...result,
@@ -62,6 +67,16 @@ export function provideCiOrchestratorFeature(
             : {}),
         };
       },
+    ),
+    createOrchestratorRequestHandler(
+      'ci.runs.history.list',
+      ciRequestSchemas['ci.runs.history.list'],
+      ciResponseSchemas['ci.runs.history.list'],
+      async (input) =>
+        runHistory.list({
+          workspaceIds: resolveRequestedWorkspaceIds(settingsState.current, input.workspaceId),
+          since: input.since,
+        }),
     ),
     createOrchestratorRequestHandler(
       'ci.workflow.dispatch',

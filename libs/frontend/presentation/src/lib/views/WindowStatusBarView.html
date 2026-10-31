@@ -1,0 +1,109 @@
+<footer
+  part="window-status-bar"
+  test-id="window-status-bar"
+  aria-label="Status bar"
+  class="box-border flex h-[28px] w-full min-w-0 items-center gap-1.5 pr-[6px] pl-1.5"
+>
+  @if (presenter.syncState(); as sync) {
+  <span class="flex min-w-0 items-center gap-[6px]" test-id="status-bar-sync" role="status">
+    <mosaik-icon
+      class="flex-none"
+      [icon]="sync.state === 'current' ? 'sync' : 'warning'"
+      [size]="'tiny'"
+      [variant]="sync.state === 'current' ? 'default' : 'warning'"
+    />
+    <span class="truncate" test-id="status-bar-sync-text">
+      @if (sync.state === 'current') {
+      <span
+        >Synced with GitHub {{ sync.lastSuccessfulRefreshAt | relativeTime: presenter.now() : 'ago'
+        }}</span
+      >
+      } @else if (sync.rateLimited) {
+      <span
+        >GitHub request limit reached{{ sync.retryAt ? ' · try again at ' + (sync.retryAt | date:
+        'shortTime') : '' }}</span
+      >
+      } @else if (sync.state === 'stale') {
+      <span
+        >GitHub sync paused{{ sync.lastSuccessfulRefreshAt ? ' · last synced ' +
+        (sync.lastSuccessfulRefreshAt | relativeTime: presenter.now() : 'ago') : '' }}</span
+      >
+      } @else {
+      <span>GitHub is unavailable</span>
+      }
+    </span>
+    @if (sync.state !== 'current') {
+    <mosaik-button
+      class="flex-none"
+      test-id="status-bar-sync-retry"
+      [label]="'Retry'"
+      [appearance]="'plain'"
+      [isBusy]="presenter.syncBusy()"
+      (click)="presenter.synchronizeCommand.execute()"
+    />
+    }
+  </span>
+  }
+
+  <div class="flex-1"></div>
+
+  <symphony-notification-bell class="flex flex-none" />
+
+  @if (presenter.updates.state(); as update) {
+  <span test-id="app-version-watermark" class="flex-none"
+    >Symphony v{{ update.currentVersion }}</span
+  >
+
+  @if (update.kind === 'available' || update.kind === 'downloading') {
+  <span class="relative flex h-[24px] w-[24px] flex-none items-center justify-center">
+    <mosaik-button
+      [attr.test-id]="update.kind === 'available' ? 'download-available-update' : 'update-downloading'"
+      [iconName]="'download'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [disabled]="update.kind === 'downloading'"
+      [attr.aria-label]="update.kind === 'available'
+        ? 'Download Symphony ' + update.targetVersion
+        : 'Downloading the update'"
+      [mosaikTooltip]="update.kind === 'available'
+        ? 'Download Symphony ' + update.targetVersion
+        : 'Downloading the update…'"
+      (click)="presenter.downloadUpdateCommand.execute()"
+    />
+    @if (update.kind === 'downloading') {
+    <span
+      class="pointer-events-none absolute inset-0 flex items-center justify-center"
+      test-id="update-progress"
+      role="progressbar"
+      [attr.aria-valuenow]="update.progress === undefined ? null : (update.progress * 100 | number: '1.0-0')"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-label="Update download"
+    >
+      <mosaik-progress-ring
+        [variant]="'primary'"
+        [radius]="11"
+        [thickness]="2"
+        [min]="0"
+        [max]="100"
+        [value]="(update.progress ?? 0) * 100"
+        [isIndeterminate]="update.progress === undefined"
+      />
+    </span>
+    }
+  </span>
+  } @else if (update.kind === 'ready') {
+  <mosaik-button
+    class="flex-none"
+    test-id="install-ready-update"
+    [label]="'Restart to update'"
+    [iconName]="'sync'"
+    [iconSize]="'small'"
+    [appearance]="'soft'"
+    [isBusy]="presenter.updates.busy()"
+    [disabled]="!presenter.installUpdateCommand.canExecute()"
+    [attr.aria-label]="'Install Symphony ' + update.targetVersion + ' and restart'"
+    (click)="presenter.installUpdateCommand.execute()"
+  />
+  } }
+</footer>

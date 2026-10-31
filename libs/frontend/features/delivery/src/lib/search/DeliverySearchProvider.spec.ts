@@ -4,7 +4,7 @@
 
 import { signal } from '@angular/core';
 import type { IPullRequestSummary } from '@symphony/domain-delivery';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DeliverySearchProvider } from './DeliverySearchProvider';
 import type { IDeliverySearchContext } from './IDeliverySearchContext';
 
@@ -43,6 +43,28 @@ describe('DeliverySearchProvider', () => {
     expect(missing).toBeUndefined();
     expect(absentList).toBeUndefined();
     expect(current).toEqual({ path: '/main/pull-requests', queryParams: { q: 'Release' } });
+  });
+
+  it('lists matching pull requests and syncs pull requests and Actions runs together', async () => {
+    // arrange
+    const sync = {
+      refresh: vi.fn(async () => undefined),
+      refreshContinuousIntegrationRuns: vi.fn(async () => undefined),
+    };
+    const provider = new DeliverySearchProvider(
+      { snapshot: signal({ pullRequests: [pullRequest()] }) },
+      sync,
+    );
+
+    // act
+    const results = provider.paletteResults('release', 'release');
+    const syncNow = provider.paletteResults('', '')[0]?.action;
+    if (syncNow?.kind === 'execute') await syncNow.execute();
+
+    // assert
+    expect(results.map((result) => result.id)).toEqual(['pull-request:pull-request:274']);
+    expect(sync.refresh).toHaveBeenCalledOnce();
+    expect(sync.refreshContinuousIntegrationRuns).toHaveBeenCalledOnce();
   });
 });
 

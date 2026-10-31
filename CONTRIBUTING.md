@@ -132,7 +132,8 @@ yarn release:dry-run
 Nx owns the version and changelog. The complete verification and native ARM64 build
 matrix must succeed before the source commit, tag, installers and update metadata are
 published. Supported installers remain the macOS DMG, Windows EXE and Linux DEB.
-Installer manifests make updates discoverable in the app; installation remains manual.
+Installer manifests make updates discoverable in the app, which downloads the installer, verifies
+its size and SHA-256 digest and opens it on `Restart to update`.
 Native ZIP/NuGet updater payloads and x64 builds remain disabled.
 
 The private release App is installed only for Synapse and Symphony, with Contents

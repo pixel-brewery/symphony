@@ -8,10 +8,15 @@ import {
 } from '@symphony/ipc-contracts-desktop';
 import type { AutoUpdateEvent } from './AutoUpdateEvent';
 import type { IAutoUpdateAdapter } from './IAutoUpdateAdapter';
+import type { IInstallerUpdate } from './IInstallerUpdate';
 import type { IInstallerUpdateAdapter } from './IInstallerUpdateAdapter';
 import type { IUpdateCoordinatorOptions } from './IUpdateCoordinatorOptions';
 
 // #endregion
+
+// Download progress reaches every renderer window over IPC; one message per whole percent, and at
+// most one every 150 ms, keeps the ring fluid without flooding the windows.
+const PROGRESS_PUBLISH_INTERVAL_MS = 150;
 
 export class UpdateCoordinator {
   // #region Fields
@@ -23,10 +28,13 @@ export class UpdateCoordinator {
   private readonly _platform: NodeJS.Platform;
   private readonly _architecture: string;
   private readonly _packaged: boolean;
+  private readonly _quitApplication: () => void;
   private readonly _now: () => Date;
   private readonly _listeners = new Set<(state: UpdateState) => void>();
   private _unsubscribeAdapter?: () => void;
-  private _availableDownloadUrl?: string;
+  private _availableInstaller?: IInstallerUpdate;
+  private _activeDownload?: AbortController;
+  private _downloadedInstallerPath?: string;
   private _state: UpdateState;
 
   // #endregion
@@ -41,6 +49,7 @@ export class UpdateCoordinator {
     this._platform = options.platform;
     this._architecture = options.architecture;
     this._packaged = options.packaged;
+    this._quitApplication = options.quitApplication;
     this._now = options.now ?? (() => new Date());
     this._state = this.initialState(updateChannelSchema.parse(options.channel));
   }
@@ -66,6 +75,8 @@ export class UpdateCoordinator {
    * @public
    */
   public dispose(): void {
+    this._activeDownload?.abort();
+    this._activeDownload = undefined;
     this._unsubscribeAdapter?.();
     this._unsubscribeAdapter = undefined;
     this._listeners.clear();
@@ -111,7 +122,7 @@ export class UpdateCoordinator {
       if (installerUpdate) {
         const lastCheckedAt = this._now().toISOString();
         if (this.isNewerVersion(installerUpdate.version)) {
-          this._availableDownloadUrl = installerUpdate.downloadUrl;
+          this._availableInstaller = installerUpdate;
           this.transition({
             kind: 'available',
             currentVersion: this._currentVersion,
@@ -120,7 +131,7 @@ export class UpdateCoordinator {
             targetVersion: installerUpdate.version,
           });
         } else {
-          this._availableDownloadUrl = undefined;
+          this._availableInstaller = undefined;
           this.transition({
             kind: 'idle',
             currentVersion: this._currentVersion,
@@ -150,23 +161,61 @@ export class UpdateCoordinator {
       throw new Error('The update channel cannot change while an update check is active.');
     }
     this._state = this.initialState(validatedChannel);
-    this._availableDownloadUrl = undefined;
+    this._availableInstaller = undefined;
+    this._downloadedInstallerPath = undefined;
     if (this._state.kind !== 'disabled') this.configureFeed(validatedChannel);
     this.publish();
     return this._state;
   }
 
   /**
-   * Installs.
+   * Starts the in-app download of the available installer. The state moves to `downloading` with
+   * the target version and a progress share, then to `ready` once the installer has the declared
+   * size and checksum, or to `failed` with `DOWNLOAD_FAILED`.
    *
+   * @returns Whether an in-app download is running after the call, including one that was
+   * already running; `false` when no installer update is available.
    * @public
    */
-  public install(): boolean {
+  public download(): boolean {
+    if (this._state.kind === 'downloading' && this._activeDownload) return true;
+    const installer = this._availableInstaller;
+    if (this._state.kind !== 'available' || !installer) return false;
+    const controller = new AbortController();
+    this._activeDownload = controller;
+    this._downloadedInstallerPath = undefined;
+    this.transition({
+      kind: 'downloading',
+      currentVersion: this._currentVersion,
+      channel: this._state.channel,
+      ...(this._state.lastCheckedAt ? { lastCheckedAt: this._state.lastCheckedAt } : {}),
+      targetVersion: installer.version,
+      progress: 0,
+    });
+    void this.runDownload(installer, controller);
+    return true;
+  }
+
+  /**
+   * Installs the ready update: a downloaded installer is opened and Symphony quits so it can be
+   * replaced; a native (Squirrel) update quits and installs itself.
+   *
+   * @returns Whether the installation started.
+   * @public
+   */
+  public async install(): Promise<boolean> {
     if (this._state.kind !== 'ready') return false;
+    const installerPath = this._downloadedInstallerPath;
     try {
-      this._adapter.install();
+      if (installerPath) {
+        await this._installerAdapter.launch(installerPath);
+        this._quitApplication();
+      } else {
+        this._adapter.install();
+      }
       return true;
     } catch {
+      this._downloadedInstallerPath = undefined;
       this.fail('INSTALL_FAILED', 'Symphony could not start the update installation.');
       return false;
     }
@@ -178,7 +227,45 @@ export class UpdateCoordinator {
    * @public
    */
   public availableDownloadUrl(): string | undefined {
-    return this._state.kind === 'available' ? this._availableDownloadUrl : undefined;
+    return this._state.kind === 'available' ? this._availableInstaller?.downloadUrl : undefined;
+  }
+
+  private async runDownload(
+    installer: IInstallerUpdate,
+    controller: AbortController,
+  ): Promise<void> {
+    let publishedPercent = 0;
+    let publishedAt = this._now().getTime();
+    try {
+      const installerPath = await this._installerAdapter.download(installer, {
+        signal: controller.signal,
+        onProgress: (receivedBytes) => {
+          if (this._activeDownload !== controller || this._state.kind !== 'downloading') return;
+          const percent = Math.min(100, Math.floor((receivedBytes / installer.bytes) * 100));
+          const at = this._now().getTime();
+          if (percent <= publishedPercent || at - publishedAt < PROGRESS_PUBLISH_INTERVAL_MS)
+            return;
+          publishedPercent = percent;
+          publishedAt = at;
+          this.transition({ ...this._state, progress: percent / 100 });
+        },
+      });
+      if (this._activeDownload !== controller) return;
+      this._activeDownload = undefined;
+      this._downloadedInstallerPath = installerPath;
+      this.transition({
+        kind: 'ready',
+        currentVersion: this._currentVersion,
+        channel: this._state.channel,
+        ...(this._state.lastCheckedAt ? { lastCheckedAt: this._state.lastCheckedAt } : {}),
+        targetVersion: installer.version,
+        downloadedAt: this._now().toISOString(),
+      });
+    } catch {
+      if (this._activeDownload !== controller) return;
+      this._activeDownload = undefined;
+      this.fail('DOWNLOAD_FAILED', 'Symphony could not download the available update.');
+    }
   }
 
   private initialState(channel: UpdateChannel): UpdateState {
@@ -246,6 +333,7 @@ export class UpdateCoordinator {
 
   private handleAdapterEvent(event: AutoUpdateEvent): void {
     if (
+      this._activeDownload ||
       this._state.kind === 'disabled' ||
       this._state.kind === 'available' ||
       this._state.kind === 'ready'

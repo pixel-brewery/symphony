@@ -10,16 +10,20 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test, _electron as electron } from '@playwright/test';
+import { expect, test, _electron as electron, type Page } from '@playwright/test';
 import { desktopChannels, type UpdateState } from '@symphony/ipc-contracts-desktop';
 import { type IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { closeSettings } from './closeSettings';
+import { expandBoardColumn } from './expandBoardColumn';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
 test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electron', async () => {
   // arrange
-  test.setTimeout(180_000);
+  test.setTimeout(240_000);
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
   const expectsNativeWindows = process.env['SYMPHONY_E2E_WINDOW_MODE'] === 'visible';
@@ -45,7 +49,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       SYMPHONY_EXTERNAL_LINKS_MODE: 'blocked',
       SYMPHONY_WORKSPACE_MODE: 'simulated',
       SYMPHONY_AGENT_MODE: 'simulated',
-      SYMPHONY_SIMULATED_AGENT_STEP_DELAY_MS: '1200',
+      SYMPHONY_SIMULATED_AGENT_STEP_DELAY_MS: '4000',
       SYMPHONY_SIMULATED_ADDITIONAL_WORK_ITEMS: '12',
     },
   });
@@ -63,45 +67,28 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     ).toBe(true);
     const expectFullWidthView = async (testId: string): Promise<void> => {
       const widths = await page.getByTestId(testId).evaluate((view) => ({
-        page:
-          (view.matches('mosaik-page')
-            ? view
-            : view.querySelector('mosaik-page')
-          )?.getBoundingClientRect().width ?? 0,
+        page: (view.matches('mosaik-page')
+          ? view
+          : (view.querySelector('mosaik-page') ?? view)
+        ).getBoundingClientRect().width,
         route:
           document.querySelector('[test-id="presenter-route-scroll"]')?.getBoundingClientRect()
             .width ?? 0,
+        window: window.innerWidth,
       }));
       expect(widths.page).toBeCloseTo(widths.route, 0);
-      expect(widths.page).toBeGreaterThan(960);
+      // The routed screen takes the whole window beside the 240 px sidebar (239 px and its 1 px
+      // divider).
+      expect(widths.page).toBeGreaterThanOrEqual(widths.window - 240);
     };
-    const expectCenteredPage = async (testId: string, maximumWidth = 960): Promise<void> => {
-      const boxes = await page.getByTestId(testId).evaluate((view) => {
-        const pageElement = view.matches('mosaik-page') ? view : view.querySelector('mosaik-page');
-        const pageBox = pageElement?.getBoundingClientRect();
-        const routeElement = document.querySelector<HTMLElement>(
-          '[test-id="presenter-route-scroll"]',
-        );
-        const routeBox = routeElement?.getBoundingClientRect();
-        return {
-          page: pageBox ? { x: pageBox.x, width: pageBox.width } : undefined,
-          route: routeBox
-            ? { x: routeBox.x, width: routeElement?.clientWidth ?? routeBox.width }
-            : undefined,
-        };
-      });
-      expect(boxes.page?.width).toBeCloseTo(Math.min(boxes.route?.width ?? 0, maximumWidth), 0);
-      expect(boxes.page?.x).toBeCloseTo(
-        (boxes.route?.x ?? 0) + ((boxes.route?.width ?? 0) - (boxes.page?.width ?? 0)) / 2,
-        0,
+    const dismissNotifications = async (target: Page = page): Promise<void> => {
+      const notifications = target.locator(
+        '[test-id="notification-success"], [test-id="notification-info"], [test-id="notification-warning"], [test-id="notification-error"]',
       );
-    };
-    const dismissNotifications = async (): Promise<void> => {
-      const notifications = page.locator('[test-id^="notification-"]');
       while ((await notifications.count()) > 0) {
         const count = await notifications.count();
         if (count === 0) break;
-        await page.keyboard.press('Escape');
+        await target.keyboard.press('Escape');
         await expect.poll(() => notifications.count(), { timeout: 7_000 }).toBeLessThan(count);
       }
     };
@@ -147,60 +134,15 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
             .blockedExternalUrls,
       );
     await expect(page).toHaveTitle('Symphony');
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('navigation-home').click();
+    // Symphony opens on Overview, the first sidebar destination.
     await expect(page.getByTestId('home-view')).toBeVisible();
     await expect(page).toHaveURL(/\/main\/home/);
-    await expectFullWidthView('home-view');
-    await expect(page.getByTestId('presenter-navigation')).toBeVisible();
-    await expect(page.getByTestId('navigation-actions-badge')).toHaveCount(0);
-    await expect(page.getByTestId('toggle-navigation')).toHaveCount(0);
-    await expect(page.getByTestId('global-workspace-filter')).toBeVisible();
-    await expect(page.getByTestId('global-workspace-avatar')).toBeVisible();
-    await expect(page.getByTestId('app-version-watermark')).toHaveText(`v${applicationVersion}`);
-    await expect(page.getByTestId('install-ready-update')).toHaveCount(0);
-    await expect(page.getByTestId('global-workspace-avatar-group')).toHaveCount(0);
-    // The search rests as a launcher button and becomes the field on activation, the way a macOS
-    // toolbar search does, so a narrow window spends its width on the navigation instead. The band
-    // geometry below is asserted in that resting state.
-    await expect(page.getByTestId('global-search-launcher')).toBeVisible();
-    await expect(page.getByTestId('global-search-launcher-input')).toHaveCount(0);
-    await expect(page.getByTestId('profile-identity')).toHaveCount(0);
-    await expect(page.getByTestId('profile-navigation-menu')).toHaveCount(0);
-    await expect(page.getByTestId('workspace-ai-banner')).toHaveCount(0);
-    await expect(page.getByTestId('footer-workspace-picker')).toHaveCount(0);
-    await expect(page.getByTestId('workspace-github-actions-usage')).toHaveCount(0);
-    await expect(page.getByTestId('footer-settings')).toHaveCount(0);
-    await expect(page.getByTestId('navigation-arcade')).toHaveCount(0);
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
-    await expect(page).toHaveURL(/\/main\/settings/);
-    await expect(page.getByTestId('settings-view')).toBeVisible();
-    await expect(page.getByTestId('workspace-directory')).toBeVisible({ timeout: 15_000 });
-    await page.getByTestId('navigation-orbit').click();
-    await expect(page).toHaveURL(/\/main\/orbit/);
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('navigation-home').click();
-    await expect(page.getByTestId('home-view')).toBeVisible();
-    await expect(page.getByTestId('footer-activity')).toHaveCount(0);
-    await expect(page.getByTestId('navigation-workflows')).toHaveCount(0);
-    await expect(page.getByTestId('navigation-executions')).toHaveCount(0);
-    await expect(page.getByTestId('navigation-projects')).toHaveCount(0);
-    await expect(page.getByTestId('navigation-home')).toContainText('Overview');
-    await expect(page.getByTestId('navigation-orbit')).toContainText('Orbit');
-    await expect(page.getByTestId('navigation-settings')).toHaveCount(0);
-    // The header is a band across the top of the view. The exact inset is the app view's own
-    // border and gap, so this waits for the layout and the relative header/content assertions
-    // below pin the geometry.
-    await expect
-      .poll(() =>
-        page
-          .locator('mosaik-app > mosaik-app-header')
-          .evaluate((element) => element.getBoundingClientRect().x),
-      )
-      .toBeLessThan(32);
+    await expect(page.getByTestId('window-title-text')).toHaveJSProperty('text', 'Overview');
 
-    const layout = await page.evaluate(() => {
+    // Window chrome: a 240px source-list sidebar beside the window split's 1px divider, a 52px
+    // unified toolbar and a 28px status bar along the whole bottom edge, the routed screen
+    // between them.
+    const chrome = await page.evaluate(() => {
       const rect = (selector: string) => {
         const box = document.querySelector(selector)?.getBoundingClientRect();
         return box ? { x: box.x, y: box.y, width: box.width, height: box.height } : undefined;
@@ -209,62 +151,118 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         theme: document.documentElement.getAttribute('theme'),
         themeMode: document.documentElement.getAttribute('theme-mode'),
         nativeVibrancy: document.documentElement.getAttribute('data-native-vibrancy'),
-        app: rect('mosaik-app'),
-        nav: rect('[test-id="presenter-navigation"]'),
-        header: rect('mosaik-app > mosaik-app-header'),
-        workspaceFilter: rect('[test-id="global-workspace-filter"]'),
-        search: rect('[part="search-launcher"]'),
-        content: rect('[test-id="presenter-content"]'),
-        heading: rect('[test-id="home-greeting"]'),
-        toggleRail: rect('[test-id="toggle-rail"]'),
-        navFirstItem: rect('[test-id="navigation-home"]'),
-        navLastItem: rect('[test-id="navigation-actions"]'),
-        titlebarArea: (
-          navigator as Navigator & {
-            readonly windowControlsOverlay?: {
-              readonly visible: boolean;
-              getTitlebarAreaRect(): DOMRect;
-            };
-          }
-        ).windowControlsOverlay
-          ?.getTitlebarAreaRect()
-          .toJSON(),
+        window: { width: window.innerWidth, height: window.innerHeight },
+        sidebar: rect('[test-id="window-sidebar"]'),
+        toolbar: rect('[test-id="window-toolbar"]'),
+        statusBar: rect('[test-id="window-status-bar"]'),
+        route: rect('[test-id="presenter-route-scroll"]'),
+        overview: rect('[test-id="navigation-home"]'),
+        settings: rect('[test-id="navigation-settings"]'),
+        horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
       };
     });
-    expect(layout.theme).toBe('soho');
-    expect(layout.themeMode).toBe('light');
-    expect(layout.nativeVibrancy).toBe('true');
-    // The shell has no side navigation band: the header is one full-width band carrying the
-    // workspace picker, the primary navigation segment and the search, with the content directly
-    // beneath it.
-    expect(layout.content?.x).toBeLessThan(320);
-    expect(layout.header?.x).toBeCloseTo(layout.content?.x ?? 0, 0);
-    expect(layout.header?.width).toBeCloseTo(layout.content?.width ?? 0, 0);
-    // The band takes layout again rather than floating over the content.
-    expect(layout.content?.y).toBeGreaterThanOrEqual(
-      (layout.header?.y ?? 0) + (layout.header?.height ?? 0) - 1,
+    expect(chrome.theme).toBe('soho');
+    expect(chrome.themeMode).toBe('light');
+    expect(chrome.nativeVibrancy).toBe('true');
+    // The drawn 240px sidebar is 239px of source list and the 1px split divider; the toolbar
+    // starts right after the divider.
+    expect(chrome.sidebar?.width).toBe(239);
+    expect(chrome.toolbar?.height).toBe(52);
+    expect(chrome.toolbar?.x).toBe(240);
+    expect(chrome.statusBar?.height).toBe(28);
+    expect(chrome.statusBar?.x).toBe(0);
+    expect(chrome.statusBar?.width).toBe(chrome.window.width);
+    expect((chrome.statusBar?.y ?? 0) + (chrome.statusBar?.height ?? 0)).toBe(chrome.window.height);
+    expect(chrome.route?.y).toBe((chrome.toolbar?.y ?? 0) + (chrome.toolbar?.height ?? 0));
+    expect((chrome.route?.y ?? 0) + (chrome.route?.height ?? 0)).toBeLessThanOrEqual(
+      chrome.statusBar?.y ?? 0,
     );
-    expect(layout.titlebarArea?.x).toBeGreaterThan(0);
-    expect(layout.search?.x).toBeGreaterThan(layout.titlebarArea?.x ?? 0);
+    expect((chrome.settings?.y ?? 0) + (chrome.settings?.height ?? 0)).toBeLessThanOrEqual(
+      chrome.statusBar?.y ?? 0,
+    );
+    expect(chrome.overview?.height).toBe(32);
+    expect(chrome.settings?.y ?? 0).toBeGreaterThan(chrome.overview?.y ?? 0);
+    expect(chrome.horizontalOverflow).toBe(false);
+
+    // Overview leads the sidebar, then the Delivery group; Settings is pinned at the bottom and
+    // Skills is no longer a main-window destination.
+    const destinations = await page
+      .getByTestId('presenter-navigation')
+      .locator('[test-id^="navigation-"]')
+      .evaluateAll((elements) =>
+        elements
+          .map((element) => element.getAttribute('test-id'))
+          .filter((testId): testId is string => Boolean(testId?.match(/^navigation-[a-z-]+$/u))),
+      );
     expect(
-      (layout.workspaceFilter?.x ?? 0) + (layout.workspaceFilter?.width ?? 0),
-    ).toBeLessThanOrEqual(layout.search?.x ?? 0);
-    expect((layout.search?.x ?? 0) + (layout.search?.width ?? 0)).toBeLessThanOrEqual(
-      layout.toggleRail?.x ?? 0,
+      destinations.filter(
+        (testId) =>
+          !testId.startsWith('navigation-group-') && !testId.startsWith('navigation-count-'),
+      ),
+    ).toEqual([
+      'navigation-home',
+      'navigation-inbox',
+      'navigation-board',
+      'navigation-pull-requests',
+      'navigation-actions',
+      'navigation-orbit',
+    ]);
+    await expect(page.getByTestId('navigation-group-delivery')).toHaveJSProperty(
+      'text',
+      'Delivery',
     );
-    // Navigation sits inside the band and remains pinned to its exact horizontal centre rather
-    // than following the residual space between the workspace picker and trailing actions.
-    expect(layout.nav?.y).toBeGreaterThanOrEqual((layout.header?.y ?? 0) - 1);
-    expect((layout.nav?.y ?? 0) + (layout.nav?.height ?? 0)).toBeLessThanOrEqual(
-      (layout.header?.y ?? 0) + (layout.header?.height ?? 0) + 1,
+    await expect(page.getByTestId('navigation-skills')).toHaveCount(0);
+    await expect(page.getByTestId('navigation-arcade')).toHaveCount(0);
+    await expect(page.getByTestId('navigation-settings')).toBeVisible();
+    await expect(page.getByTestId('navigation-home')).toHaveAttribute('appearance', 'soft');
+    await expect(page.getByTestId('navigation-board')).toHaveAttribute('appearance', 'plain');
+    await expect(page.getByTestId('global-workspace-filter')).toBeVisible();
+    await expect(page.getByTestId('workspace-switcher')).toBeVisible();
+    // Voice input and the former workspace rail are gone from the shell.
+    await expect(page.getByTestId('voice-search')).toHaveCount(0);
+    await expect(page.getByTestId('toggle-rail')).toHaveCount(0);
+    await expect(page.getByTestId('workspace-rail')).toHaveCount(0);
+    await expect(page.getByTestId('app-version-watermark')).toHaveText(
+      `Symphony v${applicationVersion}`,
     );
-    expect(layout.navFirstItem?.x ?? 0).toBeLessThan(layout.navLastItem?.x ?? 0);
-    expect(
-      (layout.workspaceFilter?.x ?? 0) + (layout.workspaceFilter?.width ?? 0),
-    ).toBeLessThanOrEqual(layout.nav?.x ?? 0);
-    const bandCentre = (layout.header?.x ?? 0) + (layout.header?.width ?? 0) / 2;
-    const navCentre = (layout.nav?.x ?? 0) + (layout.nav?.width ?? 0) / 2;
-    expect(Math.abs(navCentre - bandCentre)).toBeLessThanOrEqual(1);
+    await expect(page.getByTestId('download-available-update')).toHaveCount(0);
+    await expect(page.getByTestId('install-ready-update')).toHaveCount(0);
+    await expect(page.getByTestId('notification-bell')).toBeVisible();
+
+    // Back and forward follow the router history.
+    await expect(page.getByTestId('navigate-back')).toHaveJSProperty('disabled', true);
+    await page.getByTestId('navigation-board').click();
+    await expect(page).toHaveURL(/\/main\/board/);
+    await expect(page.getByTestId('navigation-board')).toHaveAttribute('appearance', 'soft');
+    await page.getByTestId('navigate-back').click();
+    await expect(page).toHaveURL(/\/main\/home/);
+    await expect(page.getByTestId('navigate-forward')).toHaveJSProperty('disabled', false);
+    await page.getByTestId('navigate-forward').click();
+    await expect(page).toHaveURL(/\/main\/board/);
+    await page.getByTestId('navigation-home').click();
+    await expect(page.getByTestId('home-view')).toBeVisible();
+
+    // The run panel switches between agents and the current action runs.
+    await expect(page.getByTestId('rail-run-segment')).toBeVisible();
+    await page.getByTestId('rail-run-segment-actions').click();
+    await expect(page.getByTestId('rail-run-segment-actions')).toHaveAttribute(
+      'appearance',
+      'soft',
+    );
+    await page.getByTestId('rail-run-segment-agent-runs').click();
+    await expect(page.getByTestId('rail-run-segment-agent-runs')).toHaveAttribute(
+      'appearance',
+      'soft',
+    );
+
+    // ⌘K (Ctrl+K off macOS) opens the command palette and Escape closes it.
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+K' : 'Control+K');
+    await expect(page.getByTestId('command-palette')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('command-palette')).toHaveCount(0);
+
+    // The app-update button lives in the status bar: an icon-only download button, a progress
+    // ring that fills while the update downloads, then `Restart to update`.
     await publishUpdateState({
       kind: 'available',
       currentVersion: applicationVersion,
@@ -274,10 +272,18 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     });
     const downloadAvailableUpdate = page.getByTestId('download-available-update');
     await expect(downloadAvailableUpdate).toBeVisible();
-    await expect(downloadAvailableUpdate).toHaveAttribute('aria-label', 'Download update 98.0.0');
-    await downloadAvailableUpdate.hover();
-    await expect(page.getByRole('tooltip')).toContainText('Download update 98.0.0');
-    await page.mouse.move(0, 0);
+    await expect(downloadAvailableUpdate).toHaveAttribute('aria-label', 'Download Symphony 98.0.0');
+    await expect(
+      page.getByTestId('window-status-bar').getByTestId('download-available-update'),
+    ).toBeVisible();
+    await publishUpdateState({
+      kind: 'downloading',
+      currentVersion: applicationVersion,
+      targetVersion: '98.0.0',
+      channel: 'stable',
+      progress: 0.5,
+    });
+    await expect(page.getByTestId('update-progress')).toHaveAttribute('aria-valuenow', '50');
     await publishUpdateState({
       kind: 'ready',
       currentVersion: applicationVersion,
@@ -285,41 +291,19 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       channel: 'stable',
       downloadedAt: '2026-09-04T20:00:00.000Z',
     });
-    await expect(downloadAvailableUpdate).toHaveCount(0);
+    await expect(page.getByTestId('update-progress')).toHaveCount(0);
     const installReadyUpdate = page.getByTestId('install-ready-update');
     await expect(installReadyUpdate).toBeVisible();
+    await expect(installReadyUpdate).toHaveJSProperty('label', 'Restart to update');
     await expect(installReadyUpdate).toHaveAttribute(
       'aria-label',
-      'Install update 99.0.0 and restart Symphony',
+      'Install Symphony 99.0.0 and restart',
     );
-    await expect(installReadyUpdate).toHaveJSProperty('isBusy', false);
-    await installReadyUpdate.hover();
-    await expect(page.getByRole('tooltip')).toContainText(
-      'Install update 99.0.0 and restart Symphony',
-    );
-    const updateAction = await installReadyUpdate.evaluate((element) => {
-      const box = element.getBoundingClientRect();
-      const navigation = document
-        .querySelector('[test-id="presenter-navigation"]')
-        ?.getBoundingClientRect();
-      const search = document
-        .querySelector('[test-id="global-search-launcher"]')
-        ?.getBoundingClientRect();
-      return {
-        x: box.x,
-        right: box.right,
-        navigationRight: navigation?.right,
-        searchX: search?.x,
-      };
-    });
-    expect(updateAction.x).toBeGreaterThanOrEqual(updateAction.navigationRight ?? 0);
-    expect(updateAction.right).toBeLessThanOrEqual(updateAction.searchX ?? 0);
     await page.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'desktop-ready-update.png'),
       fullPage: true,
     });
-    await page.mouse.move(0, 0);
     await publishUpdateState({
       kind: 'disabled',
       reason: 'development',
@@ -327,12 +311,6 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       channel: 'stable',
     });
     await expect(installReadyUpdate).toHaveCount(0);
-    // The navigation carries labels only; the icons are gone.
-    expect(
-      await page
-        .getByTestId('navigation-board')
-        .evaluate((element) => element.shadowRoot?.querySelector('[part="icon"]') ?? null),
-    ).toBeNull();
     expect(
       await page
         .getByTestId('presenter-content')
@@ -340,100 +318,14 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     ).toBe('rgb(10, 10, 10)');
     await page.screenshot({
       animations: 'disabled',
-      path: resolve(outputDirectory, 'macos-vibrancy-navigation.png'),
+      path: resolve(outputDirectory, 'macos-window-chrome.png'),
       fullPage: true,
     });
 
-    // The search matches against the loaded snapshot; the widget grid renders only from it, so
-    // its visibility is the observable "workspace is loaded" state the search contract needs.
-    await expect(page.getByTestId('home-column-widgets')).toBeVisible();
-    const launcher = page.getByTestId('global-search-launcher');
-    if (await launcher.count()) {
-      await launcher.click();
-    }
-    await expect(page.getByTestId('global-search-launcher-input')).toBeVisible();
-    const globalSearch = page.getByTestId('global-search-launcher-input').locator('input');
-    await globalSearch.fill('Expose execution diagnostics');
-    await globalSearch.press('Enter');
-    await expect(page).toHaveURL(/\/main\/board\?q=Expose/);
-    await expect(page.getByTestId('board-item-work-item-138')).toBeVisible();
-    await expect(page.getByTestId('board-item-work-item-142')).toHaveCount(0);
-    await globalSearch.press('Escape');
-    await expect(page.getByTestId('presenter-navigation')).toBeVisible();
-    await page.getByTestId('navigation-home').click();
-    await expect(page.getByTestId('home-view')).toBeVisible();
-    await expect(page.getByTestId('global-search-launcher')).toBeVisible();
-    await expect(page.getByTestId('global-search-launcher-input')).toHaveCount(0);
-
-    // The navigation segment replaces the compact/expanded side rail and is always visible; there
-    // is no navigation toggle any more, and no persisted navigation state to restore.
-    await expect(page.getByTestId('presenter-navigation')).toBeVisible();
-    await expect(page.getByTestId('navigation-pull-requests')).toBeVisible();
-
-    // The route scrollport starts below the band instead of running underneath it.
-    const behindHeader = await page.evaluate(() => {
-      const header = document
-        .querySelector('mosaik-app > mosaik-app-header')
-        ?.getBoundingClientRect();
-      const scroll = document.querySelector('[part="route-scroll"]')?.getBoundingClientRect();
-      return header && scroll ? scroll.top - header.bottom : -1;
-    });
-    expect(behindHeader).toBeGreaterThanOrEqual(0);
-
-    // Segment items carry their label beside the icon, so each one is wider than an icon button.
-    expect(
-      await page
-        .getByTestId('navigation-board')
-        .evaluate((element) => element.getBoundingClientRect().width),
-    ).toBeGreaterThan(48);
-
-    // Keyboard activation of a navigation item. The focusable element is the `<button role="tab">`
-    // inside the segment item's shadow root - the host does not set `delegatesFocus`, so focusing
-    // it would be a no-op, and Tab reaches the inner button the same way. The segment consumes
-    // Enter in a capture-phase keyboard controller and checks the item instead of clicking it, so
-    // this asserts the `checked`-driven navigation rather than a synthesised click.
-    await page.getByTestId('navigation-board').locator('button').press('Enter');
-    await expect(page).toHaveURL(/\/main\/board/);
-    await page.getByTestId('navigation-home').click();
-    await expect(page.getByTestId('home-view')).toBeVisible();
-
-    await expect(page.getByTestId('workspace-rail')).toBeHidden();
-    await page.getByTestId('toggle-rail').click();
-    await expect(page.getByTestId('workspace-rail')).toBeVisible();
-    await expect(page.getByTestId('rail-header')).toContainText('Runs');
-    await expect(page.getByTestId('rail-run-segment')).toBeVisible();
-    expect(await page.getByTestId('rail-run-list').evaluate((element) => element.tagName)).toBe(
-      'MOSAIK-LIST',
-    );
-    await page.getByTestId('presenter-rail-split').evaluate((element) => {
-      (element as HTMLElement & { collapse(side: 'start' | 'end'): void }).collapse('start');
-    });
-    await expect
-      .poll(() =>
-        page
-          .getByTestId('presenter-rail-split')
-          .evaluate(
-            (element) =>
-              (element as HTMLElement & { isStartCollapsed?: boolean }).isStartCollapsed ?? false,
-          ),
-      )
-      .toBe(false);
-    await page.screenshot({
-      animations: 'disabled',
-      path: resolve(outputDirectory, 'rail-reference-alignment.png'),
-      fullPage: true,
-    });
-    await page.getByTestId('toggle-rail').click();
-    await expect(page.getByTestId('workspace-rail')).toBeHidden();
-
-    await page.getByTestId('toggle-rail').click();
-    await expect(page.getByTestId('workspace-rail')).toBeVisible();
-    expect(
-      await page.evaluate(() => ({
-        rail: localStorage.getItem('presentation.isRailOpen'),
-      })),
-    ).toEqual({ rail: 'true' });
-
+    // `Hide sidebar` collapses the sidebar and the choice survives a reload.
+    await page.getByTestId('hide-sidebar').click();
+    await expect(page.getByTestId('window-sidebar')).toHaveCount(0);
+    await expect(page.getByTestId('show-sidebar')).toBeVisible();
     await Promise.all([
       page.waitForEvent('domcontentloaded'),
       app.evaluate(({ BrowserWindow }, rendererUrl) => {
@@ -444,26 +336,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       }, page.url()),
     ]);
     await expect(page.getByTestId('home-view')).toBeVisible();
-    // Navigation is always there after a reload, and the header band still spans the view edge.
-    await expect(page.getByTestId('presenter-navigation')).toBeVisible();
-    // The band starts at the view edge. The exact inset is the app view's own border and gap, so
-    // this waits for the layout before the relative geometry is pinned.
-    await expect
-      .poll(() =>
-        page
-          .locator('mosaik-app > mosaik-app-header')
-          .evaluate((element) => element.getBoundingClientRect().x),
-      )
-      .toBeLessThan(32);
-    await expect(page.getByTestId('workspace-rail')).toBeVisible();
-
-    await page.getByTestId('toggle-rail').click();
-    await expect(page.getByTestId('workspace-rail')).toBeHidden();
-    expect(
-      await page.evaluate(() => ({
-        rail: localStorage.getItem('presentation.isRailOpen'),
-      })),
-    ).toEqual({ rail: 'false' });
+    await expect(page.getByTestId('window-sidebar')).toHaveCount(0);
+    await page.getByTestId('show-sidebar').click();
+    await expect(page.getByTestId('window-sidebar')).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem('presentation.isSidebarCollapsed'))).toBe(
+      'false',
+    );
 
     expect(
       await page.evaluate(() => typeof (window as unknown as { process?: unknown }).process),
@@ -472,8 +350,8 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       await page.locator('mosaik-app').evaluate((element) => Boolean(element.shadowRoot)),
     ).toBe(true);
 
-    // A column widget lands on the board narrowed to exactly that column.
-    await page.getByTestId('home-column-widget-qualified').click();
+    // A Board card column bar lands on the board narrowed to exactly that column.
+    await page.getByTestId('home-board-column-qualified').click();
     await expect(page).toHaveURL(/\/main\/board\?column=qualified/);
     await expect(page.getByTestId('board-column-qualified')).toBeVisible();
     await expect(page.getByTestId('board-column-backlog')).toHaveCount(0);
@@ -503,23 +381,29 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(page.getByTestId('board-column-backlog')).toBeVisible();
     await expect(filterMenu).toHaveJSProperty('isDropDownOpen', false);
 
+    // `Manage workspaces…` in the workspace menu opens Settings inside the main window, whose
+    // navigation replaces the sidebar's destinations.
     await page.getByTestId('global-workspace-filter').click();
     await page.getByTestId('workspace-menu-settings').click();
-    await expect(page).toHaveURL(/\/main\/settings/);
-    await expect(page.getByTestId('workspace-directory')).toBeVisible();
-    await page.getByTestId('global-settings-section-workspaces').click();
-    await page.getByTestId('open-workspace-settings-personal').click();
-    await expect(page.getByTestId('workspace-card-personal')).toBeVisible();
-    await expectCenteredPage('settings-view', 1240);
-    await expect(page.getByTestId('workspace-card-personal')).toContainText('AI team');
-    await page.getByTestId('workspace-settings-section-services').click();
-    await expect(page.getByTestId('workspace-card-personal')).toContainText('Azure DevOps');
-    await expect(page.getByTestId('add-repository-personal')).toHaveCount(0);
-    await page.getByTestId('workspace-settings-section-repositories').click();
-    await expect(page.getByTestId('add-repository-personal')).toBeVisible();
-    await page.getByTestId('workspace-settings-section-administration').click();
-    await expect(page.getByTestId('delete-workspace-personal')).toHaveJSProperty('disabled', true);
-    await expect(page.getByTestId('export-workspace-personal')).toBeVisible();
+    await expectSettingsInMainWindow(app, page);
+    await expect(page.getByTestId('global-workspace-filter')).toHaveCount(0);
+    const settings = await openSettings(page);
+    await expect(settings.getByTestId('workspace-directory')).toBeVisible();
+    await settings.getByTestId('global-settings-section-workspaces').click();
+    await settings.getByTestId('open-workspace-settings-personal').click();
+    await expect(settings.getByTestId('workspace-card-personal')).toBeVisible();
+    await expect(settings.getByTestId('window-title')).toContainText('AI team');
+    await settings.getByTestId('workspace-settings-section-services').click();
+    await expect(settings.getByTestId('workspace-card-personal')).toContainText('Azure DevOps');
+    await expect(settings.getByTestId('add-repository-personal')).toHaveCount(0);
+    await settings.getByTestId('workspace-settings-section-repositories').click();
+    await expect(settings.getByTestId('add-repository-personal')).toBeVisible();
+    await settings.getByTestId('workspace-settings-section-administration').click();
+    await expect(settings.getByTestId('delete-workspace-personal')).toHaveJSProperty(
+      'disabled',
+      true,
+    );
+    await expect(settings.getByTestId('export-workspace-personal')).toBeVisible();
     const workspaceTransferDirectory = resolve(
       outputDirectory,
       `workspace-transfer-${process.pid}`,
@@ -527,8 +411,8 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     rmSync(workspaceTransferDirectory, { force: true, recursive: true });
     mkdirSync(workspaceTransferDirectory, { recursive: true });
     await setDialogPaths([workspaceTransferDirectory]);
-    await page.getByTestId('export-workspace-personal').click();
-    await expect(page.getByTestId('notification-success').last()).toContainText(
+    await settings.getByTestId('export-workspace-personal').click();
+    await expect(settings.getByTestId('notification-success').last()).toContainText(
       'Personal exported',
     );
     const exportedWorkspacePath = resolve(
@@ -547,28 +431,31 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     expect(JSON.stringify(exportedWorkspace)).not.toContain('accountLogin');
     expect(JSON.stringify(exportedWorkspace)).not.toContain('localPath');
     expect(exportedWorkspace.connections[0]).toMatchObject({ credentialSource: 'isolated' });
-    await dismissNotifications();
-    await page.getByTestId('global-settings-section-workspaces').click();
-    await expect(page.getByTestId('import-workspace')).toBeVisible();
+    await dismissNotifications(settings);
+    await settings.getByTestId('global-settings-section-workspaces').click();
+    await expect(settings.getByTestId('import-workspace')).toBeVisible();
     await setDialogPaths([exportedWorkspacePath]);
-    await page.getByTestId('import-workspace').click();
-    const importConfirmation = page.locator('mosaik-message-box').last();
+    await settings.getByTestId('import-workspace').click();
+    // Importing is confirmed in an alert sheet of Settings.
+    const importConfirmation = settings.getByTestId('settings-alert-workspace-import');
     await expect(importConfirmation).toContainText('Import workspace configuration?');
-    await importConfirmation.getByText('Import workspace', { exact: true }).click();
-    await expect(page.getByTestId('notification-success').last()).toContainText(
+    await settings.getByTestId('settings-alert-workspace-import-confirm').click();
+    await expect(settings.getByTestId('notification-success').last()).toContainText(
       'Personal updated from bundle',
     );
-    await expect(page.getByTestId('workspace-directory')).toBeVisible();
-    await dismissNotifications();
+    await expect(settings.getByTestId('workspace-directory')).toBeVisible();
+    await dismissNotifications(settings);
     await setDialogPaths([workspace]);
     const workspaceStorageRoot = resolve(configurationRoot, 'workspaces');
     const storageDirectoriesBefore = new Set(readdirSync(workspaceStorageRoot));
-    await page.getByTestId('add-workspace').click();
-    await page.getByTestId('workspace-name').locator('input').fill('Temporary workspace');
-    await page.getByTestId('workspace-short-code').locator('input').fill('TMP');
-    await page.getByTestId('workspace-color').locator('input').fill('#038387');
-    await page.getByTestId('save-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await settings.getByTestId('add-workspace').click();
+    await settings.getByTestId('workspace-name').locator('input').fill('Temporary workspace');
+    await settings.getByTestId('workspace-short-code').locator('input').fill('TMP');
+    await settings.getByTestId('choose-workspace-icon').click();
+    await settings.getByTestId('workspace-avatar-color-14b8a6').click();
+    await settings.getByTestId('workspace-avatar-save').click();
+    await settings.getByTestId('save-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
     const temporaryWorkspaceId = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const settings = await api.request('settings.get', {});
@@ -577,13 +464,24 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       )?.id;
     });
     expect(temporaryWorkspaceId).toBeTruthy();
-    const temporaryWorkspaceCard = page.getByTestId(`workspace-card-${temporaryWorkspaceId!}`);
-    await expect(temporaryWorkspaceCard).toBeVisible();
+    // The new workspace joins the directory and the Settings sidebar, and, once Settings is
+    // left, the main window's workspace menu switches to it; there is no `All workspaces` scope.
+    await settings.getByTestId('global-settings-section-workspaces').click();
+    await expect(
+      settings.getByTestId(`workspace-directory-item-${temporaryWorkspaceId!}`),
+    ).toBeVisible();
+    const temporaryWorkspaceNavigation = settings.getByTestId(
+      `workspace-navigation-item-${temporaryWorkspaceId!}`,
+    );
+    await expect(temporaryWorkspaceNavigation).toBeVisible();
+    await closeSettings(page);
     await page.getByTestId('global-workspace-filter').click();
     await expect(page.getByTestId('global-workspace-filter-all')).toHaveCount(0);
     await page.getByTestId(`global-workspace-filter-${temporaryWorkspaceId!}`).click();
-    await expect(page.getByTestId('global-workspace-avatar')).toBeVisible();
-    await expect(page.getByTestId('global-workspace-avatar-group')).toHaveCount(0);
+    await expect(page.getByTestId('workspace-switcher-name')).toHaveJSProperty(
+      'text',
+      'Temporary workspace',
+    );
     await expect
       .poll(async () => {
         const settings = await page.evaluate(async () => {
@@ -595,7 +493,10 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       .toEqual([temporaryWorkspaceId]);
     await page.getByTestId('global-workspace-filter').click();
     await page.getByTestId('global-workspace-filter-personal').click();
-    await page.getByTestId('workspace-settings-section-administration').click();
+    await expect(page.getByTestId('workspace-switcher-name')).toHaveJSProperty('text', 'Personal');
+    await openSettings(page);
+    await settings.getByTestId(`open-workspace-settings-${temporaryWorkspaceId!}`).click();
+    await settings.getByTestId('workspace-settings-section-administration').click();
     const temporaryStorageDirectory = await expect
       .poll(() => {
         const current = readdirSync(workspaceStorageRoot);
@@ -616,13 +517,18 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     );
     mkdirSync(orphanedExecution, { recursive: true });
     writeFileSync(resolve(orphanedExecution, 'workspace-owned.txt'), 'delete me');
-    await page.getByTestId(`delete-workspace-${temporaryWorkspaceId!}`).click();
-    const deleteConfirmation = page.locator('mosaik-message-box').last();
+    await settings.getByTestId(`delete-workspace-${temporaryWorkspaceId!}`).click();
+    // Deleting is confirmed in an alert sheet of Settings.
+    const deleteConfirmation = settings.getByTestId(
+      `settings-alert-delete-workspace-confirmation-${temporaryWorkspaceId!}`,
+    );
     await expect(deleteConfirmation).toContainText('Delete Temporary workspace?');
     await expect(deleteConfirmation).toContainText('Configured repository checkouts are kept');
-    await deleteConfirmation.getByText('Delete workspace', { exact: true }).click();
-    await expect(temporaryWorkspaceCard).toHaveCount(0);
-    await expect(page.getByTestId('notification-success').last()).toContainText(
+    await settings
+      .getByTestId(`settings-alert-delete-workspace-confirmation-${temporaryWorkspaceId!}-confirm`)
+      .click();
+    await expect(temporaryWorkspaceNavigation).toHaveCount(0);
+    await expect(settings.getByTestId('notification-success').last()).toContainText(
       'Workspace deleted',
     );
     expect(existsSync(resolve(workspaceStorageRoot, temporaryStorageDirectory!))).toBe(false);
@@ -638,13 +544,16 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         };
       }, temporaryWorkspaceId!),
     ).toEqual({ workspace: false, connection: false });
-    await page.getByTestId('global-settings-section-workspaces').click();
-    await page.getByTestId('open-workspace-settings-personal').click();
-    await page.getByTestId('workspace-settings-section-administration').click();
-    await expect(page.getByTestId('delete-workspace-personal')).toHaveJSProperty('disabled', true);
-    await page.getByTestId('workspace-settings-section-services').click();
-    const accountGroup = page.getByTestId('configured-accounts-personal');
-    const availableConnections = page.getByTestId('available-connections-personal');
+    await settings.getByTestId('global-settings-section-workspaces').click();
+    await settings.getByTestId('open-workspace-settings-personal').click();
+    await settings.getByTestId('workspace-settings-section-administration').click();
+    await expect(settings.getByTestId('delete-workspace-personal')).toHaveJSProperty(
+      'disabled',
+      true,
+    );
+    await settings.getByTestId('workspace-settings-section-services').click();
+    const accountGroup = settings.getByTestId('configured-accounts-personal');
+    const availableConnections = settings.getByTestId('available-connections-personal');
     await expect(accountGroup).toHaveCount(1);
     await expect(availableConnections).toHaveCount(1);
     await expect
@@ -666,33 +575,33 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         'ai-runtime-account-opencode-personal',
         'azure-account-personal',
       ]);
-    await dismissNotifications();
+    await dismissNotifications(settings);
     await availableConnections.scrollIntoViewIfNeeded();
-    await page.screenshot({
+    await settings.screenshot({
       path: resolve(outputDirectory, 'modular-services-accounts.png'),
       animations: 'disabled',
       fullPage: true,
     });
-    await page.getByTestId('workspace-settings-section-team').click();
-    const agentGroup = page.getByTestId('workspace-agents-personal');
+    await settings.getByTestId('workspace-settings-section-team').click();
+    const agentGroup = settings.getByTestId('workspace-agents-personal');
     await expect(agentGroup.locator('[test-id^="workspace-agent-"]')).toHaveCount(1);
-    await page.screenshot({
+    await settings.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'settings-account-list.png'),
       fullPage: true,
     });
-    await page.getByTestId('global-settings-section-workspaces').click();
-    await page.getByTestId('global-settings-section-automation').click();
-    await expect(page.getByTestId('virtual-machines-card')).toBeVisible();
-    await expect(page.getByTestId('virtual-machines-card')).toContainText('Virtual machines');
-    await expect(page.getByTestId('local-ci-reuse-vm')).toHaveJSProperty('isChecked', false);
-    await expect(page.getByTestId('local-ci-resource-preset')).toHaveJSProperty(
+    // This Mac's virtual machines and updates live under System.
+    await settings.getByTestId('global-settings-section-system').click();
+    await expect(settings.getByTestId('virtual-machines-card')).toBeVisible();
+    await expect(settings.getByTestId('virtual-machines-card')).toContainText('Virtual machines');
+    await expect(settings.getByTestId('local-ci-reuse-vm')).toHaveJSProperty('isChecked', false);
+    await expect(settings.getByTestId('local-ci-resource-preset')).toHaveJSProperty(
       'value',
       'balanced',
     );
-    await expect(
-      page.getByTestId('local-ci-runtime-root').getByRole('textbox', { name: 'Runner data' }),
-    ).toHaveValue(resolve(configurationRoot, 'workspaces', 'local-ci'));
+    await expect(settings.getByTestId('local-ci-runtime-root')).toContainText(
+      resolve(configurationRoot, 'workspaces', 'local-ci'),
+    );
     expect(
       await page.evaluate(async () => {
         const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -704,72 +613,76 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         }
       }),
     ).toContain('Enable local GitHub Actions');
-    await expect(page.getByTestId('runtime-settings-card')).toBeVisible();
-    await expect(page.getByTestId('runtime-settings-card')).toContainText('Managed workspaces');
-    await expect(page.getByTestId('runtime-settings-card')).toContainText('GitHub issue control');
-    await expect(page.getByTestId('runtime-settings-card')).toContainText('Autonomous work');
-    await expect(page.getByTestId('runtime-settings-card')).toContainText('Workspace cleanup');
-    await page.getByTestId('global-settings-section-mobile').click();
-    await expect(page.getByTestId('mobile-access-card')).toBeVisible();
-    await expect(page.getByTestId('mobile-access-toggle')).toContainText('Allow mobile access');
-    await expect(page.getByTestId('mobile-access-toggle')).toContainText(
-      'only to phones that you pair and approve',
+    await expect(settings.getByTestId('update-settings-card')).toBeVisible();
+    await expect(settings.getByTestId('update-channel-guide')).toContainText(
+      'Stable receives tested releases',
     );
-    await expect(page.getByTestId('mobile-network-guide')).toContainText(
-      'Mac remains the task owner',
-    );
-    await page.getByTestId('global-settings-section-appearance').click();
-    await expect(page.getByTestId('theme-settings-card')).toBeVisible();
-    await expect(page.getByTestId('theme-guide')).toContainText(
-      'System follows the Mac appearance',
-    );
-    await page.getByTestId('global-settings-section-system').click();
-    await expect(page.getByTestId('update-settings-card')).toBeVisible();
-    await expect(page.getByTestId('update-channel-guide')).toContainText(
-      'Choose stability or early access',
-    );
-    await expect(page.getByTestId('update-status')).toContainText(
+    await expect(settings.getByTestId('update-status')).toContainText(
       'Automatic updates are disabled in development builds.',
     );
-    await expect(page.getByTestId('check-for-updates')).toHaveJSProperty('disabled', true);
-    await expect(page.getByText('Update channel changed.', { exact: true })).toHaveCount(0);
+    await expect(settings.getByTestId('check-for-updates')).toHaveJSProperty('disabled', true);
+    await expect(settings.getByText('Update channel changed.', { exact: true })).toHaveCount(0);
+    await settings.getByTestId('global-settings-section-automation').click();
+    await expect(settings.getByTestId('runtime-settings-card')).toBeVisible();
+    for (const heading of ['Autonomous work', 'GitHub commands', 'Execution']) {
+      await expect(settings.getByTestId('runtime-settings-card')).toContainText(heading);
+    }
+    await expect(settings.getByTestId('runtime-settings-card')).toContainText(
+      'Clear inactive workspaces',
+    );
+    await settings.getByTestId('global-settings-section-mobile').click();
+    await expect(settings.getByTestId('mobile-access-card')).toBeVisible();
+    await expect(settings.getByTestId('mobile-network-settings-group')).toContainText(
+      'Allow mobile access',
+    );
+    await expect(settings.getByTestId('mobile-network-settings-group')).toContainText(
+      'only to phones that you pair and approve',
+    );
+    await expect(settings.getByTestId('mobile-network-guide')).toContainText(
+      'Mac remains the task owner',
+    );
+    await settings.getByTestId('global-settings-section-appearance').click();
+    await expect(settings.getByTestId('theme-settings-card')).toBeVisible();
+    await expect(settings.getByTestId('appearance-theme-settings-group')).toContainText(
+      'switch between light and dark automatically',
+    );
 
-    await page.getByTestId('global-settings-section-workspaces').click();
-    await page.getByTestId('open-workspace-settings-personal').click();
-    await expect(page.getByTestId('workspace-card-personal')).toBeVisible();
-    await page.getByTestId('edit-agent-account-personal-default-agent').click();
-    await expect(page.getByTestId('settings-editor-loading-skeleton')).toHaveCount(0);
+    await settings.getByTestId('global-settings-section-workspaces').click();
+    await settings.getByTestId('open-workspace-settings-personal').click();
+    await expect(settings.getByTestId('workspace-card-personal')).toBeVisible();
+    await settings.getByTestId('edit-agent-account-personal-default-agent').click();
+    await expect(settings.getByTestId('settings-editor-loading-skeleton')).toHaveCount(0);
     // Account, model, and effort are card choices; nothing is typed by hand.
-    await expect(page.getByTestId('ai-account')).toBeVisible();
-    await expect(page.getByTestId('ai-account-personal-codex')).toBeVisible();
-    await expect(page.getByTestId('ai-model')).toBeVisible();
-    await expect(page.getByTestId('ai-reasoning')).toBeVisible();
-    expect(await page.getByTestId('ai-model').evaluate((element) => element.tagName)).toBe(
+    await expect(settings.getByTestId('ai-account')).toBeVisible();
+    await expect(settings.getByTestId('ai-account-personal-codex')).toBeVisible();
+    await expect(settings.getByTestId('ai-model')).toBeVisible();
+    await expect(settings.getByTestId('ai-reasoning')).toBeVisible();
+    expect(await settings.getByTestId('ai-model').evaluate((element) => element.tagName)).toBe(
       'MOSAIK-CHOICE-GROUP',
     );
-    expect(await page.getByTestId('ai-reasoning').evaluate((element) => element.tagName)).toBe(
+    expect(await settings.getByTestId('ai-reasoning').evaluate((element) => element.tagName)).toBe(
       'MOSAIK-CHOICE-GROUP',
     );
-    await expect(page.getByTestId('ai-model-gpt-5.6-sol')).toBeAttached();
-    await expect(page.getByTestId('ai-reasoning-low')).toBeAttached();
-    await expect(page.getByTestId('ai-reasoning')).toHaveJSProperty('value', 'low');
+    await expect(settings.getByTestId('ai-model-gpt-5.6-sol')).toBeAttached();
+    await expect(settings.getByTestId('ai-reasoning-low')).toBeAttached();
+    await expect(settings.getByTestId('ai-reasoning')).toHaveJSProperty('value', 'low');
     // Sign-in, usage type, and account naming moved to Connected services.
-    await expect(page.getByTestId('agent-wizard')).not.toContainText('Usage type');
-    await expect(page.getByTestId('agent-wizard')).not.toContainText('Usage type');
-    await expect(page.getByTestId('agent-wizard')).not.toContainText('Account name');
-    await page.screenshot({
+    await expect(settings.getByTestId('agent-wizard')).not.toContainText('Usage type');
+    await expect(settings.getByTestId('agent-wizard')).not.toContainText('Usage type');
+    await expect(settings.getByTestId('agent-wizard')).not.toContainText('Account name');
+    await settings.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'settings-ai-account-configuration.png'),
       fullPage: true,
     });
-    await page.getByTestId('ai-reasoning-high').click();
-    await expect(page.getByTestId('ai-reasoning')).toHaveJSProperty('value', 'high');
-    await expect(page.getByTestId('save-settings-editor')).toBeEnabled();
-    await page.getByTestId('save-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
-    await page.getByTestId('edit-agent-account-personal-default-agent').click();
-    await expect(page.getByTestId('settings-editor-loading-skeleton')).toHaveCount(0);
-    await expect(page.getByTestId('ai-reasoning')).toHaveJSProperty('value', 'high');
+    await settings.getByTestId('ai-reasoning-high').click();
+    await expect(settings.getByTestId('ai-reasoning')).toHaveJSProperty('value', 'high');
+    await expect(settings.getByTestId('save-settings-editor')).toBeEnabled();
+    await settings.getByTestId('save-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await settings.getByTestId('edit-agent-account-personal-default-agent').click();
+    await expect(settings.getByTestId('settings-editor-loading-skeleton')).toHaveCount(0);
+    await expect(settings.getByTestId('ai-reasoning')).toHaveJSProperty('value', 'high');
     expect(
       await page.evaluate(async () => {
         const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -779,136 +692,128 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
           .find((candidate) => candidate.aiConnectionId === 'personal-codex')?.reasoningEffort;
       }),
     ).toBe('high');
-    await page.getByTestId('cancel-settings-editor').click();
+    await settings.getByTestId('cancel-settings-editor').click();
 
-    await page.getByTestId('workspace-settings-section-services').click();
-    await page.getByTestId('add-azure-source-personal').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toBeVisible();
-    await expect(page.locator('mosaik-drawer-header').last()).toContainText('Azure DevOps');
-    await expect(page.getByTestId('ado-organization')).toBeVisible();
-    await page.getByTestId('cancel-settings-editor').click();
+    await settings.getByTestId('workspace-settings-section-services').click();
+    await settings.getByTestId('add-azure-source-personal').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toBeVisible();
+    await expect(settings.locator('mosaik-dialog-header').last()).toContainText('Azure DevOps');
+    await expect(settings.getByTestId('ado-organization')).toBeVisible();
+    await settings.getByTestId('cancel-settings-editor').click();
 
-    await page.getByTestId('feedback-intake-settings-personal').click();
-    await page.getByTestId('add-teams-feedback-intake-personal').click();
-    await expect(page.getByTestId('teams-feedback-intake-editor')).toBeVisible();
-    await expect(page.locator('mosaik-drawer-header').last()).toContainText(
+    await expect(settings.getByTestId('feedback-intake-settings-personal')).toBeVisible();
+    await settings.getByTestId('add-teams-feedback-intake-personal').click();
+    await expect(settings.getByTestId('teams-feedback-intake-editor')).toBeVisible();
+    await expect(settings.locator('mosaik-dialog-header').last()).toContainText(
       'Add Microsoft Teams feedback intake',
     );
-    await expect(page.getByTestId('teams-feedback-tenant-id')).toBeVisible();
-    await expect(page.getByTestId('teams-feedback-client-id')).toBeVisible();
-    await expect(page.getByTestId('teams-feedback-credential-ref')).toBeVisible();
-    await expect(page.getByTestId('teams-feedback-team-id')).toBeVisible();
-    await expect(page.getByTestId('teams-feedback-channel-id')).toBeVisible();
-    await expect(page.getByTestId('test-teams-feedback-connection')).toHaveAttribute(
+    await expect(settings.getByTestId('teams-feedback-tenant-id')).toBeVisible();
+    await expect(settings.getByTestId('teams-feedback-client-id')).toBeVisible();
+    await expect(settings.getByTestId('teams-feedback-credential-ref')).toBeVisible();
+    await expect(settings.getByTestId('teams-feedback-team-id')).toBeVisible();
+    await expect(settings.getByTestId('teams-feedback-channel-id')).toBeVisible();
+    await expect(settings.getByTestId('test-teams-feedback-connection')).toHaveAttribute(
       'aria-disabled',
       'true',
     );
-    await page.getByTestId('cancel-settings-editor').click();
+    await settings.getByTestId('cancel-settings-editor').click();
 
     // AI accounts are connected once under Connected services …
-    await page.getByTestId('add-ai-runtime-account-claude-personal').click();
-    await expect(page.locator('mosaik-drawer-header').last()).toContainText('Connect AI account');
-    await expect(page.getByTestId('ai-provider-claude')).toHaveJSProperty('isChecked', true);
+    await settings.getByTestId('add-ai-runtime-account-claude-personal').click();
+    await expect(settings.locator('mosaik-dialog-header').last()).toContainText(
+      'Connect AI account',
+    );
+    await expect(settings.getByTestId('ai-provider-claude')).toHaveJSProperty('isChecked', true);
     // No Save for a new account: it only exists once the sign-in completed.
-    await expect(page.getByTestId('save-settings-editor')).toHaveCount(0);
-    await page.getByTestId('ai-account-name').locator('input').fill('Secondary Claude account');
-    await page.getByTestId('connect-ai-account').click();
-    await expect(page.getByTestId('ai-authorization-code')).toBeVisible();
-    await page.getByTestId('ai-authorization-code').locator('input').fill('e2e-authorization-code');
-    await page.getByTestId('complete-claude-login').click();
-    await expect(page.getByTestId('remove-ai-account')).toBeVisible();
+    await expect(settings.getByTestId('save-settings-editor')).toHaveCount(0);
+    await settings.getByTestId('ai-account-name').locator('input').fill('Secondary Claude account');
+    await settings.getByTestId('connect-ai-account').click();
+    await expect(settings.getByTestId('ai-authorization-code')).toBeVisible();
+    await settings
+      .getByTestId('ai-authorization-code')
+      .locator('input')
+      .fill('e2e-authorization-code');
+    await settings.getByTestId('complete-claude-login').click();
+    await expect(settings.getByTestId('remove-ai-account')).toBeVisible();
     // The sign-in produced an authorization URL, but it must never leave the app process.
     expect(await blockedExternalUrls()).toContain(
       'https://claude.com/cai/oauth/authorize?state=symphony-e2e',
     );
     expect(await escapedExternalUrls()).toEqual([]);
-    await page.getByTestId('cancel-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
-    await expect(page.getByTestId('configured-accounts-personal')).toContainText(
+    await settings.getByTestId('cancel-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await expect(settings.getByTestId('configured-accounts-personal')).toContainText(
       'Secondary Claude account',
     );
     // … and picked by the agent afterwards.
-    await page.getByTestId('workspace-settings-section-team').click();
-    await page.getByTestId('add-ai-account-personal').click();
-    await expect(page.locator('mosaik-drawer-header').last()).toContainText('Add AI agent');
-    await page
+    await settings.getByTestId('workspace-settings-section-team').click();
+    await settings.getByTestId('add-ai-account-personal').click();
+    await expect(settings.locator('mosaik-dialog-header').last()).toContainText('Add AI agent');
+    await settings
       .getByTestId('settings-editor-drawer')
       .locator('mosaik-choice[test-id^="ai-account-claude-"]')
       .click();
-    await expect(page.getByTestId('ai-model-fable')).toBeVisible();
-    await expect(page.getByTestId('ai-model-opus')).toBeVisible();
-    await expect(page.getByTestId('ai-reasoning-high')).toBeVisible();
-    await page.getByTestId('agent-ai-next').click();
-    await page.getByTestId('ai-display-name').locator('input').fill('Secondary Claude agent');
-    await page.getByTestId('ai-position-name').locator('input').fill('Review Agent');
-    await page
+    await expect(settings.getByTestId('ai-model-fable')).toBeVisible();
+    await expect(settings.getByTestId('ai-model-opus')).toBeVisible();
+    await expect(settings.getByTestId('ai-reasoning-high')).toBeVisible();
+    await settings.getByTestId('ai-display-name').locator('input').fill('Secondary Claude agent');
+    await settings.getByTestId('ai-position-name').locator('input').fill('Review Agent');
+    await settings
       .getByTestId('ai-position-description')
       .locator('input')
       .fill('Reviews planned and implemented changes.');
-    await page.getByTestId('agent-identity-next').click();
-    await page.getByTestId('ai-role-analysis').click();
-    await page.getByTestId('agent-responsibilities-next').click();
-    await page.getByTestId('save-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await settings.getByTestId('ai-role-analysis').click();
+    await settings.getByTestId('save-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
     await expect(agentGroup.locator('[test-id^="workspace-agent-"]')).toHaveCount(2);
     const secondaryAgent = agentGroup.locator('[test-id^="workspace-agent-"]').last();
     await expect(secondaryAgent).toContainText('Secondary Claude agent');
 
-    await page.getByTestId('global-settings-section-workspaces').click();
-    await page.getByTestId('global-settings-section-system').click();
-    await page.getByTestId('open-skill-import').click();
-    await expect(page.locator('mosaik-drawer-header').last()).toContainText('Import skill');
-    await expect(page.locator('mosaik-drawer-footer').last()).toContainText('Import skill');
-    await expect
-      .poll(() =>
-        page
-          .locator('mosaik-drawer-footer')
-          .last()
-          .evaluate((element) => {
-            const bounds = element.getBoundingClientRect();
-            return (
-              bounds.width > 400 &&
-              bounds.left < window.innerWidth - 400 &&
-              bounds.right <= window.innerWidth + 20
-            );
-          }),
-      )
-      .toBe(true);
-    await page.screenshot({
+    // `Import skill` is an action of the Skills section and opens as a sheet.
+    await settings.getByTestId('global-settings-section-skills').click();
+    await settings.getByTestId('open-skill-import').click();
+    await expect(settings.locator('mosaik-dialog-header').last()).toContainText('Import skill');
+    await expect(settings.getByTestId('save-settings-editor')).toHaveJSProperty(
+      'label',
+      'Import skill',
+    );
+    await settings.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'settings-import-drawer.png'),
       fullPage: true,
     });
-    await page.getByTestId('cancel-settings-editor').click();
-    await page.getByTestId('global-settings-section-automation').click();
-    await expect(page.getByTestId('runtime-settings-card')).toBeVisible();
-    const boardRefreshInterval = page.getByTestId('board-refresh-interval').locator('input');
+    await settings.getByTestId('cancel-settings-editor').click();
+    await settings.getByTestId('global-settings-section-automation').click();
+    await expect(settings.getByTestId('runtime-settings-card')).toBeVisible();
+    const boardRefreshInterval = settings.getByTestId('board-refresh-interval').locator('input');
     await expect(boardRefreshInterval).toHaveValue('15');
-    await page.getByTestId('board-refresh-interval').evaluate((element) => {
+    // Every Automation control applies when it changes; a number when it is committed.
+    await settings.getByTestId('board-refresh-interval').evaluate((element) => {
       (element as HTMLElement & { value: number }).value = 30;
-      element.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+      element.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
     });
-    const automaticGitHubExecution = page.getByTestId('automatic-github-execution');
+    await expect(settings.getByTestId('notification-success').last()).toContainText(
+      'Settings saved',
+    );
+    const automaticGitHubExecution = settings.getByTestId('automatic-github-execution');
     await expect(automaticGitHubExecution).toHaveJSProperty('isChecked', false);
-    await expect(automaticGitHubExecution).toContainText('Allow GitHub commands');
-    await expect(automaticGitHubExecution).toContainText('Run authorized @symphony comments');
-    await expect(page.getByTestId('autonomous-execution')).toContainText('Run autonomous work');
-    await expect(page.getByTestId('autonomous-execution')).toContainText('Analyze backlog items');
-    await expect(page.getByTestId('autonomy-capacity-guide')).toContainText(
-      'parallel limit applies application-wide',
+    await expect(settings.getByTestId('github-automation-settings-group')).toContainText(
+      'Allow GitHub commands',
     );
-    await expect(page.getByTestId('remote-github-commands-guide')).toContainText(
-      '@symphony your instruction',
+    await expect(settings.getByTestId('autonomy-settings-group')).toContainText(
+      'Run autonomous work',
     );
-    await expect(page.getByTestId('remote-github-commands-guide')).toContainText(
-      '/symphony rerun-ci',
-    );
+    const commands = settings.getByTestId('remote-github-commands-guide').locator('mosaik-code');
+    await expect(commands).toHaveCount(5);
+    await expect(commands.first()).toHaveJSProperty('text', '@symphony your instruction');
+    await expect(commands.last()).toHaveJSProperty('text', '/symphony rerun-ci');
     await automaticGitHubExecution.click();
     await expect(automaticGitHubExecution).toHaveJSProperty('isChecked', true);
-    await page.getByTestId('save-runtime-settings').click();
-    await expect(page.getByTestId('notification-success').last()).toContainText('Settings saved');
-    await page.getByTestId('save-local-ci-settings').click();
-    await expect(page.getByTestId('notification-success').last()).toContainText('Settings saved');
+    await expect(settings.getByTestId('notification-success').last()).toContainText(
+      'Settings saved',
+    );
+    // The virtual machine defaults are stored without a Save button.
+    await expect(settings.getByTestId('save-local-ci-settings')).toHaveCount(0);
     await expect
       .poll(() =>
         page.evaluate(async () => {
@@ -918,14 +823,16 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       )
       .toEqual({ resourcePreset: 'balanced', storageLimitGiB: 32, reuseVirtualMachine: false });
 
-    await page.getByTestId('global-settings-section-workspaces').click();
-    await page.getByTestId('open-workspace-settings-personal').click();
-    await expect(page.getByTestId('workspace-card-personal')).toBeVisible();
+    await settings.getByTestId('global-settings-section-workspaces').click();
+    await settings.getByTestId('open-workspace-settings-personal').click();
+    await expect(settings.getByTestId('workspace-card-personal')).toBeVisible();
     // Local runs are a workspace decision, so the workspace itself switches them on.
-    await page.getByTestId('workspace-settings-section-local-ci').click();
-    await page.getByTestId('workspace-local-ci-enabled-personal').click();
-    await page.getByTestId('save-workspace-local-ci').click();
-    await expect(page.getByTestId('notification-success').last()).toContainText('Settings saved');
+    await settings.getByTestId('workspace-settings-section-local-ci').click();
+    // The switch applies at once; there is no Save button.
+    await settings.getByTestId('workspace-local-ci-enabled-personal').click();
+    await expect(settings.getByTestId('notification-success').last()).toContainText(
+      'Settings saved',
+    );
     await expect
       .poll(() =>
         page.evaluate(async () => {
@@ -936,38 +843,43 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         }),
       )
       .toEqual([true]);
-    await page.getByTestId('workspace-settings-section-repositories').click();
-    await page.getByTestId('add-repository-personal').click();
-    await page.getByTestId('repository-display-name').locator('input').fill('Symphony E2E');
-    await page.getByTestId('choose-repository-local-path').click();
+    await settings.getByTestId('workspace-settings-section-repositories').click();
+    await settings.getByTestId('add-repository-personal').click();
+    await settings.getByTestId('repository-display-name').locator('input').fill('Symphony E2E');
+    await settings.getByTestId('choose-repository-local-path').click();
     await expect(
-      page.getByTestId('repository-local-path').locator('input[type="text"]'),
+      settings.getByTestId('repository-local-path').locator('input[type="text"]'),
     ).toHaveValue(workspace);
-    await page.getByTestId('repository-owner').locator('input').fill('openai');
-    await page.getByTestId('repository-name').locator('input').fill('symphony');
-    await expect(page.getByTestId('repository-git-protocol')).toHaveJSProperty('value', 'https');
-    await page.getByTestId('save-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
-    await expect(page.getByTestId('workspace-card-personal')).toContainText('Symphony E2E');
+    await settings.getByTestId('repository-owner').locator('input').fill('openai');
+    await settings.getByTestId('repository-name').locator('input').fill('symphony');
+    await expect(settings.getByTestId('repository-git-protocol')).toHaveJSProperty(
+      'value',
+      'https',
+    );
+    await settings.getByTestId('save-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await expect(settings.getByTestId('workspace-card-personal')).toContainText('Symphony E2E');
     const configuredRepository = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       return (await api.request('settings.get', {})).repositoryBindings.at(-1);
     });
     expect(configuredRepository?.displayName).toBe('Symphony E2E');
     expect(configuredRepository?.id).toBeTruthy();
-    await expect(page.getByTestId(`edit-repository-${configuredRepository!.id}`)).toContainText(
+    await expect(settings.getByTestId(`edit-repository-${configuredRepository!.id}`)).toContainText(
       'Edit',
     );
-    await expect(page.getByText('Plan and run tests', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Allow AI tasks', { exact: true })).toHaveCount(0);
-    await page.getByTestId('add-repository-personal').click();
-    await page.getByTestId('repository-display-name').locator('input').fill('FLAMOX365 API');
-    await page.getByTestId('repository-owner').locator('input').fill('ruederennes');
-    await page.getByTestId('repository-name').locator('input').fill('platform-api');
-    await page.getByTestId('save-settings-editor').click();
-    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
-    await expect(page.getByTestId('workspace-repositories-personal')).toContainText('Symphony E2E');
-    await expect(page.getByTestId('workspace-repositories-personal')).toContainText(
+    await expect(settings.getByText('Plan and run tests', { exact: true })).toHaveCount(0);
+    await expect(settings.getByText('Allow AI tasks', { exact: true })).toHaveCount(0);
+    await settings.getByTestId('add-repository-personal').click();
+    await settings.getByTestId('repository-display-name').locator('input').fill('FLAMOX365 API');
+    await settings.getByTestId('repository-owner').locator('input').fill('ruederennes');
+    await settings.getByTestId('repository-name').locator('input').fill('platform-api');
+    await settings.getByTestId('save-settings-editor').click();
+    await expect(settings.getByTestId('settings-editor-drawer')).toHaveCount(0);
+    await expect(settings.getByTestId('workspace-repositories-personal')).toContainText(
+      'Symphony E2E',
+    );
+    await expect(settings.getByTestId('workspace-repositories-personal')).toContainText(
       'FLAMOX365 API',
     );
     expect(
@@ -996,44 +908,45 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       expect(statSync(resolve(configurationRoot, 'state.sqlite')).mode & 0o777).toBe(0o600);
       expect(statSync(resolve(configurationRoot, 'workspaces')).mode & 0o777).toBe(0o700);
     }
-    await page.screenshot({
+    await settings.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'settings-configuration.png'),
       fullPage: true,
     });
 
+    // The former Projects route leads to Settings inside the main window instead of a page of
+    // its own.
+    await closeSettings(page);
     await page.evaluate(() => {
       window.location.hash = '/main/projects';
     });
-    await expect(page).toHaveURL(/\/main\/settings/);
-    await expect(page.getByTestId('settings-view')).toBeVisible();
+    await expectSettingsInMainWindow(app, page);
+    await closeSettings(page);
 
     // Skills are built-in process roles now, configured from settings instead of a browsable
     // package catalog, so they must no longer own a main navigation entry.
+    await expect(page.getByTestId('navigation-home')).toBeVisible();
     await expect(page.getByTestId('navigation-skills')).toHaveCount(0);
     await page.getByTestId('global-workspace-filter').click();
     await page.getByTestId('workspace-menu-settings').click();
-    await expect(page.getByTestId('settings-view')).toBeVisible();
-    await page.getByTestId('global-settings-section-skills').click();
-    await expect(page.getByTestId('builtin-skills')).toBeVisible();
-    await expect(page.getByTestId('builtin-skill-analyze')).toContainText('Analyze');
-    await expect(page.getByTestId('builtin-skill-verify')).toContainText('Verify');
+    await expectSettingsInMainWindow(app, page);
+    await settings.getByTestId('global-settings-section-skills').click();
+    await expect(settings.getByTestId('builtin-skills')).toBeVisible();
+    await expect(settings.getByTestId('builtin-skill-analyze')).toContainText('Analyze');
+    await expect(settings.getByTestId('builtin-skill-verify')).toContainText('Verify');
 
-    await page.getByTestId('builtin-skill-instructions-analyze').evaluate((element) => {
-      (element as HTMLElement & { value: string }).value = 'Always name the owning Nx project.';
-      element.dispatchEvent(
-        new CustomEvent('valueChange', {
-          detail: { value: 'Always name the owning Nx project.' },
-          bubbles: true,
-          composed: true,
-        }),
-      );
-    });
-    await page.getByTestId('builtin-skill-save-analyze').click();
-    await expect(page.getByTestId('notification-success').last()).toContainText(
+    // A role's instructions are edited in its sheet.
+    await settings.getByTestId('builtin-skill-edit-analyze').click();
+    await expect(settings.getByTestId('builtin-skill-instructions-sheet-analyze')).toBeVisible();
+    await settings
+      .getByTestId('builtin-skill-instructions-analyze')
+      .locator('textarea')
+      .fill('Always name the owning Nx project.');
+    await settings.getByTestId('builtin-skill-save-analyze').click();
+    await expect(settings.getByTestId('notification-success').last()).toContainText(
       'The role uses them on its next run.',
     );
-    await dismissNotifications();
+    await dismissNotifications(settings);
 
     expect(
       await page.evaluate(async () => {
@@ -1053,29 +966,31 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       }),
     ).toEqual([{ role: 'analyze', additionalInstructions: 'Always name the owning Nx project.' }]);
 
-    await page.screenshot({
+    await settings.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'skills-management.png'),
       fullPage: true,
     });
+    await closeSettings(page);
 
     await page.getByTestId('navigation-pull-requests').click();
     await expect(page.getByTestId('pull-requests-view')).toBeVisible();
     await expect(page.getByTestId('pull-requests-workspace-filter')).toHaveCount(0);
     await expect(page.getByTestId('global-workspace-filter')).toBeVisible();
-    const pullRequestsRefresh = page.getByTestId('refresh-pull-requests');
-    await expect(pullRequestsRefresh).toHaveAttribute('appearance', 'outline');
-    expect(await pullRequestsRefresh.evaluate((element) => element.parentElement?.tagName)).toBe(
-      'MOSAIK-TOOLBAR',
-    );
+    const pullRequestsRefresh = page
+      .getByTestId('window-toolbar-actions')
+      .getByTestId('refresh-pull-requests');
+    await expect(pullRequestsRefresh).toHaveAttribute('appearance', 'plain');
 
     await expect(page.getByTestId('navigation-actions')).toBeVisible();
     await page.getByTestId('navigation-actions').click();
     await expect(page.getByTestId('actions-view')).toBeVisible();
     await expect(page.getByTestId('actions-workspace-filter')).toHaveCount(0);
     await expect(page.getByTestId('global-workspace-filter')).toBeVisible();
-    const actionsRefresh = page.getByTestId('refresh-actions');
-    await expect(actionsRefresh).toHaveAttribute('appearance', 'outline');
+    const actionsRefresh = page
+      .getByTestId('window-toolbar-actions')
+      .getByTestId('refresh-actions');
+    await expect(actionsRefresh).toHaveAttribute('appearance', 'plain');
     await page.getByTestId('navigation-pull-requests').click();
     await expect(page.getByTestId('pull-requests-view')).toBeVisible();
 
@@ -1152,23 +1067,19 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expectFullWidthView('board-view');
     await expect(page.getByTestId('board-workspace-filter')).toHaveCount(0);
     await expect(page.getByTestId('global-workspace-filter')).toBeVisible();
-    const boardRefresh = page.getByTestId('refresh-board');
-    await expect(boardRefresh).toHaveAttribute('appearance', 'outline');
-    expect(await boardRefresh.evaluate((element) => element.parentElement?.tagName)).toBe(
-      'MOSAIK-TOOLBAR',
-    );
+    // The refresh is a contextual action of the window toolbar; the board's own controls sit in
+    // its filter bar.
+    const boardRefresh = page.getByTestId('window-toolbar-actions').getByTestId('refresh-board');
+    await expect(boardRefresh).toHaveAttribute('appearance', 'plain');
     await expect(page.getByTestId('board-search')).toHaveCount(0);
-    await expect(page.locator('mosaik-flow-board')).toHaveAttribute('gap', '0px');
+    await expect(page.locator('mosaik-flow-board')).toHaveAttribute('gap', '12px');
     await expect(page.locator('mosaik-flow-board-column').first()).toHaveAttribute(
       'appearance',
       'plain',
     );
-    await expect(page.locator('[test-id^="board-item-dates-"]').first()).toContainText('Created');
-    await expect(page.locator('[test-id^="board-item-dates-"]').first()).toContainText('Changed');
+    await expandBoardColumn(page, 'backlog');
     const boardLayout = await page.evaluate(() => {
-      const pageRect = document
-        .querySelector('symphony-board-view mosaik-page')
-        ?.getBoundingClientRect();
+      const pageRect = document.querySelector('[test-id="board-view"]')?.getBoundingClientRect();
       const routeRect = document
         .querySelector('[test-id="presenter-route-scroll"]')
         ?.getBoundingClientRect();
@@ -1179,13 +1090,18 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       return {
         pageWidth: pageRect?.width ?? 0,
         routeWidth: routeRect?.width ?? 0,
+        windowWidth: window.innerWidth,
+        routeBottom: routeRect?.bottom ?? 0,
+        boardBottom: boardRect?.bottom ?? 0,
         boardHeight: boardRect?.height ?? 0,
         columnHeights: columnRects.map((column) => column.height),
       };
     });
     expect(boardLayout.pageWidth).toBeCloseTo(boardLayout.routeWidth, 0);
-    expect(boardLayout.pageWidth).toBeGreaterThan(960);
-    expect(boardLayout.boardHeight).toBeGreaterThan(500);
+    expect(boardLayout.pageWidth).toBeGreaterThanOrEqual(boardLayout.windowWidth - 240);
+    // The board fills the screen down to its bottom padding, whatever the window height.
+    expect(boardLayout.boardBottom).toBeGreaterThanOrEqual(boardLayout.routeBottom - 24);
+    expect(boardLayout.boardHeight).toBeGreaterThan(400);
     expect(boardLayout.columnHeights.length).toBeGreaterThan(0);
     for (const columnHeight of boardLayout.columnHeights) {
       expect(columnHeight).toBeGreaterThanOrEqual(boardLayout.boardHeight - 24);
@@ -1222,29 +1138,26 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     // that owns the analysis; the backlog items around it wait in a human gate.
     const selectedWorkItemId = 'work-item-138';
     expect(rendererErrors).toEqual([]);
+    // The item rests in Qualified, which the board starts collapsed.
+    await expandBoardColumn(page, 'qualified');
     await page.getByTestId(`board-item-${selectedWorkItemId}`).click();
+    // The card opens the work item's own screen.
     await expect(page.getByTestId('task-drawer')).toBeVisible();
     await expect(page.getByTestId('task-loading-skeleton')).toHaveCount(0);
-    await expect(page.getByTestId('task-footer-loading-skeleton')).toHaveCount(0);
     await expect(page.getByTestId('task-drawer-dates')).toContainText('Created');
-    await expect(page.getByTestId('task-drawer-dates')).toContainText('Last changed');
+    await expect(page.getByTestId('task-drawer-dates')).toContainText('Changed');
     expect(
       await page
-        .locator('symphony-task-dialog-view')
+        .locator('symphony-work-item-view')
         .evaluate((element) => getComputedStyle(element).minHeight),
     ).toBe('0px');
     expect(rendererErrors).toEqual([]);
-    expect(await page.locator('symphony-task-dialog-view').count()).toBe(1);
+    expect(await page.locator('symphony-work-item-view').count()).toBe(1);
     await expect(page.getByTestId('selected-work-item')).toHaveCount(0);
     await expect(page.getByTestId('task-drawer-status')).toContainText('Ready to analyze');
-    await expect(page.getByTestId('task-description-section')).toHaveJSProperty(
-      'isExpanded',
-      false,
-    );
-    await expect(page.getByTestId('task-activity-section')).toHaveJSProperty('isExpanded', true);
+    await expect(page.getByTestId('task-drawer-description')).toBeVisible();
+    await expect(page.getByTestId('task-activity-section')).toBeVisible();
     await expect(page.getByTestId('task-drawer-comment-draft')).toBeVisible();
-    await expect(page.getByTestId('task-checks-section')).toHaveJSProperty('isExpanded', false);
-    await page.getByTestId('task-checks-section').click();
     await expect(page.getByTestId('task-step-by-step-controls')).toHaveAttribute('is-expanded', '');
     await expect(page.getByTestId('task-analysis-mode-manual')).toHaveJSProperty('isChecked', true);
     await expect(page.getByTestId('task-analysis-manual')).toBeVisible();
@@ -1263,6 +1176,9 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(page.getByTestId('task-drawer-start')).toHaveAttribute('variant', 'highlight');
     await page.getByTestId('task-drawer-start').click();
     await expect(page.getByTestId('task-drawer-events')).toContainText('Analyzer started');
+    // The running card is read on the board after a reload, so the screen returns to it first.
+    await page.getByTestId('navigate-back').click();
+    await expect(page.getByTestId('board-view')).toBeVisible();
     const boardRendererUrl = page.url();
     await Promise.all([
       page.waitForEvent('domcontentloaded'),
@@ -1276,24 +1192,23 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     ]);
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toBeVisible();
+    // The card names the running step in its status chip and stays pinned while it runs; its
+    // five delivery steps say how far the item has come.
     const analysisStatus = page.getByTestId(`board-item-status-${selectedWorkItemId}`);
-    await expect(analysisStatus).toContainText(/Analyzing|Analyzed/);
-    const analysisProgressRing = page.getByTestId(`board-item-progress-${selectedWorkItemId}`);
-    if ((await analysisStatus.textContent())?.includes('Analyzing')) {
+    await expect(analysisStatus).toBeVisible();
+    const analysisStatusLabel = await analysisStatus.evaluate(
+      (element) => (element as HTMLElement & { label?: string }).label ?? '',
+    );
+    if (analysisStatusLabel.endsWith(' running')) {
       await expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toHaveJSProperty(
         'pinned',
         true,
       );
-      await expect(analysisProgressRing).toBeVisible();
-      expect(await analysisProgressRing.evaluate((element) => element.tagName)).toBe(
-        'MOSAIK-PROGRESS-RING',
-      );
-      expect(
-        await analysisProgressRing.evaluate(
-          (element) => (element as HTMLElement & { isIndeterminate?: boolean }).isIndeterminate,
-        ),
-      ).toBe(true);
     }
+    await expect(page.getByTestId(`board-item-progress-${selectedWorkItemId}`)).toHaveAttribute(
+      'aria-label',
+      /^\d of 5 delivery steps done$/u,
+    );
     await page.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'board-running-after-reload.png'),
@@ -1329,8 +1244,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(page.getByTestId('task-drawer-events')).toContainText('Analysis complete', {
       timeout: 20_000,
     });
+    // The completion is recorded once in the activity.
     await expect(
-      page.getByTestId('task-drawer-events').getByText('Analysis complete', { exact: true }),
+      page
+        .getByTestId('task-drawer-events')
+        .locator('[data-activity-kind]')
+        .filter({ hasText: 'Analysis complete' }),
     ).toHaveCount(1);
     await expect(page.getByTestId('task-drawer-status')).toContainText('Analyzed');
     expect(
@@ -1359,6 +1278,8 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         )?.request;
       }, selectedWorkItemId),
     ).toBe('Concentrate on renderer boundaries and regression coverage.');
+    await page.getByTestId('navigate-back').click();
+    await expect(page.getByTestId('board-view')).toBeVisible();
     try {
       await expect(
         page.getByTestId('board-column-ready').getByTestId(`board-item-${selectedWorkItemId}`),
@@ -1424,7 +1345,8 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
 
       throw cause;
     }
-    await page.getByTestId('task-checks-section').click();
+    await page.getByTestId(`board-item-${selectedWorkItemId}`).click();
+    await expect(page.getByTestId('task-loading-skeleton')).toHaveCount(0);
     const renderedTaskAnalysis = await page
       .getByTestId('task-result-markdown')
       .evaluate((element) => ({
@@ -1494,11 +1416,13 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     // A completed analysis advances the item to the implementation stage. Re-analysis is only
     // valid in the Qualified stage, so move it back through the same board interaction a user
     // would perform before exercising cancellation and restart.
-    await page.getByTestId('task-drawer-header-close').click();
+    await page.getByTestId('navigate-back').click();
     await expect(page.getByTestId('task-drawer')).toHaveCount(0);
     const analyzedEntry = page
       .getByTestId(`board-item-${selectedWorkItemId}`)
       .locator('xpath=ancestor::symphony-board-column-entry');
+    // Qualified starts as a collapsed strip; the drop target is its expanded column.
+    await expandBoardColumn(page, 'qualified');
     const qualifiedColumn = page.getByTestId('board-column-qualified');
     const readyViewport = page.getByTestId('board-column-viewport-ready');
     // The completed card is taller than the viewport; keep its drag origin inside the scrollport.
@@ -1524,7 +1448,6 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await dismissNotifications();
     await page.getByTestId(`board-item-${selectedWorkItemId}`).click();
     await expect(page.getByTestId('task-loading-skeleton')).toHaveCount(0);
-    await page.getByTestId('task-checks-section').click();
     await expect(page.getByTestId('task-step-by-step-controls')).toHaveAttribute('is-expanded', '');
     await page.getByTestId('task-analysis-mode-ai').click();
     await expect(page.getByTestId('task-drawer-start')).toBeEnabled();
@@ -1601,40 +1524,24 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(page.getByTestId('task-solution-skill')).toContainText('e2e-solve-skill');
     await expect(page.getByTestId('task-drawer-solve')).toHaveAttribute('variant', 'highlight');
     await page.getByTestId('task-drawer-solve').click();
-    const solutionProgressRing = page.getByTestId(`board-item-progress-${selectedWorkItemId}`);
-    const [solutionProgressRingTag] = await Promise.all([
-      solutionProgressRing.evaluate((element) => element.tagName),
-      expect(page.getByTestId('task-drawer-status')).toContainText('Solving'),
+    await expect(page.getByTestId('task-drawer-status')).toContainText('Solving');
+    await expect(page.getByTestId('task-solution-branch')).toContainText(
+      /codex\/work-\d+-simulated-implementation/,
+    );
+    const fullBranchName = await page
+      .getByTestId('task-solution-branch')
+      .evaluate((element) => (element as HTMLElement & { label?: string }).label ?? '');
+    await page.getByTestId('navigate-back').click();
+    await expect(page.getByTestId('board-view')).toBeVisible();
+    // While the implementation runs the card rests in `In progress` and stays pinned; its branch
+    // is shown on the work-item screen, not on the card.
+    await Promise.all([
       expect(
         page.getByTestId('board-column-progress').getByTestId(`board-item-${selectedWorkItemId}`),
       ).toBeAttached(),
       expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toHaveJSProperty('pinned', true),
     ]);
-    expect(solutionProgressRingTag).toBe('MOSAIK-PROGRESS-RING');
-    await expect(page.getByTestId('task-solution-branch')).toContainText(
-      /codex\/work-\d+-simulated-implementation/,
-    );
-    const boardBranchChip = page.getByTestId(`board-item-branch-${selectedWorkItemId}`);
-    await expect(boardBranchChip).toContainText(/codex\/work-\d+-simulated-implementation/);
-    await expect(boardBranchChip).toHaveAttribute('size', 'tiny');
-    const fullBranchName = await page
-      .getByTestId('task-solution-branch')
-      .evaluate((element) => (element as HTMLElement & { label?: string }).label ?? '');
-    const branchTooltip = boardBranchChip.locator('xpath=following-sibling::mosaik-tooltip[1]');
-    await expect(branchTooltip).toHaveJSProperty('content', fullBranchName);
-    const branchChipLayout = await boardBranchChip.evaluate((element) => {
-      const host = element as HTMLElement;
-      return {
-        hostWidth: host.getBoundingClientRect().width,
-        parentWidth: host.parentElement?.getBoundingClientRect().width ?? 0,
-        parentContentWidth: host.parentElement?.scrollWidth ?? 0,
-        parentViewportWidth: host.parentElement?.clientWidth ?? 0,
-      };
-    });
-    expect(branchChipLayout.hostWidth).toBeLessThanOrEqual(branchChipLayout.parentWidth + 1);
-    expect(branchChipLayout.parentContentWidth).toBeLessThanOrEqual(
-      branchChipLayout.parentViewportWidth + 1,
-    );
+    await expect(page.getByTestId(`board-item-branch-${selectedWorkItemId}`)).toHaveCount(0);
     await expect
       .poll(
         () =>
@@ -1666,11 +1573,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         { timeout: 20_000 },
       )
       .toBe(true);
-    await expect(page.getByTestId('task-drawer-status')).toContainText('Solved');
     await expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toHaveJSProperty(
       'pinned',
       false,
     );
+    await page.getByTestId(`board-item-${selectedWorkItemId}`).click();
+    await expect(page.getByTestId('task-drawer-status')).toContainText('Solved');
     await expect(page.getByTestId('task-solution-markdown')).toBeVisible();
     await expect(page.getByTestId('task-create-pull-request')).toBeVisible();
     const unpublishedBranch = page.getByTestId('task-solution-branch');
@@ -1687,7 +1595,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       'Local branch · available on GitHub after creating the pull request',
     );
     await page.getByTestId('task-create-pull-request').click();
-    await expect(page.getByTestId('task-pull-request')).toContainText(/PR #\d+/);
+    await expect(page.getByTestId('task-pull-request')).toContainText(/#\d+/);
     const pullRequestUrl = await page
       .getByTestId('task-pull-request')
       .evaluate((element) => (element as HTMLElement & { href?: string }).href);
@@ -1696,6 +1604,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       .evaluate((element) => (element as HTMLElement & { href?: string }).href);
     expect(pullRequestUrl).toMatch(/^https:\/\/github\.com\/.+\/pull\/\d+$/);
     expect(branchUrl).toMatch(/^https:\/\/github\.com\/.+\/tree\/.+$/);
+    // The published branch keeps its full name in the inspector's tooltip.
+    const publishedBranch = page.getByTestId('task-solution-branch');
+    const branchTooltip = publishedBranch.locator('xpath=following-sibling::mosaik-tooltip[1]');
+    await expect(branchTooltip).toHaveJSProperty('content', fullBranchName);
+    await publishedBranch.hover();
+    await expect(branchTooltip).toHaveJSProperty('isOpen', true);
     expect(
       await page.evaluate(async (workItemId) => {
         const api = (
@@ -1719,6 +1633,9 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         )?.workspaceReference;
       }, selectedWorkItemId),
     ).toMatch(/^codex\/work-\d+-simulated-implementation$/);
+    // The work-item screen opens with manual input; the feedback goes to the AI Solver.
+    await expect(page.getByTestId('task-drawer-solve')).toContainText('Record rework');
+    await page.getByTestId('task-solution-mode-ai').click();
     await expect(page.getByTestId('task-drawer-solve')).toContainText('Apply feedback');
     await expect(page.getByTestId('task-solution-ai')).toBeVisible();
     await expect(page.getByTestId('task-solver-feedback')).toHaveAttribute('variant', 'highlight');
@@ -1761,25 +1678,25 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       )
       .toBe(true);
     await expect(page.getByTestId('task-solution-markdown')).toContainText('Revision complete');
-    await page.getByTestId('task-drawer-header-close').click();
+    await page.getByTestId('navigate-back').click();
     await expect(page.getByTestId('task-drawer')).toHaveCount(0);
-    await boardBranchChip.hover();
-    await expect(branchTooltip).toHaveJSProperty('isOpen', true);
     await page.getByTestId(`board-item-${selectedWorkItemId}`).click();
     await expect(page.getByTestId('task-drawer')).toBeVisible();
-    await expect(page.locator('mosaik-drawer-header').last()).toContainText(
+    await expect(page.getByTestId('task-solution-branch')).toContainText(
       /codex\/work-\d+-simulated-implementation/,
     );
-    await expect(page.locator('mosaik-drawer-header').last()).toContainText('Solved');
+    await expect(page.getByTestId('task-drawer-status')).toContainText('Solved');
     await page.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'board-task-drawer.png'),
       fullPage: true,
     });
-    await page.getByTestId('task-drawer-header-close').click();
+    await page.getByTestId('navigate-back').click();
     await expect(page.getByTestId('task-drawer')).toHaveCount(0);
-    await expect(page.getByTestId(`board-item-status-${selectedWorkItemId}`)).toContainText(
-      'Solved',
+    // The finished implementation stays on the card as its completed delivery steps.
+    await expect(page.getByTestId(`board-item-progress-${selectedWorkItemId}`)).toHaveAttribute(
+      'aria-label',
+      /^[3-5] of 5 delivery steps done$/u,
     );
     await page.screenshot({
       animations: 'disabled',
@@ -1788,11 +1705,10 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     });
 
     await page.getByTestId('navigation-home').click();
-    await expect(page.getByTestId('home-column-widgets')).toBeVisible();
-    await expect(page.getByTestId('home-column-widget-qualified')).toBeVisible();
+    await expect(page.getByTestId('home-board-card')).toBeVisible();
+    await expect(page.getByTestId('home-board-column-qualified')).toBeVisible();
 
-    await page.getByTestId('toggle-rail').click();
-    const failedExecutionId = await page.evaluate(async () => {
+    const { failedExecutionId, failedAgentId } = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const snapshot = await api.request('snapshot.get', {});
       const qualified = snapshot.boardColumns.find((column) => column.stageId === 'qualified');
@@ -1804,8 +1720,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         workItemId,
       });
       if (admission.outcome !== 'started') throw new Error('The analysis was queued, not started.');
-      return admission.execution.id;
+      return {
+        failedExecutionId: admission.execution.id,
+        failedAgentId: admission.execution.bindingSnapshot?.agentProfileId,
+      };
     });
+    expect(failedAgentId).toBeTruthy();
     await app.evaluate(({ app: electronApp, dialog }) => {
       const lifecycleState = globalThis as typeof globalThis & {
         quitWarning?: { title?: string; message?: string; detail?: string; buttons?: string[] };
@@ -1870,10 +1790,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         ),
       )
       .toBe(expectsNativeWindows);
-    const liveRun = page.getByTestId(`rail-run-${failedExecutionId}`);
-    await expect(liveRun).toBeVisible();
-    await expect(page.getByTestId(`rail-run-progress-${failedExecutionId}`)).toBeVisible();
-    await liveRun.click();
+    // The run panel lists the agent with the work it is doing; the row opens the live run.
+    await page.getByTestId('rail-run-segment-agent-runs').click();
+    const liveAgent = page.getByTestId(`rail-agent-${failedAgentId!}`);
+    await expect(liveAgent).toHaveAttribute('role', 'button');
+    await expect(liveAgent).toHaveAttribute('aria-label', /Analyzing/u);
+    await liveAgent.click();
     await expect(page.getByTestId('execution-detail-drawer')).toBeVisible();
     await expect(page.getByTestId('execution-detail-loading-skeleton')).toHaveCount(0);
     await expect(page.getByTestId('execution-stream-progress')).toBeVisible();
@@ -1889,80 +1811,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(
       page.getByTestId('execution-run-stream').locator('mosaik-timeline-marker[variant="info"]'),
     ).not.toHaveCount(0);
-    const liveRunTimestamp = page.getByTestId(`rail-run-timestamp-${failedExecutionId}`);
-    await expect(liveRunTimestamp).toBeVisible();
-    await expect(liveRunTimestamp).toHaveAttribute('datetime', /T/);
-    await expect(liveRunTimestamp).not.toHaveText('');
     await page.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'execution-live-stream.png'),
       fullPage: true,
     });
-    await page.keyboard.press('Escape');
-    await expect(page.getByTestId('execution-detail-drawer')).toHaveCount(0);
-    await page.getByTestId('toggle-rail').click();
-    await expect(page.getByTestId('workspace-rail')).toBeHidden();
-    const finalLayout = await page.evaluate(() => {
-      const content = document
-        .querySelector('[test-id="presenter-content"]')
-        ?.getBoundingClientRect();
-      const heading = document.querySelector('[test-id="home-greeting"]')?.getBoundingClientRect();
-      const widget = document
-        .querySelector('[test-id="home-column-widgets"]')
-        ?.getBoundingClientRect();
-      return {
-        contentX: content?.x ?? 0,
-        headingX: heading?.x ?? 0,
-        widgetX: widget?.x ?? 0,
-      };
-    });
-    expect(finalLayout.headingX).toBeGreaterThanOrEqual(finalLayout.contentX + 12);
-    expect(finalLayout.widgetX).toBeGreaterThanOrEqual(finalLayout.contentX + 12);
-    await page.screenshot({
-      animations: 'disabled',
-      path: resolve(outputDirectory, 'home-focused.png'),
-      fullPage: true,
-    });
-
-    // The failed run surfaces as the attention widget, and its click-through lands on the
-    // board narrowed to exactly the items whose newest run failed.
-    const attentionWorkItemId = await page.evaluate(async (executionId) => {
-      const api = (
-        window as unknown as {
-          orchestration: {
-            request(
-              method: 'snapshot.get',
-              payload: Record<string, never>,
-            ): Promise<{ executions: { id: string; workItemId: string }[] }>;
-          };
-        }
-      ).orchestration;
-      const snapshot = await api.request('snapshot.get', {});
-      return snapshot.executions.find((execution) => execution.id === executionId)?.workItemId;
-    }, failedExecutionId);
-    expect(attentionWorkItemId).toBeTruthy();
-    await expect(page.getByTestId('home-attention-widget')).toBeVisible();
-    await page.getByTestId('home-attention-widget').click();
-    await expect(page).toHaveURL(/\/main\/board\?attention=true/);
-    const attentionFilter = page.getByTestId('board-attention-filter-clear');
-    await expect(attentionFilter).toBeVisible();
-    await expect(page.getByTestId(`board-item-${attentionWorkItemId}`)).toBeVisible();
-    await expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toHaveCount(0);
-    await attentionFilter.click();
-    await expect(page.getByTestId('board-attention-filter-clear')).toHaveCount(0);
-    await expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toBeVisible();
-    await page.getByTestId('navigation-home').click();
-    await expect(page.getByTestId('home-view')).toBeVisible();
-
-    await page.getByTestId('toggle-rail').click();
-    await expect(page.getByTestId('workspace-rail')).toBeVisible();
-    const failedRailExecution = page
-      .locator('mosaik-list-item[test-id^="rail-run-"]')
-      .filter({ hasText: 'failed' })
-      .first();
-    await expect(failedRailExecution).toBeVisible();
-    await failedRailExecution.click();
-    await expect(page.getByTestId('execution-detail-drawer')).toBeVisible();
+    // The finished run stays open in the same wide drawer, not a dialog, with its failure.
     await expect(page.locator('mosaik-dialog')).toHaveCount(0);
     await expect(page.getByTestId('execution-detail-drawer')).toContainText(
       'Simulated agent failure',
@@ -1980,6 +1834,63 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     });
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('execution-detail-drawer')).toHaveCount(0);
+    const finalLayout = await page.evaluate(() => {
+      const content = document
+        .querySelector('[test-id="presenter-content"]')
+        ?.getBoundingClientRect();
+      const heading = document.querySelector('[test-id="home-greeting"]')?.getBoundingClientRect();
+      const widget = document.querySelector('[test-id="home-board-card"]')?.getBoundingClientRect();
+      return {
+        contentX: content?.x ?? 0,
+        headingX: heading?.x ?? 0,
+        widgetX: widget?.x ?? 0,
+      };
+    });
+    expect(finalLayout.headingX).toBeGreaterThanOrEqual(finalLayout.contentX + 12);
+    expect(finalLayout.widgetX).toBeGreaterThanOrEqual(finalLayout.contentX + 12);
+    await page.screenshot({
+      animations: 'disabled',
+      path: resolve(outputDirectory, 'home-focused.png'),
+      fullPage: true,
+    });
+
+    // The failed run is counted by Overview's Board card, and the Board's `Needs you` segment
+    // narrows to exactly the items whose newest run failed.
+    const attentionWorkItemId = await page.evaluate(async (executionId) => {
+      const api = (
+        window as unknown as {
+          orchestration: {
+            request(
+              method: 'snapshot.get',
+              payload: Record<string, never>,
+            ): Promise<{ executions: { id: string; workItemId: string }[] }>;
+          };
+        }
+      ).orchestration;
+      const snapshot = await api.request('snapshot.get', {});
+      return snapshot.executions.find((execution) => execution.id === executionId)?.workItemId;
+    }, failedExecutionId);
+    expect(attentionWorkItemId).toBeTruthy();
+    await expect(page.getByTestId('home-board-card')).toContainText('1 need you');
+    await page.getByTestId('home-open-board').click();
+    await expect(page).toHaveURL(/\/main\/board/);
+    // The board's `Needs you` segment narrows to the failed item; `All` clears it.
+    const attentionSegment = page.getByTestId('board-segment-attention');
+    await attentionSegment.click();
+    await expect(attentionSegment).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId(`board-item-${attentionWorkItemId}`)).toBeVisible();
+    await expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toHaveCount(0);
+    await page.getByTestId('board-segment-all').click();
+    await expect(attentionSegment).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toBeVisible();
+    await page.getByTestId('navigation-home').click();
+    await expect(page.getByTestId('home-view')).toBeVisible();
+
+    // After the failure the run panel keeps the agent on the item it is blocked on.
+    await expect(page.getByTestId(`rail-agent-${failedAgentId!}`)).toHaveAttribute(
+      'aria-label',
+      /(?:Blocked|Failed) on #142$/u,
+    );
 
     const managedWorkspaceRoot = resolve(configurationRoot, 'workspaces');
     const managedExecutions = () =>
@@ -1987,20 +1898,32 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         (entry) => entry.isDirectory() && /^execution-[a-zA-Z0-9._-]+$/u.test(entry.name),
       );
     expect(managedExecutions()).not.toHaveLength(0);
+    // Clearing inactive workspaces is an Automation action of Settings, confirmed in its alert
+    // sheet.
     await page.getByTestId('global-workspace-filter').click();
     await page.getByTestId('workspace-menu-settings').click();
-    await page.getByTestId('global-settings-section-automation').click();
-    await expect(page.getByTestId('clear-workspaces')).toBeVisible();
-    await expect(page.getByTestId('clear-workspaces')).toHaveAttribute('variant', 'danger');
-    await page.getByTestId('clear-workspaces').click();
-    const cleanupConfirmation = page.locator('mosaik-message-box');
+    await expectSettingsInMainWindow(app, page);
+    const cleanupSettings = await openSettings(page);
+    await cleanupSettings.getByTestId('global-settings-section-automation').click();
+    await expect(cleanupSettings.getByTestId('clear-workspaces')).toBeVisible();
+    await expect(cleanupSettings.getByTestId('clear-workspaces')).toHaveAttribute(
+      'variant',
+      'danger',
+    );
+    await cleanupSettings.getByTestId('clear-workspaces').click();
+    const cleanupConfirmation = cleanupSettings.getByTestId(
+      'settings-alert-clear-workspaces-confirmation',
+    );
     await expect(cleanupConfirmation).toContainText('Clear inactive execution workspaces?');
     await expect(cleanupConfirmation).toContainText('Local uncommitted changes');
-    await cleanupConfirmation.getByText('Clear workspaces', { exact: true }).click();
-    await expect(page.getByTestId('notification-success').last()).toContainText(
+    await cleanupSettings
+      .getByTestId('settings-alert-clear-workspaces-confirmation-confirm')
+      .click();
+    await expect(cleanupSettings.getByTestId('notification-success').last()).toContainText(
       'Workspaces cleared',
     );
     await expect.poll(managedExecutions).toHaveLength(0);
+    await closeSettings(page);
     expect(rendererErrors).toEqual([]);
     expect(
       await page.evaluate(async () => {

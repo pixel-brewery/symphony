@@ -4,6 +4,8 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { closeSettings } from './closeSettings';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -88,6 +90,8 @@ test('configures Production from its overlay in the selected project without cla
         page.url(),
       ),
     ]);
+    // Symphony opens on Overview; Orbit is a Delivery entry in the sidebar.
+    await page.getByTestId('navigation-orbit').click();
     await expect(page.getByTestId('orbit-view')).toBeVisible();
     const readTargets = () =>
       page.evaluate(async () => {
@@ -112,7 +116,7 @@ test('configures Production from its overlay in the selected project without cla
 
     // assert
     await expect(page.getByTestId('orbit-production-unassigned')).toBeVisible();
-    await expect(page.getByTestId('orbit-details')).toContainText('Delivery destinations');
+    await expect(page.getByTestId('orbit-object-details')).toContainText('Delivery destinations');
     await expect(page.getByTestId('orbit-destination-project')).toHaveText('delivery-project');
     expect(await canvas.boundingBox()).toEqual(viewportBefore);
     expect(await readCamera()).toBe(cameraBefore);
@@ -128,19 +132,24 @@ test('configures Production from its overlay in the selected project without cla
     });
     await page.getByTestId('orbit-close-object').focus();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('orbit-details')).toHaveCount(0);
+    // Escape returns the inspector from the destination to the default stage cluster.
+    await expect(page.getByTestId('orbit-object-details')).toHaveCount(0);
+    await expect(page.getByTestId('orbit-inspector')).toBeVisible();
     expect(await canvas.boundingBox()).toEqual(viewportBefore);
     expect(await readCamera()).toBe(cameraBefore);
     await page.getByTestId('orbit-label-production').click();
     await page.getByTestId('orbit-configure-destination').click();
+    // Configuring a destination opens Settings inside the main window on its destination sheet.
+    await expectSettingsInMainWindow(app, page);
     await expect(page.getByTestId('delivery-target-editor')).toBeVisible();
-    await expect(page.getByTestId('workspace-settings-section-delivery')).toHaveJSProperty(
-      'isChecked',
-      true,
-    );
+    await expect(page.getByTestId('workspace-delivery-destinations')).toBeVisible();
     await expect(page.getByTestId('delivery-settings-repository')).toHaveJSProperty(
       'value',
       'delivery-project',
+    );
+    await expect(page.getByTestId('delivery-target-orbit-preview')).toBeVisible();
+    await expect(page.getByTestId('delivery-target-orbit-preview')).toContainText(
+      'Orbit preview · delivery-project',
     );
     await expect(page.getByTestId('delivery-target-name').locator('input')).toHaveValue(
       'Production',
@@ -155,8 +164,10 @@ test('configures Production from its overlay in the selected project without cla
     expect(await readTargets()).toHaveLength(1);
     await page.getByTestId('delivery-target-name').locator('input').fill('Cancelled configuration');
     await page.getByTestId('cancel-settings-editor').click();
+    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
     expect(await readTargets()).toHaveLength(1);
 
+    await closeSettings(page);
     await page.getByTestId('navigation-orbit').click();
     await page.getByTestId('orbit-label-production').click();
     await page.getByTestId('orbit-configure-destination').click();
@@ -167,6 +178,8 @@ test('configures Production from its overlay in the selected project without cla
     await expect(page.getByTestId('save-settings-editor')).toHaveJSProperty('disabled', true);
     await page.getByTestId('delivery-target-name').locator('input').fill('Live Europe');
     await page.getByTestId('delivery-target-environment').locator('input').fill('prod-eu');
+    await page.getByTestId('delivery-body-mars').click();
+    await expect(page.getByTestId('delivery-target-orbit-preview-body-mars')).toBeVisible();
     await page.screenshot({
       path: resolve(outputDirectory, 'orbit-production-settings.png'),
       animations: 'disabled',
@@ -180,18 +193,16 @@ test('configures Production from its overlay in the selected project without cla
       displayName: 'Live Europe',
       environment: 'prod-eu',
       production: true,
+      celestialBody: 'mars',
       workspaceId: 'personal',
       kind: 'environment',
     });
     expect((await readTargets()).find((item) => item.id === 'other-production')?.displayName).toBe(
       'Other production',
     );
-    // Wait for the editor backdrop to close through a normal actionable control.
-    await page.getByTestId('delivery-settings-repository').click();
-    await page.getByTestId('delivery-settings-repository-delivery-project').click();
-    await page.getByTestId('add-delivery-target').focus();
-    await page.keyboard.press('Escape');
-    await expect(page.getByTestId('notification-success')).toHaveCount(0);
+    await expect(page.getByTestId(`delivery-settings-target-${target.id}`)).toContainText(
+      'Environment · prod-eu · Production',
+    );
     await expect(page.getByTestId('delivery-settings-repository')).toHaveJSProperty(
       'value',
       'delivery-project',
@@ -200,6 +211,7 @@ test('configures Production from its overlay in the selected project without cla
       path: resolve(outputDirectory, 'orbit-delivery-destinations-settings.png'),
       animations: 'disabled',
     });
+    await closeSettings(page);
     await page.getByTestId('navigation-orbit').click();
     await page.getByTestId('orbit-label-production').click();
     await expect(page.getByTestId('delivery-target-details')).toBeVisible();
@@ -218,19 +230,28 @@ test('configures Production from its overlay in the selected project without cla
     ).toEqual([{ ...target, displayName: 'Live cluster' }]);
 
     await page.getByTestId('add-delivery-target').click();
+    await expect(page.getByTestId('delivery-target-orbit-preview')).toHaveCount(0);
     await page.getByTestId('delivery-target-name').locator('input').fill('Duplicate');
     await page.getByTestId('delivery-target-environment').locator('input').fill('prod-eu');
     await expect(page.getByTestId('delivery-target-duplicate')).toBeVisible();
     await expect(page.getByTestId('save-settings-editor')).toHaveJSProperty('disabled', true);
     await page.getByTestId('cancel-settings-editor').click();
+    await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
     await page.getByTestId(`remove-delivery-target-${target.id}`).click();
+    await expect(
+      page.getByTestId(`settings-alert-remove-delivery-target-${target.id}`),
+    ).toBeVisible();
     await page.keyboard.press('Escape');
+    await expect(
+      page.getByTestId(`settings-alert-remove-delivery-target-${target.id}`),
+    ).toHaveCount(0);
     expect((await readTargets()).some((item) => item.id === target.id)).toBe(true);
 
     // A full application restart reads the saved target from disk, with the same identity.
     await app.close();
     app = await electron.launch(launchOptions);
-    page = await prepareMainWindow(app);
+    // The restarted window reopens Orbit, the screen it showed last.
+    page = await prepareMainWindow(app, 'orbit-view');
     page.on('pageerror', (error) => rendererErrors.push(error.message));
     expect((await readTargets()).find((item) => item.id === target.id)?.displayName).toBe(
       'Live cluster',

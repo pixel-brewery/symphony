@@ -15,16 +15,18 @@ import {
   createTrackedSettingsDraft,
   upsertSettingsItem,
   mosaikEventValue,
+  SettingsAlertService,
 } from '@symphony/frontend-setting';
-import {
-  DRAWER_REF,
-  DRAWER_REF_DATA,
-  MessageBoxService,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import { OpenCodeModelsPipe } from '../pipes/OpenCodeModelsPipe';
 import { OpenCodeProvidersPipe } from '../pipes/OpenCodeProvidersPipe';
 import { SettingNamePipe } from '../pipes/SettingNamePipe';
-import { aiRuntimeValidationIssue, AI_RUNTIME_LABELS } from '@symphony/frontend-ui';
+import {
+  aiRuntimeValidationIssue,
+  AI_RUNTIME_LABELS,
+  deliveryFlowSteps,
+  type IDeliveryFlowStep,
+} from '@symphony/frontend-ui';
 import { type AiConnection, type AiRuntimeKind } from '@symphony/frontend-core/ai';
 import { type AiValidationIssue } from '../models/AiValidationIssue';
 import { type IAiChoice } from '../models/IAiChoice';
@@ -80,7 +82,7 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
   /** Consumed state and configuration dependencies of the Team editor. @public @readonly */ public readonly store =
     inject(TEAM_SETTINGS_CONTEXT);
   /** Validated feature-owned drawer request. @public @readonly */ public readonly data =
-    inject<ITeamSettingsEditorRequest>(DRAWER_REF_DATA);
+    inject<ITeamSettingsEditorRequest>(DIALOG_REF_DATA);
 
   /**
    * The kind.
@@ -94,8 +96,8 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
 
   private readonly _changeDetector = inject(ChangeDetectorRef);
 
-  private readonly _messageBoxService = inject(MessageBoxService);
-  private readonly _drawerRef = inject(DRAWER_REF);
+  private readonly _alerts = inject(SettingsAlertService);
+  private readonly _dialogRef = inject(DIALOG_REF);
 
   private readonly _openCodeModelsPipe = new OpenCodeModelsPipe();
 
@@ -297,6 +299,34 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
 
   private readonly _refreshAiConfigurationCommand: Command<string | undefined> = new Command(
     (connectionId) => void this.onExecuteRefreshAiConfigurationCommand(connectionId),
+  );
+
+  private readonly _selectedAiAccount = this.createDraftProjection(() =>
+    this.resolveSelectedAiAccount(),
+  );
+
+  private readonly _previewModel = this.createDraftProjection(() =>
+    this.resolveAiModelChoices().find(
+      (choice) => choice.id === this.resolveSelectedAiModelChoice(),
+    ),
+  );
+
+  private readonly _previewEffort = this.createDraftProjection(() =>
+    this.resolveAiEffortChoices().find(
+      (choice) => choice.id === this.resolveSelectedAiEffortChoice(),
+    ),
+  );
+
+  private readonly _selectedAccountProblem = this.createDraftProjection(() =>
+    this.resolveSelectedAccountProblem(),
+  );
+
+  private readonly _deliveryFlowSteps = this.createDraftProjection(() =>
+    this.resolveDeliveryFlowSteps(),
+  );
+
+  private readonly _previewFallback = this.createDraftProjection(() =>
+    this.resolvePreviewFallback(),
   );
   // #endregion
   // #region Properties
@@ -666,9 +696,69 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
   public get refreshAiConfigurationCommand(): Command<string | undefined> {
     return this._refreshAiConfigurationCommand;
   }
+
+  /**
+   * The AI account the agent runs on, for the preview.
+   *
+   * @public
+   * @readonly
+   */
+  public get selectedAiAccount() {
+    return this._selectedAiAccount;
+  }
+
+  /**
+   * The chosen model card, for the preview.
+   *
+   * @public
+   * @readonly
+   */
+  public get previewModel() {
+    return this._previewModel;
+  }
+
+  /**
+   * The chosen effort card, for the preview.
+   *
+   * @public
+   * @readonly
+   */
+  public get previewEffort() {
+    return this._previewEffort;
+  }
+
+  /**
+   * Why the chosen account cannot run the agent: its CLI is missing or it is not signed in.
+   *
+   * @public
+   * @readonly
+   */
+  public get selectedAccountProblem() {
+    return this._selectedAccountProblem;
+  }
+
+  /**
+   * The delivery-flow steps the agent's responsibilities cover, in flow order.
+   *
+   * @public
+   * @readonly
+   */
+  public get deliveryFlowSteps() {
+    return this._deliveryFlowSteps;
+  }
+
+  /**
+   * The backup account that takes over first, with its effort card, for the preview.
+   *
+   * @public
+   * @readonly
+   */
+  public get previewFallback() {
+    return this._previewFallback;
+  }
   // #endregion
   // #region Methods
-  /** Hydrates this feature-owned drawer from the authoritative configuration. @public */
+  /** Hydrates this feature-owned sheet from the authoritative configuration. @public */
   public override async onHydrate(): Promise<void> {
     try {
       if (!this.store.settings()) await this.hydrateConfiguration();
@@ -679,6 +769,59 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
       window.requestAnimationFrame(() => this._application.tick());
     }
   }
+  /**
+   * Returns the selected AI account.
+   *
+   * @private
+   */
+  private resolveSelectedAiAccount(): AiConnection | undefined {
+    return this.resolveAiAccounts().find((account) => account.id === this.ai.accountId);
+  }
+
+  /**
+   * Returns why the selected account cannot run the agent.
+   *
+   * @private
+   */
+  private resolveSelectedAccountProblem(): 'cli-missing' | 'not-signed-in' | undefined {
+    const account = this.resolveSelectedAiAccount();
+    if (!account) return undefined;
+    if (!this.resolveAiRuntimeAvailable(account.kind)) return 'cli-missing';
+    if (account.kind === 'opencode') return undefined;
+    const provider =
+      account.kind === 'codex' ? this.store.connections()?.codex : this.store.connections()?.claude;
+    const status = provider?.accounts.find((candidate) => candidate.id === account.id);
+    return status && !status.authenticated ? 'not-signed-in' : undefined;
+  }
+
+  /**
+   * Returns the delivery-flow steps covered by the chosen responsibilities.
+   *
+   * @private
+   */
+  private resolveDeliveryFlowSteps(): readonly IDeliveryFlowStep[] {
+    return deliveryFlowSteps.filter((step) =>
+      step.skillFlowRoles.some((role) => this.ai.roles.includes(role)),
+    );
+  }
+
+  /**
+   * Returns the first enabled backup account with its effort card.
+   *
+   * @private
+   */
+  private resolvePreviewFallback():
+    { readonly account: AiConnection; readonly effort: IAiChoice | undefined } | undefined {
+    const accountId = this.ai.fallbackConnectionIds[0];
+    const account = this.resolveAiAccounts().find((candidate) => candidate.id === accountId);
+    if (!account) return undefined;
+    const effortId = this.ai.fallbackEfforts[account.id];
+    return {
+      account,
+      effort: this.resolveFallbackEffortChoices().find((choice) => choice.id === effortId),
+    };
+  }
+
   private async onExecuteSaveCommand(): Promise<void> {
     if (this.busy()) return;
     this.busy.set(true);
@@ -695,7 +838,7 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
    * @private
    */
   private onExecuteCloseCommand(): void {
-    this._drawerRef.close();
+    this._dialogRef.close();
   }
   private resolveCanSave(): boolean {
     return this.resolveAiValidationIssues().length === 0;
@@ -835,7 +978,7 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
   private onExecuteOpenAiAccountEditorCommand(): void {
     const data = this.data;
     if (data.kind !== 'ai') return;
-    this._drawerRef.close({
+    this._dialogRef.close({
       reason: 'positive',
       result: { next: { kind: 'ai-account', workspaceId: data.workspaceId } },
     });
@@ -1277,19 +1420,18 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
     ) {
       return;
     }
-    const confirmation = this._messageBoxService.show({
-      id: `install-agent-runtime-${runtime}`,
-      header: `Install ${label} CLI?`,
-      message: `Homebrew will download and install ${label} CLI on this Mac. Symphony verifies the command before enabling it for agents.`,
-      buttons: 'yesNo',
-      variant: 'warning',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Install with Homebrew', noLabel: 'Cancel' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason !== 'positive') return;
-      void this.installAiRuntime(runtime);
-    });
+    void this._alerts
+      .confirm({
+        id: `install-agent-runtime-${runtime}`,
+        header: `Install ${label} CLI?`,
+        message: `Homebrew will download and install ${label} CLI on this Mac. Symphony verifies the command before enabling it for agents.`,
+        tone: 'warning',
+        confirmLabel: 'Install with Homebrew',
+        cancelLabel: 'Cancel',
+      })
+      .then((confirmed) => {
+        if (confirmed) void this.installAiRuntime(runtime);
+      });
   }
 
   /**
@@ -1607,7 +1749,7 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
       this.ai.skillIds,
     );
     if (!(await this.store.saveSettings(next))) return;
-    this._drawerRef.close();
+    this._dialogRef.close();
   }
 
   /**

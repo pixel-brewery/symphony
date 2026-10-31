@@ -9,6 +9,7 @@ import { AutomationSettingsStore } from '../state/AutomationSettingsStore';
 import { AutomationSettingsContext } from '../adapters/AutomationSettingsContext';
 import { RepositoryPreparationPolicy } from '../state/RepositoryPreparationPolicy';
 import { withAutomationSettings } from './withAutomationSettings';
+import { withAutomationNotifications } from './withAutomationNotifications';
 
 // #endregion
 
@@ -27,6 +28,7 @@ export function provideAutomationFeature(): EnvironmentProviders {
         { provide: AUTOMATION_PREPARATION, useExisting: RepositoryPreparationPolicy },
         { provide: AUTOMATION_SETTINGS_CONTEXT, useExisting: AutomationSettingsContext },
         { provide: AUTOMATION_PATH_SELECTOR, useExisting: ORCHESTRATION_CLIENT },
+        ...withAutomationNotifications().provide(),
       ],
       withAutomationSettings(),
     ),

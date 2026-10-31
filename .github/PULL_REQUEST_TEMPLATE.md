@@ -14,7 +14,7 @@
 
 - [ ] The change respects the process boundaries in [docs/architecture/process-model.md](../blob/main/docs/architecture/process-model.md) — the renderer stays sandboxed, and Git, GitHub, SQLite, and agent execution stay in the orchestrator
 - [ ] New or changed IPC methods update the request schema, the response schema, the `requestEnvelopeSchema` method enum, the orchestrator `dispatch` case, and the renderer caller
-- [ ] Generated trees (`.codex/`, `.opencode/`, `.claude/skills/`, `.mcp.json`, `.agents/packages/`, `skills-lock.json`, `opencode.json`) were regenerated with `yarn agents:sync`, not edited by hand
+- [ ] Generated trees (`.codex/`, `.opencode/`, `.claude/skills/`, `.mcp.json`, `.agents/packages/`, `.agents/packages/skills-lock.json`, `opencode.json`) were regenerated with `yarn agents:sync`, not edited by hand
 - [ ] Affected documentation under `docs/architecture/` is updated
 - [ ] `package.json` `version` is untouched — releases are versioned by the pipeline
 

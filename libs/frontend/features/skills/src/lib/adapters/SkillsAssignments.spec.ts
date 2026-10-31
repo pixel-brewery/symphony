@@ -60,7 +60,9 @@ describe('SkillsAssignments', () => {
     const proposal: readonly IAgentPhaseAssignment[] = [{ ...phase, fallbackAgentIds }];
 
     // act
-    const accepted = await assignments.saveAssignments(team.id, proposal);
+    const accepted = await assignments.saveAssignments([
+      { teamId: team.id, assignments: proposal },
+    ]);
     fallbackAgentIds.push('later-draft-edit');
 
     // assert
@@ -81,7 +83,9 @@ describe('SkillsAssignments', () => {
     const { assignments, saveSettings } = arrange();
 
     // act
-    const accepted = await assignments.saveAssignments('removed-team', []);
+    const accepted = await assignments.saveAssignments([
+      { teamId: 'removed-team', assignments: [] },
+    ]);
 
     // assert
     expect(accepted).toBe(false);

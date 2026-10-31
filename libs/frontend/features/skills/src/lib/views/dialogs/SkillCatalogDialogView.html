@@ -1,16 +1,17 @@
-<ng-template mosaikDrawerHeader>
-  <mosaik-drawer-header
+<ng-template mosaikDialogHeader>
+  <mosaik-dialog-header
+    slot="header"
     [text]="'Add skills'"
     [subText]="'Activate skills for optional AI-assisted workflow steps.'"
   >
     <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
-  </mosaik-drawer-header>
+  </mosaik-dialog-header>
 </ng-template>
 
-<ng-template mosaikDrawerContent>
+<ng-template mosaikDialogContent>
   <div
     test-id="skill-catalog-drawer"
-    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+    class="flex max-h-[calc(100dvh-240px)] min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-y-auto py-0.5"
   >
     @if (presenter.isHydrating()) {
     <!-- The catalog loads as itself: the search field and package cards with their static labels and
@@ -23,31 +24,18 @@
       aria-label="Loading available skills"
     >
       <mosaik-searchbox
+        class="w-full"
         [placeholder]="'Search available skills…'"
         [variant]="'primary'"
         [disabled]="true"
       />
-      <div class="grid grid-cols-3 gap-3 max-[1100px]:grid-cols-2 max-[720px]:grid-cols-1">
-        @for (placeholder of [1, 2, 3]; track placeholder) {
-        <mosaik-card [appearance]="'outline'">
-          <mosaik-card-header>
-            <div slot="header" class="flex h-3 items-center">
-              <mosaik-skeleton [width]="'9rem'" [height]="'16px'" [shimmer]="true" />
-            </div>
-            <div slot="subHeader" class="flex h-2.5 items-center">
-              <mosaik-skeleton [width]="'7rem'" [height]="'12px'" [shimmer]="true" />
-            </div>
-            <mosaik-skeleton slot="suffix" [width]="'3.5rem'" [height]="'20px'" [shimmer]="true" />
-          </mosaik-card-header>
-          <mosaik-card-content>
-            <div class="flex flex-col">
-              <div class="flex h-3 items-center">
-                <mosaik-skeleton [width]="'100%'" [height]="'14px'" [shimmer]="true" />
-              </div>
-              <div class="flex h-3 items-center">
-                <mosaik-skeleton [width]="'70%'" [height]="'14px'" [shimmer]="true" />
-              </div>
-            </div>
+      <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5 max-[640px]:grid-cols-1">
+        @for (placeholder of [1, 2]; track placeholder) {
+        <mosaik-card class="block min-w-0">
+          <div slot="content" class="flex min-w-0 flex-col gap-[10px] p-[14px]">
+            <mosaik-skeleton [width]="'9rem'" [height]="'16px'" [shimmer]="true" />
+            <mosaik-skeleton [width]="'7rem'" [height]="'12px'" [shimmer]="true" />
+            <mosaik-skeleton [width]="'100%'" [height]="'14px'" [shimmer]="true" />
             <mosaik-select
               [label]="'Use in flow'"
               [placeholder]="'Choose a flow step'"
@@ -55,26 +43,26 @@
               [required]="true"
               [disabled]="true"
             />
-            <div class="flex h-2.5 items-center">
-              <mosaik-skeleton [width]="'12rem'" [height]="'12px'" [shimmer]="true" />
+            <div class="flex justify-end">
+              <mosaik-button
+                [label]="'Activate'"
+                [iconName]="'add'"
+                [iconSize]="'small'"
+                [appearance]="'solid'"
+                [variant]="'primary'"
+                [disabled]="true"
+              />
             </div>
-          </mosaik-card-content>
-          <mosaik-card-footer>
-            <mosaik-button
-              [label]="'Activate'"
-              [iconName]="'add'"
-              [appearance]="'solid'"
-              [variant]="'primary'"
-              [disabled]="true"
-            />
-          </mosaik-card-footer>
+          </div>
         </mosaik-card>
         }
       </div>
     </div>
     } @else {
     <mosaik-searchbox
+      class="w-full"
       test-id="skill-catalog-search"
+      aria-label="Search available skills"
       [value]="presenter.searchQuery()"
       [placeholder]="'Search available skills…'"
       [mode]="'delay'"
@@ -85,21 +73,38 @@
       (cleared)="presenter.searchQuery.set('')"
     />
 
-    <div class="grid grid-cols-3 gap-3 max-[1100px]:grid-cols-2 max-[720px]:grid-cols-1">
+    @if (presenter.packages().length) {
+    <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5 max-[640px]:grid-cols-1">
       @for (skill of presenter.packages(); track skill.id) {
       <mosaik-card
+        class="block min-w-0"
         [attr.test-id]="'skill-catalog-card-' + skill.source + '-' + skill.name"
-        [appearance]="'outline'"
       >
-        <mosaik-card-header [text]="skill.displayName" [subText]="skill.name">
-          <mosaik-badge
-            slot="suffix"
-            [label]="skill.source === 'repository' ? 'Project' : (skill.source === 'user' ? 'Shared' : 'Legacy')"
-            [appearance]="'soft'"
-          />
-        </mosaik-card-header>
-        <mosaik-card-content>
-          <p>{{ skill.description }}</p>
+        <div slot="content" class="flex min-w-0 flex-col gap-[10px] p-[14px]">
+          <div class="flex min-w-0 items-start gap-1">
+            <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+              <mosaik-text
+                part="catalog-card-name"
+                [mosaikTypography]="'subtitle2'"
+                [wrap]="true"
+                [text]="skill.displayName"
+              />
+              <mosaik-text
+                class="technical-value"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="skill.name"
+              />
+            </div>
+            <mosaik-badge
+              class="flex-none"
+              [label]="skill.source | skillSourceLabel"
+              [appearance]="'soft'"
+              [variant]="'neutral'"
+              [size]="'small'"
+            />
+          </div>
+          <mosaik-text [mosaikTypography]="'body2'" [wrap]="true" [text]="skill.description" />
           <mosaik-select
             [attr.test-id]="'skill-flow-role-' + skill.name"
             [label]="'Use in flow'"
@@ -117,34 +122,60 @@
             }
           </mosaik-select>
           @if (presenter.replacementName()(skill.id); as replacement) {
-          <small>Replaces {{ replacement }} in this flow step.</small>
-          }
-          <small
-            >{{ skill.resourceCount }} resources · {{ skill.implicitInvocation ? 'automatic +
-            explicit' : 'explicit only' }}</small
-          >
-        </mosaik-card-content>
-        <mosaik-card-footer>
-          <mosaik-button
-            [attr.test-id]="'activate-skill-' + skill.name"
-            [label]="'Activate'"
-            [iconName]="'add'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            [disabled]="presenter.store.skillsBusy() || presenter.store.configurationBusy() || !presenter.selectedRole()(skill.id)"
-            (click)="presenter.activateCommand.execute(skill.id)"
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="'Replaces ' + replacement + ' in this flow step.'"
           />
-        </mosaik-card-footer>
+          }
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="skill.resourceCount + ' resources · ' + (skill.implicitInvocation ? 'automatic + explicit' : 'explicit only')"
+          />
+          <div class="flex min-w-0 justify-end">
+            <mosaik-button
+              [attr.test-id]="'activate-skill-' + skill.name"
+              [label]="'Activate'"
+              [iconName]="'add'"
+              [iconSize]="'small'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [disabled]="presenter.store.skillsBusy() || presenter.store.configurationBusy() || !presenter.selectedRole()(skill.id)"
+              (click)="presenter.activateCommand.execute(skill.id)"
+            />
+          </div>
+        </div>
       </mosaik-card>
-      } @empty {
-      <mosaik-empty-state
-        class="col-span-full"
-        [iconName]="'search'"
-        [header]="presenter.searchQuery().trim() ? 'No matching skills' : 'All discovered skills are active'"
-        [content]="presenter.searchQuery().trim() ? 'Try another skill name, description or source.' : 'Deactivate a skill to make it available here again.'"
-      />
       }
     </div>
-    }
+    } @else {
+    <div part="settings-group-rows" class="flex min-w-0 flex-col">
+      <div class="flex min-w-0 items-center gap-2 px-2 py-1.5" test-id="skill-catalog-empty">
+        <mosaik-avatar
+          class="flex-none"
+          aria-hidden="true"
+          [iconName]="'search'"
+          [size]="'small'"
+          [appearance]="'soft'"
+          [variant]="'neutral'"
+        />
+        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [text]="presenter.searchQuery().trim() ? 'No matching skills' : 'All discovered skills are active'"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="presenter.searchQuery().trim() ? 'Try another skill name, description or source.' : 'Deactivate a skill to make it available here again.'"
+          />
+        </div>
+      </div>
+    </div>
+    } }
   </div>
 </ng-template>

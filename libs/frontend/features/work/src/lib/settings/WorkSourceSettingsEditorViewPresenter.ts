@@ -13,12 +13,14 @@ import { TEAM_CONFIGURATION } from '@symphony/frontend-core/team';
 import { WORK_SOURCE_SETTINGS_CONTEXT } from '../ports/WorkSourceSettingsContextToken';
 import {
   createTrackedSettingsDraft,
+  SettingsAlertService,
   upsertSettingsItem,
   mosaikEventValue,
 } from '@symphony/frontend-setting';
 import { Hydratable, ViewPresenter, Command } from '@symphony/frontend-core';
 import type { IWorkSourceSettingsEditorRequest } from './IWorkSourceSettingsEditorRequest';
-import { DRAWER_REF, DRAWER_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import type { AzureDevOpsValidationIssue } from './AzureDevOpsValidationIssue';
 import type { BoardColumnMappingChoice } from './BoardColumnMappingChoice';
 import type { ApplicationSettingsDto as Settings } from '@symphony/ipc-contracts-composition';
 
@@ -59,7 +61,7 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
    * @public
    * @readonly
    */
-  public readonly data = inject<IWorkSourceSettingsEditorRequest>(DRAWER_REF_DATA);
+  public readonly data = inject<IWorkSourceSettingsEditorRequest>(DIALOG_REF_DATA);
 
   /**
    * The kind.
@@ -69,10 +71,11 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
    */
   public readonly kind = this.data.kind;
   private readonly _teamConfiguration = inject(TEAM_CONFIGURATION, { optional: true });
+  private readonly _alerts = inject(SettingsAlertService);
   private readonly _application = inject(ApplicationRef);
   private readonly _changeDetector = inject(ChangeDetectorRef);
 
-  private readonly _drawerRef = inject(DRAWER_REF);
+  private readonly _dialogRef = inject(DIALOG_REF);
   private readonly _draftRevision = signal(0);
 
   /**
@@ -173,6 +176,9 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
     () => void this.onExecuteCloseCommand(),
   );
   private readonly _canSave = this.createDraftProjection(() => this.resolveCanSave());
+  private readonly _azureValidationIssues = this.createDraftProjection(() =>
+    this.resolveAzureValidationIssues(),
+  );
 
   private readonly _githubConnections = this.createDraftProjection(() =>
     this.resolveGithubConnections(),
@@ -240,6 +246,14 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
     () => void this.onExecuteRemoveGitHubProjectCommand(),
   );
 
+  private readonly _hasExistingAzureDevOpsSource = this.createDraftProjection(() =>
+    this.resolveHasExistingAzureDevOpsSource(),
+  );
+
+  private readonly _removeAzureDevOpsSourceCommand: Command<void> = new Command(
+    () => void this.onExecuteRemoveAzureDevOpsSourceCommand(),
+  );
+
   private readonly _eventText = computed(() => (event: unknown) => this.resolveEventText(event));
   /**
    * The save command.
@@ -258,6 +272,16 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
    */
   public get closeCommand(): Command<void> {
     return this._closeCommand;
+  }
+  /**
+   * The required Azure DevOps details that are still empty, in form order; `Save` stays disabled
+   * while there is one.
+   *
+   * @public
+   * @readonly
+   */
+  public get azureValidationIssues() {
+    return this._azureValidationIssues;
   }
   /**
    * The canSave projection.
@@ -440,6 +464,24 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
     return this._removeGitHubProjectCommand;
   }
   /**
+   * Whether the sheet edits a saved Azure DevOps source, which can be removed.
+   *
+   * @public
+   * @readonly
+   */
+  public get hasExistingAzureDevOpsSource() {
+    return this._hasExistingAzureDevOpsSource;
+  }
+  /**
+   * Removes the Azure DevOps source after a destructive confirmation.
+   *
+   * @public
+   * @readonly
+   */
+  public get removeAzureDevOpsSourceCommand(): Command<void> {
+    return this._removeAzureDevOpsSourceCommand;
+  }
+  /**
    * The eventText projection.
    *
    * @public
@@ -457,7 +499,7 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
    *
    * @public
    */
-  /** Hydrates this feature-owned drawer from the authoritative configuration. @public */
+  /** Hydrates this feature-owned sheet from the authoritative configuration. @public */
   public override async onHydrate(): Promise<void> {
     try {
       if (!this.store.settings()) await this.hydrateConfiguration();
@@ -508,7 +550,7 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
    * @private
    */
   private onExecuteCloseCommand(): void {
-    this._drawerRef.close();
+    this._dialogRef.close();
   }
 
   /**
@@ -518,7 +560,22 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
    */
   private resolveCanSave(): boolean {
     if (this.kind === 'github-projects') return this.canSaveGitHubProject();
-    return true;
+    return this.resolveAzureValidationIssues().length === 0;
+  }
+
+  /**
+   * Returns the required Azure DevOps details that are still empty.
+   *
+   * @private
+   */
+  private resolveAzureValidationIssues(): readonly AzureDevOpsValidationIssue[] {
+    if (this.kind !== 'azure-devops') return [];
+    return [
+      ...(!this.azure.displayName.trim() ? (['display-name'] as const) : []),
+      ...(!this.azure.organization.trim() ? (['organization'] as const) : []),
+      ...(!this.azure.project.trim() ? (['project'] as const) : []),
+      ...(!this.azure.queryId.trim() && !this.azure.wiql.trim() ? (['query'] as const) : []),
+    ];
   }
 
   /**
@@ -906,25 +963,133 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
   private async onExecuteRemoveGitHubProjectCommand(): Promise<void> {
     const data = this.data;
     if (data.kind !== 'github-projects' || !data.sourceId) return;
+    const source = this.store.settings()?.workItemSources.find((item) => item.id === data.sourceId);
+    const confirmed = await this._alerts.confirm({
+      id: `remove-board-${data.sourceId}`,
+      header: `Remove ${source?.displayName || 'this board'}?`,
+      message:
+        'Symphony stops reading this GitHub Project. Its work items stay in GitHub, but they no longer appear on the Board, the Overview or the Orbit.',
+      tone: 'danger',
+      confirmLabel: 'Remove board',
+      cancelLabel: 'Keep board',
+      destructive: true,
+    });
+    if (!confirmed) return;
     const current = this.requireSettings();
     const next = this.synchronizeDeliveryContext(
-      {
-        ...current,
-        workItemSources: current.workItemSources.filter((source) => source.id !== data.sourceId),
-        activeViewScope: {
-          ...current.activeViewScope,
-          workItemSourceId:
-            current.activeViewScope.workItemSourceId === data.sourceId
-              ? undefined
-              : current.activeViewScope.workItemSourceId,
-        },
-      },
+      this.withoutWorkItemSource(current, data.sourceId),
       data.workspaceId,
     );
     if (await this.store.saveSettings(next)) {
-      this._drawerRef.close();
+      this._dialogRef.close();
       await this.store.refresh();
     }
+  }
+
+  /**
+   * Whether the sheet edits a saved Azure DevOps source.
+   *
+   * @private
+   */
+  private resolveHasExistingAzureDevOpsSource(): boolean {
+    const data = this.data;
+    return (
+      data.kind === 'azure-devops' &&
+      Boolean(
+        this.store
+          .settings()
+          ?.workItemSources.some(
+            (source) => source.id === data.sourceId && source.provider === 'azure-devops',
+          ),
+      )
+    );
+  }
+
+  /**
+   * Removes the Azure DevOps source after a destructive confirmation. Its account goes with it
+   * when no other source uses the account, and the stored personal access token is deleted from
+   * the operating-system keychain first.
+   *
+   * @private
+   */
+  private async onExecuteRemoveAzureDevOpsSourceCommand(): Promise<void> {
+    const data = this.data;
+    if (data.kind !== 'azure-devops' || !data.sourceId || this.busy()) return;
+    const source = this.store
+      .settings()
+      ?.workItemSources.find(
+        (item) => item.id === data.sourceId && item.provider === 'azure-devops',
+      );
+    if (!source) return;
+    const confirmed = await this._alerts.confirm({
+      id: `remove-azure-devops-source-${source.id}`,
+      header: `Remove ${source.displayName}?`,
+      message:
+        'Symphony stops reading this Azure DevOps query and deletes the stored personal access token. Its work items stay in Azure DevOps, but they no longer appear on the Board, the Overview or the Orbit.',
+      tone: 'danger',
+      confirmLabel: 'Remove source',
+      cancelLabel: 'Keep source',
+      destructive: true,
+    });
+    if (!confirmed) return;
+    this.busy.set(true);
+    try {
+      const before = this.requireSettings();
+      const connection = before.connections.find(
+        (item) => item.id === source.connectionId && item.kind === 'azure-devops',
+      );
+      const sharedConnection = before.workItemSources.some(
+        (item) => item.id !== source.id && item.connectionId === source.connectionId,
+      );
+      if (
+        connection?.kind === 'azure-devops' &&
+        connection.credentialRef &&
+        !sharedConnection &&
+        !(await this.store.disconnectAzureDevOps(connection.id))
+      )
+        return;
+      const current = this.requireSettings();
+      const withoutSource = this.withoutWorkItemSource(current, source.id);
+      const next = this.synchronizeDeliveryContext(
+        sharedConnection
+          ? withoutSource
+          : {
+              ...withoutSource,
+              connections: withoutSource.connections.filter(
+                (item) => item.id !== source.connectionId,
+              ),
+            },
+        data.workspaceId,
+      );
+      if (await this.store.saveSettings(next)) {
+        this._dialogRef.close();
+        await this.store.refresh();
+      }
+    } finally {
+      this.busy.set(false);
+      this._changeDetector.detectChanges();
+    }
+  }
+
+  /**
+   * Removes one work-item source and clears it as the selected board.
+   *
+   * @param settings - Current settings.
+   * @param sourceId - Removed source.
+   * @private
+   */
+  private withoutWorkItemSource(settings: Settings, sourceId: string): Settings {
+    return {
+      ...settings,
+      workItemSources: settings.workItemSources.filter((source) => source.id !== sourceId),
+      activeViewScope: {
+        ...settings.activeViewScope,
+        workItemSourceId:
+          settings.activeViewScope.workItemSourceId === sourceId
+            ? undefined
+            : settings.activeViewScope.workItemSourceId,
+      },
+    };
   }
 
   /**
@@ -1014,7 +1179,7 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
       data.workspaceId,
     );
     if (await this.store.saveSettings(next)) {
-      this._drawerRef.close();
+      this._dialogRef.close();
       await this.store.refresh();
     }
   }
@@ -1077,7 +1242,7 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
     );
     if (!(await this.store.saveSettings(next))) return undefined;
     this.azure.connectionId = connectionId;
-    if (close) this._drawerRef.close();
+    if (close) this._dialogRef.close();
     return connectionId;
   }
   private synchronizeDeliveryContext(settings: Settings, workspaceId: string): Settings {
@@ -1085,7 +1250,7 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
   }
 
   /**
-   * Creates a computed projection that also follows mutable drawer draft changes.
+   * Creates a computed projection that also follows mutable sheet draft changes.
    *
    * @param resolve - Resolves the current projection value.
    * @private
@@ -1098,7 +1263,7 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
   }
 
   /**
-   * Tracks assignments to a mutable drawer draft as a reactive revision.
+   * Tracks assignments to a mutable sheet draft as a reactive revision.
    *
    * @param draft - Draft to track.
    * @private

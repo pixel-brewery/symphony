@@ -1,14 +1,18 @@
 // #region Imports
 
-import { Inject, inject, Injectable } from '@angular/core';
+import { Inject, inject, Injectable, Optional } from '@angular/core';
+import { DELIVERY_ROUTE_HYDRATION } from '../ports/DeliveryRouteHydrationToken';
 import { DELIVERY_VIEW_CONTEXT } from '../ports/DeliveryViewContextToken';
-import type { ISearchMatch, ISearchProvider } from '@symphony/frontend-search';
+import type { IPaletteResult, ISearchMatch, ISearchProvider } from '@symphony/frontend-search';
+import type { ISnapshotRouteStore } from '../view-presenters/routeHydration/ISnapshotRouteStore';
 import type { IDeliverySearchContext } from './IDeliverySearchContext';
+import { projectDeliveryPaletteResults } from './projectDeliveryPaletteResults';
 
 // #endregion
 
 /**
- * Owns pull-request field matching and contextual search for the Delivery feature.
+ * Owns pull-request field matching, contextual search and the command palette's pull requests and
+ * `Sync now` for the Delivery feature.
  *
  * @public
  */
@@ -17,17 +21,30 @@ export class DeliverySearchProvider implements ISearchProvider {
   // #region Fields
 
   private readonly _context: IDeliverySearchContext;
+  private readonly _sync: Pick<
+    ISnapshotRouteStore,
+    'refresh' | 'refreshContinuousIntegrationRuns'
+  > | null;
 
   // #endregion
 
   // #region Ctor
 
-  /** Connects the existing read-only pull-request projection. @public */
+  /**
+   * Connects the existing read-only pull-request projection and the refreshes the pull-request
+   * route already runs, which `Sync now` reuses.
+   *
+   * @public
+   */
   public constructor(
     @Inject(DELIVERY_VIEW_CONTEXT)
     context: IDeliverySearchContext = inject(DELIVERY_VIEW_CONTEXT),
+    @Inject(DELIVERY_ROUTE_HYDRATION)
+    @Optional()
+    sync: Pick<ISnapshotRouteStore, 'refresh' | 'refreshContinuousIntegrationRuns'> | null = null,
   ) {
     this._context = context;
+    this._sync = sync;
   }
 
   // #endregion
@@ -74,6 +91,32 @@ export class DeliverySearchProvider implements ISearchProvider {
     return pullRequestMatch
       ? { path: '/main/pull-requests', queryParams: { q: query } }
       : undefined;
+  }
+
+  /**
+   * Lists the matching pull requests, each opening the pull-request list narrowed to it, and
+   * `Sync now`, which refreshes the pull requests and the Actions runs together.
+   *
+   * @param _query - Trimmed palette input; matching uses the normalized form.
+   * @param normalizedQuery - Locale-lowercased palette input; empty lists only the command.
+   * @returns Delivery's palette rows.
+   * @public
+   */
+  public paletteResults(_query: string, normalizedQuery: string): readonly IPaletteResult[] {
+    const snapshot = this._context.snapshot();
+    const sync = this._sync;
+    return projectDeliveryPaletteResults(
+      snapshot?.pullRequests ?? [],
+      snapshot?.ciRuns ?? [],
+      normalizedQuery,
+      sync
+        ? // The snapshot goes first: refreshed in parallel it would replace the fresher CI runs.
+          async () => {
+            await sync.refresh();
+            await sync.refreshContinuousIntegrationRuns();
+          }
+        : undefined,
+    );
   }
 
   // #endregion

@@ -38,6 +38,8 @@ export type { IWorkflowRevisions } from './lib/workflow/IWorkflowRevisions';
 export type { IWorkflowRouting } from './lib/workflow/IWorkflowRouting';
 export type { IWorkflowRun } from './lib/workflow/IWorkflowRun';
 export type { IWorkflowStage } from './lib/workflow/IWorkflowStage';
+export type { IWorkflowStageChange } from './lib/workflow/IWorkflowStageChange';
+export type { IWorkflowStageChangeHistory } from './lib/workflow/IWorkflowStageChangeHistory';
 export type { IWorkflowTransition } from './lib/workflow/IWorkflowTransition';
 export type { MergeMode } from './lib/workflow/MergeMode';
 export { mergeModes } from './lib/workflow/MergeModes';

@@ -1,10 +1,15 @@
 // #region Imports
-import type { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import type { RedirectFunction, Routes } from '@angular/router';
+import { LastScreenMemory } from './LastScreenMemory';
 // #endregion
 
 /**
- * Wraps the selected feature pages and derives every fallback from an included concrete route.
+ * Wraps the selected feature pages in the main window and derives every fallback from an included
+ * concrete route. Opening the main window without a route reopens the screen it showed last;
+ * a remembered screen the composition no longer includes falls back to the start page.
  *
+ * @param children - Feature pages of the main window; the first concrete one is the start page.
  * @public
  */
 export const presentationRoutes = (children: Routes): Routes => {
@@ -15,6 +20,8 @@ export const presentationRoutes = (children: Routes): Routes => {
     throw new Error('The application composition must include at least one feature page.');
   }
   const defaultPath = defaultRoute.path;
+  const startScreen: RedirectFunction = () =>
+    inject(LastScreenMemory).read() ?? `/main/${defaultPath}`;
   return [
     {
       path: 'menu-bar',
@@ -24,12 +31,12 @@ export const presentationRoutes = (children: Routes): Routes => {
       path: 'main',
       loadComponent: () => import('../views/PresenterView').then((module) => module.PresenterView),
       children: [
-        { path: '', pathMatch: 'full', redirectTo: defaultPath },
+        { path: '', pathMatch: 'full', redirectTo: startScreen },
         ...children,
         { path: '**', redirectTo: defaultPath },
       ],
     },
-    { path: '', pathMatch: 'full', redirectTo: `main/${defaultPath}` },
+    { path: '', pathMatch: 'full', redirectTo: startScreen },
     { path: '**', redirectTo: `main/${defaultPath}` },
   ];
 };

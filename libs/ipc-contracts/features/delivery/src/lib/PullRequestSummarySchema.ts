@@ -18,6 +18,8 @@ export const pullRequestSummarySchema = z.object({
   mergeRevision: z.string().min(1).optional(),
   targetBranch: z.string().min(1),
   baseBranchStatus: z.enum(['current', 'behind', 'conflicting', 'unknown']).optional(),
+  requestedReviewers: z.array(z.string().min(1).max(100)).max(100).readonly().optional(),
+  requestedTeams: z.array(z.string().min(1).max(200)).max(100).readonly().optional(),
   externalUrl: z.url(),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),

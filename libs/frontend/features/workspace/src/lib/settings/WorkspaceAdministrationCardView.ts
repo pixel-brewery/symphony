@@ -2,27 +2,24 @@
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
-  DividerComponent,
+  MessageComponent,
   NumberBoxComponent,
-  TextComponent,
   ToggleSwitchComponent,
-  IconNameDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { HeadlineComponent, StorageBreakdownComponent } from '@symphony/frontend-ui';
+import {
+  SettingsConditionalComponent,
+  SettingsGroupComponent,
+  SettingsRowComponent,
+} from '@symphony/frontend-setting';
+import { StorageBreakdownComponent } from '@symphony/frontend-ui';
 import { WorkspaceSettingsViewPresenter } from './WorkspaceSettingsViewPresenter';
 
 // #endregion
 
 /**
- * Feature-owned Workspace settings card.
+ * A workspace's `Administration` section: its own storage bar and limit, delivery grouping, and
+ * the edit, scope, export and delete actions.
  *
  * @public
  */
@@ -30,21 +27,14 @@ import { WorkspaceSettingsViewPresenter } from './WorkspaceSettingsViewPresenter
   selector: 'symphony-workspace-administration-card',
   host: { class: 'block' },
   imports: [
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
     ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    DividerComponent,
+    MessageComponent,
     NumberBoxComponent,
-    TextComponent,
-    ToggleSwitchComponent,
-    HeadlineComponent,
+    SettingsConditionalComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
     StorageBreakdownComponent,
-    IconNameDirective,
+    ToggleSwitchComponent,
   ],
   providers: [WorkspaceSettingsViewPresenter],
   templateUrl: './WorkspaceAdministrationCardView.html',

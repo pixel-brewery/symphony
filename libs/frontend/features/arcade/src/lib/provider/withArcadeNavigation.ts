@@ -29,6 +29,7 @@ export function withArcadeNavigation(order: number): IFeature<NavigationFeatureK
         route: '/main/arcade',
         order,
         region: 'desktop-main',
+        group: 'More',
         isVisible: () => context.enabled(),
       };
     },

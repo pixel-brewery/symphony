@@ -1,23 +1,38 @@
-<ng-template mosaikDrawerHeader>
+<!-- The authoring form opens as a sheet hanging below the window toolbar, like `New work item`. -->
+<ng-template mosaikDialogHeader>
   @let repository = presenter.repository();
-  <mosaik-drawer-header
-    [text]="'New pull request'"
-    [subText]="repository
-      ? repository.owner + '/' + repository.name
-      : 'Choose the branches to merge, then describe the change'"
-  >
+  <mosaik-dialog-header slot="header" [text]="'New pull request'">
+    @if (repository) {
+    <mosaik-text
+      slot="subHeader"
+      part="technical-caption"
+      class="technical-value"
+      [text]="repository.owner + '/' + repository.name"
+      [variant]="'neutral'"
+      [truncate]="true"
+    />
+    } @else {
+    <mosaik-text
+      slot="subHeader"
+      [text]="'Choose the branches to merge, then describe the change'"
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [truncate]="true"
+    />
+    }
     <mosaik-dismiss
       slot="suffix"
       test-id="pull-request-create-header-close"
+      aria-label="Close"
       (click)="presenter.closeCommand.execute()"
     />
-  </mosaik-drawer-header>
+  </mosaik-dialog-header>
 </ng-template>
 
-<ng-template mosaikDrawerContent>
+<ng-template mosaikDialogContent>
   <div
     test-id="pull-request-create-drawer"
-    class="flex h-full min-h-0 w-full flex-col overflow-hidden"
+    class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden"
   >
     <!-- While repositories and branches load, the form itself renders with its controls disabled:
          labels and headings are static, and only the comparison, which needs both branches, is a
@@ -31,7 +46,7 @@
     />
     } @else {
     <form
-      class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-2 py-2"
+      class="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto"
       [attr.test-id]="presenter.isHydrating() ? 'pull-request-create-loading-skeleton' : null"
       [attr.aria-busy]="presenter.isHydrating()"
     >
@@ -202,7 +217,7 @@
             [label]="'Description'"
             [placeholder]="'Explain the change in Markdown…'"
             [multiline]="true"
-            [multilineRows]="10"
+            [multilineRows]="5"
             [resize]="'vertical'"
             [maxlength]="60000"
             [disabled]="presenter.isHydrating()"
@@ -220,7 +235,7 @@
           </mosaik-card-content>
         </mosaik-card>
         }
-        <div class="flex min-w-0 items-center gap-2 p-2">
+        <div class="flex min-w-0 items-center gap-1">
           <mosaik-checkbox
             test-id="pull-request-draft"
             [label]="'Create as draft'"
@@ -237,8 +252,8 @@
   </div>
 </ng-template>
 
-<ng-template mosaikDrawerFooter>
-  <div class="flex w-full items-center justify-end gap-2">
+<ng-template mosaikDialogFooter>
+  <div part="sheet-footer" class="flex w-full min-w-0 items-center justify-end gap-1">
     <mosaik-button
       test-id="pull-request-create-cancel"
       [label]="'Cancel'"
@@ -248,7 +263,6 @@
     <mosaik-button
       test-id="pull-request-create-submit"
       [label]="presenter.draft() ? 'Create draft pull request' : 'Create pull request'"
-      [iconName]="'add'"
       [appearance]="'solid'"
       [variant]="'primary'"
       [isBusy]="presenter.isCreating()"

@@ -1,13 +1,13 @@
 // #region Imports
 
 import { computed, inject, Injectable } from '@angular/core';
-import { MessageBoxService } from '@pixel-brewery/mosaik-elements-angular';
 import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
 import {
+  mosaikEventText,
+  SETTINGS_WORKSPACE_CONTEXT,
+  SettingsAlertService,
   SettingsEditorService,
   SettingsHostSession,
-  SETTINGS_WORKSPACE_CONTEXT,
-  mosaikEventText,
   type ISettingsEditorRequest,
   type WorkspaceSettingsSection,
 } from '@symphony/frontend-setting';
@@ -32,7 +32,7 @@ export class DeliverySettingsViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _settingsHost = inject(SettingsHostSession);
   private readonly _settingsEditors = inject(SettingsEditorService);
   private readonly _selection = inject(SETTINGS_WORKSPACE_CONTEXT);
-  private readonly _messageBoxService = inject(MessageBoxService);
+  private readonly _alerts = inject(SettingsAlertService);
   private readonly _draft = deliverySettingsDraftFor(this._settingsHost);
   /** Retains the selected project across native card remounts. @public @readonly */
   public readonly deliveryRepositoryId = this._draft.deliveryRepositoryId;
@@ -99,24 +99,25 @@ export class DeliverySettingsViewPresenter extends Hydratable(ViewPresenter) {
   public readonly removeDeliveryTargetCommand = new Command<string>((targetId) => {
     const target = this.deliveryTargets().find((item) => item.id === targetId);
     if (!target || this._context.configurationBusy()) return;
-    const confirmation = this._messageBoxService.show({
-      id: `remove-delivery-target-${targetId}`,
-      header: `Remove ${target.displayName}?`,
-      message:
-        'This removes the destination configuration from Symphony. Deployment history and the deployed application are kept.',
-      buttons: 'yesNo',
-      variant: 'warning',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Remove destination', noLabel: 'Cancel' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason !== 'positive' || this._context.configurationBusy()) return;
-      const settings = this.requireSettings();
-      void this._configuration.saveSettings({
-        ...settings,
-        deliveryTargets: settings.deliveryTargets.filter((item) => item.id !== targetId),
+    void this._alerts
+      .confirm({
+        id: `remove-delivery-target-${targetId}`,
+        header: `Remove ${target.displayName}?`,
+        message:
+          'This removes the destination configuration from Symphony. Deployment history and the deployed application are kept.',
+        tone: 'danger',
+        confirmLabel: 'Remove destination',
+        cancelLabel: 'Keep destination',
+        destructive: true,
+      })
+      .then((confirmed) => {
+        if (!confirmed || this._context.configurationBusy()) return;
+        const settings = this.requireSettings();
+        void this._configuration.saveSettings({
+          ...settings,
+          deliveryTargets: settings.deliveryTargets.filter((item) => item.id !== targetId),
+        });
       });
-    });
   });
   private readonly _repositoriesByWorkspace = computed(() => {
     const repositories = new Map<string, RepositoryBinding[]>();
@@ -290,32 +291,32 @@ export class DeliverySettingsViewPresenter extends Hydratable(ViewPresenter) {
     const settings = this.requireSettings();
     const blockers = repositoryRemovalBlockers(settings, repository.id);
     if (blockers.length) {
-      this._messageBoxService.show({
+      void this._alerts.confirm({
         id: `remove-repository-blocked-${repository.id}`,
         header: 'This repository is still in use',
         message: `${blockers.join(', ')} ${blockers.length === 1 ? 'uses' : 'use'} only this repository. Add another repository there first, then remove it.`,
-        buttons: 'ok',
-        variant: 'warning',
-        pressEscapeToClose: true,
+        tone: 'warning',
+        confirmLabel: 'OK',
       });
       return;
     }
-    const confirmation = this._messageBoxService.show({
-      id: `remove-repository-${repository.id}`,
-      header: `Remove ${repository.displayName}?`,
-      message:
-        'Symphony drops the repository from this workspace and forgets its local path. Your checkout and its Git history stay untouched on disk.',
-      buttons: 'yesNo',
-      variant: 'danger',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Remove repository', noLabel: 'Keep repository' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason !== 'positive') return;
-      void this._configuration.saveSettings(
-        withoutRepository(this.requireSettings(), repository.id),
-      );
-    });
+    void this._alerts
+      .confirm({
+        id: `remove-repository-${repository.id}`,
+        header: `Remove ${repository.displayName}?`,
+        message:
+          'Symphony drops the repository from this workspace and forgets its local path. Your checkout and its Git history stay untouched on disk.',
+        tone: 'danger',
+        confirmLabel: 'Remove repository',
+        cancelLabel: 'Keep repository',
+        destructive: true,
+      })
+      .then((confirmed) => {
+        if (!confirmed) return;
+        void this._configuration.saveSettings(
+          withoutRepository(this.requireSettings(), repository.id),
+        );
+      });
   }
   private requireSettings(): ApplicationSettingsDto {
     const settings = this._context.settings();

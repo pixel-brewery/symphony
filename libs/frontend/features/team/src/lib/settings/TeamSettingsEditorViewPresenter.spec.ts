@@ -6,17 +6,13 @@ import '@angular/compiler';
 import { ApplicationRef, ChangeDetectorRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import {
-  DRAWER_REF,
-  DRAWER_REF_DATA,
-  MessageBoxService,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
 } from '@symphony/configuration-composition';
+import { SettingsAlertService } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto, ResponsePayload } from '@symphony/ipc-contracts-composition';
-import { Subject } from 'rxjs';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { ITeamConfigurationContext } from '../ports/ITeamConfigurationContext';
 import { TEAM_SETTINGS_CONTEXT } from '../ports/TeamSettingsContextToken';
@@ -42,8 +38,7 @@ function arrange(nativeInstallAvailable = true, runtimeAvailable = true) {
     ],
   });
   const saveSettings = vi.fn<ITeamConfigurationContext['saveSettings']>(async () => true);
-  const confirmation = new Subject<{ reason: 'positive' }>();
-  const show = vi.fn(() => ({ closed: confirmation }));
+  const confirm = vi.fn<SettingsAlertService['confirm']>(async () => true);
   const installRuntimeDependency = vi.fn<ITeamConfigurationContext['installRuntimeDependency']>(
     async () => false,
   );
@@ -79,11 +74,11 @@ function arrange(nativeInstallAvailable = true, runtimeAvailable = true) {
       TeamSettingsEditorViewPresenter,
       { provide: TEAM_SETTINGS_CONTEXT, useValue: context },
       {
-        provide: DRAWER_REF_DATA,
+        provide: DIALOG_REF_DATA,
         useValue: { kind: 'ai', workspaceId: 'personal', connectionId: 'primary' },
       },
-      { provide: DRAWER_REF, useValue: { close } },
-      { provide: MessageBoxService, useValue: { show } },
+      { provide: DIALOG_REF, useValue: { close } },
+      { provide: SettingsAlertService, useValue: { confirm } },
       { provide: ApplicationRef, useValue: { tick: vi.fn() } },
       { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn() } },
     ],
@@ -94,7 +89,7 @@ function arrange(nativeInstallAvailable = true, runtimeAvailable = true) {
   presenter.ai.roles = ['analysis', 'solution'];
   presenter.ai.model = 'sonnet';
   presenter.ai.reasoningEffort = 'high';
-  return { presenter, settings, saveSettings, close, show, confirmation, installRuntimeDependency };
+  return { presenter, settings, saveSettings, close, confirm, installRuntimeDependency };
 }
 
 describe('TeamSettingsEditorViewPresenter', () => {
@@ -102,19 +97,19 @@ describe('TeamSettingsEditorViewPresenter', () => {
     'requires the actual Platform owner before confirming native installation: %s',
     async (nativeInstallAvailable) => {
       // arrange
-      const { presenter, show, confirmation, installRuntimeDependency } = arrange(
+      const { presenter, confirm, installRuntimeDependency } = arrange(
         nativeInstallAvailable,
         false,
       );
 
       // act
       presenter.confirmInstallAiRuntimeCommand.execute(['claude', 'Claude Code']);
-      if (nativeInstallAvailable) confirmation.next({ reason: 'positive' });
+      await Promise.resolve();
       await Promise.resolve();
 
       // assert
       expect(presenter.confirmInstallAiRuntimeCommand.canExecute()).toBe(nativeInstallAvailable);
-      expect(show).toHaveBeenCalledTimes(nativeInstallAvailable ? 1 : 0);
+      expect(confirm).toHaveBeenCalledTimes(nativeInstallAvailable ? 1 : 0);
       expect(installRuntimeDependency).toHaveBeenCalledTimes(nativeInstallAvailable ? 1 : 0);
     },
   );
@@ -168,6 +163,39 @@ describe('TeamSettingsEditorViewPresenter', () => {
     expect(saved?.connections).toEqual(current?.connections);
     expect(saved?.workItemSources).toEqual(current?.workItemSources);
     expect(close).toHaveBeenCalledOnce();
+  });
+
+  it('previews the delivery-flow steps of the chosen responsibilities and the first backup', () => {
+    // arrange
+    const { presenter } = arrange();
+    presenter.ai.fallbackConnectionIds = ['backup'];
+    presenter.ai.fallbackEfforts = { backup: 'medium' };
+
+    // act
+    presenter.ai.roles = ['pull-request-review', 'work-item-creation', 'ci-repair', 'ci-diagnosis'];
+
+    // assert
+    expect(presenter.deliveryFlowSteps().map((step) => step.label)).toEqual([
+      'Create',
+      'Fix failed checks',
+      'Address reviews',
+    ]);
+    expect(presenter.selectedAiAccount()?.id).toBe('primary');
+    expect(presenter.previewModel()?.label).toBe('Sonnet');
+    expect(presenter.previewEffort()?.label).toBe('High');
+    expect(presenter.previewFallback()?.account.displayName).toBe('Backup');
+    expect(presenter.previewFallback()?.effort?.label).toBe('Medium');
+  });
+
+  it('warns in the preview when the chosen account cannot run', () => {
+    // arrange
+    const { presenter } = arrange(true, false);
+
+    // act
+    const actual = presenter.selectedAccountProblem();
+
+    // assert
+    expect(actual).toBe('cli-missing');
   });
 
   it('keeps the current draft open when the sole configuration writer rejects the save', async () => {

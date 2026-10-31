@@ -5,16 +5,16 @@ This repository contains a local-first desktop orchestration platform for Codex-
 ## Repository AI configuration
 
 - `AGENTS.md` is the shared repository instruction source. Keep `CODEX.md` and `CLAUDE.md` as thin provider adapters.
-- `.agents/skills/` is the canonical editable tree for portable ChatGPT- and Codex-compatible skills.
+- `.agents/skills/` is the canonical skill tree for portable ChatGPT- and Codex-compatible skills. Repository-owned skills are editable; imported skills tracked in root `skills-lock.json` are maintained through the Skills CLI rather than edited locally.
 - `.github/agents/`, `.github/instructions/`, `.github/prompts/`, and `.github/rules/` own repository agent descriptions and scoped guidance.
 - `.vscode/mcp.json` is the provider-neutral MCP registry. Never commit literal credentials, token values, or absolute developer paths.
 - Run `yarn agents:sync` after changing agent, prompt, MCP, or skill configuration. Run `yarn agents:check` before handoff.
-- Generated files under `.codex/`, `.opencode/`, `opencode.json`, `.claude/skills/`, `.claude/agents/`, `.mcp.json`, `.agents/packages/`, and `skills-lock.json` must not be edited directly.
+- Generated files under `.codex/`, `.opencode/`, `opencode.json`, `.claude/skills/`, `.claude/agents/`, `.mcp.json`, `.agents/packages/`, and `.agents/packages/skills-lock.json` must not be edited directly.
 - Skills vendored under `.github/skills/` (the nx toolchain skills) are excluded from the `.claude/skills/` mirror, and the nx MCP server is excluded from `.mcp.json`: Claude Code loads both from the `nx@nx-claude-plugins` plugin enabled in `.claude/settings.json`. Codex and OpenCode keep using the vendored copies and the `nx` server from `.vscode/mcp.json`.
 - `yarn nx configure-ai-agents` and `yarn agents:sync` write to overlapping paths, and the sync wins because `agents:check` gates handoff. Configuring `codex` or `opencode` through Nx injects an `nx-mcp` server, copies Nx's own commands and subagents into `.codex/` and `.opencode/`, and recreates `.opencode/skills/`; the next `agents:sync` reverts the generated files and deletes the skill copies, so run Nx first and the sync afterwards. Add MCP servers only in `.vscode/mcp.json`.
 - Never expose a skill to Claude Code by symlinking `.claude/skills/<name>` at `.agents/skills/<name>`. The sync writes the generated mirror to that path and would overwrite the source; it now removes such a symlink instead of following it.
 - Invoke `$reuse-existing-patterns` before and after implementation work.
-- Apply `$symphony-architect` for Symphony engineering work. Its complete shared architecture foundations live in `.agents/skills/symphony-architect`; Symphony-specific references apply them to this desktop platform. `architect-desktop-platform` remains a compatibility entrypoint.
+- Apply `$symphony-architect` for Symphony engineering work. It explicitly derives from `.agents/skills/architecture/SKILL.md`, installed from `pixel-brewery/skills` at the immutable revision and content digest in root `skills-lock.json`. Symphony-specific rules remain in `.agents/skills/symphony-architect`. Shared changes belong upstream; update the locked base through the Skills CLI, then run `yarn agents:sync` and `yarn agents:check`. `architect-desktop-platform` remains a compatibility entrypoint.
 
 ## Architecture invariants
 

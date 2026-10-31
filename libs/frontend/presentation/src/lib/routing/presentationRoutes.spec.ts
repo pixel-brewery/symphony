@@ -7,6 +7,7 @@ import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideRouter, Router, RouterOutlet, type Routes } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { BROWSER_STORAGE } from '@symphony/frontend-core';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { presentationRoutes } from './presentationRoutes';
 // #endregion
@@ -40,6 +41,41 @@ describe('presentationRoutes', () => {
       await harness.navigateByUrl(path);
       expect(router.url).toBe('/main/board');
     }
+  });
+
+  it('reopens the remembered screen and falls back to the start page when it is not included', async () => {
+    // arrange
+    const stored = new Map([['symphony.window.last-screen', '/main/inbox']]);
+    const storage = {
+      getItem: (key: string) => stored.get(key) ?? null,
+      setItem: (key: string, value: string) => void stored.set(key, value),
+    } as Storage;
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: BROWSER_STORAGE, useValue: storage },
+        provideRouter(
+          routesFor([
+            { path: 'board', component: IncludedPage },
+            { path: 'inbox', component: IncludedPage },
+          ]),
+        ),
+      ],
+    });
+    const harness = await RouterTestingHarness.create();
+    const router = TestBed.inject(Router);
+
+    // act
+    await harness.navigateByUrl('/');
+    const reopened = router.url;
+    await harness.navigateByUrl('/main');
+    const reopenedFromMain = router.url;
+    stored.set('symphony.window.last-screen', '/main/arcade');
+    await harness.navigateByUrl('/');
+
+    // assert
+    expect(reopened).toBe('/main/inbox');
+    expect(reopenedFromMain).toBe('/main/inbox');
+    expect(router.url).toBe('/main/board');
   });
 
   it('ignores compatibility redirects when selecting a valid default and rejects a composition without a page', async () => {

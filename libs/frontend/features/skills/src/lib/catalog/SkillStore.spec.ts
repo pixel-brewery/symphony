@@ -3,8 +3,8 @@
 // #region Imports
 
 import '@angular/compiler';
-import { signal } from '@angular/core';
-import type { IAgentPhaseAssignment, IAgentTeam } from '@symphony/domain-team';
+import { computed, signal } from '@angular/core';
+import type { IAgentTeam } from '@symphony/domain-team';
 import type { ISkillManifest } from '@symphony/domain-skills';
 import type { RequestPayload, ResponsePayload } from '@symphony/ipc-contracts-composition';
 import type {
@@ -15,6 +15,7 @@ import type {
 } from '@symphony/ipc-contracts-skills';
 import { describe, expect, it, vi } from 'vitest';
 import type { ISkillsClient } from '../ports/ISkillsClient';
+import type { ISkillsTeamAssignments } from '../ports/ISkillsTeamAssignments';
 import { SkillStore } from './SkillStore';
 
 // #endregion
@@ -45,12 +46,35 @@ function createFixture() {
       },
     ],
   });
+  // A second workspace whose AI team has nobody on Implement and verify (`solution`).
+  const otherTeam = signal<IAgentTeam | undefined>({
+    id: 'team-2',
+    workspaceId: 'workspace-2',
+    displayName: 'Other team',
+    description: '',
+    assignments: [
+      { role: 'analysis', primaryAgentId: 'agent-2', fallbackAgentIds: [], skillId: null },
+    ],
+  });
+  const teams = [
+    { workspaceName: 'FLAMOX365', team },
+    { workspaceName: 'Personal', team: otherTeam },
+  ];
+  const workspaceTeams = computed(() =>
+    teams.flatMap(({ workspaceName, team: entry }) => {
+      const value = entry();
+      return value ? [{ workspaceId: value.workspaceId, workspaceName, team: value }] : [];
+    }),
+  );
   const skillManifests = signal<readonly ISkillManifest[]>([]);
   const saveAssignments = vi.fn(
-    async (teamId: string, assignments: readonly IAgentPhaseAssignment[]): Promise<boolean> => {
-      const current = team();
-      if (!current || current.id !== teamId) return false;
-      team.set({ ...current, assignments });
+    async (changes: readonly ISkillsTeamAssignments[]): Promise<boolean> => {
+      for (const change of changes) {
+        const entry = teams.find(({ team: candidate }) => candidate()?.id === change.teamId)?.team;
+        const current = entry?.();
+        if (!entry || !current) return false;
+        entry.set({ ...current, assignments: change.assignments });
+      }
       return true;
     },
   );
@@ -75,10 +99,10 @@ function createFixture() {
   };
   const refresh = vi.fn().mockResolvedValue(undefined);
   const customizeBuiltinSkill = vi.fn().mockResolvedValue(undefined);
-  const notifications = { showSuccess: vi.fn(), showError: vi.fn() };
+  const notifications = { showSuccess: vi.fn(), showError: vi.fn(), showWarning: vi.fn() };
   const store = new SkillStore(
     {
-      activeTeam: team.asReadonly(),
+      workspaceTeams,
       skillManifests: skillManifests.asReadonly(),
       configurationBusy: signal(false).asReadonly(),
     },
@@ -90,6 +114,7 @@ function createFixture() {
   return {
     store,
     team,
+    otherTeam,
     skillManifests,
     saveAssignments,
     requests,
@@ -151,6 +176,63 @@ describe('SkillStore', () => {
     expect(team()).toBe(previous);
     expect(refresh).not.toHaveBeenCalled();
     expect(notifications.showSuccess).not.toHaveBeenCalled();
+  });
+
+  it('attaches a package to the step in every workspace team that has someone on it', async () => {
+    // arrange
+    const { store, team, otherTeam, saveAssignments, notifications } = createFixture();
+
+    // act
+    const actual = await store.activateSkill('review-skill', 'analysis');
+
+    // assert
+    expect(actual).toBe(true);
+    expect(saveAssignments).toHaveBeenCalledOnce();
+    expect(team()?.assignments.find((item) => item.role === 'analysis')?.skillId).toBe(
+      'review-skill',
+    );
+    expect(otherTeam()?.assignments[0]?.skillId).toBe('review-skill');
+    expect(notifications.showSuccess).toHaveBeenCalledWith(
+      'Skill assigned to the selected flow step. The previous skill was deactivated.',
+      '',
+    );
+  });
+
+  it('names the workspaces without anyone on the step after attaching it elsewhere', async () => {
+    // arrange
+    const { store, team, otherTeam, notifications } = createFixture();
+
+    // act
+    const actual = await store.activateSkill('implementation-skill', 'solution');
+
+    // assert
+    expect(actual).toBe(true);
+    expect(team()?.assignments.find((item) => item.role === 'solution')?.skillId).toBe(
+      'implementation-skill',
+    );
+    expect(otherTeam()?.assignments).toHaveLength(1);
+    expect(notifications.showSuccess).toHaveBeenCalledWith(
+      'Skill assigned to the selected flow step. The previous skill was deactivated.',
+      'Not attached in Personal: nobody works on Implement and verify there.',
+    );
+  });
+
+  it('changes nothing and warns instead of reporting success when nobody works on the step', async () => {
+    // arrange
+    const { store, saveAssignments, refresh, notifications } = createFixture();
+
+    // act
+    const actual = await store.activateSkill('review-skill', 'pull-request-review');
+
+    // assert
+    expect(actual).toBe(false);
+    expect(saveAssignments).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+    expect(notifications.showSuccess).not.toHaveBeenCalled();
+    expect(notifications.showWarning).toHaveBeenCalledWith(
+      'Nobody works on Address reviews',
+      'No AI team has someone on Address reviews. Assign an agent to it under AI team, then attach the skill.',
+    );
   });
 
   it('deactivates only the selected skill before refreshing the authoritative snapshot', async () => {

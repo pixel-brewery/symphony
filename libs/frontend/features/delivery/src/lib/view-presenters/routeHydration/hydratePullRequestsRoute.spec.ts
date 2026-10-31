@@ -6,7 +6,7 @@ import { hydratePullRequestsRoute } from './';
 // #endregion
 
 describe('hydratePullRequestsRoute', () => {
-  it('waits for initialization before refreshing both Pull Request data sources', async () => {
+  it('waits for initialization, refreshes the snapshot and then applies the runs', async () => {
     // arrange
     const initialization = deferred();
     const snapshotRefresh = deferred();
@@ -17,6 +17,7 @@ describe('hydratePullRequestsRoute', () => {
       refreshContinuousIntegrationRuns: vi.fn(() => runRefresh.promise),
     };
     let completed = false;
+
     // act
     const hydration = hydratePullRequestsRoute(store).then(() => {
       completed = true;
@@ -27,10 +28,11 @@ describe('hydratePullRequestsRoute', () => {
     initialization.resolve();
     await flushPromises();
     expect(store.refresh).toHaveBeenCalledOnce();
+    expect(store.refreshContinuousIntegrationRuns).not.toHaveBeenCalled();
+    snapshotRefresh.resolve();
+    await flushPromises();
     expect(store.refreshContinuousIntegrationRuns).toHaveBeenCalledOnce();
     expect(completed).toBe(false);
-
-    snapshotRefresh.resolve();
     runRefresh.resolve();
     await hydration;
     expect(completed).toBe(true);

@@ -35,7 +35,7 @@ test('launches and reopens as the active macOS application', async () => {
   // act
   try {
     const page = await app.firstWindow();
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     const mainWindowUrl = page.url();
 
     await expect

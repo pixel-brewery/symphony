@@ -1,8 +1,8 @@
 # Architect origin and Symphony translations
 
-The shared foundations and `architect-core` workflow block were copied from the local `../archipel/.agents/skills/archipel-architect` on 2026-10-30 and compared with `../flamox/.agents/skills/flamox-architect` and `../synapse/.agents/skills/synapse-architect`.
+The architecture foundation is inherited from the public [Pixel Brewery Skills](https://github.com/pixel-brewery/skills) repository, skill `architecture`. The root `skills-lock.json` records its full immutable commit in `ref`, source path and installed-folder SHA-256. The canonical installed base is `../../architecture`; this local skill declares `metadata.inherits: architecture` and reads [its entrypoint](../../architecture/SKILL.md) before applying Symphony-specific rules.
 
-All 13 common modules are retained byte for byte: `architecture.md`, `oop.md`, `workflow.md`, `backend.md`, `backend-contracts.md`, `backend-safety.md`, `api.md`, `platform.md`, `frontend.md`, `frontend-patterns.md`, `date-time.md`, `testing.md` and `e2e.md`. The shared entrypoint block is also unchanged. No general foundation was removed or summarized away. Ordinary skill use is independent of the reference checkouts.
+The foundation originated from the 13 common modules shared by Archipel, FLAMOX365, Mosaik, Synapse and Symphony. These modules are maintained centrally rather than copied into this local skill. Relevant modules are loaded through the routing table; ordinary skill use remains independent of other project checkouts.
 
 Symphony-specific translations live in the local project references:
 
@@ -14,4 +14,4 @@ Symphony-specific translations live in the local project references:
 - Public library/runtime examples respect installed Synapse and Mosaik ownership. Symphony retains product/workspace policy and does not copy library source into the application.
 - The previous `architect-desktop-platform` responsibilities remain in the complete skill: user outcome/owner, process path, neutral domain, explicit state, validated secret-safe boundaries, isolated worktrees/read-only Analyzer, Mosaik/presenter/FlowBoard reuse and documented migration/operational/verification consequences.
 
-The peer comparison helper is adapted only to recognize Symphony/Synapse and keep differently scoped peer helper scripts local; it compares and optionally synchronizes the common content. Retained core files and the shared entrypoint are excluded from source formatting to preserve exact equality. Run `yarn exec python3 .agents/scripts/sync_architect_core.py --peer ../archipel --check` and the equivalent check for each available peer after deliberate shared changes. This proves shared-content equality, not product/runtime behavior or another repository's wider workflow parity.
+Validate installed-source integrity and derivation with `python3 .agents/scripts/sync_architect_core.py --check`. Update shared foundations upstream, deliberately select a new immutable revision through the Skills CLI, and regenerate the provider mirrors and portable packages. Local project rules are retained during a base update. This proves skill integrity and generation consistency; it does not establish product/runtime behavior.

@@ -42,16 +42,20 @@ describe('ContinuousIntegrationProjectionService continuous-integration polling'
   function createContinuousIntegrationService(ci: IContinuousIntegrationPort): {
     readonly service: ContinuousIntegrationProjectionService;
     readonly repository: IContinuousIntegrationProjectionRepository;
+    readonly record: ReturnType<typeof vi.fn>;
   } {
     const repository: IContinuousIntegrationProjectionRepository = {
       loadContinuousIntegration: vi.fn(() => cached),
       saveContinuousIntegration: vi.fn(),
     };
+    const record = vi.fn();
     return {
       repository,
+      record,
       service: new ContinuousIntegrationProjectionService({
         ci,
         repository,
+        runHistory: { record },
         clock: { now: () => '2026-08-19T10:00:00.000Z' },
         scope: () => ({
           workspaceIds: ['workspace-1'],
@@ -89,6 +93,22 @@ describe('ContinuousIntegrationProjectionService continuous-integration polling'
     );
   });
 
+  it('records the runs of every successful read in the durable run history', async () => {
+    // arrange
+    const ci: IContinuousIntegrationPort = {
+      listWorkflows: vi.fn(async () => [workflow]),
+      listRuns: vi.fn(async () => [cachedRun, currentRun]),
+    };
+    const { service, record } = createContinuousIntegrationService(ci);
+
+    // act
+    await service.refresh();
+    await service.refresh(true);
+
+    // assert
+    expect(record.mock.calls).toEqual([[[cachedRun, currentRun]], [[cachedRun, currentRun]]]);
+  });
+
   it('refreshes the workflow catalog only when explicitly requested', async () => {
     // arrange
     const ci: IContinuousIntegrationPort = {
@@ -116,13 +136,14 @@ describe('ContinuousIntegrationProjectionService continuous-integration polling'
         throw new RemoteProviderRateLimitError('Provider-specific detail.', retryAt);
       }),
     };
-    const { service } = createContinuousIntegrationService(ci);
+    const { service, record } = createContinuousIntegrationService(ci);
 
     // act
     const result = await service.refresh();
 
     // assert
     expect(result.ciRuns).toEqual([cachedRun]);
+    expect(record).not.toHaveBeenCalled();
     expect(result.status).toEqual({
       state: 'stale',
       reason: 'rate-limited',

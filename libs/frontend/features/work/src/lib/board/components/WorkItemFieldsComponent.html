@@ -1,0 +1,149 @@
+@let form = editor(); @if (showWorkItemType() && (form.metadata()?.workItemTypes ?? []).length) {
+<div class="grid min-w-0 grid-cols-2 gap-1.5 max-[42rem]:grid-cols-1">
+  <mosaik-select
+    test-id="issue-work-item-type"
+    [formField]="form.form.workItemType"
+    [label]="'Work item type'"
+    [required]="true"
+  >
+    @for (workItemType of form.metadata()?.workItemTypes ?? []; track workItemType) {
+    <mosaik-select-item [value]="workItemType" [label]="workItemType" />
+    }
+  </mosaik-select>
+</div>
+} @if (fields().length) {
+<section class="flex min-w-0 flex-col gap-1" test-id="issue-project-fields">
+  <mosaik-text [text]="'Project fields'" [mosaikTypography]="'subtitle2'" />
+  <div class="grid min-w-0 grid-cols-2 gap-1.5 max-[42rem]:grid-cols-1">
+    @for (field of fields(); track field.id) {
+    <div
+      class="min-w-0"
+      [class.col-span-full]="field.type === 'multi-select'"
+      [attr.test-id]="'issue-project-field-' + field.id"
+    >
+      @switch (field.type) { @case ('text') {
+      <mosaik-textbox
+        aiEnhanced
+        [aiEnabled]="aiDraft()"
+        [label]="field.name"
+        [value]="form.projectFieldText()(field.id)"
+        [maxlength]="10000"
+        [isClearable]="true"
+        (input)="form.updateProjectFieldCommand.execute([field, $event])"
+        (cleared)="form.clearProjectFieldCommand.execute(field)"
+      />
+      } @case ('number') {
+      <mosaik-numberbox
+        [label]="field.name"
+        [value]="form.projectFieldNumber()(field.id)"
+        [isClearable]="true"
+        (change)="form.updateProjectFieldCommand.execute([field, $event])"
+        (cleared)="form.clearProjectFieldCommand.execute(field)"
+      />
+      } @case ('date') {
+      <mosaik-datebox
+        [label]="field.name"
+        [value]="form.projectFieldDate()(field.id)"
+        [isClearable]="true"
+        [dropDownPlacement]="'bottom-end'"
+        (change)="form.updateProjectFieldCommand.execute([field, $event])"
+        (cleared)="form.clearProjectFieldCommand.execute(field)"
+      />
+      } @case ('single-select') {
+      <mosaik-select
+        aiEnhanced
+        [aiEnabled]="aiDraft()"
+        [label]="field.name"
+        [value]="form.projectFieldSelection()(field.id)"
+        [isClearable]="field.role !== 'workflow-state'"
+        (selectionChanged)="form.updateProjectFieldCommand.execute([field, $event])"
+        (cleared)="form.clearProjectFieldCommand.execute(field)"
+      >
+        @for (option of field.options; track option.id) {
+        <mosaik-select-item
+          [attr.test-id]="'issue-project-field-' + field.id + '-option-' + option.id"
+          [value]="option.id"
+          [label]="option.label"
+        />
+        }
+      </mosaik-select>
+      } @case ('iteration') {
+      <mosaik-select
+        aiEnhanced
+        [aiEnabled]="aiDraft()"
+        [label]="field.name"
+        [value]="form.projectFieldSelection()(field.id)"
+        [isClearable]="true"
+        (selectionChanged)="form.updateProjectFieldCommand.execute([field, $event])"
+        (cleared)="form.clearProjectFieldCommand.execute(field)"
+      >
+        @for (option of field.options; track option.id) {
+        <mosaik-select-item
+          [attr.test-id]="'issue-project-field-' + field.id + '-option-' + option.id"
+          [value]="option.id"
+          [label]="option.startDate ? option.label + ' · ' + option.startDate : option.label"
+        />
+        }
+      </mosaik-select>
+      } @case ('multi-select') {
+      <div class="flex min-w-0 flex-col gap-1">
+        <mosaik-text [text]="field.name" [mosaikTypography]="'subtitle2'" />
+        <div class="grid min-w-0 grid-cols-2 gap-1 max-[42rem]:grid-cols-1">
+          @for (option of field.options; track option.id) {
+          <mosaik-checkbox
+            aiEnhanced
+            [aiEnabled]="aiDraft() && form.isProjectFieldOptionSelected()(field.id, option.id)"
+            [attr.test-id]="'issue-project-field-' + field.id + '-option-' + option.id"
+            [label]="option.label"
+            [isChecked]="form.isProjectFieldOptionSelected()(field.id, option.id)"
+            (click)="form.toggleProjectFieldOptionCommand.execute([field.id, option.id])"
+          />
+          }
+        </div>
+      </div>
+      } }
+    </div>
+    }
+  </div>
+</section>
+} @if (showLabels() && (form.metadata()?.labels ?? []).length) {
+<section class="flex min-w-0 flex-col gap-1" test-id="issue-labels">
+  <mosaik-text [text]="'Labels'" [mosaikTypography]="'subtitle2'" />
+  <div class="grid min-w-0 grid-cols-2 gap-1 max-[42rem]:grid-cols-1">
+    @for (label of form.metadata()?.labels ?? []; track label.name) {
+    <mosaik-checkbox
+      aiEnhanced
+      [aiEnabled]="aiDraft() && form.isLabelSelected()(label.name)"
+      [attr.test-id]="'issue-label-' + label.name"
+      [label]="label.name"
+      [isChecked]="form.isLabelSelected()(label.name)"
+      (click)="form.toggleLabelCommand.execute(label.name)"
+    />
+    }
+  </div>
+</section>
+} @if ((form.metadata()?.assignees ?? []).length) {
+<section class="flex min-w-0 flex-col gap-1" test-id="issue-assignees">
+  <mosaik-text [text]="'Assignees'" [mosaikTypography]="'subtitle2'" />
+  <div class="grid min-w-0 grid-cols-2 gap-1 max-[42rem]:grid-cols-1">
+    @for (assignee of form.metadata()?.assignees ?? []; track assignee.login) {
+    <div class="flex min-w-0 items-center gap-1">
+      <mosaik-avatar
+        [text]="assignee.displayName ?? assignee.login"
+        [src]="assignee.avatarUrl ?? ''"
+        [size]="'tiny'"
+        [appearance]="'soft'"
+      />
+      <mosaik-checkbox
+        aiEnhanced
+        [aiEnabled]="aiDraft() && form.isAssigneeSelected()(assignee.login)"
+        [attr.test-id]="'issue-assignee-' + assignee.login"
+        [label]="assignee.displayName ?? assignee.login"
+        [isChecked]="form.isAssigneeSelected()(assignee.login)"
+        (click)="form.toggleAssigneeCommand.execute(assignee.login)"
+      />
+    </div>
+    }
+  </div>
+</section>
+}

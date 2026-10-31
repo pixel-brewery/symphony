@@ -6,7 +6,7 @@ import '@angular/compiler';
 import { ApplicationRef, type Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { DrawerService, type ICancel } from '@pixel-brewery/mosaik-elements-angular';
+import { DialogService, type ICancel } from '@pixel-brewery/mosaik-elements-angular';
 import { Subject } from 'rxjs';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { ISettingsEditorDefinition } from './ISettingsEditorDefinition';
@@ -20,8 +20,13 @@ class FirstEditor {}
 class FollowupEditor {}
 function arrange(editors: readonly ISettingsEditorDefinition[]) {
   const closed = new Subject<ICancel<ISettingsEditorResult>>();
-  const requestAttention = vi.fn();
-  const show = vi.fn(() => ({ closed: closed.asObservable(), requestAttention }));
+  const requestAttention = vi.fn(async () => true);
+  const setAttribute = vi.fn();
+  const show = vi.fn(() => ({
+    closed: closed.asObservable(),
+    requestAttention,
+    element: { setAttribute },
+  }));
   const isShown = vi.fn(() => true);
   const frames: FrameRequestCallback[] = [];
   vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
@@ -32,7 +37,7 @@ function arrange(editors: readonly ISettingsEditorDefinition[]) {
     providers: [
       SettingsEditorService,
       { provide: SettingsEditorRegistry, useValue: new SettingsEditorRegistry(editors) },
-      { provide: DrawerService, useValue: { show, isShown } },
+      { provide: DialogService, useValue: { show, isShown } },
     ],
   });
   const application = TestBed.inject(ApplicationRef);
@@ -42,6 +47,7 @@ function arrange(editors: readonly ISettingsEditorDefinition[]) {
     closed,
     show,
     requestAttention,
+    setAttribute,
     frames,
     tick,
   };
@@ -110,9 +116,13 @@ describe('SettingsEditorService', () => {
     // assert
     expect(tick).toHaveBeenCalledTimes(2);
     expect(onSection).toHaveBeenCalledExactlyOnceWith('workspace-a', 'services');
-    expect(show).toHaveBeenLastCalledWith(FollowupEditor, {
-      data: { kind: 'followup', workspaceId: 'workspace-a' },
-    });
+    expect(show).toHaveBeenLastCalledWith(
+      FollowupEditor,
+      expect.objectContaining({
+        data: { kind: 'followup', workspaceId: 'workspace-a' },
+        size: { width: '640px' },
+      }),
+    );
   });
 
   it('releases the opening guard after a component load failure so another editor can open', async () => {
@@ -139,6 +149,37 @@ describe('SettingsEditorService', () => {
     await service.open({ kind: 'available' });
 
     // assert
-    expect(show).toHaveBeenCalledExactlyOnceWith(FirstEditor, { data: { kind: 'available' } });
+    expect(show).toHaveBeenCalledExactlyOnceWith(
+      FirstEditor,
+      expect.objectContaining({ data: { kind: 'available' } }),
+    );
+  });
+
+  it('presents an editor as a sheet of its declared width that Escape closes', async () => {
+    // arrange
+    const { service, show, setAttribute } = arrange([
+      {
+        id: 'agent',
+        kind: 'agent',
+        width: '920px',
+        isRequest: () => true,
+        loadComponent: async () => FirstEditor,
+      },
+    ]);
+
+    // act
+    await service.open({ kind: 'agent' });
+
+    // assert
+    expect(show).toHaveBeenCalledExactlyOnceWith(
+      FirstEditor,
+      expect.objectContaining({
+        size: { width: '920px' },
+        hasBackdrop: true,
+        pressEscapeToClose: true,
+        clickOutsideToClose: false,
+      }),
+    );
+    expect(setAttribute).toHaveBeenCalledWith('part', 'settings-sheet');
   });
 });

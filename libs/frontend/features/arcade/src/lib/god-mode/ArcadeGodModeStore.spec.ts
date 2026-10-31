@@ -127,4 +127,39 @@ describe('ArcadeGodModeStore', () => {
     expect(store.progress()).toBe(0);
     expect(store.enabled()).toBe(false);
   });
+
+  it('enables god mode in every window once the code was entered in one of them', async () => {
+    // arrange
+    vi.useRealTimers();
+    const store = TestBed.inject(ArcadeGodModeStore);
+    store.initialize();
+    const otherWindow = new BroadcastChannel('symphony.arcade-god-mode');
+
+    // act
+    otherWindow.postMessage({ kind: 'enabled' });
+    await vi.waitFor(() => expect(store.enabled()).toBe(true));
+
+    // assert
+    expect(store.progress()).toBe(CODE.length);
+    expect(showSuccess).not.toHaveBeenCalled();
+    otherWindow.close();
+  });
+
+  it('tells another window that opens later that god mode is active', async () => {
+    // arrange
+    vi.useRealTimers();
+    const store = TestBed.inject(ArcadeGodModeStore);
+    store.initialize();
+    for (const code of CODE) press(code);
+    const replies: unknown[] = [];
+    const laterWindow = new BroadcastChannel('symphony.arcade-god-mode');
+    laterWindow.onmessage = (event) => replies.push(event.data);
+
+    // act
+    laterWindow.postMessage({ kind: 'query' });
+
+    // assert
+    await vi.waitFor(() => expect(replies).toContainEqual({ kind: 'enabled' }));
+    laterWindow.close();
+  });
 });

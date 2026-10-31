@@ -1,13 +1,10 @@
 // #region Imports
 
 import { computed, inject, Injectable } from '@angular/core';
-import {
-  MessageBoxService,
-  VIEW_SLOT_CONTEXT,
-  type IViewSlotContext,
-} from '@pixel-brewery/mosaik-elements-angular';
+import { VIEW_SLOT_CONTEXT, type IViewSlotContext } from '@pixel-brewery/mosaik-elements-angular';
 import { Command } from '@symphony/frontend-core';
 import {
+  SettingsAlertService,
   SettingsEditorService,
   SettingsHostSession,
   type ISettingsEditorRequest,
@@ -17,6 +14,7 @@ import { AI_RUNTIME_LABELS } from '@symphony/frontend-ui';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { AiStore } from '../state/AiStore';
 import { aiAccountRemovalBlockers, withoutAiAccount } from './ai-account-removal';
+import { aiAccountSignIn } from './aiAccountSignIn';
 // #endregion
 type ProviderConnection = ApplicationSettingsDto['connections'][number];
 /** Owns AI account rows, optional connections and their existing removal workflow. @public */
@@ -58,7 +56,7 @@ export class AiConnectionsSettingsViewPresenter {
       });
   });
 
-  private readonly _messageBoxService = inject(MessageBoxService);
+  private readonly _alerts = inject(SettingsAlertService);
 
   /**
    * The AI runtimes.
@@ -187,17 +185,7 @@ export class AiConnectionsSettingsViewPresenter {
     if (account.kind === 'opencode') {
       return `${label}${account.gateway ? ` · ${account.gateway.displayName}` : ''}`;
     }
-    const provider =
-      account.kind === 'codex' ? this.store.connections()?.codex : this.store.connections()?.claude;
-    const status = provider?.accounts.find((candidate) => candidate.id === account.id);
-    const signIn = !provider?.cliAvailable
-      ? 'CLI not installed'
-      : !status
-        ? 'Sign-in not checked yet'
-        : status.authenticated
-          ? 'Signed in'
-          : 'Not signed in';
-    return `${label} · ${signIn}`;
+    return `${label} · ${aiAccountSignIn(account, this.store.connections())}`;
   }
 
   /**
@@ -221,30 +209,30 @@ export class AiConnectionsSettingsViewPresenter {
     const settings = this.requireSettings();
     const blockers = aiAccountRemovalBlockers(settings, account.id);
     if (blockers.length) {
-      this._messageBoxService.show({
+      void this._alerts.confirm({
         id: `remove-ai-account-blocked-${account.id}`,
         header: 'This account is still in use',
         message: `${blockers.join(', ')} ${blockers.length === 1 ? 'runs' : 'run'} on this account. Move ${blockers.length === 1 ? 'that agent' : 'those agents'} to another AI account first, then remove it.`,
-        buttons: 'ok',
-        variant: 'warning',
-        pressEscapeToClose: true,
+        tone: 'warning',
+        confirmLabel: 'OK',
       });
       return;
     }
-    const confirmation = this._messageBoxService.show({
-      id: `remove-ai-account-${account.id}`,
-      header: `Remove ${account.displayName}?`,
-      message:
-        'Symphony signs the account out, deletes its isolated workspace data, and drops it from every backup route. Agents keep running on their other accounts.',
-      buttons: 'yesNo',
-      variant: 'danger',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Remove account', noLabel: 'Keep account' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason !== 'positive') return;
-      void this.removeAiAccount(account);
-    });
+    void this._alerts
+      .confirm({
+        id: `remove-ai-account-${account.id}`,
+        header: `Remove ${account.displayName}?`,
+        message:
+          'Symphony signs the account out, deletes its isolated workspace data, and drops it from every backup route. Agents keep running on their other accounts.',
+        tone: 'danger',
+        confirmLabel: 'Remove account',
+        cancelLabel: 'Keep account',
+        destructive: true,
+      })
+      .then((confirmed) => {
+        if (!confirmed) return;
+        void this.removeAiAccount(account);
+      });
   }
 
   /**

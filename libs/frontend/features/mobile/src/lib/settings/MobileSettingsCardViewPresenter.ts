@@ -3,6 +3,7 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Inject, inject, Injectable, type Signal } from '@angular/core';
 import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
+import { createImmediateSetting, SettingsAlertService } from '@symphony/frontend-setting';
 import type { MobileAccessStatus, MobilePairingChallenge } from '@symphony/mobile-contracts';
 import { MobileAccessStore } from '../state/MobileAccessStore';
 
@@ -18,6 +19,7 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
   // #region Fields
 
   private readonly _window: Window;
+  private readonly _alerts: SettingsAlertService;
   private _mobileRefreshTimer: number | undefined;
   private readonly _toggleMobileAccessCommand: Command<boolean> = new Command(
     (enabled) => void this.onExecuteToggleMobileAccessCommand(enabled),
@@ -43,6 +45,16 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
    */
   public readonly store: MobileAccessStore;
 
+  /**
+   * The `Allow mobile access` switch: applied at once, restored when the change fails.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly enabled = createImmediateSetting(
+    () => this.store.mobileAccessStatus()?.enabled ?? false,
+  );
+
   // #endregion
 
   // #region Ctor
@@ -53,17 +65,20 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
    * @param store - Mobile access owner.
    * @param document - Active renderer document.
    * @param destroyRef - Card destruction lifecycle.
+   * @param alerts - Settings alert sheets that confirm revoking phones.
    * @public
    */
   public constructor(
     @Inject(MobileAccessStore) store: MobileAccessStore = inject(MobileAccessStore),
     @Inject(DOCUMENT) document: Document = inject(DOCUMENT),
     @Inject(DestroyRef) destroyRef: DestroyRef = inject(DestroyRef),
+    @Inject(SettingsAlertService) alerts: SettingsAlertService = inject(SettingsAlertService),
   ) {
     super(destroyRef);
     const browserWindow = document.defaultView;
     if (!browserWindow) throw new Error('Mobile pairing requires a browser window.');
     this.store = store;
+    this._alerts = alerts;
     this._window = browserWindow;
     this._mobileRefreshTimer = this._window.setInterval(() => {
       if (this.mobileAccess()?.enabled) void this.store.refreshMobileAccess(true);
@@ -174,7 +189,7 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   private async onExecuteToggleMobileAccessCommand(enabled: boolean): Promise<void> {
-    await this.store.setMobileAccess(enabled);
+    await this.enabled.apply(enabled, (next) => this.store.setMobileAccess(next));
   }
 
   private async onExecuteCreateMobilePairingCommand(): Promise<void> {
@@ -189,11 +204,35 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   private async onExecuteRevokeMobileDeviceCommand(deviceId: string): Promise<void> {
-    await this.store.revokeMobileDevice(deviceId);
+    const device = this.mobileAccess()?.devices.find((candidate) => candidate.id === deviceId);
+    if (!device) return;
+    const confirmed = await this._alerts.confirm({
+      id: `revoke-mobile-device-${deviceId}`,
+      header: `Revoke ${device.name}?`,
+      message:
+        'The phone loses access at once and its connection ends. Pair it again to use Symphony on it.',
+      tone: 'danger',
+      confirmLabel: 'Revoke',
+      cancelLabel: 'Keep access',
+      destructive: true,
+    });
+    if (confirmed) await this.store.revokeMobileDevice(deviceId);
   }
 
   private async onExecuteRevokeAllMobileDevicesCommand(): Promise<void> {
-    await this.store.revokeAllMobileDevices();
+    const count = this.mobileAccess()?.devices.length ?? 0;
+    if (!count) return;
+    const confirmed = await this._alerts.confirm({
+      id: 'revoke-all-mobile-devices',
+      header: `Revoke all ${count} phones?`,
+      message:
+        'Every paired phone loses access at once and its connection ends. Pair each phone again to use Symphony on it.',
+      tone: 'danger',
+      confirmLabel: 'Revoke all phones',
+      cancelLabel: 'Keep access',
+      destructive: true,
+    });
+    if (confirmed) await this.store.revokeAllMobileDevices();
   }
 
   // #endregion

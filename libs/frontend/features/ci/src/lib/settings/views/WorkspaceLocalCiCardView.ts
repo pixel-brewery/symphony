@@ -10,54 +10,49 @@ import {
 } from '@angular/core';
 import {
   AvatarComponent,
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
-  CellComponent,
-  IconNameDirective,
+  MessageComponent,
   SelectComponent,
   SelectItemComponent,
   TextBoxComponent,
   TextComponent,
   ToggleSwitchComponent,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  SettingsConditionalComponent,
+  SettingsGroupComponent,
+  SettingsRowComponent,
+} from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
-import { HeadlineComponent } from '@symphony/frontend-ui';
 import { CiSettingsViewPresenter } from '../CiSettingsViewPresenter';
 
 // #endregion
 
 /**
  * Local GitHub Actions of one workspace: whether it runs workflows locally, the guest image it
- * reproduces, and what its repositories provision inside that guest. The machine specification
- * these boot is host-owned and lives on its own card under Automation.
+ * reproduces, and what its repositories provision inside that guest. Every control applies as soon
+ * as it changes; setup scripts when their editor loses focus. The machine specification these boot
+ * is host-owned and configured once for this Mac.
+ *
+ * @public
  */
 @Component({
   selector: 'symphony-workspace-local-ci-card',
   host: { class: 'block' },
   imports: [
     AvatarComponent,
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
     ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    CellComponent,
-    HeadlineComponent,
-    IconNameDirective,
+    MessageComponent,
     SelectComponent,
     SelectItemComponent,
+    SettingsConditionalComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
     TextBoxComponent,
     TextComponent,
     ToggleSwitchComponent,
+    TypographyDirective,
   ],
   templateUrl: './WorkspaceLocalCiCardView.html',
   styleUrl: './WorkspaceLocalCiCardView.scss',

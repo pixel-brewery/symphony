@@ -92,6 +92,9 @@ export function projectWorkspaceOrganization(
         ...(agent.appearance ? { appearance: agent.appearance } : {}),
         positionDisplayName: position?.displayName ?? 'Position unavailable',
         positionDescription: position?.description,
+        responsibilities: [...(position?.allowedRoles ?? [])].sort(
+          (left, right) => skillFlowRoles.indexOf(left) - skillFlowRoles.indexOf(right),
+        ),
         enabled: agent.enabled,
         ...(accountId ? { accountId } : {}),
         ...(accountKind ? { accountKind } : {}),
@@ -129,6 +132,8 @@ export function projectWorkspaceOrganization(
       assignments: team.assignments.map((assignment) => {
         return {
           role: assignment.role,
+          primaryAgentId: assignment.primaryAgentId,
+          fallbackAgentIds: assignment.fallbackAgentIds,
           primaryAgentDisplayName:
             agentsById.get(assignment.primaryAgentId)?.displayName ?? 'Unavailable',
           skillId: assignment.skillId,

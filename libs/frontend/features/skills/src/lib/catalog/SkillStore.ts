@@ -4,6 +4,7 @@ import { Inject, inject, Injectable, signal, type Signal } from '@angular/core';
 import type { ISkillManifest, SkillFlowRole } from '@symphony/domain-skills';
 import { type ISkillsOperations } from '@symphony/frontend-core';
 import { NotificationService, operatorErrorMessage } from '@symphony/frontend-notification';
+import { deliveryFlowSteps } from '@symphony/frontend-ui';
 import type { RequestPayload } from '@symphony/ipc-contracts-composition';
 import type {
   BuiltinSkillDto,
@@ -35,7 +36,10 @@ export class SkillStore implements ISkillsOperations {
   private readonly _assignments: ISkillsAssignments;
   private readonly _snapshot: ISkillsSnapshotRefresh;
   private readonly _client: ISkillsClient;
-  private readonly _notifications: Pick<NotificationService, 'showSuccess' | 'showError'>;
+  private readonly _notifications: Pick<
+    NotificationService,
+    'showSuccess' | 'showError' | 'showWarning'
+  >;
   private readonly _skillCatalog = signal<SkillPackageCatalogDto | undefined>(undefined);
   private readonly _builtinSkills = signal<readonly BuiltinSkillDto[]>([]);
   private readonly _activeSkill = signal<SkillPackageDocumentDto | undefined>(undefined);
@@ -61,7 +65,7 @@ export class SkillStore implements ISkillsOperations {
     snapshot: ISkillsSnapshotRefresh = inject(SKILLS_SNAPSHOT_REFRESH),
     @Inject(SKILLS_CLIENT) client: ISkillsClient = inject(SKILLS_CLIENT),
     @Inject(NotificationService)
-    notifications: Pick<NotificationService, 'showSuccess' | 'showError'> = inject(
+    notifications: Pick<NotificationService, 'showSuccess' | 'showError' | 'showWarning'> = inject(
       NotificationService,
     ),
   ) {
@@ -131,39 +135,36 @@ export class SkillStore implements ISkillsOperations {
   // #region Methods
 
   /**
-   * Whether it is skill active.
+   * Whether any workspace's AI team runs the package on a step.
    *
-   * @param id - Id.
+   * @param id - Package id.
    * @public
    */
   public isSkillActive(id: string): boolean {
-    return (
-      this._context.activeTeam()?.assignments.some((assignment) => assignment.skillId === id) ??
-      false
-    );
+    return this.assignmentsOfAllTeams().some((assignment) => assignment.skillId === id);
   }
 
   /**
-   * Returns the skill flow role.
+   * The step the package runs on, as the first workspace that runs it assigns it.
    *
-   * @param id - Id.
+   * @param id - Package id.
    * @public
    */
   public skillFlowRole(id: string): SkillFlowRole | undefined {
-    return this._context.activeTeam()?.assignments.find((assignment) => assignment.skillId === id)
-      ?.role;
+    return this.assignmentsOfAllTeams().find((assignment) => assignment.skillId === id)?.role;
   }
 
   /**
-   * Returns the skill ID for flow role.
+   * The package attached to a step, as the first workspace with a package on that step assigns it.
    *
-   * @param role - Role.
+   * @param role - Skill-flow role of the step.
    * @public
    */
   public skillIdForFlowRole(role: SkillFlowRole): string | undefined {
     return (
-      this._context.activeTeam()?.assignments.find((assignment) => assignment.role === role)
-        ?.skillId ?? undefined
+      this.assignmentsOfAllTeams().find(
+        (assignment) => assignment.role === role && assignment.skillId,
+      )?.skillId ?? undefined
     );
   }
 
@@ -181,49 +182,54 @@ export class SkillStore implements ISkillsOperations {
   }
 
   /**
-   * Returns the activate skill.
+   * Attaches a package to a step in every workspace whose AI team has someone on that step, and
+   * detaches it from any other step. Without anyone on the step nothing changes, and a warning
+   * says so instead of a success.
    *
-   * @param id - Id.
-   * @param role - Role.
+   * @param id - Package id.
+   * @param role - Skill-flow role of the step.
+   * @returns Whether the assignment changed or already held.
    * @public
    */
   public async activateSkill(id: string, role: SkillFlowRole): Promise<boolean> {
-    const team = this._context.activeTeam();
-    if (!team) return false;
-    if (team.assignments.some((assignment) => assignment.skillId === id))
-      return this.assignSkillToFlow(id, role);
-    return this.saveSkillFlowAssignment(id, role, true);
+    return this.saveSkillFlowAssignment(id, role, !this.isSkillActive(id));
   }
 
   /**
-   * Assigns the skill to flow.
+   * Moves an attached package to another step in every workspace whose AI team has someone on it.
    *
-   * @param id - Id.
-   * @param role - Role.
+   * @param id - Package id.
+   * @param role - Skill-flow role of the new step.
+   * @returns Whether the assignment changed or already held.
    * @public
    */
   public async assignSkillToFlow(id: string, role: SkillFlowRole): Promise<boolean> {
-    const team = this._context.activeTeam();
-    if (!team || !team.assignments.some((assignment) => assignment.skillId === id)) return false;
-    if (this.skillFlowRole(id) === role) return true;
+    if (!this.isSkillActive(id)) return false;
     return this.saveSkillFlowAssignment(id, role, false);
   }
 
   /**
-   * Returns the deactivate skill.
+   * Detaches a package from every step of every workspace's AI team.
    *
-   * @param id - Id.
+   * @param id - Package id.
+   * @returns Whether the package is detached afterwards.
    * @public
    */
   public async deactivateSkill(id: string): Promise<boolean> {
-    const team = this._context.activeTeam();
-    if (!team) return false;
-    const saved = await this._assignments.saveAssignments(
-      team.id,
-      team.assignments.map((assignment) =>
-        assignment.skillId === id ? { ...assignment, skillId: null } : assignment,
-      ),
+    const changes = this._context.workspaceTeams().flatMap(({ team }) =>
+      team.assignments.some((assignment) => assignment.skillId === id)
+        ? [
+            {
+              teamId: team.id,
+              assignments: team.assignments.map((assignment) =>
+                assignment.skillId === id ? { ...assignment, skillId: null } : assignment,
+              ),
+            },
+          ]
+        : [],
     );
+    if (!changes.length) return true;
+    const saved = await this._assignments.saveAssignments(changes);
     if (saved) {
       this._notifications.showSuccess('Skill deactivated.');
       await this._snapshot.refresh();
@@ -375,32 +381,62 @@ export class SkillStore implements ISkillsOperations {
     role: SkillFlowRole,
     activating: boolean,
   ): Promise<boolean> {
-    const team = this._context.activeTeam();
-    if (!team) return false;
-    const previousSkillId = team.assignments.find(
-      (assignment) => assignment.role === role,
-    )?.skillId;
-    const saved = await this._assignments.saveAssignments(
-      team.id,
-      team.assignments.map((assignment) =>
-        assignment.role === role
-          ? { ...assignment, skillId: id }
-          : assignment.skillId === id
-            ? { ...assignment, skillId: null }
-            : assignment,
-      ),
+    const teams = this._context.workspaceTeams();
+    const staffed = teams.filter(({ team }) =>
+      team.assignments.some((assignment) => assignment.role === role),
     );
+    const step = deliveryFlowSteps.find((candidate) => candidate.skillFlowRoles.includes(role));
+    const stepLabel = step?.label ?? role;
+    if (!staffed.length) {
+      this._notifications.showWarning(
+        `Nobody works on ${stepLabel}`,
+        teams.length
+          ? `No AI team has someone on ${stepLabel}. Assign an agent to it under AI team, then attach the skill.`
+          : 'Add a workspace with an AI team first, then attach the skill.',
+      );
+      return false;
+    }
+    const staffedTeamIds = new Set(staffed.map(({ team }) => team.id));
+    let replaced = false;
+    const changes = teams.flatMap(({ team }) => {
+      let changed = false;
+      const assignments = team.assignments.map((assignment) => {
+        if (assignment.role === role && staffedTeamIds.has(team.id)) {
+          if (assignment.skillId === id) return assignment;
+          if (assignment.skillId) replaced = true;
+          changed = true;
+          return { ...assignment, skillId: id };
+        }
+        if (assignment.skillId !== id) return assignment;
+        changed = true;
+        return { ...assignment, skillId: null };
+      });
+      return changed ? [{ teamId: team.id, assignments }] : [];
+    });
+    if (!changes.length) return true;
+    const saved = await this._assignments.saveAssignments(changes);
     if (saved) {
+      const skipped = teams
+        .filter(({ team }) => !staffedTeamIds.has(team.id))
+        .map(({ workspaceName }) => workspaceName);
       this._notifications.showSuccess(
-        previousSkillId && previousSkillId !== id
+        replaced
           ? 'Skill assigned to the selected flow step. The previous skill was deactivated.'
           : activating
             ? 'Skill activated and assigned to the selected flow step.'
             : 'Skill flow assignment updated.',
+        skipped.length
+          ? `Not attached in ${skipped.join(', ')}: nobody works on ${stepLabel} there.`
+          : '',
       );
       await this._snapshot.refresh();
     }
     return saved;
+  }
+
+  /** Every responsibility of every workspace's AI team, in workspace order. */
+  private assignmentsOfAllTeams() {
+    return this._context.workspaceTeams().flatMap(({ team }) => team.assignments);
   }
 
   private async runSkillOperation<M extends 'skills.export' | 'skills.delete'>(

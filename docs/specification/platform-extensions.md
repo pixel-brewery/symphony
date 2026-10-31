@@ -7,7 +7,7 @@ These extensions exist to make a local operator product recoverable and explaina
 ## Production orbit and employee landscape
 
 Version-six settings add employee appearances and delivery targets without changing existing
-IDs, custom workflows or execution snapshots. Orbit is the default desktop route; Board
+IDs, custom workflows or execution snapshots. Overview is the default desktop route; Orbit, Board
 and the previous Home URL remain valid. Orbit, Stages and Board share selection and filters.
 Actual immutable execution bindings own employee activity, while goal responsibility applies
 to subsequent phases. The visual setup saves only on Apply and can run the shipped read-only

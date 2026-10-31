@@ -1,6 +1,33 @@
 <mosaik-button
+  test-id="refresh-skills"
+  [iconName]="'sync'"
+  [iconSize]="'small'"
+  [appearance]="'plain'"
+  [disabled]="presenter.skillsBusy()"
+  [attr.aria-label]="'Refresh installed skills'"
+  [mosaikTooltip]="'Refresh installed skills'"
+  (click)="presenter.refreshSkillsCommand.execute()"
+/>
+<mosaik-button
   test-id="open-skill-import"
   [label]="'Import skill'"
   [appearance]="'outline'"
   (click)="presenter.openSkillImportCommand.execute()"
+/>
+<mosaik-button
+  test-id="open-skill-catalog"
+  [label]="'Add skills'"
+  [iconName]="'skills'"
+  [iconSize]="'small'"
+  [appearance]="'outline'"
+  (click)="presenter.openSkillCatalogCommand.execute()"
+/>
+<mosaik-button
+  test-id="new-skill"
+  [label]="'New skill'"
+  [iconName]="'add'"
+  [iconSize]="'small'"
+  [appearance]="'solid'"
+  [variant]="'primary'"
+  (click)="presenter.newSkillCommand.execute()"
 />

@@ -10,3 +10,7 @@ export { WorkflowMaintenanceService } from './lib/maintenance/WorkflowMaintenanc
 export type { IWorkflowRecordRepository } from './lib/persistence/IWorkflowRecordRepository';
 export { computeProgressFingerprint } from './lib/progress/computeProgressFingerprint';
 export type { IWorkflowTrackingPort } from './lib/ports/IWorkflowTrackingPort';
+export type { IWorkflowStageChangeQuery } from './lib/history/IWorkflowStageChangeQuery';
+export type { IWorkflowStageHistoryDependencies } from './lib/history/IWorkflowStageHistoryDependencies';
+export { WorkflowStageHistoryService } from './lib/history/WorkflowStageHistoryService';
+export type { IWorkflowStageHistoryRepository } from './lib/persistence/IWorkflowStageHistoryRepository';

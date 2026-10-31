@@ -1,43 +1,65 @@
 // #region Imports
 
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
-import type { IExecutionRecord } from '@symphony/domain-execution';
+import { projectAgentActivity, type IExecutionRecord } from '@symphony/domain-execution';
 import {
+  browserStorage,
   Command,
   continuousIntegrationRefreshDelay,
+  INBOX_SUMMARY,
   ORCHESTRATION_CLIENT,
 } from '@symphony/frontend-core';
 import { AUTOMATION_PREPARATION } from '@symphony/frontend-core/automation';
 import { CI_OPERATIONS } from '@symphony/frontend-core/ci';
+import { ConfigurationStore } from '@symphony/frontend-core/configuration';
 import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
-import { REPOSITORY_RUNTIME_OPERATIONS } from '@symphony/frontend-core/workspace';
-import type { ApplicationSettingsDto, ResponsePayload } from '@symphony/ipc-contracts-composition';
+import type { ResponsePayload } from '@symphony/ipc-contracts-composition';
 import {
   buildRailRuns,
   type IRailRun,
   resolveMenuBarStatus,
-  selectMenuBarRuns,
 } from '@symphony/frontend-feature-execution/projections';
 import { ExecutionControls } from '@symphony/frontend-feature-execution';
+import { NotificationCentre } from '@symphony/frontend-notification';
 import { DesktopUpdateStore } from '@symphony/frontend-update';
+import type { IMenuBarAgentRow } from './IMenuBarAgentRow';
 
 // #endregion
 
 type ExecutionState = ResponsePayload<'execution-state.get'>;
 type AutonomyStatus = ResponsePayload<'autonomy.status.get'>;
-type RepositoryRuntimeStatus = ResponsePayload<'repositories.runtime.list'>[number];
 type ContinuousIntegrationState = ResponsePayload<'ci.runs.refresh'>;
+type RunView = 'agents' | 'actions';
+type WindowRoute = 'current' | 'settings' | 'actions' | 'inbox' | 'notifications' | 'new-work-item';
 
+const RUN_VIEW_STORAGE_KEY = 'presentation.menuBarRunView';
+const MAXIMUM_ACTION_ROWS = 4;
+const AGENT_STATE_ORDER: readonly IMenuBarAgentRow['state'][] = [
+  'needs-input',
+  'working',
+  'paused',
+  'blocked',
+  'queued',
+  'failed',
+  'completed',
+];
+
+/**
+ * Owns the menu-bar panel (the tray): live agent and action runs, execution slots, what needs
+ * the user, autonomous work, the update and the application commands. The panel is a window of
+ * its own that does not hydrate the application, so it reads its state directly.
+ *
+ * @public
+ */
 @Injectable()
 export class MenuBarViewPresenter {
   // #region Fields
 
   private readonly _client = inject(ORCHESTRATION_CLIENT);
   private readonly _desktop = inject(DESKTOP_CLIENT);
+  private readonly _configuration = inject(ConfigurationStore);
   private readonly _executions = inject(ExecutionControls, { optional: true });
   private readonly _destroyRef = inject(DestroyRef);
-  private readonly _repositoryRuntimeAvailable =
-    inject(REPOSITORY_RUNTIME_OPERATIONS, { optional: true }) !== null;
 
   /** Whether this product contributes isolated execution controls. @public @readonly */
   public readonly executionAvailable = this._executions !== null;
@@ -47,13 +69,36 @@ export class MenuBarViewPresenter {
   public readonly autonomyAvailable = inject(AUTOMATION_PREPARATION, { optional: true }) !== null;
 
   /**
-   * The updates.
+   * Desktop update state shared with the status bar and Settings.
    *
    * @public
    * @readonly
    */
   public readonly updates = inject(DesktopUpdateStore);
-  private readonly _settings = signal<ApplicationSettingsDto | undefined>(undefined);
+
+  /**
+   * What needs attention, gathered from the feature sources.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly notifications = inject(NotificationCentre);
+
+  /**
+   * What waits in the Inbox, when the product includes it.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly inbox = inject(INBOX_SUMMARY, { optional: true });
+
+  /**
+   * Validated settings of the running application.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly settings = this._configuration.settings;
 
   private readonly _executionState = signal<ExecutionState>({
     executions: [],
@@ -69,16 +114,15 @@ export class MenuBarViewPresenter {
   });
 
   /**
-   * The autonomy.
+   * Autonomous work and execution capacity.
    *
    * @public
    * @readonly
    */
   public readonly autonomy = signal<AutonomyStatus | undefined>(undefined);
-  private readonly _repositoryRuntimeStatuses = signal<readonly RepositoryRuntimeStatus[]>([]);
 
   /**
-   * The now.
+   * Current time, for the next-cycle countdown and run durations.
    *
    * @public
    * @readonly
@@ -86,7 +130,7 @@ export class MenuBarViewPresenter {
   public readonly now = signal(Date.now());
 
   /**
-   * The loading.
+   * Whether the first load is still running.
    *
    * @public
    * @readonly
@@ -94,7 +138,7 @@ export class MenuBarViewPresenter {
   public readonly loading = signal(true);
 
   /**
-   * The error.
+   * The last failure of a panel command or load.
    *
    * @public
    * @readonly
@@ -102,7 +146,7 @@ export class MenuBarViewPresenter {
   public readonly error = signal<string | undefined>(undefined);
 
   /**
-   * The actions error.
+   * Why Actions could not be refreshed, while they cannot.
    *
    * @public
    * @readonly
@@ -110,7 +154,7 @@ export class MenuBarViewPresenter {
   public readonly actionsError = signal<string | undefined>(undefined);
 
   /**
-   * The autonomy busy.
+   * Whether the autonomy switch is being applied.
    *
    * @public
    * @readonly
@@ -118,18 +162,29 @@ export class MenuBarViewPresenter {
   public readonly autonomyBusy = signal(false);
 
   /**
-   * The execution busy.
+   * The execution being paused or resumed.
    *
    * @public
    * @readonly
    */
   public readonly executionBusy = signal<string | undefined>(undefined);
+
+  /**
+   * The selected `Agents | Actions` segment.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly selectedRunView = signal<RunView>(
+    readStoredRunView() ?? (this.executionAvailable ? 'agents' : 'actions'),
+  );
+
   private _refreshInFlight?: Promise<void>;
   private _continuousIntegrationRefreshInFlight?: Promise<void>;
   private _continuousIntegrationRefreshTimer?: number;
 
   /**
-   * The capacity.
+   * Execution capacity: one slot per parallel step.
    *
    * @public
    * @readonly
@@ -137,17 +192,6 @@ export class MenuBarViewPresenter {
   public readonly capacity = computed(
     () => this.autonomy() ?? { enabled: false, maximum: 1, active: 0, available: 1 },
   );
-
-  /**
-   * The capacity percent.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly capacityPercent = computed(() => {
-    const capacity = this.capacity();
-    return Math.min(100, Math.round((capacity.active / capacity.maximum) * 100));
-  });
 
   /**
    * Steps that were accepted and take the next free slots before anything else.
@@ -158,7 +202,7 @@ export class MenuBarViewPresenter {
   public readonly queuedSteps = computed(() => this._executionState().executionQueue);
 
   /**
-   * The provider-neutral run timeline shared with the workspace rail.
+   * The provider-neutral run timeline shared with the sidebar's run panel.
    *
    * @public
    * @readonly
@@ -166,7 +210,7 @@ export class MenuBarViewPresenter {
   public readonly railRuns = computed(() => {
     const state = this._executionState();
     const continuousIntegration = this._continuousIntegration();
-    const settings = this._settings();
+    const settings = this.settings();
     return buildRailRuns({
       executions: state.executions,
       executionQueue: state.executionQueue,
@@ -185,40 +229,111 @@ export class MenuBarViewPresenter {
   });
 
   /**
-   * Up to three agent runs, with active work first.
+   * The active workspace.
    *
    * @public
    * @readonly
    */
-  public readonly agentRuns = computed(() => selectMenuBarRuns(this.railRuns(), 'agent'));
+  public readonly activeWorkspace = computed(() => {
+    const settings = this.settings();
+    return settings?.workspaces.find(
+      (workspace) => workspace.id === settings.activeViewScope.workspaceIds[0],
+    );
+  });
 
   /**
-   * Up to three GitHub or local Actions runs, with active work first.
+   * Agents of the active workspace with live work or a result from today, active work first.
    *
    * @public
    * @readonly
    */
-  public readonly actionRuns = computed(() => selectMenuBarRuns(this.railRuns(), 'actions'));
+  public readonly agentRows = computed<readonly IMenuBarAgentRow[]>(() => {
+    const settings = this.settings();
+    const workspaceId = this.activeWorkspace()?.id;
+    if (!settings || !workspaceId || !this.executionAvailable) return [];
+    const state = this._executionState();
+    const profiles = settings.agentProfiles.filter(
+      (profile) => profile.workspaceId === workspaceId && profile.enabled,
+    );
+    const activities = projectAgentActivity(profiles, state, true);
+    const executions = new Map(state.executions.map((execution) => [execution.id, execution]));
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const today = startOfToday.toISOString();
+    return profiles
+      .flatMap((profile): IMenuBarAgentRow[] => {
+        const activity = activities.find((entry) => entry.agentId === profile.id);
+        const work = activity?.work[0];
+        const rowState = activity?.state;
+        if (!work || !rowState || rowState === 'idle' || rowState === 'stale') return [];
+        const finished = rowState === 'completed' || rowState === 'failed';
+        if (finished && (work.updatedAt ?? '') < today) return [];
+        const execution = work.executionId ? executions.get(work.executionId) : undefined;
+        const queued = state.executionQueue.find((entry) => entry.workItemId === work.workItemId);
+        const workItemKey = execution?.workItemSnapshot?.externalId ?? queued?.workItemExternalId;
+        const workItemTitle = execution?.workItemSnapshot?.title ?? queued?.workItemTitle;
+        return [
+          {
+            id: profile.id,
+            name: profile.displayName,
+            appearance: profile.appearance,
+            state: rowState,
+            role: work.role,
+            ...(workItemKey ? { workItemKey } : {}),
+            ...(workItemTitle ? { workItemTitle } : {}),
+            ...(work.executionId ? { executionId: work.executionId } : {}),
+            ...(work.updatedAt ? { updatedAt: work.updatedAt } : {}),
+          },
+        ];
+      })
+      .sort(
+        (left, right) =>
+          AGENT_STATE_ORDER.indexOf(left.state) - AGENT_STATE_ORDER.indexOf(right.state),
+      );
+  });
 
   /**
-   * The active agent run count.
+   * Number of agents with live work, shown on the `Agents` segment.
    *
    * @public
    * @readonly
    */
-  public readonly activeAgentRunCount = computed(
-    () => this.railRuns().filter((run) => run.kind === 'agent' && run.active).length,
+  public readonly activeAgentCount = computed(
+    () =>
+      this.agentRows().filter((agent) => agent.state !== 'completed' && agent.state !== 'failed')
+        .length,
   );
 
   /**
-   * The active Actions run count.
+   * Action runs: every running and queued run, then the latest finished ones, at most four.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly actionRows = computed(() => {
+    const actions = this.railRuns().filter((run) => run.kind !== 'agent');
+    const current = actions.filter((run) => run.active || run.state === 'queued');
+    const finished = actions.filter((run) => !run.active && run.state !== 'queued');
+    return [...current, ...finished].slice(0, Math.max(MAXIMUM_ACTION_ROWS, current.length));
+  });
+
+  /**
+   * Number of running and queued action runs, shown on the `Actions` segment.
    *
    * @public
    * @readonly
    */
   public readonly activeActionRunCount = computed(
-    () => this.railRuns().filter((run) => run.kind !== 'agent' && run.active).length,
+    () => this.actionRows().filter((run) => run.active || run.state === 'queued').length,
   );
+
+  /**
+   * Number of agent and action runs in progress, for the header's status line.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly runningCount = computed(() => this.railRuns().filter((run) => run.active).length);
 
   /**
    * The semantic state projected onto the native menu-bar mark.
@@ -229,7 +344,7 @@ export class MenuBarViewPresenter {
   public readonly menuBarStatus = computed(() => resolveMenuBarStatus(this.railRuns()));
 
   /**
-   * Execution ids that can be paused from a run submenu.
+   * Execution ids that can be paused.
    *
    * @public
    * @readonly
@@ -246,7 +361,7 @@ export class MenuBarViewPresenter {
   );
 
   /**
-   * Execution ids that can be resumed from a run submenu.
+   * Execution ids that can be resumed.
    *
    * @public
    * @readonly
@@ -265,33 +380,6 @@ export class MenuBarViewPresenter {
       ),
   );
 
-  /**
-   * The active workspace.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly activeWorkspace = computed(() => {
-    const settings = this._settings();
-    return settings?.workspaces.find(
-      (workspace) => workspace.id === settings.activeViewScope.workspaceIds[0],
-    );
-  });
-
-  /**
-   * The repositories needing preparation.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly repositoriesNeedingPreparation = computed(() => {
-    const workspaceId = this.activeWorkspace()?.id;
-    if (!workspaceId) return [];
-    return this._repositoryRuntimeStatuses().filter(
-      (status) => status.workspaceId === workspaceId && status.preparation.state !== 'prepared',
-    );
-  });
-
   private readonly _enableAutonomyCommand: Command<void> = new Command(
     () => void this.onExecuteSetAutonomyEnabledCommand(true),
     computed(() => this.autonomyAvailable && !this.autonomyBusy()),
@@ -308,14 +396,30 @@ export class MenuBarViewPresenter {
     (executionId) => void this.onExecuteResumeExecutionCommand(executionId),
     computed(() => this.executionAvailable && this.executionBusy() === undefined),
   );
+  private readonly _selectRunViewCommand: Command<RunView> = new Command((view) => {
+    this.selectedRunView.set(view);
+    browserStorage()?.setItem(RUN_VIEW_STORAGE_KEY, view);
+  });
   private readonly _openSymphonyCommand: Command<void> = new Command(
-    () => void this.onExecuteOpenSymphonyCommand('current'),
+    () => void this.showWindow('current'),
   );
   private readonly _openSettingsCommand: Command<void> = new Command(
-    () => void this.onExecuteOpenSymphonyCommand('settings'),
+    () => void this.showWindow('settings'),
   );
   private readonly _openRunCommand: Command<IRailRun> = new Command(
-    (run) => void this.onExecuteOpenSymphonyCommand(run.kind === 'agent' ? 'current' : 'actions'),
+    (run) => void this.showWindow(run.kind === 'agent' ? 'current' : 'actions'),
+  );
+  private readonly _openAllRunsCommand: Command<void> = new Command(
+    () => void this.showWindow('actions'),
+  );
+  private readonly _openInboxCommand: Command<void> = new Command(
+    () => void this.showWindow('inbox'),
+  );
+  private readonly _openNotificationsCommand: Command<void> = new Command(
+    () => void this.showWindow('notifications'),
+  );
+  private readonly _newWorkItemCommand: Command<void> = new Command(
+    () => void this.showWindow('new-work-item'),
   );
   private readonly _updateSymphonyCommand: Command<void> = new Command(
     () => void this.onExecuteUpdateSymphonyCommand(),
@@ -379,7 +483,7 @@ export class MenuBarViewPresenter {
   }
 
   /**
-   * Pauses the execution the panel row identifies.
+   * Pauses the execution an agent row identifies.
    *
    * @public
    * @readonly
@@ -389,13 +493,23 @@ export class MenuBarViewPresenter {
   }
 
   /**
-   * Resumes the execution the panel row identifies.
+   * Resumes the execution an agent row identifies.
    *
    * @public
    * @readonly
    */
   public get resumeExecutionCommand(): Command<string> {
     return this._resumeExecutionCommand;
+  }
+
+  /**
+   * Switches between `Agents` and `Actions`.
+   *
+   * @public
+   * @readonly
+   */
+  public get selectRunViewCommand(): Command<RunView> {
+    return this._selectRunViewCommand;
   }
 
   /**
@@ -409,7 +523,7 @@ export class MenuBarViewPresenter {
   }
 
   /**
-   * Opens the Symphony window on the settings route.
+   * Opens the Settings window.
    *
    * @public
    * @readonly
@@ -419,7 +533,7 @@ export class MenuBarViewPresenter {
   }
 
   /**
-   * Opens the owning Symphony run surface.
+   * Opens the Symphony surface that owns a run.
    *
    * @public
    * @readonly
@@ -429,7 +543,47 @@ export class MenuBarViewPresenter {
   }
 
   /**
-   * Installs a ready update, otherwise checks for one.
+   * Opens `Actions` on all runs.
+   *
+   * @public
+   * @readonly
+   */
+  public get openAllRunsCommand(): Command<void> {
+    return this._openAllRunsCommand;
+  }
+
+  /**
+   * Opens the Inbox in the main window.
+   *
+   * @public
+   * @readonly
+   */
+  public get openInboxCommand(): Command<void> {
+    return this._openInboxCommand;
+  }
+
+  /**
+   * Opens the main window with the notification centre open.
+   *
+   * @public
+   * @readonly
+   */
+  public get openNotificationsCommand(): Command<void> {
+    return this._openNotificationsCommand;
+  }
+
+  /**
+   * Opens the main window on the new-work-item sheet.
+   *
+   * @public
+   * @readonly
+   */
+  public get newWorkItemCommand(): Command<void> {
+    return this._newWorkItemCommand;
+  }
+
+  /**
+   * Installs a ready update, downloads an available one, otherwise checks for one.
    *
    * @public
    * @readonly
@@ -453,7 +607,7 @@ export class MenuBarViewPresenter {
   // #region Methods
 
   /**
-   * Initializes.
+   * Loads the panel's state.
    *
    * @public
    */
@@ -491,9 +645,7 @@ export class MenuBarViewPresenter {
     await this.runExecutionCommand(executionId, 'execution.resume');
   }
 
-  private async onExecuteOpenSymphonyCommand(
-    route: 'current' | 'settings' | 'actions',
-  ): Promise<void> {
+  private async showWindow(route: WindowRoute): Promise<void> {
     await this._desktop.request('window.show', { route });
   }
 
@@ -510,19 +662,18 @@ export class MenuBarViewPresenter {
   private async refreshOnce(): Promise<void> {
     this.error.set(undefined);
     try {
-      const [settings, executionState, autonomy, repositoryStatuses] = await Promise.all([
-        this._client.request('settings.get', {}),
+      const [, executionState, autonomy] = await Promise.all([
+        this._configuration.refreshSettings(),
         this.executionAvailable ? this._client.request('execution-state.get', {}) : undefined,
         this.autonomyAvailable ? this._client.request('autonomy.status.get', {}) : undefined,
-        this._repositoryRuntimeAvailable
-          ? this._client.request('repositories.runtime.list', {})
-          : undefined,
       ]);
-      this._settings.set(settings);
       if (executionState) this._executionState.set(executionState);
       if (autonomy) this.autonomy.set(autonomy);
-      if (repositoryStatuses) this._repositoryRuntimeStatuses.set(repositoryStatuses);
-      await this.refreshContinuousIntegrationState();
+      await Promise.all([
+        this.refreshContinuousIntegrationState(),
+        this.notifications.refresh(),
+        this.inbox?.refresh().catch(() => undefined),
+      ]);
     } catch (cause) {
       this.error.set(
         cause instanceof Error ? cause.message : 'Symphony could not refresh the menu bar panel.',
@@ -570,7 +721,7 @@ export class MenuBarViewPresenter {
       window.clearTimeout(this._continuousIntegrationRefreshTimer);
       this._continuousIntegrationRefreshTimer = undefined;
     }
-    if (!this.ciAvailable || !this._settings()?.ciBindings.some((binding) => binding.enabled))
+    if (!this.ciAvailable || !this.settings()?.ciBindings.some((binding) => binding.enabled))
       return;
     const state = this._continuousIntegration();
     const activeDelay = continuousIntegrationRefreshDelay(
@@ -613,4 +764,9 @@ export class MenuBarViewPresenter {
   }
 
   // #endregion
+}
+
+function readStoredRunView(): RunView | undefined {
+  const value = browserStorage()?.getItem(RUN_VIEW_STORAGE_KEY);
+  return value === 'agents' || value === 'actions' ? value : undefined;
 }

@@ -1,5 +1,535 @@
 # FLAMOX365 frontend reference
 
+## 2026-10-31 Settings in the main window and resizable panes
+
+A confirmed product decision of 2026-10-31 retires the separate Settings window: Settings opens in
+the main window, the whole side navigation switches to the Settings area, the normal navigation
+entries are not shown and the toolbar's back navigation is the only way back. In the same change
+every sidebar/content and list/detail split became a resizable Mosaik split with a remembered size,
+and the window chrome stopped scrolling. The current contracts are
+[Settings in the main window](window-and-navigation/settings.md) and
+[Resizable panes and scroll containment](window-and-navigation/resizable-panes.md); the product
+behaviour is described under [Einstellungen](../project/window-and-navigation/settings.md) and
+[Bereiche anpassen und scrollen](../project/window-and-navigation/resizable-panes.md). The exact
+read-only FLAMOX365 sources inspected were `libs/frontend/setting/src/routing/settingsRoutes.ts`,
+`libs/frontend/setting/src/views/SettingsView.html`,
+`libs/frontend/presentation/src/lib/views/PresenterView.{html,scss}`,
+`libs/frontend/presentation/src/lib/view-presenters/PresenterViewPresenter.ts`,
+`libs/frontend/presentation/src/lib/controller/SideNavigationController.ts`,
+`libs/frontend/features/reporting/src/lib/directives/ReportFolderSplitDirective.ts` and
+`libs/frontend/features/reporting/src/lib/views/ReportListView.html`.
+
+**Adopt — Settings is a routed page of the shell.** FLAMOX365 registers `settings` as a route
+inside its shell and renders `SettingsView` in the presenter's route outlet; it never opens a second
+window. Symphony returns to that composition: `/main/settings` renders `SettingsView` in the main
+window's router outlet with the window's own renderer, preload and isolation, and `/main/projects`,
+`/main/team`, `/main/skills` and `/main/setup` lead there. This reverses the 2026-10-31 Differ
+"Settings is its own window".
+
+**Adapt — the Settings navigation takes over the window sidebar.** FLAMOX365 keeps its application
+navigation beside the Settings page and places the section navigation inside the page: a
+`mosaik-searchbox` above a Mosaik Menu in a sticky aside (`settings-navigation-aside`), a Segment on
+narrow screens. Symphony hands the Settings navigation (`Search settings`, `Workspaces` with the
+nested workspace sections, `Symphony` with the global sections) to the main window's sidebar
+through `WindowSidebarDirective` and hides the workspace switcher, the destinations, the run panel
+and `Settings` while Settings is open; the 52 px title-bar row with the traffic lights and
+`Hide sidebar` stays. The section's name, description and actions go to the window toolbar through
+`WindowToolbarDirective`. The registration follows the same owned, last-one-wins pattern as
+`WindowToolbar`, adopted from FLAMOX365's `PagePathRegistry`. Constraint: the confirmed decision and
+the macOS source list, which has room for one navigation column.
+
+**Differ — Back always leads out of Settings.** FLAMOX365 leaves history to the browser. Symphony's
+toolbar `Back` stays enabled while a screen replaces the sidebar and leads to `/main/home` when
+there is no earlier entry; section changes replace the current history entry, so one `Back` leaves
+Settings. Constraint: with every other navigation entry hidden, the window must always offer a way
+back, and the decision names the toolbar's back navigation as that way.
+
+**Adapt — resizable panes remember their size.** FLAMOX365 sizes splits with directives on
+`mosaik-split` that react to `splitReposition`: `ReportFolderSplitDirective` clamps the report
+folder pane between its minimum and maximum, and `SideNavigationController` persists the desktop
+rail split position in local storage. Symphony generalises that into one `PaneSizeDirective`
+(`mosaik-split[symphonyPaneSize]`) for every sidebar/content and list/detail split: it applies the
+remembered size after the split's first update, stores whole pixels per pane under
+`symphony.pane.<name>`, and leaves `min`, `max` and `lock` to the split. The locked pane keeps its
+pixel width when the window resizes. FLAMOX365's compact overlay and its collapse below a threshold
+(the folder pane falls back to 72 px) are not reproduced; a pane stays between its minimum and
+maximum, and only the hidden sidebar and the Pull requests inspector without a selection take no
+space. Constraint: a desktop window without a compact breakpoint, and pixel-locked panes whose
+percentage would drift with the window width.
+
+**Adapt — the divider is the drawn hairline.** FLAMOX365 sets `--split-divider-width: 1px` on its
+rail split and keeps Mosaik's grip. Symphony styles every `mosaik-split[part~='pane-split']` once in
+`overrides/window-chrome.scss` through the split's public custom properties and parts: a
+`--mosaik-layout-thickness` line in `--mosaik-scheme-highlight` (replacing the former border of the
+panes), no thumb, a 9 px hit area, `--mosaik-color-neutral-300` on hover and keyboard focus. The
+divider stays Mosaik's keyboard-operable separator. Constraint: the artboards draw a hairline
+without a grip.
+
+**Differ — the window chrome clips instead of hiding overflow.** FLAMOX365's presenter content uses
+`overflow-hidden` around its route scroll area. Symphony's window frame and every split pane use
+`overflow: clip`, and each pane brings its own `overscroll-contain` scroll container, so neither
+scrolling nor a dragged text selection can scroll the toolbar or the sidebar away. The Inbox list
+became a `mosaik-list` whose header holds the fixed `All · Decisions · Updates` filter, and its
+detail pane drops the 760 px cap. Constraint: an element with hidden overflow stays programmatically
+scrollable, which let a text selection move the chrome of the desktop window.
+
+**Superseded by this entry:** the `Differ — Settings is its own window` paragraph and the fixed
+240 px source-list width of
+[2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download),
+the 232 px sidebar and separate-window constraint of
+[2026-10-31 Settings window sidebar, search, sheets and immediate saving](#2026-10-31-settings-window-sidebar-search-sheets-and-immediate-saving),
+the window statement of the Skills `Differ` in
+[2026-10-31 Settings window: AI team, Skills and Automation by delivery-flow step](#2026-10-31-settings-window-ai-team-skills-and-automation-by-delivery-flow-step),
+the fixed inspector of
+[2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet),
+the fixed inspector, workflow pane and Inbox pane widths of
+[2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox),
+and the Work item, Pull requests, Actions, Skills and Settings rows of the
+[route parity ledger](#route-parity-ledger). Each of these carries a pointer back here.
+
+## 2026-10-31 macOS window chrome, Settings window and in-app update download
+
+The confirmed macOS redesign replaces the header band, the right workspace rail and the routed
+Settings page. The current contracts are [Window chrome and navigation](window-and-navigation/README.md),
+[Settings in the main window](window-and-navigation/settings.md) (originally a separate Settings window) and the in-app download in
+[Desktop updates](application-updates/README.md#in-app-installer-download). The exact read-only
+FLAMOX365 sources inspected were `libs/frontend/presentation/src/lib/views/PresenterView.html`,
+`libs/frontend/presentation/src/lib/view-presenters/PresenterViewPresenter.ts`,
+`libs/frontend/presentation/src/lib/controller/SideNavigationController.ts`,
+`libs/frontend/ui/src/lib/components/navigation/NavigationMenuItemComponent.html` and
+`libs/frontend/ui/src/lib/components/page-path/PagePathRegistry.ts`; the search launcher, voice,
+Settings and update references are the `SearchLauncherView`, `SpeechToTextDirective`, `SettingsView`
+and `UpdateSettingsCardView` sources audited in the entries below.
+
+**Adopt — the screen declares its toolbar content and the chrome renders the latest declaration.**
+`WindowToolbar` and `WindowToolbarDirective` follow FLAMOX365's root-provided `PagePathRegistry`:
+screens register a declaration while they live, the chrome outlet renders the last one, and
+unregistering by identity on destroy can never clear a successor's declaration.
+
+**Adapt — one title, subtitle and action template instead of a page path.** The macOS unified toolbar
+shows one screen title with a one-line subtitle and the screen's contextual actions, not a
+breadcrumb, so a declaration carries `title`, `subtitle` and an optional `TemplateRef` declared in the
+screen's own template. A repeated registration replaces the owner's entry in place rather than moving
+it to the end. Without a declaration the toolbar falls back to the label of the sidebar destination
+that contains the route.
+
+**Adopt — persisted navigation visibility.** FLAMOX365's `SideNavigationController` keeps the
+navigation's open state in a local-storage boolean. Symphony persists the sidebar's hidden state the
+same way under `presentation.isSidebarCollapsed`, treating any other value as unset, and the run
+panel's segment under `presentation.runView`.
+
+**Differ — no compact navigation mode, no responsive auto-open.** The macOS source list is either
+240 px wide or hidden (since the later 2026-10-31 change resizable between 200 and 360 px; see
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes)); FLAMOX365's compact icon rail, its Ctrl+B collapse toggle and its breakpoint
+behavior are not reproduced. Constraint: the confirmed desktop redesign draws a fixed-width source
+list beside native window controls and has no compact state.
+
+**Adapt — grouped, feature-owned destinations with counts.** Destinations remain feature-owned
+`withNavigationItems` contributions, now with an optional `group` heading (`Delivery`, `More`), as in
+FLAMOX365's grouped `flx-navigation-menu-group` composition. The trailing `end` area that FLAMOX365's
+navigation item uses for quick-create actions carries a count instead: a small solid danger Mosaik
+Badge for decisions that need attention, caption Text otherwise. A count that is loading, unavailable
+or zero is hidden. Constraint: the provider-neutral delivery state shows where work waits for the
+person, which FLAMOX365's navigation has no equivalent for. This deliberately reverses the
+2026-09-01 badge-free dock decision, because a sidebar count now supports a decision instead of
+duplicating a visible rail.
+
+**Differ — no Mosaik App header and no navigation drawer.** FLAMOX365 composes `mosaik-app` with
+`hasNav`, a `mosaik-app-header` (navigation toggle, page path, centred search launcher, actions) and
+the `flx-navigation` drawer. Symphony renders `mosaik-app` with `hasHeader: false` and `hasNav: false`
+and composes the 240 px sidebar, the 52 px toolbar and the 28 px status bar from plain `part`-named
+regions styled only with Mosaik tokens and public control custom properties in one sheet,
+`overrides/window-chrome.scss`. Constraint: native desktop window chrome — the macOS traffic lights
+inside the sidebar header row, the toolbar and sidebar header as the window's drag region, and the
+Windows and Linux Window Controls Overlay at the toolbar's right edge — which the App header's
+geometry does not express.
+
+**Differ — Back and Forward in the toolbar.** FLAMOX365 relies on the browser for history. Symphony
+tracks router navigation IDs, restores the index on `popstate` and replaces it on `replaceUrl`,
+because a desktop window has no browser controls.
+
+**Differ — the search field opens the command palette; no voice input in the shell.** The centred
+`SearchLauncherView` and its `SpeechToTextDirective` voice action, adapted on 2026-08-25, leave the
+shell. The toolbar's search field accepts no text itself and only opens the command palette, also
+through ⌘K or Ctrl+K. Constraint: confirmed product decisions — the palette replaces the launcher and
+voice input is no longer needed. The `Draft with AI` prompt of the new-work-item sheet and the AI
+step prompts of the work item screen keep their own Prompt Box dictation.
+
+**Differ — a status bar for small notices.** FLAMOX365 renders feature notices in the top
+`presenter-notices` view slot. Symphony moves the GitHub sync state, the notification bell, the
+running version and the update action into a 28 px status bar along the window's bottom edge.
+Constraint: confirmed redesign decision that small notices leave toolbars and page headers; the
+version stays visible for desktop update diagnosis, as decided on 2026-09-04.
+
+**Adapt — the run panel replaces the right workspace rail.** The Runs rail's soft two-view Segment
+becomes a compact `Agents | Actions` switch in the sidebar footer. `Agents` lists the active
+workspace's agent profiles with their current activity instead of execution history; `Actions` lists
+only the runs in progress and the latest failure. Both open the existing execution and Action
+drawers. Constraint: FLAMOX365 has no agent or dual GitHub/local CI concept, and the source list has
+room only for current work.
+
+**Differ — Settings is its own window.** FLAMOX365's `SettingsView` is a routed portal page. Symphony
+opens one separate Electron window on every platform, keeps the former main-window routes as entry
+points that open it, and gives it the same renderer isolation and typed IPC. Constraint: confirmed
+desktop product decision; the security posture of the main window must not widen.
+**Superseded on 2026-10-31** by
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes): Settings is a routed
+page of the main window again.
+
+**Adapt — update download with progress.** FLAMOX365's `UpdateSettingsCardView` prepares a
+service-worker version. Symphony's Electron Main now downloads and verifies the installer itself and
+publishes whole-percent progress, which the icon-only status-bar action shows in a Mosaik
+`ProgressRing` before it becomes `Restart to update`. Constraint: desktop installers whose URL, path
+and digest must never reach the sandboxed renderer. This supersedes the 2026-09-07 Adapt in which
+Download opened the retained installer URL in the browser.
+
+**Superseded by this entry:** the header, rail, voice and update-action statements of
+[2026-09-07 installer-only update availability](#2026-09-07-installer-only-update-availability),
+[2026-09-07 workspace menu settings destination](#2026-09-07-workspace-menu-settings-destination),
+[2026-09-05 compact desktop window and responsive shell](#2026-09-05-compact-desktop-window-and-responsive-shell)
+(its 400 × 270 minimum window size remains),
+[2026-09-04 desktop version watermark and ready-update action](#2026-09-04-desktop-version-watermark-and-ready-update-action),
+[2026-09-03 unified toolbar](#2026-09-03-unified-toolbar-centred-navigation-band-launcher-search-route-title-rows),
+[2026-09-01 manual workspace-rail activation](#2026-09-01-manual-workspace-rail-activation),
+[2026-09-01 desktop dock overlay](#2026-09-01-desktop-dock-overlay-and-full-height-route-content),
+[2026-09-01 badge-free symmetric navigation dock](#2026-09-01-badge-free-symmetric-navigation-dock),
+[2026-09-01 workspace-rail action after global search](#2026-09-01-workspace-rail-action-after-global-search),
+[2026-08-26 global workspace scope](#2026-08-26-global-workspace-scope),
+[2026-08-25 macOS activation and contextual workspace search](#2026-08-25-macos-activation-and-contextual-workspace-search),
+the PresenterView, navigation and search-launcher rows of the
+[ShellView, ShellConfig, and PresenterView re-audit](#shellview-shellconfig-and-presenterview-re-audit),
+the Presenter, navigation footer and Runs rail paragraphs of the [route parity ledger](#route-parity-ledger),
+the title-bar and dark-only menu-bar panel statements of
+[Soho shell and surface alignment](#soho-shell-and-surface-alignment-2026-10-10) (the panel now follows
+the system appearance), and the voice-search sentence of
+[Loading states that keep the loaded anatomy](#loading-states-that-keep-the-loaded-anatomy-2026-10-10).
+Each of these entries carries a pointer back here; their other decisions are unchanged.
+
+## 2026-10-31 Board, work item screen and new-work-item sheet
+
+The redesign artboards `Board`, `WorkItem` and `NewItem` replace the board's page toolbar, its
+dropdown filter row and the shared create/edit task drawer. The current contracts are
+[Board](board/README.md), [Work item screen](board/work-item.md) and
+[New work item sheet](board/new-work-item-sheet.md); the product behavior is described under
+[Board](../project/board/README.md), [Work item](../project/board/work-item.md) and
+[New work item](../project/board/new-work-item.md). The exact read-only FLAMOX365 sources inspected
+were `libs/frontend/features/task/src/lib/views/TaskListView.html`,
+`libs/frontend/features/task/src/lib/view-presenters/TaskListViewPresenter.ts`,
+`libs/frontend/features/task/src/lib/views/dialogs/TaskDialogView.html`,
+`libs/frontend/features/task/src/lib/models/{ITaskDialogConfig,TaskDialogMode}.ts`,
+`libs/frontend/features/task/src/lib/services/TaskDrawerService.ts`,
+`libs/frontend/features/task/src/lib/quick-create/TaskQuickCreateItemSource.ts`,
+`libs/frontend/features/task/src/lib/routing/taskRoutes.ts`,
+`libs/frontend/ui/src/lib/collection-view/views/flow/FlowColumnExpansionPreference.ts`,
+`libs/frontend/ui/src/lib/components/detail-panel/DetailPanelComponent.html`,
+`libs/frontend/features/crm/src/lib/newsletter/routing/newsletterRoutes.ts` and
+`libs/frontend/features/crm/src/lib/newsletter/views/NewsletterDetailView.html`.
+
+**Adopt — the controlled, virtualized Mosaik FlowBoard.** The board keeps the FlowBoard chain of
+FLAMOX365's flow view: `mosaik-flow-board` in `tasks` display mode with Mosaik's own drag and drop
+off, plain `mosaik-flow-board-column`s keyed by the provider's column ids, a dynamic-size CDK
+virtual-scroll viewport per column, one `mosaik-flow-board-column-item` per card and a
+`mosaik-hint` in an empty column. Symphony keeps `mutationMode="controlled"` and its CDK drop lists,
+so a move is a presenter command against the provider, not a DOM reorder.
+
+**Adapt — a filter bar with segment, repository chip and one `Filter` menu.** FLAMOX365's task list
+toggles a side `flx-filter-bar` with saved filters and switches between table, calendar and flow
+views. Symphony draws one bar below the window toolbar: the segment `All`, `Needs you · n`,
+`Agents running · n` and `Mine` as plain and outline Mosaik Buttons on a neutral track (the same
+composition as Pull requests and Inbox), clear buttons for an active search or stage drill-down,
+the selection actions (`Deliver together (n)`, `Clear selection`), the repository chip (a `mosaik-dropdown-button` with `All repositories` and each
+repository, shown only when the scope has repositories), `Filter` (`Filter · n` while filters are
+active) and the solid primary `New work item`. `Filter` holds popover submenus for `Board` (only
+when boards can be switched), `Columns`, `Labels` and `Assignees`. `Mine` matches the
+`accountLogin` of the selected workspaces' GitHub connections and stays disabled with a tooltip
+without one. The window toolbar keeps only the title, the workspace summary and refresh.
+Constraint: the `Board` artboard; the provider-neutral board has a single flow view and no saved
+filter store.
+
+**Adapt — default-collapsed narrow columns derived from the workflow.** FLAMOX365's
+`FlowColumnExpansionPreference` expands every column by default, stores collapsed keys in local
+storage and lets Mosaik's own column toggle (`collapsible`, `flowBoardColumnExpandChange`) change
+them. Symphony collapses by default each column whose workflow stage is the initial stage, a
+terminal stage or an analysis-only stage (role `analyze` without `solve`), stores explicit choices
+in `board.collapsedColumnIds` and `board.expandedColumnIds` (an explicit choice always wins), and
+opens a default-collapsed column while a search, segment, column, label, assignee or stage filter
+narrows the board and the column holds a match. A collapsed column is a 40 px strip with its count
+and vertical label that expands on click, Enter or Space and still accepts dropped cards. Expanded
+columns are 248 px wide and carry plain `+` and collapse buttons in their `actions` slot instead of
+Mosaik's toggle, which draws a filled square the artboard does not have; `+` opens the
+new-work-item sheet with that column preselected. Constraint: the artboard draws Backlog, Qualified
+and Done as narrow strips, and a drill-down must never hide what it found.
+
+**Adapt — the card as drawn.** FLAMOX365's projection card fills the eyebrow with priority and type
+badges, adds subtitle hints, date meta and a footer Avatar Group. Symphony's card shows the
+work-item id in the `technical-value` style, the hover-revealed `More actions` menu and the agent's
+Mosaik Avatar in the eyebrow, the title, one status `mosaik-badge` (`Waiting for you`,
+`<step> running`, `<step> queued`, `<step> failed`, `Checks failed`, `Conflicts with base`,
+`Behind base`, `Ready to review`, `Ready for an agent`, `Done` or the stage label), optional
+`Group needs attention` or `Critical path` actions, and five thin Mosaik Progress Bars for the
+delivery steps with an `n/5` caption and an `n of 5 delivery steps done` label. Labels, assignees,
+branch chips and field values leave the card for the work item screen; board search still matches
+id, title, body, repository, implementation branch, field values, labels and assignees.
+Constraint: the `Board` artboard.
+
+**Adapt — multi-select by modifier click.** A plain click opens the work item; Command-, Control- or
+Shift-click and the card menu's `Select for delivery` add or remove the card from a presenter-owned,
+ordered selection, and the FlowBoard switches to `multiple` selection mode only while that selection
+is non-empty. Collapsing a column drops its cards from the selection. Constraint: the artboard draws
+no selection checkboxes on idle cards, and macOS lists extend a selection with these modifiers.
+
+**Differ — a routed work item screen instead of the task drawer.** FLAMOX365 opens every task, new
+or existing, in `TaskDialogView` through `TaskDrawerService` with `TaskDialogMode` `create` or
+`edit`. Symphony opens an existing work item on its own lazy route `/main/board/:workItemId`, a
+child of the Work routes like FLAMOX365's `newsletters/:id` detail route, and creates through a
+separate sheet. A board bookmark `?item=<id>` replaces itself with that route; `?process=true` still
+opens the process drawer. Constraint: the `WorkItem` artboard draws a full screen with a fixed
+inspector, and the stepper, checks, steps, delegation and activity exceed a drawer.
+
+**Adopt — reading first, editing on request.** The screen keeps the former drawer's adaptation of
+FLAMOX365's task form: title and description render as Mosaik Text and the shared Markdown
+component from the form model, the toolbar's `Edit work item`/`Preview` toggle swaps them for
+TextBoxes, and `Save changes` (with `Cancel editing`) is the only write. The toolbar declares the
+id as title, `Board · <column>` as subtitle and an icon action that opens the item at its provider.
+
+**Adapt — stepper, checks, acceptance criteria, activity and inspector.** FLAMOX365's task drawer
+groups its content into `flx-section`s behind a content-indicator navigation and an
+overview/activity segment, with discussion in `mosaik-comment`. Symphony's screen is one scrolling
+column (at most 800 px) beside a 300 px inspector (resizable since
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes)): status and label badges with the id and
+pull-request number, the title and description, the five-stage stepper (`Analysis`, `Solution`,
+`Implementation`, `Checks`, `Acceptance`) drawn from token-styled parts and Mosaik Icons, the checks
+as a plain Mosaik Table (`Check`, `Result`, `Time`) with `View log` and `Stop run`,
+`Acceptance criteria` as inert Mosaik Checkboxes with an `n of m met` caption, the `Steps`
+expander, the delegation card and `Activity`. Activity merges provider comments, the execution's events without progress
+events and the opened marker into one framed row list of Mosaik Avatar, shared Markdown and caption rows,
+followed by the `Add a comment` box with `Send`; it no longer uses `mosaik-comment`. The inspector
+lists `Column`, `Agent`, `Skill`, `Pull request` (or `Create pull request`), `Branch`, `Repository`,
+`Assignee` and the created and changed dates. FLAMOX365's `flx-detail-panel` is a sliding overlay
+with a handle and backdrop; the inspector differs as a permanent pane. Constraint: the `WorkItem`
+artboard.
+
+**Adopt — retained ticket semantics.** Findings stay one soft Mosaik Banner per issue with
+`Repair n fields`; the external-claim banner, the queue entry with `Remove from queue`, the danger
+`Cancel execution`, the gate decisions, the delegation card and the Manual / `With AI` Mosaik
+Segment with Prompt Box and dictation for the analysis and implementation steps keep the
+adaptations recorded for the former drawer in the [route parity ledger](#route-parity-ledger).
+An unknown id shows a Mosaik Empty State (`This work item is not on the board`) with
+`Back to board`; loading shows layout-shaped Mosaik Skeletons.
+
+**Adapt — creation is a sheet of the main window.** FLAMOX365 creates in the same drawer
+(`TaskDrawerService.create`) and its quick-create item opens it through the context-overlay service.
+Symphony's root `NewWorkItemSheet` opens `NewWorkItemSheetView` through Mosaik `DialogService` as a
+modal sheet: 600 px wide (at least 20rem, at most the window width and 86 % of its height), own
+backdrop, Escape closes, a click beside it does not, and a second request draws attention to the
+open sheet. Every entry point — `New work item`, a column `+`, ⌘N or Ctrl+N, the application menu,
+the menu-bar panel, the command palette, quick create and Overview — reaches the board with
+`?create=true`, which the board consumes once (the parameter is removed with `replaceUrl`); the
+column `+` passes its column instead. Constraint: the `NewItem` artboard draws a centred modal, and
+the board owns the sheet so the created item lands in the chosen column.
+
+**Adapt — the sheet's anatomy.** The header carries `New work item` and the `Write it myself` /
+`Draft with AI` switch as two Mosaik Buttons on a track. `Draft with AI` keeps FLAMOX365's AI
+directive vocabulary: a highlight Prompt Box (`Describe the work item`) with dictation, an
+indeterminate highlight progress bar while drafting, `Cancel generation`, and, without a Create
+skill, `Assign a skill to the Create step before drafting with AI.` with `Open Skills`. The form has
+`Title`, `Description` (`Markdown is rendered when the work item is viewed.`), `Repository` and
+`Column` as Mosaik Dropdown Buttons with menus, label badges with `Add label`, the `More fields`
+expander with the shared dynamic field controls of the work item screen (TextBox, NumberBox,
+DateBox, Select, Checkbox, Avatar) and `Analyze with <agent> after creating`. The footer adopts
+FLAMOX365's plain `Cancel` and solid primary action (`Create work item`, enabled only when the
+required values are present) with `Start over` on the left for an AI draft. A refused creation
+keeps the input and shows a soft banner (`The work item was not created.`) in the sheet.
+Constraint: the `NewItem` artboard draws dropdown chips rather than Selects.
+
+**Superseded by this entry:** the task-drawer header of
+[2026-09-02 ticket drawer header and work-item findings](#2026-09-02-ticket-drawer-header-and-work-item-findings),
+the Board share of
+[2026-09-02 grouped acrylic desktop actions](#2026-09-02-grouped-acrylic-desktop-actions),
+the permanent `multiple` selection mode and event-sourced selection of
+[2026-08-24 board multi-select for manual delivery bundling](#2026-08-24-board-multi-select-for-manual-delivery-bundling),
+Mosaik's column toggle and the all-expanded default of
+[2026-08-21 collapsible board columns and their persisted state](#2026-08-21-collapsible-board-columns-and-their-persisted-state),
+the toolbar placement of the board selector in
+[2026-08-18 provider-owned board columns and board selection](#2026-08-18-provider-owned-board-columns-and-board-selection),
+the work-item thread of [Work-item comments](#work-item-comments), the task-drawer rows of
+[Adopted and adapted patterns](#adopted-and-adapted-patterns), and the Board row and task-drawer
+paragraphs of the [route parity ledger](#route-parity-ledger). Each of these carries a pointer back
+here; their other decisions are unchanged.
+
+## 2026-10-31 Pull requests, Actions, Overview and Inbox
+
+The artboards `PullRequests`, `Actions`, `ActionsOverview`, `Overview` and `Main` (Inbox) move these
+screens into the window chrome described above. The current contracts are
+[Pull requests](pull-requests/README.md), [Actions](actions/README.md) and
+[Overview and Inbox](overview-and-inbox/README.md). For Overview and the Inbox this entry records
+only the screen composition; their figures and decision rules belong to that contract. The exact read-only
+FLAMOX365 sources inspected were `libs/frontend/features/task/src/lib/views/TaskListView.html`
+(table view, paginator, context menu), `libs/frontend/ui/src/lib/components/detail-panel/DetailPanelComponent.html`,
+`libs/frontend/features/reporting/src/lib/views/ReportListView.html`,
+`libs/frontend/ui/src/lib/components/collapsible-navigation-panel/CollapsibleNavigationPanelComponent.html`,
+`libs/frontend/features/explorer/src/views/ExplorerView.html`,
+`libs/frontend/ui/src/lib/components/widget-summary/WidgetSummaryComponent.html`,
+`libs/frontend/features/reporting/src/lib/views/widgets/{DashboardKpiWidgetView,YearComparisonWidgetView,OrdersOverviewWidgetView}.html`,
+`libs/frontend/features/feedback/src/lib/views/FeedbackListView.html` and
+`libs/frontend/features/chat/src/lib/views/rails/children/ChatConversationListChildView.html`.
+
+**Adapt — Pull requests is a segmented table with a fixed inspector.** FLAMOX365's table view is a
+`mosaik-data-table` with persisted table preferences, a paginator, a context-menu trigger and a
+selection that opens the item's drawer. Symphony shows the segment `Open · n`, `Needs action · n`
+and `Drafts · n` (buttons on a neutral track, kept in `?view=`), `New pull request` as the solid
+primary action of that bar, and a plain Mosaik Table with fixed columns (`Pull request`, `Item`,
+`Checks`, `Merge`, `Agent`, `Updated`, row menu). Click, Enter or Space selects a row into a
+permanent 360 px inspector (resizable since
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes)) instead of opening an overlay; a right-click opens the row menu. There
+is no paginator or column chooser. The window toolbar carries the title, the repository and open
+count, the filter menu and refresh; the sync note lives in the status bar, and a stale or failed
+sync shows a soft warning Mosaik Banner with `Retry` above the table. Constraint: the
+`PullRequests` artboard; FLAMOX365's overlay `flx-detail-panel` would cover the list the inspector
+explains.
+
+**Adopt — actionable empty states.** A filtered-empty list keeps FLAMOX365's Mosaik Empty State
+with one solid primary `Reset all filters`; `Nothing needs action`, `No draft pull requests` and
+`No open pull requests` stay distinct states without an action.
+
+**Adapt — the pull-request form is a sheet.** `PullRequestCreateDrawerView` opens through Mosaik
+`DialogService` as a modal sheet 640 px wide that Escape and `Cancel` close and an outside click
+does not. Constraint: the redesign presents authoring surfaces of the main window as sheets.
+
+**Adapt — Actions has a workflow source list.** FLAMOX365's report list places a
+`flx-collapsible-navigation-panel` (toggle, responsive scrim) beside its content. Symphony's
+Actions screen has a 220 px pane (resizable since
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes)) with `All runs`, the caption `WORKFLOWS` and every workflow
+as a plain or soft Mosaik Button with a health Mosaik Dot (`Disabled on GitHub` as tooltip); it
+neither collapses nor overlays. `All runs` shows `Running now` (indeterminate Progress Ring,
+`View log`, `Stop`, `Cancel`) and a `History` table of finished runs across all workflows
+(`Result`, `Workflow`, `Revision`, `Runner`, `Duration`, `Started`), newest first, extended by
+`Show older runs` instead of a paginator. A workflow shows its name and path, `Run on GitHub`
+(solid primary) and `Run locally` (outline), its runs, the selected run's steps, a log excerpt and
+the `Diagnosis` card with `Fix with AI`. `Run on GitHub` opens an inline form with `Revision or
+branch`, prefilled with the default branch, the declared workflow inputs and `Start workflow`;
+`Run locally` dispatches the default branch to the managed runner. Constraint: the `Actions` and
+`ActionsOverview` artboards; FLAMOX365 has no workflow browser. The window toolbar carries the
+title, the repository subtitle, the filter menu and refresh.
+
+**Adapt — Overview is a fixed start page, not a widget grid.** FLAMOX365's Explorer composes the
+contributed, editable `flx-widget-grid` under its page path. Symphony's Overview has a greeting with
+a one-line summary and the quick actions `Sync now`, `Run workflow` and `New work item` (primary),
+three Mosaik Cards `Waiting for you` (with `Open inbox`), `Pull requests` and `Production` (each
+with `Open`), and
+`Reporting` with a Mosaik Segment for the period (`7 days`, `30 days`, `Quarter`), four stat-tile
+Cards, the `Board` bars, `Delivered per week` and `Workflow runs`. Constraint: confirmed decision
+that Overview is the at-a-glance start page, and the `Overview` artboard.
+
+**Adopt — value and label pairs with content-shaped states.** The cards follow
+`WidgetSummaryComponent` and `DashboardKpiWidgetView`: a large value with its caption, layout-shaped
+Mosaik Skeletons while loading, a failure inside the affected card with `Retry`, and `—` with a
+tooltip where Symphony has no data (for example `Waiting for your review`).
+
+**Differ — token-drawn charts.** FLAMOX365's reporting widgets render `mosaik-chart`. Overview's
+board bars and weekly columns are `part`-named elements painted with Mosaik tokens (one neutral hue,
+the current week emphasised), each with an `aria-label` and a Mosaik Tooltip; workflow outcomes use
+a Mosaik Segment Bar. Constraint: the artboard draws three small fixed charts in the card style, and
+every value must be stated in text or on hover.
+
+**Differ — the Inbox has no FLAMOX365 counterpart.** The Inbox lists work-item decisions and updates
+in a 400 px pane (resizable, with the filter as the fixed header of a `mosaik-list`, since
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes)) with the filter
+`All · Decisions · Updates` (buttons with counts on a track), the
+groups `NEEDS YOUR DECISION` and `UPDATES`, and a detail pane with the five-stage stepper,
+continuation choices and decision actions. It reuses the Mosaik Badge, Avatar, Empty State and
+Skeleton vocabulary of FLAMOX365's feedback and conversation lists. Constraint: work-item decisions
+belong to Symphony's local orchestration, which FLAMOX365 does not have.
+
+**Superseded by this entry:**
+[2026-09-05 Actions workflow selection and dispatch hierarchy](#2026-09-05-actions-workflow-selection-and-dispatch-hierarchy),
+[2026-08-20 actions run collection header and calmed run rows](#2026-08-20-actions-run-collection-header-and-calmed-run-rows),
+[2026-08-20 shared collection list component](#2026-08-20-shared-collection-list-component) (the
+component remains in `frontend/ui` but no screen uses it), the drawer of
+[2026-08-19 operator-authored pull requests](#2026-08-19-operator-authored-pull-requests), the
+collection heading of
+[2026-09-02 filtered pull-request empty state](#2026-09-02-filtered-pull-request-empty-state), the
+Pull Requests and Actions share of
+[2026-09-02 grouped acrylic desktop actions](#2026-09-02-grouped-acrylic-desktop-actions), the
+Overview tiles of
+[2026-10-10 route consolidation and readable Overview tiles](#2026-10-10-route-consolidation-and-readable-overview-tiles),
+[2026-08-24 home panorama: three category mosaics](#2026-08-24-home-panorama-three-category-mosaics),
+[2026-08-20 home board-column widget dashboard](#2026-08-20-home-board-column-widget-dashboard) and
+the Home row of the [route parity ledger](#route-parity-ledger). Each of these carries a pointer
+back here.
+
+## 2026-10-31 Settings window sidebar, search, sheets and immediate saving
+
+The placement of Settings is recorded in
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes) and its contract in
+[Settings in the main window](window-and-navigation/settings.md); the section content of `AI team`,
+`Skills` and `Automation` is recorded in
+[2026-10-31 Settings window: AI team, Skills and Automation by delivery-flow step](#2026-10-31-settings-window-ai-team-skills-and-automation-by-delivery-flow-step).
+This entry covers the shared anatomy of every section. The exact read-only FLAMOX365 sources
+inspected were `libs/frontend/setting/src/views/SettingsView.html`,
+`libs/frontend/setting/src/view-presenters/SettingsViewPresenter.ts`,
+`libs/frontend/setting/src/search/SettingsSearchIndex.ts`,
+`libs/frontend/setting/src/models/ISettingsSearchDefinition.ts`,
+`libs/frontend/features/task/src/lib/services/TaskDrawerService.ts`,
+`libs/frontend/features/reporting/src/lib/view-presenters/ReportListViewPresenter.ts` and
+`libs/frontend/features/identity/src/lib/tenant/view-presenters/cards/TenantSettingsCardViewPresenter.ts`.
+
+**Adapt — a source-list sidebar with nested workspace rows.** FLAMOX365's `SettingsView` is an `md`
+page with a `mosaik-searchbox` above a Mosaik Menu of inline nested items with Avatar icons, and a
+Segment on narrow screens. The Settings window has a 232 px sidebar whose empty 52 px first row is
+the drag region for the traffic lights, then `Search settings` (`mosaik-searchbox`), `Workspaces`,
+every workspace with its tile and, under the selected workspace, its six sections as
+indented rows, and the heading `Symphony` with the global sections. Rows are plain Mosaik Buttons,
+the current one soft. There is no narrow-screen Segment. Constraint: the `Settings` artboard and a
+separate window with a 720 × 520 px minimum. **Superseded on 2026-10-31** for the placement: the
+navigation now fills the main window's sidebar below its title-bar row and takes its width; see
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes).
+
+**Adapt — search lists settings, not sections.** FLAMOX365's `SettingsSearchIndex` matches every
+query term against translated label texts and narrows the navigation tree. Symphony's per-window
+index covers each section and the `search` and `searchEntries` contributions of the section
+definitions, keeps the every-term rule (case-insensitive, over label, help text, keywords, value and
+breadcrumb) and lists the matches grouped by breadcrumb with `mark[part~="settings-search-match"]`
+highlights. A result either opens its section or carries its own control to change the setting in
+place. Constraint: the redesign's search covers every setting of every workspace, and a result can
+be changed in place or opened.
+
+**Adapt — editors are sheets, not drawers.** FLAMOX365's editors are right-side drawers opened
+through `DrawerService`. Settings editors open through `showSettingsSheet` as modal Mosaik dialogs:
+640 px by default or the width the editor declares, at most 96 % of the window width and 88 % of its
+height, own backdrop, Escape closes and an outside click does not, no focus move on open,
+`part="settings-sheet"`, `Cancel` and `Save` at the bottom right. At most one sheet is open; a
+result can name a follow-up editor. Sheets stay centred because Mosaik's dialog has no public input
+to attach it to the window's top edge. Constraint: the redesign's sheets attached to the Settings
+window.
+
+**Adapt — confirmations are alert sheets.** FLAMOX365 confirms through
+`MessageBoxService.show({ header, message, buttons: 'yesNo', icon, intl })`. `SettingsAlertService`
+shows a 420 px alert sheet with a tone icon (`warning`, `danger`, `info`), the question, its
+consequences and the buttons at the bottom right; a destructive alert uses a danger primary button,
+an alert without a cancel label is a notice with its confirm button alone, and only the primary
+button resolves `true`, so Escape answers like the second button. Constraint: the `Settings-Dialogs` artboard; this also
+replaces the browser `window.confirm` of the skill package's `Move to trash`.
+
+**Differ — every control applies immediately.** FLAMOX365's settings cards save through explicit
+commands (for example `TenantSettingsCardViewPresenter.saveCommand`). Settings controls apply when
+they change and numbers when they are committed, through `createImmediateSetting` and the single
+settings writer, which reports `Settings saved.` or `Unable to save settings.`; a failed save
+restores the stored value. Sheets still save explicitly and keep their input when saving fails.
+`SettingsWindowSync` forwards changed settings over a `BroadcastChannel` to the other renderer
+windows (since Settings moved into the main window, only the menu-bar panel), which FLAMOX365's
+single-window portal does not need. Constraint: the confirmed redesign
+proposal that settings apply immediately without per-card `Save` buttons.
+
+**Adapt — one group-and-row layout.** Sections use the shared `symphony-settings-group` and
+`symphony-settings-row` components instead of FLAMOX365's Card, Headline and Cell Group settings
+cards, and `symphony-settings-conditional` draws states that appear only in some situations in a
+frame labelled with the condition. Constraint: the `Settings-*` artboards.
+
+**Superseded by this entry:** the Settings and Skills rows of the
+[route parity ledger](#route-parity-ledger) and the drawer, page and card statements of the Settings
+paragraphs that follow it. Each of these carries a pointer back here.
+
 ## 2026-10-30 modular feature composition and feature-owned state
 
 **Adopt — explicit contributions and public owners.** The inspected FLAMOX365
@@ -265,6 +795,8 @@ Mosaik composition.
 
 ## 2026-10-10 route consolidation and readable Overview tiles
 
+> **Superseded on 2026-10-31** for the Overview tiles; the route retirements remain. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
+
 **Adopt.** Workspace navigation and AI team editing follow FLAMOX365's
 `libs/frontend/setting/src/views/SettingsView.html` and
 `libs/frontend/presentation/src/lib/views/PresenterView.html`. Overview keeps
@@ -345,6 +877,8 @@ hierarchical-menu example, and Joy Icon variant contract.
 
 ## 2026-09-07 installer-only update availability
 
+> **Superseded on 2026-10-31:** the header action and the browser handoff of Download are replaced by the status-bar action and the in-app download; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
+
 **Adopt — a detected version becomes one actionable Mosaik update state.** The existing Settings
 card, Presenter header, and menu-bar panel continue to share `DesktopUpdateStore`. An
 installer-only channel result now projects as `available`: Settings names the target version and
@@ -366,6 +900,8 @@ Mosaik's public Button busy-state contract.
 
 ## 2026-09-07 workspace menu settings destination
 
+> **Superseded on 2026-10-31:** the header workspace menu is replaced by the sidebar workspace switcher, whose menu ends in **Manage workspaces…** and opens Settings; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
+
 **Adopt — the workspace menu ends with a separated Settings action.** The Presenter header now
 groups its workspace choices and the Settings destination in the existing Avatar-triggered Mosaik
 Dropdown Button. A horizontal `mosaik-divider` follows every workspace item, and one plain Mosaik
@@ -382,6 +918,8 @@ and Dropdown Button contracts. Symphony **adapts** that profile-navigation compo
 provider-neutral workspace selector because FLAMOX365 has no equivalent global workspace scope.
 
 ## 2026-09-05 compact desktop window and responsive shell
+
+> **Superseded on 2026-10-31** except for the 400 × 270 minimum window size: the rail sheet and the header segment no longer exist; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 **Adopt — the narrow workspace rail is a bottom Sheet.** Below Mosaik's `lt-md` breakpoint, the
 split keeps the route surface at full width and the existing rail action opens the same Runs
@@ -409,6 +947,8 @@ former Symphony navigation implementation for icon identity, and Visual Studio C
 Electron window bounds.
 
 ## 2026-09-05 Actions workflow selection and dispatch hierarchy
+
+> **Superseded on 2026-10-31:** the workflow Select gave way to a workflow source list, `Run on GitHub` is now the primary action, and it opens a form with `Revision or branch` and the workflow inputs. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
 
 **Adopt — workflow scope is one centred Mosaik Select.** The Actions route replaces the persistent
 workflow sidebar documented on 2026-08-20 with a soft `mosaik-select` above the run collection. It
@@ -450,6 +990,8 @@ standalone Mosaik Select compositions and empty-state action projections, plus M
 appearance contracts.
 
 ## 2026-09-04 desktop version watermark and ready-update action
+
+> **Superseded on 2026-10-31:** the version and the update action moved from the header and the lower-left content edge into the status bar; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 **Adopt — update work uses a Mosaik busy action.** The Presenter shell reuses the same
 `DesktopUpdateStore` as Settings and the menu-bar panel. Once Electron has found and completely
@@ -501,6 +1043,8 @@ difference. The exact read-only references were FLAMOX365's
 `frontend/core`'s `CommandDirective`, and the Task dialog and Search presenter/view pairs.
 
 ## 2026-09-03 unified toolbar: centred navigation band, launcher search, route title rows
+
+> **Superseded on 2026-10-31** for the header band, the segment navigation and the launcher search; route-level title-row statements were not re-audited in that change. See [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 **Adopt — the shell is a header band again.** This reverses the 2026-08-23 _floating shell_ entry
 below. FLAMOX365 composes its shell as a persistent header band, and Symphony now does the same:
@@ -680,6 +1224,8 @@ Angular legend wrappers is published; the registry currently exposes only `0.1.9
 
 ## 2026-09-02 ticket drawer header and work-item findings
 
+> **Superseded on 2026-10-31** for the drawer header: an existing work item opens on its own screen and a new one in a sheet. The one-banner-per-finding composition remains on the work item screen. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).
+
 The ticket drawer header now **adopts** the close-action composition used by FLAMOX365's
 `TaskDialogView`, `UserDialogView`, and `FeedbackDetailDialogView`: a small, plain
 `mosaik-button` with the `dismiss` icon invokes the presenter's close command from the drawer
@@ -697,6 +1243,8 @@ The exact read-only component references were Mosaik's Banner and Drawer Header 
 FLAMOX365's task, user, and feedback detail drawer templates named above.
 
 ## 2026-09-02 grouped acrylic desktop actions
+
+> **Superseded on 2026-10-31:** no floating lower-left toolbar remains; Board, Pull requests and Actions place their actions in the window toolbar and in a bar or pane of the screen itself, and Skills moved into Settings. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet) and [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
 
 The lower-left collection actions now render as two separate Mosaik Toolbar groups: a primary
 group containing only the solid-primary New/Create action, when the route has one, followed by a
@@ -724,6 +1272,8 @@ material treatment only; it was not treated as an instruction source.
 
 ## 2026-09-02 filtered pull-request empty state
 
+> **Superseded on 2026-10-31** for the collection heading: the empty state replaces the table; `Reset all filters` remains. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
+
 Pull Requests **adopts** FLAMOX365's actionable Mosaik Empty State pattern when the provider still
 has open pull requests but the current Author, State, Base, or contextual search filters produce no
 matches. The empty state remains inside the shared collection below its `0 Open` heading and uses
@@ -736,6 +1286,8 @@ Mosaik's Angular `EmptyStateComponent` slot contract, and Symphony's existing Ac
 empty-template path.
 
 ## 2026-09-01 manual workspace-rail activation
+
+> **Superseded on 2026-10-31:** the workspace rail is replaced by the sidebar run panel; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 The desktop workspace rail now **adopts** FLAMOX365's explicit rail activation contract: only the
 workspace-rail toggle, responsive-sheet close action, or a direct split gesture changes whether the
@@ -764,6 +1316,8 @@ implementation and `ThemeService` CSS-variable projection, plus Symphony's exist
 `ShellConfig.ts` and former renderer-local override definition.
 
 ## 2026-09-01 desktop dock overlay and full-height route content
+
+> **Superseded on 2026-10-31:** no navigation dock overlays the content any more; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 The desktop route scrollport reaches the lower edge of the App content on every route, while the
 floating navigation dock remains a viewport overlay. This is a **Differ** from FLAMOX365 and
@@ -811,6 +1365,8 @@ as instruction sources.
 
 ## 2026-09-01 badge-free symmetric navigation dock
 
+> **Superseded on 2026-10-31:** the sidebar shows counts again; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
+
 The floating primary-navigation dock no longer renders an active-run Badge on Actions. This applies
 the UI relevance gate more strictly than FLAMOX365's persistent navigation: current runs remain
 available in the workspace rail, while a count overlaid on a route icon duplicates that state and
@@ -832,6 +1388,8 @@ Magnification directive. The supplied capture identified the two visible problem
 treated as an instruction source.
 
 ## 2026-09-01 workspace-rail action after global search
+
+> **Superseded on 2026-10-31:** neither the header search group nor the rail toggle exists any more; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 The desktop Presenter header now composes its three workspace controls as one semantic sequence in
 the Mosaik App Header `brand` slot: active workspace, global search, then the workspace-rail toggle.
@@ -909,6 +1467,8 @@ menu composition without introducing a compatibility registry or product-owned m
 
 ## 2026-08-26 global workspace scope
 
+> **Superseded on 2026-10-31** for the header placement: the scope is chosen in the sidebar workspace switcher, which selects exactly one workspace; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
+
 The workspace scope moves from the Work, Pull Requests, and Actions Page Headers into the Presenter
 App Header immediately before the global search launcher. This is an **Adapt** of FLAMOX365's
 single global Search Launcher placement: Symphony has a provider-neutral multi-workspace scope that
@@ -966,6 +1526,8 @@ changed in this step; moving the bridge into Mosaik remains a later companion-li
 
 ## 2026-08-25 macOS activation and contextual workspace search
 
+> **Superseded on 2026-10-31** for the Presenter search launcher and its voice input; the macOS activation paragraph remains valid. See [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
+
 The macOS desktop shell now keeps the main application on the regular activation policy, restores
 its Dock presence, steals application focus only when an explicit open or re-open action shows the
 main window, and installs the standard Symphony application menu. This **differs** from the
@@ -1018,6 +1580,8 @@ The 2026-08-31 list-page audit supersedes this entry's plain-neutral action appe
 Page Pre Content / Toolbar composition with solid-tertiary actions inside the shared Page Toolbar.
 
 ## 2026-08-24 board multi-select for manual delivery bundling
+
+> **Superseded on 2026-10-31** for the permanent `multiple` selection mode and the event-sourced selection: the selection is presenter-owned, Command-, Control- or Shift-click and `Select for delivery` change it, and the FlowBoard shows its selection only while it is non-empty. The delivery-group and banner decisions remain. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).
 
 **Adopt — native FlowBoard selection API** (mosaik commit 63aa920e5a at 0.1.86): the board runs
 `selection-mode='multiple'` permanently and the presenter's selection is event-sourced
@@ -1092,6 +1656,8 @@ share merge-commit semantics, while rebase remains absent because it would force
 branch and requires a separate explicit destructive-workflow design.
 
 ## 2026-08-24 home panorama: three category mosaics
+
+> **Superseded on 2026-10-31:** Overview is the redesigned start page; see [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
 
 The home dashboard becomes a horizontally scrolling panorama of three categories - Board, Pull requests, Actions - each a
 fixed six-by-four Quick Play mosaic made from seven-rem square 1×1 cells and 2×2 tiles. The larger cell size adapts the
@@ -1183,9 +1749,13 @@ Compact board representation **adopts** the new public Mosaik `mosaik-flow-board
 
 ## 2026-08-21 collapsible board columns and their persisted state
 
+> **Superseded on 2026-10-31** for Mosaik's column toggle and the all-expanded default: columns are collapsed by default from the workflow, explicit choices are stored in `board.collapsedColumnIds` and `board.expandedColumnIds` by the Work feature, and plain buttons in the column header collapse a column. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).
+
 The board columns become collapsible (`[collapsible]` with `[isExpanded]` and the `flowBoardColumnExpandChange` detail on `mosaik-flow-board-column`), and the collapsed set survives navigation and restart. The persistence **adopts** Symphony's own established renderer-preference idiom rather than inventing a third one: pure `readCollapsedBoardColumnIds` / `persistCollapsedBoardColumnIds` functions in `libs/frontend/core/src/board/boardColumnCollapse.ts` that take an injected `Storage` exactly like `theme-preference.ts`, held by a root-provided `BoardColumnCollapseStore` so `window` access stays inside `frontend/core`, under a namespaced `board.collapsedColumnIds` key alongside `presentation.isNavOpen` and `presentation.isRailOpen`. Collapsed columns are stored as an id allowlist and stale ids are deliberately kept rather than pruned, so switching board or workspace scope cannot silently expand a column the operator collapsed. FLAMOX365's preference infrastructure is a **differ**: `IUserPreferenceStorage` with `IUserPreferenceCodec`/`JsonUserPreferenceCodec` behind the `USER_PREFERENCE_STORAGE` token, and `CollectionViewPreferenceController`'s URL > localStorage > default precedence, exist to serve many typed preferences across a framework of collection projections, while Symphony persists one id set and already has two lighter mechanisms; adopting the port and codec layer would add a third parallel preference path for no additional guarantee. The URL half of that reference is also deliberately not mirrored — the board's `column` query param already owns the URL-visible narrowing, and a shared board link must not carry one operator's collapsed columns. The one generalization taken is `browserStorage()`, which moved from a private function in `PresenterViewPresenter` into `libs/frontend/core/src/storage/browserStorage.ts` so the shell and the board share one guarded accessor. The exact read-only references were `../flamox/libs/frontend/core/src/preferences/` (`IUserPreferenceStorage.ts`, `JsonUserPreferenceCodec.ts`, `LocalStorageUserPreferenceStorage.ts`, `USER_PREFERENCE_STORAGE.ts`), `../flamox/libs/frontend/ui/src/lib/collection-view/controllers/CollectionViewPreferenceController`, and the Mosaik `FlowBoardColumnElement` expandable behavior with `IFlowBoardColumnExpandChangeEventDetail` in `../mosaik/libs/mosaik-elements-foundation/`.
 
 ## 2026-08-20 home board-column widget dashboard
+
+> **Superseded on 2026-10-31:** Overview is the redesigned start page; see [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
 
 The home view is rebuilt as a widget dashboard after FLAMOX365's Explorer start page. It **adopts** the Explorer page anatomy — `mosaik-page` with a greeting `mosaik-page-header` and a `mosaik-page-content` grid of `mosaik-card` widgets at `[elevation]="'semilight'"` — and the single-metric widget anatomy of `flx-widget-summary` (the large value first, its caption label beneath), rendered with Symphony's existing `mosaikTypography` idiom instead of a product-owned summary component. Loading renders content-shaped `mosaik-skeleton`s in a `role="status"` container and an empty board renders `mosaik-empty-state`, both per the FLAMOX365 widget conventions. One widget exists per visible board column plus a "Needs attention" widget that appears only while an item's newest execution failed; the counts resolve through the same `resolveBoardColumnLayout` (moved to `libs/frontend/core` so home and board share it) and the shared `workItemIdsNeedingAttention`, so a widget can never promise a set the board does not then show. The click-through is an **adapt**: no FLAMOX365 widget navigates to a filtered collection (the only two routing widget presenters, TechnicianWorkload and PinnedNewsletter, target detail routes), but FLAMOX365's idiomatic filtered landing is a route plus query params read back by the list (`queryParamSignal`, `createViewPreferenceController`), which Symphony's board already mirrors for `q`; the widgets therefore navigate as `symphonyPseudoLink`-wrapped cards (the documented `flamoxPseudoLink` mirror) to `/main/board?column=<id>` and `?attention=true`, and the board presenter reads both params exactly like `q`, narrows the flow board to the one column, and exposes the attention state as a clearable toolbar filter beside the column dropdown that follows the established label/assignee dropdown pattern. The widget infrastructure itself is a **differ**: FLAMOX365's `flx-widget-grid` (registry, zones, drag/resize, persisted edit mode, lazy front/back views) exists to compose many independently contributed widgets, while Symphony home has one fixed provider-derived set, so a static `auto-fill` CSS grid replaces the editable six-column zone grid and no registry is introduced. The former floating action stack (run-analyzer and open-board buttons) is removed rather than adapted — the Explorer's only floating control is its edit toggle, the board is one navigation click away, and the analysis starts from the card's context action — and the "Work queue", "Recent executions", and "Completed" cards are replaced by the widgets, since the execution history already lives in the workspace rail and the execution drawers. The exact read-only references were `../flamox/libs/frontend/features/explorer/src/views/ExplorerView.html`, `../flamox/libs/frontend/widget/src/lib/components/WidgetComponent.html`, `../flamox/libs/frontend/ui/src/lib/components/widget-summary/WidgetSummaryComponent.html`, `../flamox/libs/frontend/core/src/routing/signals/paramSignal.ts`, and `../flamox/libs/frontend/features/sales/src/lib/assembly/view-presenters/widgets/TechnicianWorkloadWidgetViewPresenter.ts`.
 
@@ -1208,13 +1778,19 @@ read. The latter keeps the provider-specific recovery copy in both the banner an
 
 ## 2026-08-20 actions run collection header and calmed run rows
 
+> **Superseded on 2026-10-31:** Actions shows tables under `All runs` and per workflow instead of the collection list. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
+
 The Actions route **adopts** the shared collection-header menus documented below for its workflow-run list: `resolveActionsListMenus.ts` / `resolveActionsListCommand.ts` in `libs/frontend/features/ci/src/lib/actions/view-presenters/actionsListPresentation/` mirror the `pullRequestListPresentation` pair one-to-one (single-check Status, Author, and Sort menus; presenter-owned signals; one typed activation event), with Status reusing `actionStatusLabel` so no parallel label map exists. The visible menu wording is `Author`, matching the pull-request list, while code and command ids keep the domain field name `actor` (`CiRun.actor`). The run rows **adapt** the GitHub Actions run-list anatomy instead of copying its multi-column table: each row is status icon (the single status representation, labelled for assistive technology via `aria-label`; the former trailing status badge was removed as duplicate status per the renderer content rule) | one content column (title, then workflow name · run number · event · actor, then the branch on its own third line) | a right-aligned relative start time with duration | hover-revealed actions — the separate mid-right branch column was removed because two ragged right-side text columns made the list restless; the time column keeps its `max-[60rem]:hidden` collapse. Menu dimensions are Status + Author + Sort rather than GitHub's full set (also Branch and Event): Author mirrors the pull-request menu, Status is the dominant triage dimension, and further header menus would work against the calm-layout goal; Branch/Event filters remain a later additive step in the same seam. The sidebar is a plain `mosaik-list` of workflow names in the canonical default-slot text form (`mosaik-list-item` has no `label` input and its `displayText` is a derived typeahead value, so neither is bound): no repository group headings (the workspace filter already scopes repositories) and no per-item state icons, which were decorative rather than actionable. Scroll containment is a **differ** from FLAMOX365's document-scrolling list pages, required by the master-detail split: the routed hosts `ActionsView` and `PullRequestsView` carry `flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden` host classes (a `block` host breaks the height chain at the shell's `presenter-route-scroll` container and the page either scrolls as a whole or clips), `mosaik-page` carries the same chain, and the only scrolling regions are the sidebar workflow list and the collection `<ul>`. The exact read-only references were `TaskListView`/`UserListView` (which confirm FLAMOX365 pages carry no sizing classes) and the Mosaik `mosaik-list-item` API and examples.
 
 ## 2026-08-20 shared collection list component
 
+> **Superseded on 2026-10-31:** Pull requests and Actions render Mosaik Tables; the collection list component remains in `frontend/ui` without a screen using it. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
+
 The pull-request collection anatomy documented on 2026-08-19 — one bordered header with a status icon, a bold open-count heading, and functional single-check dropdown menus above the only scrolling result region — moves out of the Pull Requests view into the shared `symphony-collection-list` component in `libs/frontend/ui` (`CollectionListComponent`, `CollectionListItemDirective`). This **adapts** FLAMOX365's precedent of hosting reusable collection machinery in `frontend/ui` (`../flamox/libs/frontend/ui/src/lib/collection-view/`): FLAMOX365's `ICollectionView` framework spans table, gallery, calendar, and flow projections with a filter bar and export pipeline, while Symphony deliberately keeps only the GitHub-adapted list projection its routes actually use — a generic item collection, a caller-typed `ng-template` row (each row stays feature-owned, including hover-revealed context actions), and model-driven menus whose activations surface as one typed event so presenters keep owning filter and sort state. The menus stay single-check dropdowns rather than FLAMOX365's Filter Bar because the adapted GitHub list header is the documented visible baseline for this collection; the visible composition, Tailwind layout classes, region/list semantics, and `test-id` surface are unchanged. Menu construction and activation mapping live in the pure `pullRequestListPresentation` functions beside the presenter, following the established presentation-function pattern. The Actions route's workflow-run collection is the second consumer: its count heading and scrolling run rows come from the same component, which for that purpose gained an optional heading icon and an optional `symphonyCollectionListEmpty` template rendered in place of the result `<ul>` while the collection is empty, so the "No workflow runs" empty state keeps its documented placement under the always-visible count heading; the run rows and their hover-revealed context actions remain feature-owned. Adopting the component surfaced that the succeeded-run status icon name `checkCircle` had never been registered, which — per the icon-registry rule above — threw during change detection and silently stopped the run repeater from adding rows; the name is now backed by the named Reicon check-circle definition registered in `ShellConfig.ts`. The exact read-only references were `../flamox/libs/frontend/ui/src/lib/collection-view/core/ICollectionView.ts`, `ICollectionViewConfig.ts`, and the previously documented `TaskListView` collection anatomy.
 
 ## 2026-08-19 operator-authored pull requests
+
+> **Superseded on 2026-10-31** for the drawer and toolbar placement: `New pull request` sits beside the segment and opens a 640 px sheet. The compare-view form remains. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).
 
 Pull Requests gains the same create affordance the Work route already owns: a solid primary `New pull request` action at the start of the outline Toolbar, opposite the operational refresh action, which is an **Adopt** of the Toolbar action hierarchy already documented for Work, Pull Requests, and Actions. It opens the shared Mosaik drawer at the Work route's 52rem width, so the two authoring surfaces in the application behave identically; the action stays disabled with an explanatory label while the selected workspace scope contains no GitHub repository, mirroring the board's "Select one board to create".
 
@@ -1223,6 +1799,8 @@ The drawer content **adapts** the user-supplied GitHub compare view rather than 
 Two behaviours are deliberate **Adapts** of GitHub rather than of FLAMOX365, because the operator's decision is a GitHub decision. The comparison verdict is projected through a pure presentation pipe into one Mosaik Banner: a success "Able to merge" with the commits and changed files that would enter the target, a neutral "There isn't anything to compare" that blocks creation for identical or purely lagging branches, a warning for a diverged range that stays creatable because only GitHub can judge the merge, and a warning naming the open pull request that already covers the pair, which offers to open it instead of creating a duplicate. The title field is prefilled the way GitHub prefills it — the subject of a single commit, otherwise the readable branch name — and re-proposed on every branch change until the operator has written a title of their own. Mergeability itself is a **Differ**: the provider comparison carries no conflict verdict, so the drawer never claims one.
 
 ## 2026-08-18 provider-owned board columns and board selection
+
+> **Superseded on 2026-10-31** for the board selector's place: it is the `Board` submenu of the board's `Filter` menu. Provider-owned columns and the Boards settings remain. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).
 
 The Work route now renders the provider's own board columns instead of a fixed workflow-state column set. This is an **Adopt** of the FLAMOX365 flow-view rule that column keys and labels come from the projected collection definition (`../flamox` task and order flow views resolve columns from configuration, never from an internal enum): every GitHub Project status option is one `mosaik-flow-board-column` keyed by its option id, labelled by the project, and ordered as in GitHub, while the mapped workflow state stays a presenter concern. The shared Page Toolbar owns the board selector at its end, while workspace scope remains globally in the Presenter App Header. The selector appears only when the selected workspaces expose more than one board and persists its choice in `activeViewScope.workItemSourceId`; "All boards" merges columns by workflow state, then by label. Settings gain a "Boards" cell group in Connected services plus a GitHub Projects board editor in the shared settings drawer that lists discoverable projects (account-owned and repository-linked) as selectable Mosaik cells with a search textbox, offers a manual owner/number expander, and maps every status column to a workflow state through `mosaik-select`; the picker composition **adopts** the existing OpenCode provider/model chooser in the same drawer. Mosaik cells do not expose a selected state, so selection is expressed through the end-slot button appearance (`selectionAppearance` pipe) — a **Differ** forced by the public Cell API.
 
@@ -1282,32 +1860,34 @@ This contract covers shell anatomy, component vocabulary, typography, spacing, d
 
 ## Adopted and adapted patterns
 
-| Source pattern                                                               | Purpose                                     | Decision      | Application here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ---------------------------------------------------------------------------- | ------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bootstrapApplication` with an `ApplicationConfig`                           | Thin composition root                       | Adopt         | `ShellView` is the router-only root and `ShellConfig` composes routing, Mosaik theme, icons, and the desktop client.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Route layout with lazy `loadComponent` children                              | Feature isolation and startup control       | Adopt         | `presentationRoutes` wraps independently owned routes from `libs/frontend/features/*` below `/main`. Internal workflow definitions have no read-only route.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Standalone, OnPush views backed by signals                                   | Predictable rendering                       | Adopt         | Renderer state is held in focused signal stores/facades; templates remain declarative.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Mosaik `mosaik-app`, header, page, toolbar, cards, badges, and FlowBoard     | Consistent shell and interaction vocabulary | Adopt         | The product shell and feature surfaces use the published Angular wrappers at the same proven Mosaik version.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| FLAMOX365 Update settings card and ready-version dialog                      | Actionable application update lifecycle     | Adapt         | Symphony adopts the Mosaik Card/Cell/status/footer composition, manual check action, and ready-version prompt. Electron Main replaces the FLAMOX365 service-worker manager, adds Stable/Canary selection, and owns the restart because active desktop agent executions require a native pause/cancel safety check before application replacement.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Tailwind v4 theme and utility layers without Preflight                       | Reference layout utilities                  | Differ        | The renderer uses the FLAMOX365 PostCSS/Tailwind pipeline with the Soho bridge and an 8 px spacing scale; Mosaik remains the component system.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `provideTheme` with `SohoTheme.SOHO_THEME` and token overrides               | Central visual configuration                | Differ        | The user-requested Soho preset replaces the reference Joy preset. Symphony uses the Soho Inter stack, 8 px rhythm and semantic palettes through the same public theme provider. The Joy application overrides were removed after the audit. Only the shell geometry (`app`, `app-header`) and the functional `technical-value` sheet remain; the inactive historical sheets were removed on 2026-10-30.                                                                                                                                                                                                                                                                                                                                                                                |
-| `@use '@pixel-brewery/mosaik-themes/scss'` plus `soho-style()`               | Global component theme CSS                  | Differ        | The renderer uses the same public theme integration with the Soho stylesheet, matching the startup attribute and provider on desktop and mobile.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Headerless pre-content toolbar and constrained content scrollers             | Clear page composition                      | Adapt         | Collection pages omit duplicate route headers and separator lines while keeping controls separate from scrollable work surfaces.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Provider/facade composition at feature boundaries                            | Dependency inversion                        | Adapt         | Renderer features depend on a typed desktop client, never Electron or provider APIs directly.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Collection flow definition with stable item/column keys and a grouped signal | Provider-neutral projection                 | Adopt         | `OrchestrationBoard` is projected into Mosaik columns by stable IDs; GitHub status values remain configuration data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Shared create/edit `TaskDialogView` opened through `DrawerService`           | Focused task mutation                       | Adopt / Adapt | The Board add action and every item command open the same right-side Mosaik drawer with explicit create/edit mode data and Signal Forms. Creation retains FLAMOX365's Save/Cancel footer. Existing tickets adapt the reference's fixed header/footer and single content scroller into an 82%-wide detail surface: the fixed footer normally owns a compact provider-comment Text Box, while an explicit edit session replaces it with Save/Cancel and keeps those actions available while Markdown is previewed. The exact read-only sources are FLAMOX365's `TaskDialogView` and Mosaik's Drawer, Text Box, Comment, Cell, Timeline, and Expander implementations.                                                                                                                    |
-| Mosaik Expander progressive disclosure in the edit task drawer               | Decision-focused ticket detail              | Adapt         | The ticket opens with a prominent title, compact repository/status/assignee/activity metadata, collapsed Description and Checks sections, and expanded Activity containing the opened marker, execution timeline, and provider comments. Checks groups human decisions, AI assignment, deterministic verification results, technical evidence, manual/skill execution controls, and their Markdown results; nested Technical details and Step-by-step controls preserve the complete expert path. This adapts FLAMOX365's focused, sectioned task-drawer hierarchy because Symphony additionally owns provider discussions and durable multi-agent orchestration. No creator or pull-request-review field is invented when the provider-neutral work-item contract does not supply it. |
-| `Hydratable(ViewPresenter)` plus lifecycle-owned `View`                      | Stable initial asynchronous rendering       | Adopt / Adapt | All task, settings, skill-catalog, skill-editor, and execution overlays start hydrating before their first render, keep incomplete controls and misleading empty states hidden until initial data resolves, and dispose active observable hydration with the view. Symphony additionally accepts Promise-based hydration because typed desktop IPC is Promise-native; FLAMOX365's Observable contract remains supported.                                                                                                                                                                                                                                                                                                                                                               |
-| Layout-shaped Mosaik Skeleton states                                         | Low-shift loading feedback                  | Adopt         | Hydrating overlays use the published Mosaik Skeleton wrapper with explicit dimensions and shimmer. Form, card, timeline, content, and footer placeholders approximate the final overlay geometry and expose `role="status"`, `aria-busy`, accessible labels, and stable test IDs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| FLAMOX365 `AiDirective` and `AiRailComponent` Prompt Box                     | AI provenance and guided intake             | Adopt         | Each AI-capable step defaults to a primary Manual segment. Only the explicitly selected With AI segment and AI-originated controls/results use Mosaik `highlight`, persistent highlight input borders, Prompt Box/Voice Recorder input, and busy feedback.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `NotificationService` with `ToastNotificationInterceptor`                    | Transient operation feedback                | Adopt         | Renderer operations report info, success, warning, and error through one notification service. Its interceptor opens styled Mosaik toasts at bottom-left; pages and drawers do not render persistent operation banners.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Mosaik-rendering `MarkdownComponent` path                                    | Safe external-content rendering             | Adapt         | Ticket bodies, analysis and Solver results, drawer event trails, board previews, and Home summaries share one GitHub-flavored Markdown renderer that emits Mosaik elements, including the `@pixel-brewery/markdowner-core` block dialect. Raw HTML never becomes markup: the tokenizer refuses it and every interpolated value is escaped for the attribute it lands in. HTTP(S) links open through Electron's guarded system-browser handoff while malformed and unsafe schemes remain inert.                                                                                                                                                                                                                                                                                         |
-| Explicit Mosaik empty states, badges, and responsive sheets                  | Operational clarity                         | Adapt         | Empty, unavailable, blocked, failed, and loading conditions are first-class view states.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Stable `test-id` contracts                                                   | Durable automation                          | Adopt         | Interactive desktop acceptance paths use domain-specific IDs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Source pattern                                                               | Purpose                                     | Decision       | Application here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------- | ------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bootstrapApplication` with an `ApplicationConfig`                           | Thin composition root                       | Adopt          | `ShellView` is the router-only root and `ShellConfig` composes routing, Mosaik theme, icons, and the desktop client.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Route layout with lazy `loadComponent` children                              | Feature isolation and startup control       | Adopt          | `presentationRoutes` wraps independently owned routes from `libs/frontend/features/*` below `/main`. Internal workflow definitions have no read-only route.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Standalone, OnPush views backed by signals                                   | Predictable rendering                       | Adopt          | Renderer state is held in focused signal stores/facades; templates remain declarative.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Mosaik `mosaik-app`, header, page, toolbar, cards, badges, and FlowBoard     | Consistent shell and interaction vocabulary | Adopt          | The product shell and feature surfaces use the published Angular wrappers at the same proven Mosaik version.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| FLAMOX365 Update settings card and ready-version dialog                      | Actionable application update lifecycle     | Adapt          | Symphony adopts the Mosaik Card/Cell/status/footer composition, manual check action, and ready-version prompt. Electron Main replaces the FLAMOX365 service-worker manager, adds Stable/Canary selection, and owns the restart because active desktop agent executions require a native pause/cancel safety check before application replacement.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Tailwind v4 theme and utility layers without Preflight                       | Reference layout utilities                  | Differ         | The renderer uses the FLAMOX365 PostCSS/Tailwind pipeline with the Soho bridge and an 8 px spacing scale; Mosaik remains the component system.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `provideTheme` with `SohoTheme.SOHO_THEME` and token overrides               | Central visual configuration                | Differ         | The user-requested Soho preset replaces the reference Joy preset. Symphony uses the Soho Inter stack, 8 px rhythm and semantic palettes through the same public theme provider. The Joy application overrides were removed after the audit. Only the shell geometry (`app`, `app-header`) and the functional `technical-value` sheet remain; the inactive historical sheets were removed on 2026-10-30.                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `@use '@pixel-brewery/mosaik-themes/scss'` plus `soho-style()`               | Global component theme CSS                  | Differ         | The renderer uses the same public theme integration with the Soho stylesheet, matching the startup attribute and provider on desktop and mobile.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Headerless pre-content toolbar and constrained content scrollers             | Clear page composition                      | Adapt          | Collection pages omit duplicate route headers and separator lines while keeping controls separate from scrollable work surfaces.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Provider/facade composition at feature boundaries                            | Dependency inversion                        | Adapt          | Renderer features depend on a typed desktop client, never Electron or provider APIs directly.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Collection flow definition with stable item/column keys and a grouped signal | Provider-neutral projection                 | Adopt          | `OrchestrationBoard` is projected into Mosaik columns by stable IDs; GitHub status values remain configuration data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Shared create/edit `TaskDialogView` opened through `DrawerService`           | Focused task mutation                       | Adapt / Differ | Since 2026-10-31 creation opens the new-work-item sheet through Mosaik `DialogService` with FLAMOX365's plain Cancel and solid primary footer, while an existing work item opens its own route `/main/board/:workItemId` instead of a drawer: read first, edited in an explicit `Edit work item` session that `Save changes` ends. Sheet and screen share one form model and the dynamic field controls. The exact read-only sources are FLAMOX365's `TaskDialogView` and Mosaik's Dialog, Text Box, Table, Checkbox and Expander implementations. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).                                                                                                                          |
+| Mosaik Expander progressive disclosure in the edit task drawer               | Decision-focused ticket detail              | Adapt          | Since 2026-10-31 the work item screen shows status and labels, title and description, the five-stage stepper, checks, acceptance criteria, the expanded `Steps` expander with manual and AI controls, the delegation card and `Activity` with provider comments in one column beside a fixed inspector (`Column`, `Agent`, `Skill`, `Pull request`, `Branch`, `Repository`, `Assignee`, dates). This adapts FLAMOX365's sectioned task-drawer hierarchy because Symphony additionally owns provider discussions and durable multi-agent orchestration. No creator or pull-request-review field is invented when the provider-neutral work-item contract does not supply it. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet). |
+| `Hydratable(ViewPresenter)` plus lifecycle-owned `View`                      | Stable initial asynchronous rendering       | Adopt / Adapt  | All task, settings, skill-catalog, skill-editor, and execution overlays start hydrating before their first render, keep incomplete controls and misleading empty states hidden until initial data resolves, and dispose active observable hydration with the view. Symphony additionally accepts Promise-based hydration because typed desktop IPC is Promise-native; FLAMOX365's Observable contract remains supported.                                                                                                                                                                                                                                                                                                                                                                                  |
+| Layout-shaped Mosaik Skeleton states                                         | Low-shift loading feedback                  | Adopt          | Hydrating overlays use the published Mosaik Skeleton wrapper with explicit dimensions and shimmer. Form, card, timeline, content, and footer placeholders approximate the final overlay geometry and expose `role="status"`, `aria-busy`, accessible labels, and stable test IDs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| FLAMOX365 `AiDirective` and `AiRailComponent` Prompt Box                     | AI provenance and guided intake             | Adopt          | Each AI-capable step defaults to a primary Manual segment. Only the explicitly selected With AI segment and AI-originated controls/results use Mosaik `highlight`, persistent highlight input borders, Prompt Box/Voice Recorder input, and busy feedback.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `NotificationService` with `ToastNotificationInterceptor`                    | Transient operation feedback                | Adopt          | Renderer operations report info, success, warning, and error through one notification service. Its interceptor opens styled Mosaik toasts at bottom-left; pages and drawers do not render persistent operation banners.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Mosaik-rendering `MarkdownComponent` path                                    | Safe external-content rendering             | Adapt          | Ticket bodies, analysis and Solver results, drawer event trails, board previews, and Home summaries share one GitHub-flavored Markdown renderer that emits Mosaik elements, including the `@pixel-brewery/markdowner-core` block dialect. Raw HTML never becomes markup: the tokenizer refuses it and every interpolated value is escaped for the attribute it lands in. HTTP(S) links open through Electron's guarded system-browser handoff while malformed and unsafe schemes remain inert.                                                                                                                                                                                                                                                                                                            |
+| Explicit Mosaik empty states, badges, and responsive sheets                  | Operational clarity                         | Adapt          | Empty, unavailable, blocked, failed, and loading conditions are first-class view states.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Stable `test-id` contracts                                                   | Durable automation                          | Adopt          | Interactive desktop acceptance paths use domain-specific IDs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 Renderer startup adopts the FLAMOX365 thin-bootstrap pattern: remote orchestration hydration is owned by `PresenterView` and its hydratable feature presenters instead of an application initializer. The shared shell therefore mounts immediately while the initial provider snapshot is loading, and route-level Mosaik loading states remain responsible for incomplete content. Desktop update state stays an application initializer because it is local, bounded, and does not depend on the orchestrator or a remote provider.
 
 ## ShellView, ShellConfig, and PresenterView re-audit
+
+> **Superseded on 2026-10-31** for the `PresenterView`, `PresenterViewPresenter`, navigation-view and `SearchLauncherView` rows; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 The three primary reference surfaces were re-inspected after implementation and compared against the packaged Electron renderer, not only the development build.
 
@@ -1325,15 +1905,19 @@ Navigation branding is an **Adapt** of the inspected FLAMOX365 `LogoComponent` a
 
 ## Route parity ledger
 
-| Symphony route  | FLAMOX365 reference                                                                                                                                         | Decision               | Verified contract and explicit differences                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Presenter shell | `ShellView`, `ShellConfig`, `PresenterView`, navigation views                                                                                               | Adopt / Adapt          | Adopts the Mosaik app/header/navigation/split/sheet anatomy and signal-owned panel state. Adapts authentication, tenant, assistant, and network-backed capabilities out because Symphony is a local desktop orchestrator without those service contracts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Home            | `ExplorerView`, `WidgetComponent`                                                                                                                           | Adopt / Adapt          | Adopts the centered `md` Mosaik page/header/text composition, Mosaik Card widget shells, compact grid, and stacked floating actions. Uses fixed provider-neutral orchestration widgets instead of FLAMOX365's remotely contributed and editable widget catalog.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Board           | task FlowBoard views, `TaskDialogView`, Filter Bar dropdowns, Mosaik FlowBoard, and Dynamic Form controls                                                   | Adopt / Adapt          | Adopts the full-height FlowBoard chain, bounded column scrolling, add action, single-select Label and Assignee dropdown filters, shared create/edit drawer, Mosaik drawer heading, Signal Forms, split workflow/save footer actions, labels, compact Avatar Group footer, Progress Ring feedback, and visible creation/change dates. Adopts FLAMOX365's runtime Dynamic Form control mapping with Mosaik TextBox, NumberBox, DateBox, Select, and checkbox composition for the live provider-neutral work-item schema. Dynamic values appear as labeled card context and participate in board and global search; workflow state is omitted from the card details because the column already conveys it. Direct presenter bindings adapt the generic reference form to the existing shared task drawer without introducing a second form engine. Filter options are derived from current work items and combine with global search by intersection. Provider avatar URLs are rendered through Mosaik Avatar with name tooltips. Dynamic labels, assignees, and multi-select fields use in-drawer Mosaik checkbox collections because Mosaik Combo's body-level portal is occluded by the enclosing drawer backdrop; this is an explicit nested-overlay adaptation. The solved implementation branch and explicit GitHub pull-request handoff adapt the reference header-action pattern to Symphony's desktop delivery workflow. Provider-neutral work items replace FLAMOX365 business entities. |
-| Projects        | FLAMOX365 card-based settings and list views                                                                                                                | Differ                 | No standalone route or navigation item. Workspace-owned work-item sources, repositories, CI bindings, and agent accounts already have their owning configuration surface in Settings, so a second read-only projection would duplicate state without enabling another decision or action.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Skills          | Newsletter list, Extension Store drawer/grid, settings editor surfaces, and Hydratable editor presenters                                                    | Adopt / Adapt          | Adopts the pre-content Toolbar and responsive one/two/three-column Mosaik card grid from the Newsletter list, but omits the duplicate Page Header and toolbar separators used by the reference. It adopts the Extension Store drawer for activation and a right-side editor drawer for portable package authoring. Catalog discovery and edit-document loading use the shared Hydratable presenter lifecycle and layout-shaped card/form/footer skeletons. Adapts the reference installation configuration Select into each catalog card because selecting the Symphony flow role is required before activation and directly governs that action. Skill import remains owned by Settings.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Arcade          | Extension Store grid and dialog, task Page composition, Mosaik Tile, Image, Page and Dialog contracts                                                       | Adopt / Adapt / Differ | The disabled-by-default Arcade opt-in controls whether the shell exposes the hub. Once enabled, it centers eight cover Tiles plus a consolidated Leaderboard Tile horizontally and vertically, wrapping the group within narrower panes. Separate lazy-loaded routes own each themed full-pane game, setup, instructions, pause and results. Breakout setup/help opens through the shared Mosaik DialogService with an owned backdrop. Finished results from every game are validated and retained in the hub-owned personal leaderboard instead of appearing as an in-game records screen. Original mechanics follow the Atari sources; application menus, storage and the session-only God mode are explicit Symphony additions. Pinball has been removed. See the dedicated entry below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Settings        | `SettingsView`, `ThemeCardView`, `SignInMethodsCardView`, `ExtensionAdministrationSettingsCardView`, settings-card Sections, Hydratable create/edit Drawers | Adopt / Adapt          | Adopts the centered `md` page, Mosaik Cards, Headline-led Sections, Dividers, two-line Toggle labels, navigable account Cells, provider avatars, primary connect actions, danger trash actions, the primary Theme Select, explicit Drawer header/content/footer slots, and Hydratable configuration presenters. Workspace import adapts the reference package-selection action to the existing typed native file picker, while each workspace card owns its export action; both report completion through the shared notification pipeline and do not add a duplicate inline package-status surface. Appearance ends with the optional-navigation card after Theme; managed-workspace cleanup is an owned content Section rather than an unrelated Theme footer action. GitHub, Codex/ChatGPT, repository, and portable-skill configuration open in right-side Drawers so credentials and forms do not remain inline. Configuration-dependent editors keep their content and footer actions behind form-shaped Mosaik Skeletons until data exists. Local provider/runtime settings replace FLAMOX365 tenant and cloud settings. The GitHub provider avatar uses the exact provider mark registered by the FLAMOX365 shell reference.                                                                                                                                                                                                                                                            |
+| Symphony route  | FLAMOX365 reference                                                                                                                    | Decision               | Verified contract and explicit differences                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Presenter shell | `ShellView`, `ShellConfig`, `PresenterView`, navigation views                                                                          | Adopt / Adapt          | Adopts the Mosaik app/header/navigation/split/sheet anatomy and signal-owned panel state. Adapts authentication, tenant, assistant, and network-backed capabilities out because Symphony is a local desktop orchestrator without those service contracts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Overview (Home) | `ExplorerView`, `WidgetSummaryComponent`, `DashboardKpiWidgetView`                                                                     | Adapt / Differ         | Since 2026-10-31 a fixed start page: greeting and summary with the quick actions, the `Waiting for you`, `Pull requests` and `Production` cards and `Reporting` with its period segment. Adopts value/label pairs and content-shaped loading; no contributed widget grid; charts are token-drawn with a text alternative per value. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Inbox           | `FeedbackListView`, `ChatConversationListChildView` (FLAMOX365 has no inbox)                                                           | Differ                 | Work-item decisions and updates in a list pane with the `All · Decisions · Updates` filter and a detail pane with the five-stage stepper and decision actions. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Board           | task flow view (`TaskListView`, `TaskListViewPresenter`), `FlowColumnExpansionPreference`, Mosaik FlowBoard, and Dynamic Form controls | Adopt / Adapt          | Adopts the controlled full-height FlowBoard chain with virtualized columns and provider-owned column keys. Adapts the redesign's filter bar (segment `All · Needs you · Agents running · Mine`, repository chip, one `Filter` menu with `Board`, `Columns`, `Labels` and `Assignees`), default-collapsed narrow columns derived from the workflow with persisted explicit choices, the drawn card (id, agent avatar, status badge, five delivery steps), modifier-click multi-select and the column `+` that opens the new-work-item sheet. Provider-neutral work items replace FLAMOX365 business entities. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).                                                                                                                                                                                                                                                                    |
+| Work item       | `TaskDialogView`, the routed `NewsletterDetailView`, `DetailPanelComponent`                                                            | Adapt / Differ         | The route `/main/board/:workItemId` replaces the task drawer: toolbar with provider link and `Edit work item`, stepper, checks, acceptance criteria, `Steps`, delegation, `Activity` and a resizable inspector; an unknown id offers `Back to board`. Creation is the separate new-work-item sheet. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Pull requests   | `TaskListView` table view, `DetailPanelComponent`, actionable Empty State                                                              | Adapt                  | Segmented plain Mosaik Table with a resizable inspector, the filter menu and refresh in the window toolbar, sync failures as a banner with `Retry`, and the create form as a sheet. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Actions         | `ReportListView` with `CollapsibleNavigationPanelComponent`, `TaskListView` table view                                                 | Adapt                  | Resizable workflow source list, `All runs` with `Running now` and `History`, and per workflow its runs, steps, log excerpt and `Diagnosis` with `Fix with AI`. See [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Projects        | FLAMOX365 card-based settings and list views                                                                                           | Differ                 | No standalone route or navigation item. Workspace-owned work-item sources, repositories, CI bindings, and agent accounts already have their owning configuration surface in Settings, so a second read-only projection would duplicate state without enabling another decision or action.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Skills          | Newsletter list, Extension Store drawer/grid, settings editor surfaces, and Hydratable editor presenters                               | Differ                 | No main-window route since 2026-10-31: `/main/skills` redirects into Settings in the main window, whose `Skills` section lists the packages by delivery-flow step and keeps catalog, editor and import as sheets. See [2026-10-31 Settings window: AI team, Skills and Automation by delivery-flow step](#2026-10-31-settings-window-ai-team-skills-and-automation-by-delivery-flow-step).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Arcade          | Extension Store grid and dialog, task Page composition, Mosaik Tile, Image, Page and Dialog contracts                                  | Adopt / Adapt / Differ | The disabled-by-default Arcade opt-in controls whether the shell exposes the hub. Once enabled, the redesigned catalog (`Choose a game`) shows eight Mosaik Cards in at most four equal columns, each with a contained cover on a 16:10 well, title, player count and an outline `Play` button, and moves the consolidated Leaderboard into the window toolbar (Adapt: the macOS redesign artboard replaces the centered Tile group and Leaderboard Tile). Separate lazy-loaded routes own each themed full-pane game, setup, instructions, pause and results. Breakout setup/help opens through the shared Mosaik DialogService with an owned backdrop. Finished results from every game are validated and retained in the hub-owned personal leaderboard instead of appearing as an in-game records screen. Original mechanics follow the Atari sources; application menus, storage and the session-only God mode are explicit Symphony additions. Pinball has been removed. See the dedicated entry below. |
+| Settings        | `SettingsView`, `SettingsSearchIndex`, `MessageBoxService` confirmations, settings cards and Hydratable create/edit Drawers            | Adopt / Adapt / Differ | Since 2026-10-31 a routed page of the main window (Adopt) whose navigation replaces the sidebar destinations while it is open, with `Back` as the way out (see [2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes)); a source-list navigation with nested workspace rows, search over every setting with in-place controls, the shared group-and-row layout, editors as sheets, confirmations as alert sheets and immediate saving. Local provider/runtime settings replace FLAMOX365 tenant and cloud settings. See [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download) and [2026-10-31 Settings window sidebar, search, sheets and immediate saving](#2026-10-31-settings-window-sidebar-search-sheets-and-immediate-saving).                                                                                                    |
 
 The Local GitHub Actions settings card **adopts** FLAMOX365's standalone Mosaik Card/Header/Content/Footer composition, Headline-led sections, primary Select, two-line Toggle label, readonly configuration value, and explicit destructive cache action from the inspected Update, Edge Connector, and general Settings cards. Symphony **adapts** those patterns to a machine-local capability: saving the disabled-by-default toggle governs whether Pull Requests, dispatch-capable workflows on Actions, and Action drawers expose local-run actions; each preset reports the actually resolved CPU, memory, maximum disk, and cache values after detecting this Mac and applying its reserves; unavailable presets are disabled; and the storage section shows physical allocation, its hard limit, pressure, and the actionable cleanup lifecycle. No comparable FLAMOX365 cloud setting owns a local VM, so the managed workspace path, host-capacity detection, one-run capacity, storage watchdog, and abandoned-instance recovery are intentional desktop differences. The exact read-only sources were `../flamox/libs/frontend/setting/src/views/SettingsView.html`, `../flamox/libs/frontend/update/src/views/UpdateSettingsCardView.html`, and `../flamox/libs/frontend/features/edge/src/lib/views/cards/EdgeSettingsCardView.html`.
 
@@ -1358,6 +1942,8 @@ renderer applies the public Kbd background and foreground custom properties for 
 Mosaik 0.1.102 scopes that variant's variables to inner parts after the host has already consumed
 them, leaving its documented success input visually neutral without this temporary compatibility
 override.
+
+> **Superseded on 2026-10-31** for the hub layout: the catalog now shows `Choose a game` with one card per game (cover, title, player count, `Play`) and `Leaderboard` sits in the toolbar, as recorded in the Arcade row of the route parity ledger and in [Arcade](arcade/README.md). The Tile layout described in the next paragraphs is historical; the lazy child routes and the game-directory ownership remain.
 
 The Arcade hub (`/main/arcade`) and its `pitfall`, `pitfall-ii`, `breakout`, `realsports-boxing`,
 `jungle-hunt`, `pong`, `seaquest` and `river-raid` child routes
@@ -1616,6 +2202,8 @@ separate Electron journeys exercise native controls, pause/continue/reset, sound
 full-pane sizing, themes and route cleanup. The catalog journey additionally verifies all eight
 assets, keyboard access, wrapped layouts and persisted old/new leaderboard results after restart.
 
+> **Superseded on 2026-10-31:** the following four paragraphs describe the retired task drawer, Symphony's shared create/edit drawer modelled on FLAMOX365's `TaskDialogView`. Its manual and `With AI` opt-in, delegation, reading-first editing and the timeline without progress events now live on the new-work-item sheet and the work item screen; the drawer with its fixed footer and the branch chip on board cards no longer exist. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).
+
 The Board work-item editor was re-audited against FLAMOX365's `ITaskDialogConfig`, `TaskDialogMode`, `TaskDialogView`, `TaskDialogViewPresenter`, `AiDirective`, `AiRailComponent`, and `DynamicFormComponent`, plus the Mosaik Segment, TextBox, NumberBox, DateBox, Select, and checkbox compositions used throughout the references. Create and edit deliberately share one component and one form model. The intentional Symphony adaptation is explicit AI opt-in: Create, Analyze/Re-analyze, and Implement/Rework each open with a checked primary Manual segment, and an activated skill never changes that default. Manual Create shows the current provider-neutral work-item schema; manual analysis and implementation accept Markdown and persist results without an agent or a worktree. Selecting the highlighted `With AI` segment reveals the FLAMOX365-style Prompt Box or assigned-skill surface. The Creator Prompt Box enables the Mosaik Voice Recorder Tool only when the complete desktop runtime provides speech recognition; Chromium's nonfunctional Electron constructor alone does not qualify. Submitting the prompt runs the exact workspace-owned package read-only and produces a validated title, description, typed field values, labels, and assignees from fresh tracker metadata. The reviewed form never bypasses the explicit `Create work item` action. An unassigned role disables only its AI branch and provides a direct Skills action. All AI-originated controls, running indicators, and result cards adopt the FLAMOX365 AI directive contract: Mosaik `highlight`/purple variant plus persistent highlight borders on AI inputs. Manual controls use `primary`; ordinary provider fields and terminal success or failure retain semantic variants. Electron acceptance tests verify both fully manual operation and explicit AI selection, supported field types, Markdown rendering, field persistence/card rendering, editing, search, and column movement.
 
 Ticket delegation is an **Adapt** of the same FLAMOX365 task drawer plus the accountable role/user composition inspected in `UserDialogView`. GitHub assignees remain provider-owned human metadata. A separate goal card lets the operator choose only a team member as the responsible AI agent, records the objective, and then shows responsible versus currently executing agent, team, contract version, verification-report count, and handoff count. These values support delegation and review decisions and therefore pass the UI relevance gate; provider health, process topology, and generic architecture decoration remain absent. Approval appears only for a reviewing goal with passing evidence. Requesting revision requires concrete feedback from the existing implementation step and immediately starts the bounded rework path after resolving the configured repository. This intentionally differs from FLAMOX365 because its task model has no local multi-agent goal state machine. The visible Mosaik Card, Cell Group, Select, TextBox, Hint, Divider, and primary/review action hierarchy are adopted from the exact task and user drawer sources.
@@ -1625,6 +2213,10 @@ The task drawer presents an existing work item readable first and editable on re
 The task drawer keeps execution history and results distinct: its ticket-level timeline contains only lifecycle milestones and omits Codex messages, reasoning, commands, tools, and file-change chatter, which remain available in the Run drawer. Completion events remain timestamped as compact state changes, while the complete Markdown analysis or implementation result is rendered exactly once in its result card. Symphony adapts the inspected FLAMOX365 header pattern through the Mosaik drawer heading so an existing implementation branch becomes the prominent title, with the solved state and ticket title directly beneath it whenever the ticket opens. The newest Solution or Revision branch is also projected as a soft Mosaik Chip on its board card and participates in board search; the chip remains absent until an implementation execution owns a branch. Long branch labels use a shared leading-ellipsis pipe with a 50-character maximum so the distinguishing suffix remains visible inside the card, while the full branch stays available through the chip's Mosaik tooltip. The chip uses Mosaik's built-in branch icon in its original tiny Chip composition. The directly adjacent first content row owns the branch state and pull-request handoff according to the shared dynamic-drawer portal adaptation documented below. A centrally registered Reicon branch icon identifies branch chips and branch-opening actions, while GitHub and pull-request actions retain their package-provided provider mark. During implementation and after local completion, the worktree branch is shown as a non-navigable Mosaik Chip because it has not yet been pushed and no remote destination exists. A completed UI-started implementation offers one explicit `Create pull request` action; that user-authorized handoff commits pending managed-worktree changes, pushes only the named implementation branch, creates or reuses the open GitHub pull request, and persists provider-confirmed PR and branch URLs. Only then do the task and Run drawers expose the branch as external navigation. An authorized remote GitHub instruction is itself the explicit handoff for its successful Solver/revision, so that narrow path delivers the managed branch and creates or reuses the pull request without reopening the renderer. Neither path pushes a default branch, publishes partial implementation state, or merges automatically. The Run drawer continues to show the same branch with the full live stream. The task drawer follows the reference sizing contract without forcing content to a minimum viewport height, so scrolling ends with the actual content. Its footer mirrors the FLAMOX365 grouped layout: Analyze/Re-analyze and Implement fix/Apply feedback stay on the left, while Cancel and Save remain on the right. While an AI execution is running or waiting to resume, those start actions are replaced by one explicit danger-variant `Cancel execution` action; the Drawer close action remains separate and does not silently terminate work. The Work Item Creator uses the same adaptation beside its highlighted progress state. This follows the reference Mosaik danger-action treatment while adapting the command to Symphony's local long-running process lifecycle.
 
 Transient feedback follows FLAMOX365's notification pipeline rather than page-owned banners. The owning feature operations and the single `ConfigurationStore` settings writer consume the typed IPC boundary and report outcomes to `NotificationService` in `frontend-notification`; the registered `ToastNotificationInterceptor` maps them to Mosaik success, info, warning, and danger variants with the reference icon, soft appearance, bottom-left position, five-second lifetime, click-outside close, and Escape priority. Symphony intentionally omits the FLAMOX365 notification history cache, audio, console, and HTTP error interceptor because the desktop renderer has no HTTP transport or notification center. Durable domain failures remain visible in execution history and task result cards; only transient request/save failures become toasts. Electron acceptance verifies the failure toast and the absence of the former presenter banner.
+
+> **Superseded on 2026-10-31** in one point: the main window now has a notification centre whose `Earlier today` list keeps the day's toasts per window in memory (at most 50, not persisted); see [Notification centre](#notification-centre) and [Mitteilungszentrale und Menüleistenpanel](notifications-and-tray/README.md). The other statements of this paragraph were not re-checked in this change.
+
+> **Superseded on 2026-10-31:** the following Presenter, macOS navigation, navigation-footer and Runs-rail paragraphs describe the former header, drawer and rail; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 The presenter uses the same direct `mosaik-app-header` child structure as the reference. The opened Mosaik side drawer owns the 320 px expanded or 72 px compact navigation inset, so the header and content view always begin at the same edge; closing the drawer returns both to the application edge. `provideAppComponent` supplies the header/navigation capabilities before the custom element's first render so the Mosaik drawer container can register its initial children deterministically. Navigation open/closed, navigation compact/expanded, and workspace rail open/closed adopt FLAMOX365's device-local `presentation.*` browser-storage preferences; button actions, Mosaik navigation changes, rail splitter changes, and mobile-sheet closure update the same signal-owned state. The packaged-process E2E test sets all three non-default preferences, reloads Electron, and verifies their restoration before returning them to the defaults. The FLAMOX365 presenter split directive is adopted so dragging, double-clicking, or keyboard interaction cannot collapse the primary route surface; only the secondary rail may collapse.
 
@@ -1645,6 +2237,8 @@ The minimal FLAMOX365 presenter lifecycle and `Hydratable` behavior are adopted 
 The hydration re-audit inspected FLAMOX365's `patterns-and-practices/presenters/behaviors/Hydratable.ts`, its behavior tests, the lifecycle-owning abstract `View`, and the Task drawer's presenter/template hydration branches. The Mosaik `SkeletonElement` and generated Angular `SkeletonComponent` confirmed the supported width, height, shape, and shimmer contract. Symphony centralizes the corresponding lifecycle in `frontend-core`: presenters start with `isHydrating === true`, initialize once the Angular view lifecycle begins, finish on completion, rejection, synchronous failure, or disposal, and ignore stale Promise completions after a later initialization/disposal generation. Task metadata, missing configuration, missing skill catalogs, skill documents, and missing execution snapshots are the initial operations currently covered. Later save, refresh, execution, and mutation busy states remain separate so initial hydration never masks an already-present interactive view.
 
 The Settings and Board routes now use that same `PresenterView`/`ViewPresenter` lifecycle instead of starting route-owned hydration from a component constructor. Missing configuration, mobile-access state, update state, or the initial orchestration snapshot renders a bounded Mosaik Skeleton surface immediately; already-present state bypasses hydration and remains interactive without a repeated Settings reload. Board projection is computed once per snapshot/filter revision, including latest execution events and work-item field display values, rather than rescanning the complete snapshot for each rendered card. Projected Angular cards remain fully laid out inside the Mosaik column body: browser `content-visibility` containment is not applied because intrinsic height estimation destabilizes dense-lane scroll offsets. The FlowBoard element hierarchy and native Mosaik scroll ownership therefore remain aligned with the FLAMOX365 reference.
+
+> **Superseded on 2026-10-31** for the centered page, the Card containers and the right-side drawers in the Settings paragraphs of this section and of the route parity ledger: Settings has its own section navigation (in the main window's sidebar since [2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes)), its sections use the group-and-row layout, editors open as sheets and confirmations as alert sheets. Control-level statements were not re-audited in that change. See [2026-10-31 Settings window sidebar, search, sheets and immediate saving](#2026-10-31-settings-window-sidebar-search-sheets-and-immediate-saving).
 
 The settings surface now adopts the reference's centered page, `ThemeCardView` Select, `SignInMethodsCardView` Cell Group composition, `PlatformAiModelCardView` model-selection composition, shared Headline-led Sections, Dividers, two-line Toggle labels, and primary Mosaik controls. Every Card content area is organized into decision-oriented Headline groups: workspace connections separate configured accounts from available providers; execution separates managed workspaces, GitHub issue control, autonomy, and cleanup; mobile separates network access, pairing, and paired devices; updates and appearance each own one explicit group. Soft information Banners appear only where they explain a consequential choice: workspace scope, workspace-specific provider sign-in, accepted GitHub commands, shared execution capacity, local-network ownership, release-channel risk, and macOS-following appearance. All Mosaik Toggle Switches explicitly bind the `primary` variant, and the repository verification rejects implicit or different variants. Settings-page and Settings-drawer Toggle Switches use the inspected FLAMOX365 two-line label composition with Mosaik Text plus Hint. A shared Symphony Headline component mirrors the reference component's Mosaik typography and disabled behavior without creating a FLAMOX365 runtime dependency. Each workspace-owned AI account drawer adapts the AI-model pattern to its provider: model and model-supported reasoning effort are Mosaik Selects rather than free text. An explicitly addressed Codex account exposes its live limit windows through Mosaik Progress Bars, including used and remaining percentages and reset time, while aggregate token statistics use a Mosaik Cell Group. The drawer deliberately shows only provider-reported values and does not invent a remaining-token ceiling. Claude Code uses its documented moving model aliases and effort ladder; subscription remaining percentages are explained as unavailable because the normal Claude Code account interface does not expose them and Anthropic organization usage requires separate Admin or Analytics credentials. Provider-account status and Connect/Disconnect actions **adopt** `SignInMethodsCardView`'s Cell Group and state-dependent action pattern. Claude's browser authorization code is an **Adapt** of `AccountingConnectionDialogView`'s write-only credential input because the local CLI requires a one-time code before the workspace-specific subscription session is complete. The optional-navigation card follows Theme at the end of Appearance. Connection, source, and runtime settings are wired to typed IPC and versioned JSON persistence; navigation intentionally has no user/profile surface. Existing GitHub, Codex, and Claude account Cells are navigable and reopen their details; display names can be changed, while secrets remain write-only login inputs delegated to provider credential stores. Settings and dynamically attached drawer controls use direct Mosaik value/event bindings because the current Mosaik Angular Signal-Forms host directives can overwrite proxy input signals during dynamic initialization; this explicit adaptation keeps the controls `OnPush`, typed, and free of renderer exceptions. The exact additional reference sources were FLAMOX365's `EdgeSettingsCardView`, `PlatformAiModelCardView`, `ThemeCardView`, `SignInMethodsCardView`, and `AccountingConnectionDialogView` two-line Toggle composition.
 
@@ -1674,9 +2268,9 @@ The Runtime settings card adopts the inspected Edge Connector configuration patt
 
 The workspace Settings card and drawer adopt the FLAMOX365 feedback connector catalog, configuration drawer, contextual tutorial Banner, Mosaik form controls, active Toggle Switch, test action, and destructive disconnect action for Microsoft Teams feedback intake. Symphony adapts the direction from outbound delivery to inbound Microsoft Graph polling and therefore asks for tenant, application, credential reference, team, channel, GitHub Project, and repository instead of a Teams Workflow webhook URL or delivery filters. The source is workspace-owned, initially disabled, and existing messages are baselined. The exact reference sources were `../flamox/libs/frontend/features/feedback/src/lib/views/cards/FeedbackConnectorSettingsCardView.html`, `../flamox/libs/frontend/features/feedback/src/lib/views/dialogs/FeedbackConnectorDialogView.html`, and `../flamox/libs/frontend/features/feedback/src/lib/view-presenters/FeedbackConnectorDialogViewPresenter.ts`.
 
-Multi-repository workspace configuration **adapts** the existing FLAMOX365/Mosaik Settings CellGroup and Add/Edit action hierarchy. The Repositories section owns the single visible Add repository entry, lists every workspace binding, and exposes only local preparation or refresh plus Edit. Repositories with the same workspace-owned GitHub host, account, and protocol reuse one provider connection instead of duplicating service accounts. Adding and enabling a repository is the explicit authorization for AI work, so separate AI-task approval, revoke, and plan-and-run-test actions are intentionally absent. Preparation retains the existing confirmation and explicitly states that it does not execute project code. When remote or autonomous execution is enabled but a configured repository is not locally prepared, the runtime Settings card and menu-bar panel show one actionable preparation warning. This differs from FLAMOX365 because the reference product has no local multi-repository execution runtime; the visible composition reuses Mosaik Cell Group, Cell, Avatar, Button, Banner, and drawer patterns without exposing the underlying execution architecture.
+Multi-repository workspace configuration **adapts** the existing FLAMOX365/Mosaik Settings CellGroup and Add/Edit action hierarchy. The Repositories section owns the single visible Add repository entry, lists every workspace binding, and exposes only local preparation or refresh plus Edit. Repositories with the same workspace-owned GitHub host, account, and protocol reuse one provider connection instead of duplicating service accounts. Adding and enabling a repository is the explicit authorization for AI work, so separate AI-task approval, revoke, and plan-and-run-test actions are intentionally absent. Preparation retains the existing confirmation and explicitly states that it does not execute project code. When remote or autonomous execution is enabled but a configured repository is not locally prepared, the runtime Settings card shows one actionable preparation warning and the notification centre (status-bar bell, and its count in the menu-bar panel) lists the repository with **Prepare locally**. This differs from FLAMOX365 because the reference product has no local multi-repository execution runtime; the visible composition reuses Mosaik Cell Group, Cell, Avatar, Button, Banner, and drawer patterns without exposing the underlying execution architecture.
 
-Repository-level assistant configuration was compared separately as part of the same read-only reference audit. Symphony adopts its synchronized agents/skills/provider-adapter structure but replaces FLAMOX365 application-domain and server-stack rules with desktop, renderer, orchestration, IPC, persistence, worktree, Mosaik, and UI-relevance guidance. The full decision ledger is in [repository AI configuration](repository-ai-configuration.md).
+Repository-level assistant configuration was compared separately as part of the same read-only reference audit. Symphony adopts its synchronized agents/skills/provider-adapter structure but replaces FLAMOX365 application-domain and server-stack rules with desktop, renderer, orchestration, IPC, persistence, worktree, Mosaik, and UI-relevance guidance. The full decision ledger is in [repository AI configuration](repository-ai-configuration/README.md).
 
 ## Accessibility and responsive conclusions
 
@@ -1701,14 +2295,16 @@ The mobile companion was compared with FLAMOX365's presenter and navigation regi
 | Responsive ticket facts                                                                  | Adapt          | Ticket detail uses Mosaik CellGroup/Cell/Text composition with wrapped slotted Text values. Long bodies, repository names, and assignees remain within the viewport instead of retaining the desktop metadata grid.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Distributed ticket ownership                                                             | Adapt          | The existing Mosaik FlowBoard card metadata and Task detail banner surfaces project a provider-neutral foreign-instance claim only when it affects the available action. Local executions retain their existing runtime status, avoiding a duplicate ownership badge. GitHub assignees remain separate descriptive metadata.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Contextual mobile remote-command guidance                                                | Adopt / Adapt  | GitHub-backed ticket detail adopts the actionable Mosaik Banner used by the inspected Edge Connector settings in FLAMOX365 and task dialog patterns only while remote automation is disabled. Once enabled, the duplicate guide disappears; the validated public issue URL remains a compact Page Header action in both states. Other providers and unrelated mobile inputs remain unchanged.                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Mobile work-item creation                                                                | Adopt / Adapt  | Adopts the inspected FLAMOX365 `TaskDialogView` overview hierarchy and Symphony Board editor's single manual/AI form model, Mosaik Segment mode choice, TextBox, NumberBox, DateBox, Select, checkbox, Avatar, and explicit save action. The phone adapts the drawer into a dedicated Page route reached from both a dashboard action group and the Tickets header. Provider metadata remains authoritative, the currently selected single desktop workspace owns creation, and an AI draft must be reviewed before the explicit Create action.                                                                                                                                                                                                                                                       |
-| Mobile AI analysis, solution, and revision                                               | Adapt          | Adapts the Board editor's explicit AI Prompt Box workflow to the compact ticket-detail Card. Optional operator guidance is forwarded to analysis and first solution; feedback is required for a later revision. Running work remains owned by the existing Processes route, so the ticket page does not duplicate execution logs or cancellation state. Repository configuration and local preparation remain desktop-owned.                                                                                                                                                                                                                                                                                                                                                                          |
+| Mobile work-item creation                                                                | Adopt / Adapt  | Adopts the inspected FLAMOX365 `TaskDialogView` overview hierarchy and the manual/AI choice of Symphony's desktop new-work-item sheet, Mosaik Segment mode choice, TextBox, NumberBox, DateBox, Select, checkbox, Avatar, and explicit save action. The phone adapts the drawer into a dedicated Page route reached from both a dashboard action group and the Tickets header. Provider metadata remains authoritative, the currently selected single desktop workspace owns creation, and an AI draft must be reviewed before the explicit Create action.                                                                                                                                                                                                                                            |
+| Mobile AI analysis, solution, and revision                                               | Adapt          | Adapts the explicit AI Prompt Box workflow of the desktop work item screen to the compact ticket-detail Card. Optional operator guidance is forwarded to analysis and first solution; feedback is required for a later revision. Running work remains owned by the existing Processes route, so the ticket page does not duplicate execution logs or cancellation state. Repository configuration and local preparation remain desktop-owned.                                                                                                                                                                                                                                                                                                                                                         |
 | Mosaik application shell                                                                 | Differ         | Mosaik 0.1.71's headerless `AppComponent` path dereferences an absent header part. The POC therefore uses a semantic presenter-owned shell while retaining Mosaik for all routed pages and navigation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Desktop preload transport                                                                | Differ         | A browser cannot use Electron preload IPC. `MobileCompanionStore` uses only the versioned same-origin mobile HTTP/WebSocket contract and never imports desktop APIs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 The exact read-only sources included `../flamox/apps/frontend/portal/src/configuration/ShellConfig.ts`, its PresenterView and navigation configuration, `../flamox/libs/frontend/features/task/src/lib/views/TaskListView.html`, `../flamox/libs/frontend/features/task/src/lib/views/dialogs/TaskDialogView.html`, `../flamox/libs/frontend/features/task/src/lib/view-presenters/TaskDialogViewPresenter.ts`, and the corresponding Page, PageHeader, PagePreContent, Prompt Box, TextBox, NumberBox, DateBox, Select, checkbox, Cell, Text, Busy State, Message, QRCode, and navigation implementations under `../mosaik/libs`. The implementation introduces no runtime dependency on either reference repository.
 
 ## Page width and FlowBoard sizing
+
+> **Superseded on 2026-10-31** for the Home panorama, the centered Settings page, the Skills route, the Presenter search and the shared task drawer; see [2026-10-31 Pull requests, Actions, Overview and Inbox](#2026-10-31-pull-requests-actions-overview-and-inbox), [2026-10-31 Settings window sidebar, search, sheets and immediate saving](#2026-10-31-settings-window-sidebar-search-sheets-and-immediate-saving) and [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet). The FlowBoard height chain, complete-board loading and the card context actions remain.
 
 Home adopts the FLAMOX365 `ExplorerView` page anatomy but uses the complete available width for its horizontal category panorama. Settings adopts the `md` breakpoint from FLAMOX365 `SettingsView` and remains centered by the Mosaik Page component at its native maximum. Skills now follows the current FLAMOX365 list-page anatomy at full route width together with Board, Pull Requests, and Actions. Board intentionally remains full-width because its multi-column FlowBoard is a workspace canvas. Board and Skills have no second search control: the centered Presenter search is the single ticket/skill search entry point and passes its query to the owning route.
 
@@ -1722,11 +2318,15 @@ Workspace agent rows **adapt** FLAMOX365's settings-card Cell/Avatar/trailing-Bu
 
 ## macOS menu-bar panel
 
-The menu-bar panel **adopts** the compact account-menu hierarchy and nested-submenu composition from FLAMOX365's Presenter together with Mosaik Menu/Menu Item actions and the established Progress Bar, Progress Ring, Toggle Switch, Button, Icon, Hint, Text, Divider, and Tooltip APIs. Capacity appears first because it drives immediate operator decisions. Agent Runs and Actions each own an inline submenu containing at most three active-first entries from the same provider-neutral run projection as the workspace rail; every entry includes explicit state text and an activity or terminal-state icon. Actionable repository preparation follows only when needed, while Open Symphony, update, Settings, and Quit remain one global action group at the bottom. GitHub Actions allowance and unavailable-allowance placeholders remain deliberately absent.
+The menu-bar panel follows the redesign canvas page `Tray` (`Tray-Agents`, `Tray-Actions`, `Tray-Quiet`, `Tray-States`). It **adapts** the sidebar run panel's `Agents | Actions` switch as a soft Mosaik Segment and shows the runs at once instead of collapsed inline submenus: agents with their figure (`mosaik-image` with `agentAvatarSource`), name, activity and an indeterminate neutral Progress Ring or a labelled status icon, with Pause/Resume icon buttons where the execution allows it; action runs with source, state, duration and revision, an open icon button and `All runs in Symphony`. Execution slots use a segmented Mosaik Progress Bar (one segment per slot, set through the `segments` attribute because the Angular wrapper does not forward that input). `Needs you` links the Inbox (through the `INBOX_SUMMARY` port) and the notification centre with Mosaik Badges, `Autonomous work` keeps the Toggle Switch, the update row uses Buttons and a Progress Ring, and the commands are plain full-width Buttons with Mosaik Kbd shortcuts. The previous Capacity bar, inline submenus and the separate `Repository preparation required` row are gone; repository preparation is now one of the notifications. The panel paints the Mosaik `surface` role and follows the application appearance (light, dark or system) instead of the former forced dark scheme. The header uses the packaged application icon where the canvas draws a dark tile with the template mark, because no mark icon is registered.
 
-The surface **adapts** those reference compositions into a sandboxed Electron popover owned by the macOS status item. It uses an independent presenter and narrow typed requests instead of the full workspace store, because a hidden secondary renderer must not duplicate the primary route's broad state ownership. The presenter combines the existing execution snapshot with the existing CI-runs refresh response through `buildRailRuns`; it neither creates a second run model nor exposes GitHub API types across the provider boundary. Per-run Pause and Resume remain inline icon actions; an operator pause frees capacity and a resume can wait durably for the next slot. Selecting an Agent Run opens its owning workspace surface, while selecting an Actions entry opens the Actions route. The autonomy switch changes only the existing autonomous-work setting. The panel is intentionally opaque and always uses Symphony's Mosaik dark scheme over the fixed Electron background, which is Soho's dark `background` role (`#0a0a0a`), independent of both the persisted application theme and the macOS appearance. Its height is reported through a bounded typed desktop request. Nested menus expand inline because a Mosaik sidecar popover would be clipped at the edge of the fixed BrowserWindow; this retains the public Menu/Menu Item hierarchy and keyboard semantics while the panel owns overflow.
+The surface keeps an independent presenter and narrow typed requests instead of the full workspace store: settings through `ConfigurationStore.refreshSettings`, the execution snapshot, autonomy and the CI-runs refresh, combined through `buildRailRuns`, plus a silent refresh of the notification sources. It never constructs `ApplicationBootstrap` or `OrchestrationSynchronizer`. Commands use the typed `window.show` routes `current`, `settings`, `actions`, `inbox`, `notifications` and `new-work-item`, and ⌘O, ⌘N, ⌘, and ⌘Q are handled inside the panel. Its height is reported through `menu-bar.resize` (180–760 px).
 
-The native status item and frameless popover **differ** because neither inspected FLAMOX365 nor Mosaik source owns an Electron menu-bar-extra pattern. Electron Main therefore owns Tray lifecycle, panel positioning, visibility, bounded resizing, and three packaged template-image variants. The renderer sends only the semantic `idle`, `running`, or `failed` state: active work takes precedence, and otherwise the newest terminal run determines whether the mark carries a failure badge. All orchestration, CI refresh, persistence, and pause/resume work remains in the Utility Process. The exact read-only UI sources were FLAMOX365's `PresenterView.html` account dropdown and `PresenterAccountMenu.spec.ts`, plus Mosaik's public `MenuElement`, `MenuItemElement`, `MenuItemElementTemplate`, Menu theme tokens, Progress Bar, Progress Ring, Toggle Switch, Button, Icon, Hint, Text, Divider, and Tooltip implementations. No runtime dependency on the reference repositories was introduced.
+The native status item and frameless popover **differ** because neither inspected FLAMOX365 nor Mosaik source owns an Electron menu-bar-extra pattern. Electron Main therefore owns Tray lifecycle, panel positioning, visibility, bounded resizing, and three packaged template-image variants. The renderer sends only the semantic `idle`, `running`, or `failed` state: active work takes precedence, and otherwise the newest terminal run determines whether the mark carries a failure badge. All orchestration, CI refresh, persistence, and pause/resume work remains in the Utility Process. No runtime dependency on the reference repositories was introduced.
+
+## Notification centre
+
+The status bar's bell opens the notification centre drawn on the canvas screen `Notifications`. FLAMOX365 has a notification-delivery settings card but no in-app notification centre, so the popover **differs**: it is an Angular CDK connected overlay anchored to the bell (opening upwards, 400 px), with focus trapping, Escape and outside-click closing. Mosaik Popup was not used because its portal moves the content to `document.body`, where its public `--popup-*` padding and radius properties set on the View no longer apply; the drawn plain surface (surface role, highlight hairline, bold elevation) is therefore painted in the View's SCSS on a `part` with Mosaik tokens only. Rows use Mosaik Icon, Text, Button, Dot and Empty State; the bell count uses a Mosaik Badge. Problems come from feature-owned sources registered through `NOTIFICATION_SOURCES`, and today's toasts are recorded by a second `NOTIFICATION_INTERCEPTORS` entry beside the Mosaik toast interceptor; see [Mitteilungszentrale und Menüleistenpanel](notifications-and-tray/README.md).
 
 ## Agentic pull-request settings
 
@@ -1745,6 +2345,8 @@ The agentic-delivery controls **adopt** the exact FLAMOX365 two-line Mosaik Togg
 **Adopt — read-only navigation and accessibility.** Mosaik's native selectable controls provide pointer and keyboard selection; nodes cannot be moved and connections cannot be edited. All interactive acceptance surfaces retain domain-specific test IDs. The existing Board process and Actions/job-log journeys own the Electron validation and screenshots.
 
 ## Work-item comments
+
+> **Superseded on 2026-10-31** for the work-item thread: the work item screen merges comments into its `Activity` rows and does not use `mosaik-comment`; the `comment.scss` override no longer exists. `mosaik-comment` remains in the Run drawer. The Azure DevOps paragraph now applies to the new-work-item sheet, which offers the backlog's `Work item type`, and to the work item screen, whose provider action reads `Open in Azure DevOps`; both share the dynamic field controls. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).
 
 The task drawer's comment thread **adopts** Mosaik's `mosaik-comment` directly: avatar, author, timestamp, Markdown body, and the optional "Open" action each fill the component's public `avatar`, `author`, `at`, `content`, and `actions` slots. FLAMOX365 was searched and does not use the comment component anywhere, so the Mosaik component API itself is the reference for this surface.
 
@@ -1787,16 +2389,16 @@ The exact inspected FLAMOX365 owners are `libs/frontend/features/task/src/lib/vi
 Avatar/Persona, Button’s named `icon`/`label` slots, Page/PageContent, Segment, Select,
 Card, Disclosure and the Memphis theme sources.
 
-| Surface                                     | Decision       | Reason and preserved behavior                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Desktop shell, menu bar and Mobile          | Differ         | The user explicitly chose Memphis. Theme providers, startup attributes, Sass, Tailwind, preview and generated documents switch together. Public small sizing keeps navigation operable at 1040 × 700; no View overrides internal component styles.                                                                                                                                                          |
-| Orbit `/main/orbit`                         | Differ / Adapt | Production-centred delivery rings and stable aggregates replace a conventional dashboard as the initial route. Generic scene geometry draws only evidence-backed objects and uses public Mosaik cards/buttons and Symphony's shared figure component. The complete paged list and keyboard pan/zoom keep every ticket reachable.                                                                            |
-| Stages `/main/stages`                       | Adopt / Differ | The existing configurable workflow, role gates, provider column mappings, queue, handoffs and process drawer remain authoritative. Connected stations are the requested alternative composition. Drag assignment uses the existing delegation command; a stage move uses its unique provider column or the existing decision drawer.                                                                        |
-| Employees `/main/team` and execution drawer | Adapt          | Symphony's shared AgentFigureComponent owns transparent PNG layers and CSS states. Mosaik Avatar/Persona retain their published APIs. Actual immutable bindings drive activity; stale data disables animation. Public Button slots expose the figures. CLI identity remains separate, and feedback opens the established process/revision actions.                                                          |
-| Board and old Home                          | Adopt / Adapt  | The Board model and FlowBoard remain the same owner. A shared landscape store holds filters; explicit selection stays in the existing orchestration state. `/main/home` remains the overview. Existing task/process query links remain valid.                                                                                                                                                               |
-| Visual setup `/main/setup`                  | Adopt / Differ | Mosaik Page, cards, Selects and explicit Apply follow the settings composition. Connected project cards are the requested build surface. Draft discovery is read-only; Apply saves the validated proposal. Only workflow-eligible tickets can start analysis; otherwise the Board supplies the human decision. Built-in role code supplies unset skill assignments; explicit user packages take precedence. |
-| Actions and deployment reviews              | Adopt / Adapt  | Existing workflow catalog, Action drawer, jobs, steps and logs remain owners. A generic provider-neutral graph displays parallel definition jobs and actual matrix executions at the run revision. Dispatch proposals show declared inputs; environment reviews show exact version and comment. Durable journals and rechecks prevent accidental repeat writes.                                             |
-| Optional spatial mode                       | Differ / Adapt | Three.js loads after the operator selects Spatial. Orthographic projection moves the same DOM objects and PNG layers, retaining commands, selection and filters. It introduces no second UI framework or runtime process. Free positioning is stored in 2D; spatial drag still resolves the same assignment/stage commands.                                                                                 |
+| Surface                                     | Decision       | Reason and preserved behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Desktop shell, menu bar and Mobile          | Differ         | The user explicitly chose Memphis. Theme providers, startup attributes, Sass, Tailwind, preview and generated documents switch together. Public small sizing keeps navigation operable at 1040 × 700; no View overrides internal component styles.                                                                                                                                                                                                                                                                                                                         |
+| Orbit `/main/orbit`                         | Differ / Adapt | Production-centred delivery rings with the Board's stage clusters (board columns plus `Needs attention`) around the destination; Overview is the initial route. Generic scene geometry draws only evidence-backed objects with public Mosaik badges, cards and buttons. The toolbar carries the destination control; a right inspector shows the selected cluster (evidence progress, its work items, `Show on board`), destination or work item. The inspector's paged cluster lists, labelled cluster/destination buttons and the zoom card keep every ticket reachable. |
+| Stages `/main/stages`                       | Adopt / Differ | The existing configurable workflow, role gates, provider column mappings, queue, handoffs and process drawer remain authoritative. Connected stations are the requested alternative composition. Drag assignment uses the existing delegation command; a stage move uses its unique provider column or the existing decision drawer.                                                                                                                                                                                                                                       |
+| Employees `/main/team` and execution drawer | Adapt          | Symphony's shared AgentFigureComponent owns transparent PNG layers and CSS states. Mosaik Avatar/Persona retain their published APIs. Actual immutable bindings drive activity; stale data disables animation. Public Button slots expose the figures. CLI identity remains separate, and feedback opens the established process/revision actions.                                                                                                                                                                                                                         |
+| Board and old Home                          | Adopt / Adapt  | The Board model and FlowBoard remain the same owner. A shared landscape store holds filters; explicit selection stays in the existing orchestration state. `/main/home` remains the overview. Existing task/process query links remain valid.                                                                                                                                                                                                                                                                                                                              |
+| Visual setup `/main/setup`                  | Adopt / Differ | Mosaik Page, cards, Selects and explicit Apply follow the settings composition. Connected project cards are the requested build surface. Draft discovery is read-only; Apply saves the validated proposal. Only workflow-eligible tickets can start analysis; otherwise the Board supplies the human decision. Built-in role code supplies unset skill assignments; explicit user packages take precedence.                                                                                                                                                                |
+| Actions and deployment reviews              | Adopt / Adapt  | Existing workflow catalog, Action drawer, jobs, steps and logs remain owners. A generic provider-neutral graph displays parallel definition jobs and actual matrix executions at the run revision. Dispatch proposals show declared inputs; environment reviews show exact version and comment. Durable journals and rechecks prevent accidental repeat writes.                                                                                                                                                                                                            |
+| Optional spatial mode                       | Differ / Adapt | Three.js loads after the operator selects Spatial. Orthographic projection moves the same DOM objects and PNG layers, retaining commands, selection and filters. It introduces no second UI framework or runtime process. Free positioning is stored in 2D; spatial drag still resolves the same assignment/stage commands.                                                                                                                                                                                                                                                |
 
 SVG is restricted to graph/orbit geometry and labels; registered Mosaik icons remain the
 product icon vocabulary. CSS in the generic diagram and figure components owns only
@@ -1859,6 +2461,8 @@ their current state; route compositions and behavior are retained.
 
 ## Soho shell and surface alignment (2026-10-10)
 
+> **Superseded on 2026-10-31** for the App Header title-bar override and the dark-only menu-bar panel, which now follows the system appearance; see [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
+
 **Adopt — Soho owns the chrome.** The exact references are FLAMOX365's
 `apps/frontend/portal/src/styles/mosaik.scss` and
 `libs/frontend/features/task/src/lib/views/TaskListView.html`, and Mosaik's
@@ -1902,6 +2506,8 @@ The desktop journey asserts the `outline` toolbar actions on Pull Requests, Acti
 and Board.
 
 ## Loading states that keep the loaded anatomy (2026-10-10)
+
+> **Superseded on 2026-10-31** for the voice-search toggle sentence; the shell has no voice input. See [2026-10-31 macOS window chrome, Settings window and in-app update download](#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download).
 
 **Adopt — skeletons mirror the loaded layout.** The exact reference is FLAMOX365's
 `libs/frontend/ui/src/lib/components/activity-log/ActivityLogComponent.html`, whose
@@ -2235,6 +2841,8 @@ remains covered by `OrbitFlybyFleet.spec.ts`.
 
 ## Board ticket width and scrolling
 
+> **Superseded on 2026-10-31** for the column geometry and card content: expanded columns are 248 px wide, collapsed columns are 40 px strips drawn by the Board, and cards no longer show repository context, project fields or branch chips. The FlowBoard chain and the CDK virtualization remain. See [2026-10-31 Board, work item screen and new-work-item sheet](#2026-10-31-board-work-item-screen-and-new-work-item-sheet).
+
 **Adopt.** The Board retains FLAMOX365's task FlowBoard, collapsible workflow
 columns, variable-height CDK virtualization, wrapped Mosaik Text/Hint inputs,
 selection and card-action slots. The inspected sources are
@@ -2450,3 +3058,93 @@ Source-adjacent tests cover bootstrap ordering and in-flight identity, actual
 DI and Router feature omissions, the nine search shortcuts, role draft scope,
 import completion/failure and the header action. Coordinated Electron route
 verification remains the final parity evidence.
+
+## 2026-10-31 Settings window: AI team, Skills and Automation by delivery-flow step
+
+The three Settings sections that describe how far work runs on its own are ordered by the five
+delivery-flow steps (`Create`, `Plan`, `Implement and verify`, `Fix failed checks`,
+`Address reviews`, then `Acceptance`). One shared definition in `@symphony/frontend-ui`
+(`deliveryFlowSteps`, `deliveryFlowStepOf`, `DeliveryFlowStepPipe`) gives every step the same
+name, description and icon and maps it to its agent responsibilities (skill flow roles) and its
+built-in process roles, so `AI team`, `Skills`, `Automation` and the agent sheet cannot drift apart.
+
+**Adopt:** the sections use the Settings group-and-row layout (`symphony-settings-group`,
+`symphony-settings-row`), Mosaik Card, Chip, Badge, Dot, Segment, Toggle Switch, NumberBox, Code,
+Expander, Checkbox, Choice Group and Message, and the editors are Mosaik dialogs presented as sheets
+(`mosaikDialogHeader/Content/Footer`, `DIALOG_REF`/`DIALOG_REF_DATA`) through the generic
+`SettingsEditorService`. Confirmations use the Settings alert sheets (`SettingsAlertService`),
+replacing the Mosaik message boxes and the skill package's `window.confirm`.
+
+**Adapt:** every Automation control applies when it changes and a number when it is committed;
+the per-card `Save` buttons are gone. `AutomationSettingsStore.applyRuntime` /
+`applyAgenticDelivery` show the new value at once, queue the saves so quick successive changes
+build on each other, keep the `Settings saved.` / `Unable to save settings.` notices of the single
+configuration writer and restore the stored value when a save fails. The ten agentic switches
+became a ladder: the `Level` segment (`Off`, `Watch`, `Diagnose`, `Repair`, `Full`, `Custom`) sets
+the eight `Fix failed checks` switches in one go (`Watch` = agentic delivery and observation;
+`Diagnose` adds AI diagnosis and reruns; `Repair` adds branch updates and both repairs; `Full` adds
+replacement pull requests), any other combination reads `Custom`. Review feedback and delivery
+serialization stay outside the ladder in their own groups. Each rail switch names its first missing
+prerequisite (`Needs “…”`) and is disabled until it is on; turning a prerequisite off turns off the
+switches that depend on it, so the stored policy never holds a switch that cannot work. The
+dependencies follow the orchestrator: observation needs the feature; diagnosis, reruns and branch
+updates need observation; both repairs need diagnosis and branch updates; a replacement pull request
+needs a repair.
+
+**Adapt:** the agent editor became one sheet with the four questions as numbered sections and a
+live preview of the agent card (figure, name, job title, account, model, effort, delivery-flow
+steps, first backup and a warning when the chosen account's CLI is missing or it is not signed
+in). Responsibilities are check-box cards labelled with their step. Account, model, effort and
+figure pickers keep Mosaik Choice cards, laid out by the window's `choice-cards` part in at most
+three columns (the drawing shows four model and effort cards per row).
+
+**Differ:** the main-window Skills page is retired; `/main/skills` redirects to
+`/main/settings?section=skills`, which opens Settings there (in the main window since
+[2026-10-31 Settings in the main window and resizable panes](#2026-10-31-settings-in-the-main-window-and-resizable-panes)). Its packages are listed in
+the step they run in; `Import skill`, `Add skills`, `New skill` and refresh are the section's
+toolbar actions. Moving an active package to another step, formerly a select on its card, is the
+`Use in flow` select of the package sheet. Built-in role instructions are edited in their own sheet
+instead of inline cards.
+
+## 2026-10-31 Workspace icons, emoji, monograms and color
+
+The exact read-only FLAMOX365 reference is the identity user's
+`views/dialogs/AvatarDialogView.{ts,html,scss}`,
+`view-presenters/dialogs/AvatarDialogViewPresenter.ts`,
+`services/AvatarPicker.ts`, `services/AvatarSelectionValidator.ts`,
+`services/AvatarImageService.ts` and `pipes/AvatarIconsPipe.ts`, all under
+`libs/frontend/features/identity/src/lib/user/`. Mosaik's public Avatar,
+Segment, Segment Item, Toggle Button, Color Swatch and Color Picker contracts
+were inspected at the installed `0.1.183` version shared by both applications.
+
+**Adopt:** the workspace picker retains the reference dialog's header, constrained
+scroll-owned content and footer, shared live preview, three representation tabs,
+suggested symbols and case-insensitive alias search, suggested emoji and paste
+field, one-or-two-character Unicode monogram, color swatches and explicit
+confirmation/cancellation. Emoji retain native colors; the palette is hidden
+in that mode. The 256-pixel browser drawing follows the reference's white base,
+14% color tint for symbols and monograms, glyph sizes, centering and platform
+emoji fonts. Mosaik Avatar consumes the resulting PNG through its public `src`;
+there is no View override of Avatar internals.
+
+**Adapt:** this is a workspace identity editor inside the existing workspace
+settings sheet. It returns a structured `{ avatar: { kind, value }, color }`
+selection to that sheet's draft. Only the sheet's existing aggregate save writes
+settings; cancelling either step preserves its corresponding prior state.
+Workspace account, auth, upload and random profile-generation flows do not
+participate. Missing selection starts from the existing short code as a
+monogram, preserving existing workspaces without migration. The existing
+workspace color is the sole persisted color field. The authoritative domain
+validator supplies both the dialog and schema with the same Unicode glyph
+rules. A direct public Mosaik Color Picker supplies custom opaque RGB choices
+in place of FLAMOX365's application-owned color-picker wrapper.
+
+**Adapt:** the same rendering owner supplies the main sidebar's active tile,
+each workspace-menu entry through Menu Item's public `icon` slot, the settings
+sidebar and the workspace directory. Registered icon data is serialized at
+runtime rather than authored as SVG markup in Symphony. Unknown registered
+aliases fall back to the workspace short code without rewriting saved data;
+render failures leave Mosaik's text fallback. A bounded render cache and Angular
+AsyncPipe prevent repeated drawing and stale asynchronous display. These
+workspace-specific persistence and fallback rules are documented in
+[Workspaces](workspaces/README.md#workspace-symbol-und-farbe).

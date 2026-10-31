@@ -22,15 +22,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular-devkit/architect@npm:0.2202.0":
-  version: 0.2202.0
-  resolution: "@angular-devkit/architect@npm:0.2202.0"
+"@angular-devkit/architect@npm:0.2202.4":
+  version: 0.2202.4
+  resolution: "@angular-devkit/architect@npm:0.2202.4"
   dependencies:
-    "@angular-devkit/core": "npm:22.2.0"
+    "@angular-devkit/core": "npm:22.2.4"
     rxjs: "npm:7.8.2"
   bin:
     architect: bin/cli.js
-  checksum: 10c0/e0ce7dace7036461ac74488893416b402d48bdce1857afd453721ccb89ed0467a84e705a13615d6c7a12ec0e456a6679499e5c6582e0838ca3c42d88b18fb05c
+  checksum: 10c0/51731bb30b754e773d1dcbda041ab07aea7f2f05a4fe58bc2a812d37076f7298ce8d37fb8f714a4fda6c27662773d285c96b698cf839796f9f48cd191523d9ed
   languageName: node
   linkType: hard
 
@@ -65,9 +65,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular-devkit/core@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular-devkit/core@npm:22.2.0"
+"@angular-devkit/core@npm:22.2.4":
+  version: 22.2.4
+  resolution: "@angular-devkit/core@npm:22.2.4"
   dependencies:
     ajv: "npm:8.20.0"
     ajv-formats: "npm:3.0.1"
@@ -80,20 +80,20 @@ __metadata:
   peerDependenciesMeta:
     chokidar:
       optional: true
-  checksum: 10c0/315e137fc2f992134c263f15dd7a4b92e71ce33a1725a071489f0ef8ce71665f5c024d3ed33c73c98a4bb5089ebb1f7eca916248f3a1bd4aa02cf03b5f74f879
+  checksum: 10c0/6304bf174e31f1e34b15930508a3cb8ea718ad632ad69b4e0a0486cc7ec0d11132734ff5f563df0d4fab9c59dd27b4862bffa174a798d808ac37c6b26daf50e6
   languageName: node
   linkType: hard
 
-"@angular-devkit/schematics@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular-devkit/schematics@npm:22.2.0"
+"@angular-devkit/schematics@npm:22.2.4":
+  version: 22.2.4
+  resolution: "@angular-devkit/schematics@npm:22.2.4"
   dependencies:
-    "@angular-devkit/core": "npm:22.2.0"
+    "@angular-devkit/core": "npm:22.2.4"
     jsonc-parser: "npm:3.3.1"
     magic-string: "npm:1.4.1"
     ora: "npm:9.4.1"
     rxjs: "npm:7.8.2"
-  checksum: 10c0/dcf6c6b3883ac447142becbb9ddc2b7ad1678d20ed37e7cc5b4d71cf1f74b4f25c54d98f6892d92c013d632b74823fccaf57c6199f2e6897c344f727934683c0
+  checksum: 10c0/4dd68e1de27d968c2e1f3a0a1031192b42394d30ad67f0f87f6f674860f85811ee9854d2b7ad97a8e71e3734bb9946ae1879d2cabe7bb91370e9d471f05033cf
   languageName: node
   linkType: hard
 
@@ -204,12 +204,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular/build@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/build@npm:22.2.0"
+"@angular/build@npm:22.2.4":
+  version: 22.2.4
+  resolution: "@angular/build@npm:22.2.4"
   dependencies:
     "@ampproject/remapping": "npm:2.3.0"
-    "@angular-devkit/architect": "npm:0.2202.0"
+    "@angular-devkit/architect": "npm:0.2202.4"
     "@babel/core": "npm:8.0.5"
     "@inquirer/confirm": "npm:6.3.2"
     "@parcel/watcher": "npm:2.6.0"
@@ -244,7 +244,7 @@ __metadata:
     "@angular/platform-browser": ^22.0.0
     "@angular/platform-server": ^22.0.0
     "@angular/service-worker": ^22.0.0
-    "@angular/ssr": ^22.2.0
+    "@angular/ssr": ^22.2.4
     istanbul-lib-instrument: ^6.0.0
     karma: ^6.4.0
     less: ^4.2.0
@@ -287,13 +287,13 @@ __metadata:
       optional: true
     vitest:
       optional: true
-  checksum: 10c0/be8fe10bbc57c002c9134bcc3322b598de0480506410bacd84862c0a6c7c8aff37c03365252706087daa7bc70b103b5aed6e9766673859b214a6e5f6d31e57d2
+  checksum: 10c0/31346b6d24909a6ea4d4c223f88dcf76daddd93538925c22a63f2713229eec65eddb9625303214bb7ed357dbe41a7e0de4308db0d6484e1daaef938235a69847
   languageName: node
   linkType: hard
 
-"@angular/cdk@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/cdk@npm:22.2.0"
+"@angular/cdk@npm:22.2.4":
+  version: 22.2.4
+  resolution: "@angular/cdk@npm:22.2.4"
   dependencies:
     parse5: "npm:^8.0.0"
     tslib: "npm:^2.3.0"
@@ -303,49 +303,49 @@ __metadata:
     "@angular/forms": ^22.0.0 || ^23.0.0
     "@angular/platform-browser": ^22.0.0 || ^23.0.0
     rxjs: ^6.5.3 || ^7.4.0
-  checksum: 10c0/04b11f3f16582f3c583ae21faa74b58e7a7d2fe66fb8a82c15ff35ea4dc9bd7ca13cb156f14cd6fbddcf1ac528a7b04e7e2b1fe0a6b54659fb3f2458f1d1b8d8
+  checksum: 10c0/4bf72ad66298b3c8ed1b19f1ab1bbe9323281ba3489142bc74773f7cbef3a9e50c30cdff9a559b09dd058f7044e10bf0347a711afe541f346ab009007e5583b4
   languageName: node
   linkType: hard
 
-"@angular/cli@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/cli@npm:22.2.0"
+"@angular/cli@npm:22.2.4":
+  version: 22.2.4
+  resolution: "@angular/cli@npm:22.2.4"
   dependencies:
-    "@angular-devkit/architect": "npm:0.2202.0"
-    "@angular-devkit/core": "npm:22.2.0"
-    "@angular-devkit/schematics": "npm:22.2.0"
+    "@angular-devkit/architect": "npm:0.2202.4"
+    "@angular-devkit/core": "npm:22.2.4"
+    "@angular-devkit/schematics": "npm:22.2.4"
     "@inquirer/prompts": "npm:8.7.2"
     "@listr2/prompt-adapter-inquirer": "npm:4.2.7"
-    "@modelcontextprotocol/server": "npm:2.0.0"
-    "@schematics/angular": "npm:22.2.0"
+    "@modelcontextprotocol/server": "npm:2.3.1"
+    "@schematics/angular": "npm:22.2.4"
     jsonc-parser: "npm:3.3.1"
     listr2: "npm:11.1.0"
     npm-package-arg: "npm:14.0.0"
     parse5-html-rewriting-stream: "npm:8.0.1"
     semver: "npm:7.8.5"
     yargs: "npm:18.1.0"
-    zod: "npm:4.6.5"
+    zod: "npm:4.6.6"
   bin:
     ng: bin/ng.js
-  checksum: 10c0/aece2f7c9d23c3243bf48ac60dc649a66f4bcb135b7b4445c56aa8dbdfacb8a0e08bd4ad77ef4ff04d303b5278399eedd2ba32df67c7b8156d59a4c40e98a5de
+  checksum: 10c0/77f309593af619b0fa44a8d9e4f29a4e23e0d3ae58b4095628505c592be175b8a7cb81cf3f60f0477941a3a2785898c797201bb45d035844719907342e27da8e
   languageName: node
   linkType: hard
 
-"@angular/common@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/common@npm:22.2.0"
+"@angular/common@npm:22.2.3":
+  version: 22.2.3
+  resolution: "@angular/common@npm:22.2.3"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@angular/core": 22.2.0
+    "@angular/core": 22.2.3
     rxjs: ^6.5.3 || ^7.4.0
-  checksum: 10c0/bdfec2cecd6937be14c60029c2281bdb66c3ce505a15179995fa5b883a5a887a8ddb25ec6663b6b38758561561e94cb7a3fc631a2f07606a1d5de3e918602de7
+  checksum: 10c0/19b79a6d5ac7a0d8094aa19d2db8e58e990a39e54f6c704a8ce31addf1593edba965f4fd6839d43cd9d216ceee3b57f4990be9523bde461dfd57664d6068a327
   languageName: node
   linkType: hard
 
-"@angular/compiler-cli@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/compiler-cli@npm:22.2.0"
+"@angular/compiler-cli@npm:22.2.3":
+  version: 22.2.3
+  resolution: "@angular/compiler-cli@npm:22.2.3"
   dependencies:
     "@babel/core": "npm:8.0.1"
     "@jridgewell/sourcemap-codec": "npm:^1.4.14"
@@ -356,7 +356,7 @@ __metadata:
     tslib: "npm:^2.3.0"
     yargs: "npm:^18.0.0"
   peerDependencies:
-    "@angular/compiler": 22.2.0
+    "@angular/compiler": 22.2.3
     typescript: ">=6.0 <6.1"
   peerDependenciesMeta:
     typescript:
@@ -364,26 +364,26 @@ __metadata:
   bin:
     ng-xi18n: bundles/src/bin/ng_xi18n.js
     ngc: bundles/src/bin/ngc.js
-  checksum: 10c0/13770d92e0458180321cc61be023fcf6214e1715b28b7642811b967816c4513d5764134337855a197e47cb6f5b46f25b0eac277fd9057304eb9866f65b1ea024
+  checksum: 10c0/e4afd8d1bef6934ec7d080c6c3c1cc2a3b78d2bdee91c025aca17fe132126561dda01209a660e7b3fe2345591fd6b977ac6d13d14ddb5770a5bf25c0b9322570
   languageName: node
   linkType: hard
 
-"@angular/compiler@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/compiler@npm:22.2.0"
+"@angular/compiler@npm:22.2.3":
+  version: 22.2.3
+  resolution: "@angular/compiler@npm:22.2.3"
   dependencies:
     tslib: "npm:^2.3.0"
-  checksum: 10c0/25e0a6932096ab6066c1ba6b5888ef247887939daab54bbe273c7e4be07a1617fc1d72aa87b56b885f8145eded9d5801e64eee8a938501d175f22065ad0f6e01
+  checksum: 10c0/37dcfb477f17a934a7952365b9d592e970cf2e00eca9e44e2f3ecf64ba1f8bc0f12e3e26ac39e0c4761caefacd8bc62d8f1b85c3e20ad90ba15d774a58f5cb88
   languageName: node
   linkType: hard
 
-"@angular/core@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/core@npm:22.2.0"
+"@angular/core@npm:22.2.3":
+  version: 22.2.3
+  resolution: "@angular/core@npm:22.2.3"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@angular/compiler": 22.2.0
+    "@angular/compiler": 22.2.3
     rxjs: ^6.5.3 || ^7.4.0
     zone.js: ~0.15.0 || ~0.16.0
   peerDependenciesMeta:
@@ -391,53 +391,53 @@ __metadata:
       optional: true
     zone.js:
       optional: true
-  checksum: 10c0/82d49c2b66926b266791ced9801a31eebf2dc3e13aa1ff61e38d029a3361c0af0e3d622e9f263bb8164529a447bd4f44c9eec02d3c1a61266fcaeffeead03be4
+  checksum: 10c0/7eba9ada86ce1c9ba2d7882d575686b4a477de917fa1318efe28fd2caefaa250e97dc9042b204b1c04c68b84ec42bb36206e7e15061464664fb0ef60dc0c7f6e
   languageName: node
   linkType: hard
 
-"@angular/forms@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/forms@npm:22.2.0"
+"@angular/forms@npm:22.2.3":
+  version: 22.2.3
+  resolution: "@angular/forms@npm:22.2.3"
   dependencies:
     "@standard-schema/spec": "npm:^1.0.0"
     tslib: "npm:^2.3.0"
     zod: "npm:^4.0.10"
   peerDependencies:
-    "@angular/common": 22.2.0
-    "@angular/core": 22.2.0
-    "@angular/platform-browser": 22.2.0
+    "@angular/common": 22.2.3
+    "@angular/core": 22.2.3
+    "@angular/platform-browser": 22.2.3
     rxjs: ^6.5.3 || ^7.4.0
-  checksum: 10c0/1328c716931011e91f144cfe74e752b1ac963ac2e44250e5bb97c0b8fa756e5db13ade271bdb949615a86cef1349fe309d17e0ffde1a5912f8c27d4d3895dcc5
+  checksum: 10c0/91bd040e5d6775bf6f1845d4abb4c7834173bf4dbaf12d2dcf40eac834764b555cd07870ba07ec14d6e557716dd68b6ee941c84db1ad9af79d6279b986dd3a45
   languageName: node
   linkType: hard
 
-"@angular/platform-browser@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/platform-browser@npm:22.2.0"
+"@angular/platform-browser@npm:22.2.3":
+  version: 22.2.3
+  resolution: "@angular/platform-browser@npm:22.2.3"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@angular/animations": 22.2.0
-    "@angular/common": 22.2.0
-    "@angular/core": 22.2.0
+    "@angular/animations": 22.2.3
+    "@angular/common": 22.2.3
+    "@angular/core": 22.2.3
   peerDependenciesMeta:
     "@angular/animations":
       optional: true
-  checksum: 10c0/d076080235e832b1f2144a5157931833887fe3257ca697a1f609af2446c8424d1ea3b3a59af5eb82170dafa14d68720b6707c38c605adb2de4b9c9782426382c
+  checksum: 10c0/5d9c918a1fcb1e40f2dc77573f8c44ffae9f78026148563006d4abfcab80b5a2c028f55645ad7f632bb2c432e1534e59eb52ca965769542211638299913739b8
   languageName: node
   linkType: hard
 
-"@angular/router@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@angular/router@npm:22.2.0"
+"@angular/router@npm:22.2.3":
+  version: 22.2.3
+  resolution: "@angular/router@npm:22.2.3"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@angular/common": 22.2.0
-    "@angular/core": 22.2.0
-    "@angular/platform-browser": 22.2.0
+    "@angular/common": 22.2.3
+    "@angular/core": 22.2.3
+    "@angular/platform-browser": 22.2.3
     rxjs: ^6.5.3 || ^7.4.0
-  checksum: 10c0/6b31cd16a6c28682073def1c1acc36c180f789a417ef3ead1593c29d488b6d2428fd3f133ed3a7c4f62e93dd1a8dffdfe14fd2c62714246738253dad91c71dbf
+  checksum: 10c0/8c235ba87e8d8646b74138be858587bead58938f2baa4e9a068ef5a729669a8173f41b110daec7cf7ab1a0f59903fa5eea61149b5c7ec6c2875d20f7090d6eaf
   languageName: node
   linkType: hard
 
@@ -3556,14 +3556,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/sourcemap-codec@npm:^1.4.14, @jridgewell/sourcemap-codec@npm:^1.5.0, @jridgewell/sourcemap-codec@npm:^1.5.5":
-  version: 1.5.5
-  resolution: "@jridgewell/sourcemap-codec@npm:1.5.5"
-  checksum: 10c0/f9e538f302b63c0ebc06eecb1dd9918dd4289ed36147a0ddce35d6ea4d7ebbda243cda7b2213b6a5e1d8087a298d5cf630fb2bd39329cdecb82017023f6081a0
-  languageName: node
-  linkType: hard
-
-"@jridgewell/sourcemap-codec@npm:^1.6.0, @jridgewell/sourcemap-codec@npm:^1.6.0-beta.0":
+"@jridgewell/sourcemap-codec@npm:^1.4.14, @jridgewell/sourcemap-codec@npm:^1.5.0, @jridgewell/sourcemap-codec@npm:^1.5.5, @jridgewell/sourcemap-codec@npm:^1.6.0, @jridgewell/sourcemap-codec@npm:^1.6.0-beta.0":
   version: 1.6.0
   resolution: "@jridgewell/sourcemap-codec@npm:1.6.0"
   checksum: 10c0/b5be700e45a775f218589c3466c4ffea630582b4988657652da464e5ab8a7d18bf928ee4fd2363fb346ede4bea9c6ff0bae05a538358c4565ece6199531b5f72
@@ -3733,22 +3726,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@modelcontextprotocol/core@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@modelcontextprotocol/core@npm:2.0.0"
+"@modelcontextprotocol/core@npm:2.3.1":
+  version: 2.3.1
+  resolution: "@modelcontextprotocol/core@npm:2.3.1"
   dependencies:
     zod: "npm:^4.2.0"
-  checksum: 10c0/1cb96fcebfb60651775bcaa3b1e92b47b9317239e9e0352a2d6a404f77d1abfb68ce5b462becd073cddc4db08f2f0024cd3c7dd2582e3463ddb958f65b73fbe3
+  checksum: 10c0/73b5b0b0b58cdb6b1cc59cdc702004ff881d00e065c182473a9e69507ec499ce5705ff494aa08b076e2151ba6bc039ecc514162ccb9d7a20d2fa98f2df7afedc
   languageName: node
   linkType: hard
 
-"@modelcontextprotocol/server@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@modelcontextprotocol/server@npm:2.0.0"
+"@modelcontextprotocol/server@npm:2.3.1":
+  version: 2.3.1
+  resolution: "@modelcontextprotocol/server@npm:2.3.1"
   dependencies:
-    "@modelcontextprotocol/core": "npm:2.0.0"
+    "@modelcontextprotocol/core": "npm:2.3.1"
     zod: "npm:^4.2.0"
-  checksum: 10c0/18f5dbb4c533eda392a66565d8177d792c8018d3455d2cb241102917f660c0c73181e80cbf2b76b1c0e8efae22e7ee0fbb1c27e667d439ba596f1c6059c1d8af
+  checksum: 10c0/f3e8159af5cb51211109ae4817c0cfcdf349171c090d4a355dafe6117038f9a807052289cb1376d67ad4c005e3772cf1af076dbded498636a022d7c641253f12
   languageName: node
   linkType: hard
 
@@ -5204,16 +5197,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@schematics/angular@npm:22.2.0":
-  version: 22.2.0
-  resolution: "@schematics/angular@npm:22.2.0"
+"@schematics/angular@npm:22.2.4":
+  version: 22.2.4
+  resolution: "@schematics/angular@npm:22.2.4"
   dependencies:
-    "@angular-devkit/core": "npm:22.2.0"
-    "@angular-devkit/schematics": "npm:22.2.0"
+    "@angular-devkit/core": "npm:22.2.4"
+    "@angular-devkit/schematics": "npm:22.2.4"
     jsonc-parser: "npm:3.3.1"
     oxc-parser: "npm:0.150.0"
     typescript: "npm:6.0.3"
-  checksum: 10c0/b6e851f7c2fb06209fe6badeac4b29d54cbb8a379e3806dcfd05d6c573475e57ddf763611bec02773c47fc04ad1fb323e76b387a8835411261ab24cd4be9a900
+  checksum: 10c0/5456567ecdd305702883fbb4f613ad310fac038a9a1c0a8ef9b43d16bc2b795880fa6c0a6290011ae8e827456c369535527441ec3d617a820346f6129a5ae3ae
   languageName: node
   linkType: hard
 
@@ -5682,11 +5675,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-core@workspace:libs/frontend/core"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-themes": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
@@ -5716,9 +5709,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-ai@workspace:libs/frontend/features/ai"
   dependencies:
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
@@ -5735,12 +5728,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-arcade@workspace:libs/frontend/features/arcade"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/forms": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/forms": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
@@ -5758,9 +5751,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-automation@workspace:libs/frontend/features/automation"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-automation": "workspace:*"
@@ -5780,12 +5773,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-ci@workspace:libs/frontend/features/ci"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/forms": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/forms": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
@@ -5809,12 +5802,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-delivery@workspace:libs/frontend/features/delivery"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/forms": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/forms": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
@@ -5846,9 +5839,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-execution@workspace:libs/frontend/features/execution"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
@@ -5868,8 +5861,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-feedback@workspace:libs/frontend/features/feedback"
   dependencies:
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
@@ -5885,16 +5878,19 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-home@workspace:libs/frontend/features/home"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/forms": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/forms": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
+    "@symphony/domain-ci": "workspace:*"
     "@symphony/domain-delivery": "workspace:*"
+    "@symphony/domain-execution": "workspace:*"
     "@symphony/domain-platform": "workspace:*"
+    "@symphony/domain-team": "workspace:*"
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
@@ -5904,7 +5900,6 @@ __metadata:
     "@symphony/frontend-notification": "workspace:*"
     "@symphony/frontend-search": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
-    "@symphony/frontend-widget": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
     vitest: "npm:5.0.5"
@@ -5915,9 +5910,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-mobile@workspace:libs/frontend/features/mobile"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@pixel-brewery/mosaik-themes": "npm:0.1.183"
     "@symphony/frontend-core": "workspace:*"
@@ -5935,9 +5930,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-platform@workspace:libs/frontend/features/platform"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-platform": "workspace:*"
@@ -5956,10 +5951,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-skills@workspace:libs/frontend/features/skills"
   dependencies:
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
@@ -5980,9 +5975,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-team@workspace:libs/frontend/features/team"
   dependencies:
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
@@ -6001,13 +5996,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-work@workspace:libs/frontend/features/work"
   dependencies:
-    "@angular/cdk": "npm:22.2.0"
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/forms": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/cdk": "npm:22.2.4"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/forms": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
@@ -6042,9 +6037,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-workflow@workspace:libs/frontend/features/workflow"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
@@ -6061,18 +6056,22 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-feature-workspace@workspace:libs/frontend/features/workspace"
   dependencies:
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
+    "@symphony/domain-workspace": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-notification": "workspace:*"
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
+    rxjs: "npm:7.8.2"
     vitest: "npm:5.0.5"
   languageName: unknown
   linkType: soft
@@ -6081,9 +6080,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-interaction@workspace:libs/frontend/interaction"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-notification": "workspace:*"
@@ -6098,10 +6097,16 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-notification@workspace:libs/frontend/notification"
   dependencies:
-    "@angular/core": "npm:22.2.0"
+    "@angular/cdk": "npm:22.2.4"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.183"
     "@symphony/ipc-contracts-core": "workspace:*"
+    rxjs: "npm:7.8.2"
     vitest: "npm:5.0.5"
     zod: "npm:4.6.5"
   languageName: unknown
@@ -6111,11 +6116,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-presentation@workspace:libs/frontend/presentation"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
@@ -6144,8 +6149,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-quick-create@workspace:libs/frontend/quick-create"
   dependencies:
-    "@angular/core": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/core": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@symphony/frontend-core": "workspace:*"
     vitest: "npm:5.0.5"
   languageName: unknown
@@ -6155,9 +6160,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-search@workspace:libs/frontend/search"
   dependencies:
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/frontend-core": "workspace:*"
     vitest: "npm:5.0.5"
   languageName: unknown
@@ -6167,14 +6173,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-setting@workspace:libs/frontend/setting"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
+    "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
     vitest: "npm:5.0.5"
@@ -6185,9 +6192,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-ui@workspace:libs/frontend/ui"
   dependencies:
-    "@angular/common": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/common": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/markdowner-core": "npm:0.1.183"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.183"
@@ -6210,8 +6217,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-update@workspace:libs/frontend/update"
   dependencies:
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-notification": "workspace:*"
@@ -6226,9 +6233,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/frontend-widget@workspace:libs/frontend/widget"
   dependencies:
-    "@angular/core": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular/core": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.183"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-quick-create": "workspace:*"
@@ -15373,18 +15380,18 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "symphony@workspace:."
   dependencies:
-    "@angular-devkit/core": "npm:22.2.0"
-    "@angular-devkit/schematics": "npm:22.2.0"
-    "@angular/build": "npm:22.2.0"
-    "@angular/cdk": "npm:22.2.0"
-    "@angular/cli": "npm:22.2.0"
-    "@angular/common": "npm:22.2.0"
-    "@angular/compiler": "npm:22.2.0"
-    "@angular/compiler-cli": "npm:22.2.0"
-    "@angular/core": "npm:22.2.0"
-    "@angular/forms": "npm:22.2.0"
-    "@angular/platform-browser": "npm:22.2.0"
-    "@angular/router": "npm:22.2.0"
+    "@angular-devkit/core": "npm:22.2.4"
+    "@angular-devkit/schematics": "npm:22.2.4"
+    "@angular/build": "npm:22.2.4"
+    "@angular/cdk": "npm:22.2.4"
+    "@angular/cli": "npm:22.2.4"
+    "@angular/common": "npm:22.2.3"
+    "@angular/compiler": "npm:22.2.3"
+    "@angular/compiler-cli": "npm:22.2.3"
+    "@angular/core": "npm:22.2.3"
+    "@angular/forms": "npm:22.2.3"
+    "@angular/platform-browser": "npm:22.2.3"
+    "@angular/router": "npm:22.2.3"
     "@electron-forge/cli": "npm:7.11.2"
     "@electron-forge/maker-deb": "npm:7.11.2"
     "@electron-forge/maker-dmg": "npm:7.11.2"
@@ -15421,7 +15428,7 @@ __metadata:
     "@pixel-brewery/synapse-routing": "npm:0.0.1"
     "@pixel-brewery/synapse-runtime": "npm:0.0.1"
     "@playwright/test": "npm:1.64.1"
-    "@schematics/angular": "npm:22.2.0"
+    "@schematics/angular": "npm:22.2.4"
     "@swc/helpers": "npm:~0.5.23"
     "@symphony/application-ai": "workspace:*"
     "@symphony/application-automation": "workspace:*"
@@ -16894,6 +16901,13 @@ __metadata:
   version: 4.6.5
   resolution: "zod@npm:4.6.5"
   checksum: 10c0/32eb6c5e98becbe045675b2141c3611451c16ba567f9779231d79af41c4d651ca1c22f154aef7e6c6e77b929f23e43f1154ca05b82e119e922353725d6776af5
+  languageName: node
+  linkType: hard
+
+"zod@npm:4.6.6":
+  version: 4.6.6
+  resolution: "zod@npm:4.6.6"
+  checksum: 10c0/447a3113bb743c54ab839213ff95e9e8c197cc1206f65270c18aac35aa70c47a5c8cab753be911b574df9a8a9801ea74ed6be776575232cae0084e51dab3e970
   languageName: node
   linkType: hard
 

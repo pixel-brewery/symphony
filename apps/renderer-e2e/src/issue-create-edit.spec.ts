@@ -4,11 +4,12 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { expandBoardColumn } from './expandBoardColumn';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
-test('creates and edits a provider-neutral work item through the shared drawer', async () => {
+test('creates a work item from the sheet and edits it on its own screen', async () => {
   // arrange
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
@@ -37,7 +38,7 @@ test('creates and edits a provider-neutral work item through the shared drawer',
     const page = await prepareMainWindow(app);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
 
     await page.evaluate(async (localPath) => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -121,49 +122,109 @@ test('creates and edits a provider-neutral work item through the shared drawer',
           ?.reload(),
       page.url(),
     );
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
 
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
     const createWorkItem = page.getByTestId('create-work-item');
-    await expect(createWorkItem).toHaveAttribute('aria-label', 'Create work item');
-    await expect(createWorkItem).toHaveAttribute('variant', 'primary');
     await createWorkItem.click();
-    await expect(page.getByTestId('task-drawer')).toBeVisible();
-    await expect(page.getByTestId('issue-create-mode-manual')).toHaveJSProperty('isChecked', true);
+    // `New work item` opens the sheet: written by hand, in the board's first column.
+    const sheet = page.getByTestId('new-work-item-sheet');
+    await expect(sheet).toBeVisible();
+    await expect(page.getByTestId('issue-create-mode-manual')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await expect(page.getByTestId('issue-editor')).toBeVisible();
     await expect(page.getByTestId('issue-creator')).toHaveCount(0);
+    await expect(page.getByTestId('issue-column')).toContainText('Backlog');
+    // Backlog waits for a decision, so no analysis can follow the creation there.
+    await expect(page.getByTestId('issue-analyze-after-create-toggle')).toHaveJSProperty(
+      'disabled',
+      true,
+    );
+    await expect(page.getByTestId('issue-analyze-after-create-reason')).toContainText(
+      'waits for your decision',
+    );
+    // An empty title blocks creation.
+    await expect(page.getByTestId('issue-save')).toHaveJSProperty('disabled', true);
     await page
       .getByTestId('issue-title')
       .locator('input')
       .fill('Create issues manually from the board');
+    await expect(page.getByTestId('issue-save')).toHaveJSProperty('disabled', false);
     await page
       .getByTestId('issue-body')
       .locator('textarea')
       .fill('## Manual issue\n\nNo AI is required for this ticket.');
+    await page.getByTestId('task-details-section').click();
     await page
       .getByTestId('issue-project-field-field-keywords')
       .locator('input')
       .fill('manual, project workflow');
     await page.getByTestId('issue-save').click();
-    await expect(page.getByTestId('task-drawer')).toHaveCount(0);
+    await expect(sheet).toHaveCount(0);
+    await expandBoardColumn(page, 'backlog');
     const manualCard = page
       .locator('mosaik-flow-board-column-item')
       .filter({ hasText: 'Create issues manually from the board' });
     await expect(manualCard).toBeVisible();
-    await expect(manualCard.locator('[test-id^="board-item-fields-"]')).toContainText(
-      'manual, project workflow',
-    );
-    await expect(manualCard.locator('[test-id^="board-item-fields-"]')).not.toContainText(
-      'Estimate',
-    );
+    // The card shows only id, title, status and progress; the project fields are stored with
+    // the item and edited on its own screen.
+    const storedItem = (title: string) =>
+      page.evaluate(async (itemTitle) => {
+        const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
+        const snapshot = await api.request('snapshot.get', {});
+        const item = snapshot.workItems.find((candidate) => candidate.title === itemTitle);
+        return item
+          ? {
+              stageId: item.stageId,
+              labels: item.labels,
+              projectFields: item.projectFields ?? [],
+            }
+          : undefined;
+      }, title);
+    const manualItem = await storedItem('Create issues manually from the board');
+    expect(manualItem?.projectFields).toContainEqual({
+      fieldId: 'field-keywords',
+      type: 'text',
+      value: 'manual, project workflow',
+    });
+    expect(
+      manualItem?.projectFields.find((field) => field.fieldId === 'field-estimate')?.value ?? null,
+    ).toBeNull();
 
-    await page.getByTestId('create-work-item').click();
+    // ⌘N (Ctrl+N off macOS) opens the same sheet; a chosen column places the item there.
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+n' : 'Control+n');
+    await expect(sheet).toBeVisible();
+    await page
+      .getByTestId('issue-title')
+      .locator('input')
+      .fill('Prepare the reconciliation report');
+    await page.getByTestId('issue-column').click();
+    await page.getByTestId('issue-column-option-ready').click();
+    await expect(page.getByTestId('issue-column')).toContainText('Ready');
+    await page.getByTestId('issue-add-label').click();
+    await page.getByTestId('issue-label-bug').click();
+    await expect(page.getByTestId('issue-label-badge-bug')).toBeVisible();
+    await page.getByTestId('issue-save').click();
+    await expect(sheet).toHaveCount(0);
+    const readyCard = page
+      .getByTestId('board-column-ready')
+      .locator('mosaik-flow-board-column-item')
+      .filter({ hasText: 'Prepare the reconciliation report' });
+    await expect(readyCard).toBeVisible();
+    await expect
+      .poll(() => storedItem('Prepare the reconciliation report'))
+      .toMatchObject({ stageId: 'ready', labels: ['bug'] });
+
+    await createWorkItem.click();
     await expect(page.getByTestId('issue-editor')).toBeVisible();
     await page.getByTestId('issue-create-mode-ai').click();
+    await expect(page.getByTestId('issue-create-mode-ai')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('issue-editor')).toHaveCount(0);
-    // With a single repository there is nothing to choose, so the field is not shown at all.
-    await expect(page.getByTestId('issue-repository')).toHaveCount(0);
+    // The draft is written for the chosen repository, shown even when it is the only one.
+    await expect(page.getByTestId('issue-repository')).toContainText('example/platform');
     await expect(page.getByTestId('issue-creator-agent')).toBeVisible();
 
     const creatorPrompt = page.getByTestId('issue-creator-prompt');
@@ -179,13 +240,14 @@ test('creates and edits a provider-neutral work item through the shared drawer',
     await expect(creatorPrompt.locator('[part="submit"]')).toBeEnabled();
     await creatorPrompt.locator('[part="submit"]').click();
     await expect(page.getByTestId('issue-editor')).toBeVisible();
+    await expect(page.getByTestId('issue-creator-start-over')).toBeVisible();
     await expect(page.getByTestId('issue-title').locator('input')).toHaveValue(
       'Add complete issue creation to the workspace board',
     );
     await expect(page.getByTestId('issue-body').locator('textarea')).toHaveValue(
       /## Acceptance criteria/,
     );
-    await expect(page.getByTestId('issue-project-field-field-status')).toContainText('Backlog');
+    await expect(page.getByTestId('issue-column')).toContainText('Backlog');
     await expect(
       page.getByTestId('issue-project-field-field-keywords').locator('input'),
     ).toHaveValue('issue creation, project workflow');
@@ -212,16 +274,16 @@ test('creates and edits a provider-neutral work item through the shared drawer',
     await expect(page.getByTestId('issue-project-field-field-iteration')).toContainText(
       'August 2026',
     );
-    await expect(page.getByTestId('issue-label-bug').locator('input')).toBeChecked();
+    await expect(page.getByTestId('issue-label-badge-bug')).toBeVisible();
     await expect(page.getByTestId('issue-assignee-octo-operator').locator('input')).toBeChecked();
     await page.getByTestId('issue-project-field-field-keywords').scrollIntoViewIfNeeded();
     await page.screenshot({
-      path: resolve(outputDirectory, 'board-issue-create-drawer.png'),
+      path: resolve(outputDirectory, 'board-issue-create-sheet.png'),
       fullPage: true,
     });
 
     await page.getByTestId('issue-save').click();
-    await expect(page.getByTestId('task-drawer')).toHaveCount(0);
+    await expect(sheet).toHaveCount(0);
 
     const createdCard = page
       .locator('mosaik-flow-board-column-item')
@@ -235,47 +297,33 @@ test('creates and edits a provider-neutral work item through the shared drawer',
       })
       .toBe(true);
     await expect(createdCard).toBeVisible();
-    await expect(createdCard).toContainText('bug');
-    await expect(createdCard.locator('[test-id^="board-item-fields-"]')).toContainText(
-      'issue creation, project workflow',
-    );
-    await expect(createdCard.locator('[test-id^="board-item-fields-"]')).toContainText(
-      'Estimate · 5',
-    );
-    await expect(createdCard.locator('[test-id^="board-item-fields-"]')).toContainText(
-      'Areas · Projects',
-    );
     await createdCard.click();
+    // The created item opens on its own screen: title, rendered description and activity,
+    // with editing behind the toolbar's `Edit`.
+    await expect(page.getByTestId('work-item-view')).toBeVisible();
     await expect(page.getByTestId('task-summary')).toBeVisible();
-    // An existing item opens as the compact summary from the reference: the description is
-    // progressively disclosed, editing waits behind its explicit action, and activity opens.
     await expect(page.getByTestId('task-drawer-title')).toContainText(
       'Add complete issue creation to the workspace board',
     );
-    await expect(page.getByTestId('task-description-section')).toHaveJSProperty(
-      'isExpanded',
-      false,
-    );
-    await page.getByTestId('task-description-section').click();
     await expect(page.getByTestId('task-drawer-description')).toBeVisible();
+    await expect(page.getByTestId('work-item-label-bug')).toBeVisible();
+    await expect(page.getByTestId('work-item-assignee-octo-operator')).toBeVisible();
     await expect(page.getByTestId('issue-title')).toHaveCount(0);
     await expect(page.getByTestId('issue-body')).toHaveCount(0);
-    await expect(page.getByTestId('task-activity-section')).toHaveJSProperty('isExpanded', true);
-    await expect(page.getByTestId('task-drawer-comments-empty')).toBeVisible();
+    const comments = page
+      .getByTestId('task-drawer-events')
+      .locator('[data-activity-kind="comment"]');
+    await expect(comments).toHaveCount(0);
 
     // The discussion is not read-only: what is written here reaches the provider and joins the
-    // thread in place, without reopening the drawer.
+    // activity in place.
     const commentDraft = page.getByTestId('task-drawer-comment-draft');
     await commentDraft.locator('textarea').fill('Reconcile **managed workspaces** first.');
     await page.getByTestId('task-drawer-comment-submit').click();
-    await expect(page.getByTestId('task-drawer-comments-empty')).toHaveCount(0);
-    const writtenComment = page.getByTestId('task-drawer-comments').locator('mosaik-comment');
-    await expect(writtenComment).toHaveCount(1);
-    await expect(writtenComment).toContainText('Octo Operator');
-    await expect(writtenComment).toContainText('Reconcile managed workspaces first.');
+    await expect(comments).toHaveCount(1);
+    await expect(comments).toContainText('Octo Operator');
+    await expect(comments).toContainText('Reconcile managed workspaces first.');
     await expect(commentDraft.locator('textarea')).toHaveValue('');
-    await expect(page.getByTestId('task-checks-section')).toHaveJSProperty('isExpanded', false);
-    await page.getByTestId('task-checks-section').click();
     const aiDelegation = page.getByTestId('task-ai-delegation');
     await expect(aiDelegation).toBeVisible();
     await aiDelegation.scrollIntoViewIfNeeded();
@@ -321,7 +369,7 @@ test('creates and edits a provider-neutral work item through the shared drawer',
       },
     });
     // A freshly created work item waits at Human Gate 1; approving it is the only way to
-    // release it for technical work, and the drawer offers the gate's decisions. Until then
+    // release it for technical work, and the screen offers the gate's decisions. Until then
     // the gate runs no step, so the step controls offer none either.
     await expect(page.getByTestId('task-analysis-step')).toHaveCount(0);
     await expect(page.getByTestId('task-no-step-available')).toContainText('waits for a decision');
@@ -361,33 +409,42 @@ test('creates and edits a provider-neutral work item through the shared drawer',
     await expect(page.getByTestId('task-drawer-solve')).toHaveAttribute('variant', 'primary');
     await page.getByTestId('task-drawer-solve').click();
     await expect(page.getByTestId('task-solution-markdown')).toContainText('Manual implementation');
-    await page.getByTestId('task-drawer-edit-content').scrollIntoViewIfNeeded();
-    await page.getByTestId('task-drawer-edit-content').click();
-    await expect(page.getByTestId('task-drawer-edit-content')).toContainText('Preview');
+    // `Edit` lives in the toolbar; `Preview` shows the unsaved edit while the session stays open.
+    const edit = page.getByTestId('task-drawer-edit-content');
+    await edit.click();
+    await expect(edit).toHaveAttribute('aria-label', 'Preview');
+    // The editor shows the project fields the AI draft stored with the item.
+    await expect(
+      page.getByTestId('issue-project-field-field-keywords').locator('input'),
+    ).toHaveValue('issue creation, project workflow');
+    await expect(
+      page.getByTestId('issue-project-field-field-estimate').locator('input'),
+    ).toHaveValue('5');
+    await expect(
+      page.getByTestId('issue-project-field-field-areas-option-area-projects').locator('input'),
+    ).toBeChecked();
     await page.getByTestId('issue-title').locator('input').fill('Edit issues from the board');
     await page
       .getByTestId('issue-project-field-field-keywords')
       .locator('input')
       .fill('issue editing, project-v2');
     await page.getByTestId('issue-project-field-field-status').locator('mosaik-select').click();
-    // Addressed by its option id: "Ready" is also the name of a board column, and the card
-    // menus keep one hidden entry per column for their move actions.
+    // Addressed by its option id: "Ready" is also the name of a board column.
     await page.getByTestId('issue-project-field-field-status-option-status-ready').click();
-    await page.getByTestId('task-drawer-edit-content').click();
-    // Preview renders the unsaved edit while the footer retains the explicit Save/Cancel session.
+    await edit.click();
     await expect(page.getByTestId('task-drawer-title')).toContainText('Edit issues from the board');
-    await expect(page.getByTestId('task-drawer-edit-content')).toContainText('Edit');
+    await expect(edit).toHaveAttribute('aria-label', 'Edit work item');
     await expect(page.getByTestId('issue-save')).toBeVisible();
     await page.getByTestId('issue-save').click();
-    await expect(page.getByTestId('task-drawer')).toHaveCount(0);
+    await expect(page.getByTestId('issue-save')).toHaveCount(0);
+    await expect(page.getByTestId('window-subtitle')).toContainText('Board · Ready');
+    await page.getByTestId('navigate-back').click();
+    await expect(page.getByTestId('board-view')).toBeVisible();
     const editedCard = page
       .getByTestId('board-column-ready')
       .locator('mosaik-flow-board-column-item')
       .filter({ hasText: 'Edit issues from the board' });
     await expect(editedCard).toBeVisible();
-    await expect(editedCard.locator('[test-id^="board-item-fields-"]')).toContainText(
-      'issue editing, project-v2',
-    );
 
     const saved = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -446,11 +503,15 @@ test('creates and edits a provider-neutral work item through the shared drawer',
       path: resolve(outputDirectory, 'board-issue-create-edit.png'),
       fullPage: true,
     });
-    // The search rests as a launcher button and becomes the field on activation.
+    // The toolbar search opens the command palette; its contextual filter narrows the board to
+    // the edited project field.
     await page.getByTestId('global-search-launcher').click();
-    const globalSearch = page.getByTestId('global-search-launcher-input').locator('input');
+    const globalSearch = page.getByTestId('command-palette-search').locator('input');
+    await expect(globalSearch).toBeFocused();
     await globalSearch.fill('project-v2');
-    await globalSearch.press('Enter');
+    const boardFilter = page.getByTestId('command-palette-option-command:contextual-filter');
+    await expect(boardFilter).toContainText('Filter Board by “project-v2”');
+    await boardFilter.click();
     await expect(page).toHaveURL(/\/main\/board\?q=project-v2/);
     await expect(editedCard).toBeVisible();
     await expect(manualCard).toHaveCount(0);

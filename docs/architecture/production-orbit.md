@@ -1,13 +1,19 @@
 # Production orbit and employees
 
-Symphony's initial route is `/main/orbit`. Overview (`/main/home`) and Orbit have
-separate primary navigation entries alongside Board, Pull Requests and Actions.
-The workspace menu owns project setup (`/main/setup`) and Settings. Dedicated
-Stages and Employees views are retired: `/main/stages` redirects to Board and
-`/main/team` redirects to Settings. Orbit has no duplicate route
-toolbar, setup control or lower ticket catalogue. Its Runs rail starts closed
-on entry and remains explicitly available from the shell. Existing bookmarks,
-task/process links and Actions drawers remain valid. These surfaces reuse the
+Symphony's initial route is Overview (`/main/home`). Overview and Orbit have
+separate sidebar entries: Overview leads the sidebar, Orbit closes its `Delivery`
+group after Inbox, Board, Pull requests and Actions
+([window chrome and navigation](window-and-navigation/README.md)). The product
+behaviour of the Orbit screen is described in [Orbit](../project/orbit/README.md).
+Settings is a route of the main window whose navigation replaces the sidebar destinations
+while it is open; project setup has no sidebar entry, and `/main/setup` opens the
+`Build your project team` sheet in Settings
+([Settings in the main window](window-and-navigation/settings.md#einrichtung-als-sheet)). Dedicated Stages and
+Employees views are retired: `/main/stages` redirects to Board and `/main/team`
+redirects to `/main/settings`. Orbit has
+no duplicate route toolbar, setup control or lower ticket catalogue. The former
+Runs rail is replaced by the sidebar run panel, which belongs to the sidebar on
+every main route. Existing bookmarks, task/process links and Actions drawers remain valid. These surfaces reuse the
 existing orchestration, queue, workflow and CLI execution services.
 
 ## Theme and employee identity
@@ -122,23 +128,73 @@ delivery targets become an empty list.
 
 Existing projects configure targets under **Settings → Workspaces → workspace →
 Delivery destinations**. The project selector scopes the list and every editor to
-one repository. Add/Edit use the existing settings drawer and save the destination
-name, evidence kind and Production assignment together. An optional deployment
+one repository. Add/Edit open the destination sheet of Settings and
+save the destination name, evidence kind and Production assignment together. While the
+draft represents Production, an orbit preview at the top of the sheet shows the chosen body
+at the centre and the project's other destinations on two rings; the body picker is a compact
+three-column grid of the nine planet previews. An optional deployment
 workflow is selected from the repository's manually dispatchable workflows and
 requires its exact-version input. Destination and operation inputs remain optional.
 Cancel discards the draft; removing a destination removes its configuration, not
 the deployment or provider history.
 Removing a repository or workspace also removes its owned destination configuration.
 
-Selecting the Production body or another destination exposes its project,
-configuration and evidence state in the right-hand Mosaik Card overlay. Its
-configuration button opens the same settings section and the matching editor;
-unconfigured Production opens a prefilled, unsaved Production draft. With multiple
-Production destinations, the button opens the scoped list so the operator chooses
-which target to edit. Details and the left explorer share card anatomy, with
-independent content scrolling and a fixed close action. Only one overlay is shown
-at a time. Opening details does not shrink the WebGL viewport or reset the camera;
-Escape closes the active overlay. Configuring a target never confirms a delivery.
+Orbit's window toolbar shows the title `Orbit`, a subtitle and the destination control.
+The subtitle reports one destination (`toolbarDestination`): the destination selected in
+the scene or the destination menu, otherwise the first Production destination in menu
+order (Production destinations sorted by display name). Without either it is
+`No production destination`; otherwise it is `<name> · <state>`, where `<name>` is that
+destination's display name and `<state>` comes from its scene node
+(`toolbarDestinationNode`, the node whose `targetId` is the destination: the centre node
+for a single Production destination, the `target:<id>` node otherwise): the confirmed
+version, `Not verified` (stale evidence) or `No confirmed version`. With several
+Production destinations the subtitle therefore names the selected (or first) one's
+confirmed version. The destination control is an outline dropdown labelled with the
+single Production destination's display name, or `Production` when there are none or
+several. Its menu lists every in-scope destination, Production destinations first and
+then by display name, each with the sub-label `Production · ` (when applicable) followed
+by `Environment`, `Release channel` or `Installation`; without destinations it shows the
+disabled item `No delivery destinations are configured for this project.` When the
+Delivery participant is part of the product, the menu adds `Refresh evidence` (disabled
+while a refresh runs) and `Delivery destinations in Settings`, which opens
+`/main/settings?workspace=…&section=delivery&repository=…` without a target and is
+disabled without a selected workspace. With several repositories a `Project` selector
+precedes the control. Choosing a destination selects its scene node and focuses the
+camera on it.
+
+A 340 px inspector pane beside the diagram always shows exactly one state, in this
+order of precedence: a selected destination, the selected Production centre, a selected
+stage cluster, the selected work item, otherwise the default cluster (`Needs attention`
+when anything needs attention, else the first cluster); without work items it says that
+no tickets exist or that none match the filters, with `Clear filters`. Selecting the
+Production body or another destination exposes its project, configuration and evidence
+state; its configuration button opens Settings › Delivery destinations
+(`/main/settings?workspace=…&section=delivery&repository=…&target=…`, Settings in the
+main window) with the matching editor; unconfigured Production opens a prefilled,
+unsaved Production draft. With multiple Production destinations, the button opens the
+scoped list so the operator chooses which target to edit. Selecting the single
+Production destination (centre or menu) shows its destination state; the separate
+Production state appears only when no or several Production destinations exist and lists
+one button per Production destination plus `Configure production`. Destination,
+Production and work-item states carry a close action; it and Escape clear the
+destination, node and cluster selection, hide work-item details until the next explicit
+selection and leave the shared Board selection intact, so the inspector returns to the
+default cluster. The inspector never shrinks the WebGL viewport or resets the camera.
+Configuring a target never confirms a delivery.
+
+The work-item state shows title, identifier, Board column, `Work stage: <label>`
+(`Unmapped` outside the workflow), `Review / answer / next stage`
+(`/main/board?item=<id>&process=true`, the Board's process view), `Open ticket details`
+(`/main/board?item=<id>`, which the Board turns into the work-item screen), one line
+`<destination> · <version> · <kind>` per destination whose current evidence names the
+item (otherwise `No delivery of this ticket is currently confirmed.`), the pull requests
+of its executions as external links and the CI runs on their head or merge revisions (or
+on a revision whose evidence names the item) as `/main/actions?run=<id>` links; a run
+matches only through a pull request of the same repository binding, never through another
+repository's pull request with the same number. As soon as the application is hydrated,
+each new Orbit presenter clears destination, node and cluster selection, resets the
+cluster page and refreshes the evidence; an explicit Board selection inside the project
+therefore opens in the work-item state.
 
 ## Three-dimensional production orbit
 
@@ -147,7 +203,41 @@ store holds shared text/stage/column/label filters and explicit selection. The
 pure `projectOrbitScene` function produces world positions, bodies, rings and
 relationships from the repository's actual tickets and delivery
 evidence. The orbit camera is retained separately for each workspace/repository
-scope. Filtering does not invent new positions for surviving tickets.
+scope.
+
+Work items form stage clusters around the destination. The pure
+`projectOrbitClusters` function applies the Board's own rules: the active board's
+column layout (`resolveBoardColumnLayout`, including `No column`) and the Board's
+attention judgement (`workItemIdsNeedingAttention`). An item that needs attention
+belongs to the `Needs attention` cluster instead of its column, so every item is in
+exactly one cluster and that cluster equals the Board's attention filter. Clusters are
+the non-empty columns in board order followed by `Needs attention`; their tone is danger
+for attention, success for a column mapped to a terminal stage and neutral otherwise.
+`projectOrbitScene` gives each cluster one sector of a flat belt, clockwise from the top,
+and lays its members out as evenly spaced arcs (large clusters pack tighter and add outer
+rows) with a cluster label node outside the arc. Ticket bodies take the cluster tone.
+Positions depend on cluster membership, so filtering re-lays the surviving tickets inside
+their clusters. The inspector of a cluster shows its name, how many of its work items
+are not in the confirmed Production version, `Evidence collected` (items named by any
+destination's succeeded evidence, `—` while evidence is loading or failed) with a progress
+bar, its work items newest first (six per page with `Previous` / `Next`; each row shows
+title, identifier and column label and selects the item) and `Show on board`, which opens
+`/main/board?column=<id>` or `/main/board?attention=true`. The summary is
+`No production destination is configured for this project.` without Production, only the
+item count while evidence is unknown, `All n work items are in the confirmed Production
+version.` (or `This work item is …`) when nothing is missing, and otherwise `n work items
+are …` or `k of n work items are not in a confirmed Production version.` Only a
+`confirmed` centre contributes members; an unconfirmed or stale centre counts every item
+as missing. Selecting a cluster resets its page to the first one. Items that no cluster
+claims are drawn as one extra `Work items` sector, so the scene never drops a ticket.
+
+Search, stage, column and label filters are the Work feature's shared filter state, not
+Orbit's own: a filter set on the Board narrows Orbit and vice versa. `Show on board` for a
+column sets that shared column filter through the Board's `column` parameter, so Orbit
+shows only that cluster afterwards until `Clear filters`; the Board's attention drill-down
+clears the shared column (unless `column` is given), query (unless `q` is given), stage and
+label filters. Selecting a work item that the filters hide clears them first. The `q`
+query parameter sets the shared search on entry and whenever it changes.
 
 `OrbitCanvasComponent` owns a lazy Three.js WebGL renderer, perspective camera,
 lit destination bodies, a shader sun, tilted orbital rings and an instanced
@@ -156,17 +246,34 @@ effective Soho scheme, including live system appearance changes. There is no
 scoped dark theme. Public `ThemeObserver` events repaint GPU colours without
 resetting selection or camera. Physical lighting uses the brighter scheme pole
 so dark text in the light scheme cannot extinguish illumination.
-Fit targets the central sun and calculates the required distance
+Fit targets the central sun from a steep view above the belt, so the belt reads as the
+near-circle the diagram draws, and calculates the required distance
 from projected horizontal, vertical and depth bounds, viewport aspect and label
-margins. Every filtered ticket remains a pickable GPU instance. System,
-sector and ticket zoom levels bound projected DOM labels to 10, 14 and 18 instead
-of removing ticket geometry. Compact labels show group counts in their public
-Mosaik label slot. Native drag, wheel and pinch move the camera; selection and
-focus are distinct actions. Fit and zoom buttons complement pointer interaction.
-The on-demand object explorer provides bounded, keyboard-operable pages for
-tickets and destinations without adding a permanent list below the
-scene. Each explicit focus command has a revision, so selecting the same ticket
-again can refocus it after manual camera movement.
+margins. Destination orbits are dashed neutral guides; the work-item belt is a solid
+one. Every filtered ticket remains a pickable GPU instance. Bodies and cluster labels are
+always labelled where there is room; only ticket labels share a zoom-dependent budget
+instead of removing ticket geometry. The zoom level follows the camera distance: `system`
+(48 units or more) labels no ticket except the selected or keyboard-focused one, `groups`
+(below 48) at most 14 tickets and `tickets` (below 18) at most 18. A cluster label is a
+Mosaik Badge (`Label · count`; soft danger with `errorCircle`, soft success, or outline
+default) on a surface pill, placed on the side facing away from the centre; destinations
+show a name card with `<version> · confirmed <MMM d>`, `No destination configured` or
+`No confirmed version`. Native drag, wheel and pinch move the camera. Selection and focus
+are distinct actions: selecting a cluster, the centre or another destination in the scene
+keeps the camera; selecting a work item (in the scene, the cluster list, an evidence chip
+or by search) and choosing a destination from the toolbar menu also focus it; a
+double-click or Ctrl/⌘+Enter on any label focuses that object. The floating zoom card
+offers `+` (zoom in by a factor of 1.2), the current scale as fitted distance divided by
+current distance, rounded to whole per cent (`100 %`; clicking it returns to the fitted
+distance along the current direction) and `Fit`. While the camera is fitted, scene changes
+and viewport resizes re-fit it; any manual zoom, wheel, drag, focus or restored camera
+ends that until the next `Fit`. A floating find
+card, present only with the Work filter participant, holds the shared text search
+(`Find a work item`, matching identifier, title and labels; Enter selects the exact
+identifier match or the only result), the stage filter (`All stages` or one workflow
+stage) and `Clear filters` while any shared filter is active. Each explicit focus command
+has a revision, so selecting the same ticket again can refocus it after manual camera
+movement.
 
 Production uses the Sun by default. In Settings → Workspaces → Delivery destinations,
 edit the Production destination and choose **Body at the centre of the orbit**:
@@ -197,7 +304,7 @@ evidence are distinct states. A ticket has one work position and separate links
 to all confirmed destinations; its stage never implies a deployment. Target
 selection opens the existing evidence and explicit deployment commands.
 
-Orbit's selectable objects are production, delivery targets, tickets and ticket groups.
+Orbit's selectable objects are production, delivery targets, tickets and stage clusters.
 There are no employee work nodes, team groups, handoff edges, employee explorer
 category or employee detail/assignment controls. Workspace settings and Mobile retain
 actual employee identities and work states.
@@ -234,7 +341,21 @@ Configured settings targets remain visible when a query fails; last-known
 evidence is marked stale. Late responses cannot replace the active project's
 state. Scene rendering settles between interaction and finite flights, pauses out of view, respects
 reduced motion and disposes its resources on destruction. Failure to create or
-restore WebGL keeps the accessible ticket explorer available.
+restore WebGL replaces the scene with `3D is unavailable` or `3D was interrupted`, the
+line `Choose a destination or a cluster of work items here instead.`, one button per
+non-ticket node (the centre, every destination and every cluster as `Label · count`) and
+`Retry`, which recreates the canvas and renderer; the inspector's cluster list keeps every
+work item reachable.
+
+Visible failure texts of the screen: a failed evidence refresh sets the inspector hint
+`Delivery evidence could not be refreshed. Check the GitHub account and retry.` and marks
+the centre and destinations stale; per-destination provider errors appear as their own
+hints; a failed operations read only warns `Delivery operations could not be refreshed.
+Retry before starting another deployment.`; preview, start and reconcile failures show
+`Unable to prepare delivery.`, `Delivery was not started.` and `Unable to reconcile
+delivery.`; a plan whose scope, target or ref no longer matches at start is discarded with
+`The delivery target or version changed. Prepare a new delivery.` and nothing is
+dispatched.
 
 The dedicated Stage and Employees scenes are removed. Board owns workflow work,
 while workspace settings own the AI team and appearance. Successful setup analysis
@@ -323,9 +444,18 @@ matrix logs, saved appearance across restart/account replacement and first-analy
 setup journeys. Component and Mobile journeys cover transparent animated figures
 and reduced motion. Adjacent projection
 specs own deterministic geometry and multi-destination
-relationships. The shell journey also checks contextual search on Orbit and
+relationships: `projectOrbitClusters.spec.ts` (board column order, skipped empty columns,
+attention items last, empty input), `projectOrbitScene.spec.ts` (clusters as clockwise arcs
+with outer labels, re-laying a filtered subset, distinct evidence states) and
+`OrbitViewPresenter.spec.ts` (`Needs attention` as the default cluster, `Show on board`
+targets, evidence and unconfirmed counts, returning from a selected cluster, opening
+Delivery destinations in Settings, late-evidence invalidation and an omitted Delivery
+participant). `OrbitCanvasComponent.spec.ts` covers camera restore per scope,
+repeated focus, theme repaint and visibility, `projectOrbitLabels.spec.ts` the label
+budgets and outer cluster labels, and `fitOrbitCamera.spec.ts` fitting; the WebGL fallback
+with `Retry` is exercised by `orbit-redesign.spec.ts`. The shell journey also checks contextual search on Orbit and
 the separate Overview destination. `orbit-appearance.spec.ts` checks that all six
-employee identities remain available in workspace settings, retired routes redirect, the explorer contains only tickets and destinations, and live Soho
+employee identities remain available in workspace settings, retired routes redirect, the inspector opens on a stage cluster with `Show on board`, the canvas sits on the neutral-50 diagram surface, and live Soho
 scheme changes preserve the scene and camera. A running analysis remains active
 when switching from its Board process drawer to Orbit without employee figures.
 

@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { expandBoardColumn } from './expandBoardColumn';
 
 // #endregion
 
@@ -37,11 +38,13 @@ test('shows where a work item stands in the process from its board context menu'
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
 
+    // The item rests in Backlog, which the board starts collapsed.
     const workItemId = 'work-item-142';
+    await expandBoardColumn(page, 'backlog');
     const card = page.getByTestId(`board-item-${workItemId}`);
     await expect(card).toBeVisible();
 

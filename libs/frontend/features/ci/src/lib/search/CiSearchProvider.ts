@@ -1,14 +1,16 @@
 // #region Imports
 
 import { Inject, inject, Injectable } from '@angular/core';
-import type { ISearchMatch, ISearchProvider } from '@symphony/frontend-search';
+import type { IPaletteResult, ISearchMatch, ISearchProvider } from '@symphony/frontend-search';
 import type { ICiContext } from '../ports/ICiContext';
 import { CI_CONTEXT } from '../ports/CiContextToken';
+import { projectCiPaletteResults } from './projectCiPaletteResults';
 
 // #endregion
 
 /**
- * Uses CI's existing run projection for global and contextual Actions search.
+ * Uses CI's existing run and workflow projections for global and contextual Actions search and for
+ * the command palette.
  *
  * @public
  */
@@ -16,14 +18,17 @@ import { CI_CONTEXT } from '../ports/CiContextToken';
 export class CiSearchProvider implements ISearchProvider {
   // #region Fields
 
-  private readonly _context: Pick<ICiContext, 'runs'>;
+  private readonly _context: Pick<ICiContext, 'runs'> & Partial<Pick<ICiContext, 'workflows'>>;
 
   // #endregion
 
   // #region Ctor
 
-  /** Connects the feature's existing run projection. @public */
-  public constructor(@Inject(CI_CONTEXT) context: Pick<ICiContext, 'runs'> = inject(CI_CONTEXT)) {
+  /** Connects the feature's existing run and workflow projections. @public */
+  public constructor(
+    @Inject(CI_CONTEXT)
+    context: Pick<ICiContext, 'runs'> & Partial<Pick<ICiContext, 'workflows'>> = inject(CI_CONTEXT),
+  ) {
     this._context = context;
   }
 
@@ -71,6 +76,23 @@ export class CiSearchProvider implements ISearchProvider {
           .includes(normalizedQuery),
       );
     return actionMatch ? { path: '/main/actions', queryParams: { q: query } } : undefined;
+  }
+
+  /**
+   * Lists the matching Action runs, each opening on Actions, the matching workflows that can be
+   * started by hand and `Run workflow…`.
+   *
+   * @param _query - Trimmed palette input; matching uses the normalized form.
+   * @param normalizedQuery - Locale-lowercased palette input; empty lists only `Run workflow…`.
+   * @returns CI's palette rows.
+   * @public
+   */
+  public paletteResults(_query: string, normalizedQuery: string): readonly IPaletteResult[] {
+    return projectCiPaletteResults(
+      this._context.runs(),
+      this._context.workflows?.() ?? [],
+      normalizedQuery,
+    );
   }
 
   // #endregion

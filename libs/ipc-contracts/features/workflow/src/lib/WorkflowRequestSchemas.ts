@@ -28,4 +28,10 @@ export const workflowRequestSchemas = {
     option: z.string().trim().min(1).max(300).optional(),
     note: z.string().trim().max(4_000).optional(),
   }),
+  'workflow.stage-changes.list': z.object({
+    /** One configured workspace; every workspace of the active scope when omitted. */
+    workspaceId: z.string().min(1).optional(),
+    /** Earliest change of interest; earlier changes of the same work items are included. */
+    since: z.iso.datetime({ offset: true }),
+  }),
 } as const;

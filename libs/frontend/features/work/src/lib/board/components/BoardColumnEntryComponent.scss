@@ -1,0 +1,16 @@
+// The card id is a technical value: monospace from the shared `technical-value` class, in the
+// caption size the Board artboard draws. Only the text's public size properties are set here,
+// because the typography directive would replace the monospace family with the caption's.
+[part~='board-card-id'] {
+  --text-font-size: var(--mosaik-typography-caption-font-size);
+  --text-font-line-height: var(--mosaik-typography-caption-line-height);
+}
+
+// A card in the delivery selection carries the 2px foreground frame the artboard draws; the
+// padding gives the extra pixel back so the content does not shift.
+mosaik-flow-board-column-item[aria-selected='true'] {
+  --flow-board-column-item-border-width: calc(var(--mosaik-layout-thickness) * 2);
+  --flow-board-column-item-padding: calc(
+    var(--mosaik-layout-space) * 1.5 - var(--mosaik-layout-thickness)
+  );
+}

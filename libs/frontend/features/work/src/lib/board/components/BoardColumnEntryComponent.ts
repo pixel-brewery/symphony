@@ -1,13 +1,10 @@
 // #region Imports
 
-import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import {
   AvatarComponent,
-  AvatarGroupComponent,
   BadgeComponent,
   ButtonComponent,
-  ChipComponent,
   DividerComponent,
   DropDownButtonComponent,
   FlowBoardColumnItemComponent,
@@ -17,19 +14,17 @@ import {
   IconNameDirective,
   MenuComponent,
   MenuItemComponent,
+  ProgressBarComponent,
   ProgressRingComponent,
   TextComponent,
-  TooltipComponent,
   TooltipDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import {
-  HoverRevealForDirective,
-  MarkdownComponent,
-  TruncateStartPipe,
-} from '@symphony/frontend-ui';
-import { TaskRuntimePresentationPipe } from '../pipes/TaskRuntimePresentationPipe';
+import { HoverRevealForDirective } from '@symphony/frontend-ui';
+import { BoardCardStatusPresentationPipe } from '../pipes/BoardCardStatusPresentationPipe';
 import { WorkItemHealthPresentationPipe } from '../pipes/WorkItemHealthPresentationPipe';
 import { WorkItemLinkPresentationPipe } from '../pipes/WorkItemLinkPresentationPipe';
+import { BOARD_DELIVERY_STEP_COUNT } from '../view-presenters/boardCard';
 import { BoardViewPresenter } from '../view-presenters/BoardViewPresenter';
 import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
 
@@ -42,14 +37,12 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
  */
 @Component({
   selector: 'symphony-board-column-entry',
-  host: { class: 'block w-full min-w-0 max-w-full' },
+  host: { class: 'block w-full min-w-0 max-w-full pb-[6px]' },
   imports: [
     AvatarComponent,
-    AvatarGroupComponent,
     BadgeComponent,
+    BoardCardStatusPresentationPipe,
     ButtonComponent,
-    ChipComponent,
-    DatePipe,
     DividerComponent,
     DropDownButtonComponent,
     FlowBoardColumnItemComponent,
@@ -58,19 +51,18 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
     HoverRevealForDirective,
     IconComponent,
     IconNameDirective,
-    MarkdownComponent,
     MenuComponent,
     MenuItemComponent,
+    ProgressBarComponent,
     ProgressRingComponent,
-    TaskRuntimePresentationPipe,
     TextComponent,
-    TooltipComponent,
     TooltipDirective,
-    TruncateStartPipe,
+    TypographyDirective,
     WorkItemHealthPresentationPipe,
     WorkItemLinkPresentationPipe,
   ],
   templateUrl: './BoardColumnEntryComponent.html',
+  styleUrl: './BoardColumnEntryComponent.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BoardColumnEntryComponent {
@@ -100,6 +92,15 @@ export class BoardColumnEntryComponent {
   protected readonly presenter = inject(BoardViewPresenter);
   /** Existing Workflow availability from the actual owning Board presenter. @protected @readonly */
   protected readonly workflowAvailable = this.presenter.workflowAvailable;
+
+  /** Number of delivery steps on the card's progress bar. */
+  protected readonly deliveryStepCount = BOARD_DELIVERY_STEP_COUNT;
+
+  /** Zero-based delivery steps the progress bar draws, one segment each. */
+  protected readonly deliverySteps = Array.from(
+    { length: BOARD_DELIVERY_STEP_COUNT },
+    (_step, index) => index,
+  );
 
   // #endregion
 

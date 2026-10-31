@@ -29,7 +29,13 @@
         [size]="'small'"
       />
     </div>
-    <mosaik-text slot="title" class="w-0 min-w-full" [text]="root.title" [wrap]="true" />
+    <mosaik-text
+      slot="title"
+      class="w-0 min-w-full"
+      [mosaikTypography]="'subtitle2'"
+      [text]="root.title"
+      [wrap]="true"
+    />
     <div slot="actions" class="min-w-[40px]" aria-hidden="true"></div>
     <div slot="subtitle" class="flex w-0 min-w-full flex-col gap-1">
       <mosaik-hint
@@ -147,18 +153,9 @@
             }
           </mosaik-menu>
         </mosaik-menu-item>
-        } @if (group.state === 'paused') {
-        <mosaik-divider />
-        <mosaik-menu-item
-          [attr.test-id]="'board-delivery-group-action-align-' + group.id"
-          [label]="'Align to root column'"
-          [iconName]="'sync'"
-          [appearance]="'plain'"
-          [variant]="'warning'"
-          [disabled]="presenter.isDeliveryGroupContextActionBusy(group)"
-          (activated)="presenter.alignDeliveryGroup(group); groupContextActions.invoke('close')"
-        />
         }
+        <!-- A paused group never draws as a stack (its members stand in different columns), so
+             aligning lives in its group drawer, opened from the members' Group needs attention. -->
         <mosaik-divider />
         <mosaik-menu-item
           [attr.test-id]="'board-delivery-group-action-dissolve-' + group.id"
@@ -198,7 +195,10 @@
   </mosaik-flow-board-column-item>
   } } }
 </mosaik-flow-board-column-item-group>
-} } @if (item(); as item) {
+} } @if (item(); as item) { @if (presenter.cardState()(item); as card) {
+<!-- The card as drawn: the id in the technical-value style with the agent's avatar, the title, a
+     status chip and the five delivery steps. Everything else about the item lives on its own
+     screen, which a click opens; the menu keeps every card action. -->
 <mosaik-flow-board-column-item
   #boardItem
   class="block w-full min-w-0 max-w-full"
@@ -215,416 +215,314 @@
   (click)="presenter.openTaskFromCardCommand.execute([$event, item.id])"
   (contextmenu)="presenter.openContextActionsCommand.execute([$event, contextActions, item])"
 >
-  <!-- A zero intrinsic width lets Mosaik's title group shrink beside its selection and actions;
-       min-w-full then fills that resolved width, including for unbroken ticket identifiers. -->
-  <div slot="title" class="flex w-0 min-w-full flex-wrap items-start gap-2">
-    @if (presenter.health()(item) | workItemHealthPresentation; as health) {
-    <mosaik-icon
-      class="mt-0.5 flex-none"
-      [attr.test-id]="'board-item-health-' + item.id"
-      [icon]="health.iconName"
-      [appearance]="'plain'"
-      [variant]="health.variant"
-      [size]="'small'"
-      [attr.aria-label]="health.ariaLabel"
-      [mosaikTooltip]="health.tooltip"
-      [mosaikTooltipPlacement]="'top'"
-    />
-    }
+  <!-- A zero intrinsic width lets Mosaik's title group shrink beside its selection; min-w-full
+       then fills that resolved width, including for unbroken ticket identifiers. -->
+  <div slot="eyebrow" class="flex w-0 min-w-full items-center gap-1 pb-[4px]">
     <mosaik-text
-      class="min-w-0 flex-1"
-      [attr.test-id]="'board-item-title-' + item.id"
-      [text]="item.title"
-      [wrap]="true"
+      part="board-card-id"
+      class="technical-value min-w-0 flex-1"
+      [attr.test-id]="'board-item-id-' + item.id"
+      [variant]="'neutral'"
+      [truncate]="true"
+      [text]="item.externalId"
     />
-    @if (presenter.pausedDeliveryGroup(item.id); as pausedGroup) {
-    <mosaik-button
-      [attr.test-id]="'board-item-group-attention-' + item.id"
-      [label]="'Group needs attention'"
-      [appearance]="'soft'"
-      [variant]="'warning'"
-      [size]="'tiny'"
-      (click)="presenter.openPausedDeliveryGroup($event, pausedGroup.id)"
-    />
-    } @else if (presenter.criticalPathProposal(item.id); as proposal) {
-    <mosaik-button
-      [attr.test-id]="'board-item-critical-path-' + item.id"
-      [label]="proposal.assessment.relation === 'joint-delivery' ? 'Take together?' : 'Critical path'"
-      [appearance]="'soft'"
-      [variant]="'warning'"
-      [size]="'tiny'"
-      [mosaikTooltip]="'Review the shared change surface before moving this ticket.'"
-      (click)="presenter.openCriticalPath($event, proposal.id)"
-    />
-    }
-  </div>
-  <!-- The menu lives in the card's own `actions` slot, not at the end of the title
-                 row: `[mosaikTooltip]` appends its `display: contents` host to the tooltipped
-                 element's parent, and its shadow children then join that row as extra flex
-                 items whose gaps push the button off the card's right edge. The wrapper keeps
-                 those zero-width boxes out of a gapped row, so the button sits as far right as
-                 it sits high - flush in the card corner. It is also what the running indicator
-                 is positioned against: the button keeps its box while an operation runs so the
-                 ring can take exactly its place, and stays in the template rather than being
-                 swapped out because the card's context menu addresses it by reference. -->
-  <div slot="actions" class="relative">
-    <mosaik-dropdown-button
-      #contextActions
-      class="min-w-[40px]"
-      [attr.test-id]="'board-item-actions-' + item.id"
-      aria-label="More actions"
-      [caretVisible]="false"
-      [iconName]="'more-horizontal'"
-      [size]="'tiny'"
-      [iconSize]="'small'"
-      [appearance]="'plain'"
-      [dropDownPlacement]="'bottom-end'"
-      [dropDownMaxWidth]="'18rem'"
-      [mosaikTooltip]="'More actions'"
-      [mosaikTooltipPlacement]="'top'"
-      [class.invisible]="presenter.isContextActionBusy()(item.id)"
-      [symphonyHoverRevealFor]="boardItem"
-      (click)="$event.stopPropagation(); presenter.prepareContextActionsCommand.execute(item)"
-      (pointerdown)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()"
-    >
-      <mosaik-menu>
-        @for (action of presenter.contextActions()(item); track action.id) {
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-' + action.id + '-' + item.id"
-          [label]="action.label"
-          [subLabel]="action.blockedReason"
-          [textOverflow]="'wrap'"
-          [appearance]="'plain'"
-          [variant]="action.blockedReason ? 'danger' : action.variant"
-          [disabled]="!!action.blockedReason || presenter.isContextActionBusy()(item.id)"
-          (activated)="presenter.executeContextActionCommand.execute([item, action]); contextActions.invoke('close')"
-        >
-          <mosaik-icon
-            slot="icon"
-            [icon]="action.iconName"
-            [appearance]="'plain'"
-            [variant]="action.blockedReason ? 'danger' : action.variant === 'default' ? 'neutral' : action.variant"
-            [size]="'small'"
-          />
-        </mosaik-menu-item>
-        } @if (presenter.contextActions()(item).length) {
-        <mosaik-divider />
-        } @if (presenter.moveTargets()(item).length) {
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-move-forward-' + item.id"
-          [label]="'Move forward'"
-          [subLabel]="presenter.neighbourColumn()(item, 1)?.label"
-          [textOverflow]="'wrap'"
-          [iconName]="'chevronRight'"
-          [appearance]="'plain'"
-          [disabled]="!presenter.neighbourColumn()(item, 1) || presenter.isContextActionBusy()(item.id)"
-          (activated)="presenter.moveByOffsetCommand.execute([item, 1]); contextActions.invoke('close')"
-        />
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-move-backward-' + item.id"
-          [label]="'Move backward'"
-          [subLabel]="presenter.neighbourColumn()(item, -1)?.label"
-          [textOverflow]="'wrap'"
-          [iconName]="'chevronLeft'"
-          [appearance]="'plain'"
-          [disabled]="!presenter.neighbourColumn()(item, -1) || presenter.isContextActionBusy()(item.id)"
-          (activated)="presenter.moveByOffsetCommand.execute([item, -1]); contextActions.invoke('close')"
-        />
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-move-to-' + item.id"
-          [label]="'Move to'"
-          [iconName]="'board'"
-          [appearance]="'plain'"
-          menu-mode="popover"
-        >
-          <mosaik-menu slot="submenu">
-            @for (column of presenter.moveTargets()(item); track column.id) {
-            <mosaik-menu-item
-              [attr.test-id]="'board-item-move-target-' + column.id + '-' + item.id"
-              [label]="column.label"
-              [textOverflow]="'wrap'"
-              [appearance]="'plain'"
-              [isChecked]="presenter.isCurrentColumn()(item, column.id)"
-              [disabled]="presenter.isContextActionBusy()(item.id)"
-              (activated)="presenter.moveToColumnCommand.execute([item, column.id]); contextActions.invoke('close')"
-            />
-            }
-          </mosaik-menu>
-        </mosaik-menu-item>
-        <mosaik-divider />
-        } @if (presenter.assignableUsers()(item).length) {
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-assign-' + item.id"
-          [label]="'Assign to'"
-          [iconName]="'person'"
-          [appearance]="'plain'"
-          menu-mode="popover"
-        >
-          <!-- The submenu only ever grows from empty to the loaded people: the popover
-                         projection of mosaik-menu-item adopts appended children, but removing a
-                         projected child (a swapped placeholder) leaves the item marked childless. -->
-          <mosaik-menu slot="submenu">
-            @for (user of presenter.assignableUsers()(item); track user.login) {
-            <mosaik-menu-item
-              [attr.test-id]="'board-item-assign-target-' + user.login + '-' + item.id"
-              [label]="user.displayName ?? user.login"
-              [subLabel]="user.displayName ? user.login : undefined"
-              [textOverflow]="'wrap'"
-              [appearance]="'plain'"
-              [isChecked]="presenter.isAssignedTo()(item, user.login)"
-              [disabled]="presenter.isContextActionBusy()(item.id)"
-              (activated)="presenter.toggleAssigneeCommand.execute([item, user.login]); contextActions.invoke('close')"
-            >
-              <mosaik-avatar
-                slot="start"
-                [text]="user.displayName ?? user.login"
-                [src]="user.avatarUrl ?? ''"
-                [size]="'tiny'"
-              />
-            </mosaik-menu-item>
-            }
-          </mosaik-menu>
-        </mosaik-menu-item>
-        <mosaik-divider />
-        } @if (presenter.hasPullRequest()(item)) {
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-pull-request-' + item.id"
-          [label]="'Pull request'"
-          [subLabel]="'#' + presenter.pullRequestNumber()(item)"
-          [iconName]="'branch'"
-          [appearance]="'plain'"
-          menu-mode="popover"
-        >
-          <!-- Entries keep their identity while the menu is open: a started run only
-                         relabels one, because a removed projected child leaves the popover childless. -->
-          <mosaik-menu slot="submenu">
-            @for (action of presenter.pullRequestActions()(item); track action.id) {
-            <mosaik-menu-item
-              [attr.test-id]="'board-item-pull-request-action-' + action.id + '-' + item.id"
-              [label]="action.label"
-              [subLabel]="action.blockedReason ?? action.subLabel"
-              [textOverflow]="'wrap'"
-              [iconName]="action.iconName"
-              [appearance]="'plain'"
-              [variant]="action.blockedReason ? 'danger' : action.variant"
-              [disabled]="!!action.blockedReason || presenter.isContextActionBusy()(item.id)"
-              (activated)="presenter.executePullRequestActionCommand.execute([item, action]); contextActions.invoke('close')"
-            />
-            }
-          </mosaik-menu>
-        </mosaik-menu-item>
-        <mosaik-divider />
-        }
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-select-' + item.id"
-          [label]="'Select for delivery'"
-          [iconName]="'checkmark'"
-          [appearance]="'plain'"
-          [isChecked]="presenter.isSelected(item.id)"
-          (activated)="toggleCardSelection(item.id); contextActions.invoke('close')"
-        />
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-open-' + item.id"
-          [label]="'Open details'"
-          [iconName]="'panelRight'"
-          [appearance]="'plain'"
-          (activated)="presenter.openTaskCommand.execute(item.id); contextActions.invoke('close')"
-        />
-        @if (workflowAvailable) {
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-process-' + item.id"
-          [label]="'Show process'"
-          [iconName]="'flow'"
-          [appearance]="'plain'"
-          (activated)="presenter.openProcessCommand.execute(item.id); contextActions.invoke('close')"
-        />
-        } @if (item | workItemLinkPresentation; as link) {
-        <mosaik-divider />
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-open-external-' + item.id"
-          [label]="link.openLabel"
-          [iconName]="link.openIconName"
-          [appearance]="'plain'"
-          (activated)="presenter.openWorkItemUrlCommand.execute(item); contextActions.invoke('close')"
-        />
-        <mosaik-menu-item
-          [attr.test-id]="'board-item-action-copy-url-' + item.id"
-          [label]="link.copyLabel"
-          [iconName]="'copy'"
-          [appearance]="'plain'"
-          (activated)="presenter.copyWorkItemUrlCommand.execute(item); contextActions.invoke('close')"
-        />
-        }
-      </mosaik-menu>
-    </mosaik-dropdown-button>
-    @if (presenter.isContextActionBusy()(item.id)) {
-    <mosaik-progress-ring
-      class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-      [attr.test-id]="'board-item-busy-' + item.id"
-      [attr.aria-label]="'Working on this item'"
-      [isIndeterminate]="true"
-      [radius]="'9px'"
-      [thickness]="'2px'"
-      [variant]="'primary'"
-    />
-    }
-  </div>
-  <div slot="subtitle" class="flex w-0 min-w-full flex-col gap-2">
-    <div class="flex min-w-0 flex-wrap items-center gap-2">
-      @if (presenter.workspaceFor()(item); as workspace) {
-      <mosaik-hint
-        class="min-w-0 max-w-full"
-        [text]="workspace.shortCode + ' · ' + workspace.displayName"
-        [textOverflow]="'wrap'"
-      />
-      }
-      <mosaik-hint
-        class="technical-value min-w-0 max-w-full"
-        [text]="item.repository ? item.externalId + ' · ' + item.repository : item.externalId"
-        [textOverflow]="'wrap'"
-      />
-    </div>
-    @if (presenter.implementationBranch()(item.id); as branch) {
-    <div class="flex w-full min-w-0 max-w-full overflow-hidden">
-      <mosaik-chip
-        class="technical-value min-w-0 max-w-full"
-        [attr.test-id]="'board-item-branch-' + item.id"
-        [label]="branch | truncateStart"
-        [iconName]="'branch'"
-        [mosaikTooltip]="branch"
+    <!-- The menu sits before the avatar so the avatar keeps the card's trailing edge; the wrapper
+         keeps the tooltip's `display: contents` host out of the gapped row and is what the
+         running indicator is positioned against. The button keeps its box while an operation runs
+         so the ring can take exactly its place, and stays in the template because the card's
+         context menu addresses it by reference. -->
+    <div class="relative flex flex-none">
+      <mosaik-dropdown-button
+        #contextActions
+        [attr.test-id]="'board-item-actions-' + item.id"
+        aria-label="More actions"
+        [caretVisible]="false"
+        [iconName]="'more-horizontal'"
+        [size]="'tiny'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [dropDownPlacement]="'bottom-end'"
+        [dropDownMaxWidth]="'18rem'"
+        [mosaikTooltip]="'More actions'"
         [mosaikTooltipPlacement]="'top'"
-        [appearance]="'soft'"
-        [variant]="'neutral'"
-        [size]="'tiny'"
-      />
-    </div>
-    } @if (presenter.hasConflictingPullRequest(item)) {
-    <div class="flex min-w-0 items-start">
-      <mosaik-chip
-        [attr.test-id]="'board-item-pr-conflict-' + item.id"
-        [label]="'PR conflicts with base'"
-        [iconName]="'branch'"
-        [appearance]="'soft'"
-        [variant]="'warning'"
-        [size]="'tiny'"
-      />
-    </div>
-    } @if (item.createdAt || item.updatedAt) {
-    <div
-      class="flex min-w-0 flex-wrap gap-x-2 gap-y-1"
-      [attr.test-id]="'board-item-dates-' + item.id"
-    >
-      @if (item.createdAt) {
-      <time [attr.datetime]="item.createdAt"
-        >Created {{ item.createdAt | date: 'mediumDate' }}</time
+        [class.invisible]="presenter.isContextActionBusy()(item.id)"
+        [symphonyHoverRevealFor]="boardItem"
+        (click)="$event.stopPropagation(); presenter.prepareContextActionsCommand.execute(item)"
+        (pointerdown)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"
       >
-      } @if (item.updatedAt) {
-      <time [attr.datetime]="item.updatedAt"
-        >Changed {{ item.updatedAt | date: 'mediumDate' }}</time
-      >
+        <mosaik-menu>
+          @for (action of presenter.contextActions()(item); track action.id) {
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-' + action.id + '-' + item.id"
+            [label]="action.label"
+            [subLabel]="action.blockedReason"
+            [textOverflow]="'wrap'"
+            [appearance]="'plain'"
+            [variant]="action.blockedReason ? 'danger' : action.variant"
+            [disabled]="!!action.blockedReason || presenter.isContextActionBusy()(item.id)"
+            (activated)="presenter.executeContextActionCommand.execute([item, action]); contextActions.invoke('close')"
+          >
+            <mosaik-icon
+              slot="icon"
+              [icon]="action.iconName"
+              [appearance]="'plain'"
+              [variant]="action.blockedReason ? 'danger' : action.variant === 'default' ? 'neutral' : action.variant"
+              [size]="'small'"
+            />
+          </mosaik-menu-item>
+          } @if (presenter.contextActions()(item).length) {
+          <mosaik-divider />
+          } @if (presenter.moveTargets()(item).length) {
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-move-forward-' + item.id"
+            [label]="'Move forward'"
+            [subLabel]="presenter.neighbourColumn()(item, 1)?.label"
+            [textOverflow]="'wrap'"
+            [iconName]="'chevronRight'"
+            [appearance]="'plain'"
+            [disabled]="!presenter.neighbourColumn()(item, 1) || presenter.isContextActionBusy()(item.id)"
+            (activated)="presenter.moveByOffsetCommand.execute([item, 1]); contextActions.invoke('close')"
+          />
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-move-backward-' + item.id"
+            [label]="'Move backward'"
+            [subLabel]="presenter.neighbourColumn()(item, -1)?.label"
+            [textOverflow]="'wrap'"
+            [iconName]="'chevronLeft'"
+            [appearance]="'plain'"
+            [disabled]="!presenter.neighbourColumn()(item, -1) || presenter.isContextActionBusy()(item.id)"
+            (activated)="presenter.moveByOffsetCommand.execute([item, -1]); contextActions.invoke('close')"
+          />
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-move-to-' + item.id"
+            [label]="'Move to'"
+            [iconName]="'board'"
+            [appearance]="'plain'"
+            menu-mode="popover"
+          >
+            <mosaik-menu slot="submenu">
+              @for (column of presenter.moveTargets()(item); track column.id) {
+              <mosaik-menu-item
+                [attr.test-id]="'board-item-move-target-' + column.id + '-' + item.id"
+                [label]="column.label"
+                [textOverflow]="'wrap'"
+                [appearance]="'plain'"
+                [isChecked]="presenter.isCurrentColumn()(item, column.id)"
+                [disabled]="presenter.isContextActionBusy()(item.id)"
+                (activated)="presenter.moveToColumnCommand.execute([item, column.id]); contextActions.invoke('close')"
+              />
+              }
+            </mosaik-menu>
+          </mosaik-menu-item>
+          <mosaik-divider />
+          } @if (presenter.assignableUsers()(item).length) {
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-assign-' + item.id"
+            [label]="'Assign to'"
+            [iconName]="'person'"
+            [appearance]="'plain'"
+            menu-mode="popover"
+          >
+            <!-- The submenu only ever grows from empty to the loaded people: the popover
+                 projection of mosaik-menu-item adopts appended children, but removing a projected
+                 child (a swapped placeholder) leaves the item marked childless. -->
+            <mosaik-menu slot="submenu">
+              @for (user of presenter.assignableUsers()(item); track user.login) {
+              <mosaik-menu-item
+                [attr.test-id]="'board-item-assign-target-' + user.login + '-' + item.id"
+                [label]="user.displayName ?? user.login"
+                [subLabel]="user.displayName ? user.login : undefined"
+                [textOverflow]="'wrap'"
+                [appearance]="'plain'"
+                [isChecked]="presenter.isAssignedTo()(item, user.login)"
+                [disabled]="presenter.isContextActionBusy()(item.id)"
+                (activated)="presenter.toggleAssigneeCommand.execute([item, user.login]); contextActions.invoke('close')"
+              >
+                <mosaik-avatar
+                  slot="start"
+                  [text]="user.displayName ?? user.login"
+                  [src]="user.avatarUrl ?? ''"
+                  [size]="'tiny'"
+                />
+              </mosaik-menu-item>
+              }
+            </mosaik-menu>
+          </mosaik-menu-item>
+          <mosaik-divider />
+          } @if (presenter.hasPullRequest()(item)) {
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-pull-request-' + item.id"
+            [label]="'Pull request'"
+            [subLabel]="'#' + presenter.pullRequestNumber()(item)"
+            [iconName]="'branch'"
+            [appearance]="'plain'"
+            menu-mode="popover"
+          >
+            <!-- Entries keep their identity while the menu is open: a started run only relabels
+                 one, because a removed projected child leaves the popover childless. -->
+            <mosaik-menu slot="submenu">
+              @for (action of presenter.pullRequestActions()(item); track action.id) {
+              <mosaik-menu-item
+                [attr.test-id]="'board-item-pull-request-action-' + action.id + '-' + item.id"
+                [label]="action.label"
+                [subLabel]="action.blockedReason ?? action.subLabel"
+                [textOverflow]="'wrap'"
+                [iconName]="action.iconName"
+                [appearance]="'plain'"
+                [variant]="action.blockedReason ? 'danger' : action.variant"
+                [disabled]="!!action.blockedReason || presenter.isContextActionBusy()(item.id)"
+                (activated)="presenter.executePullRequestActionCommand.execute([item, action]); contextActions.invoke('close')"
+              />
+              }
+            </mosaik-menu>
+          </mosaik-menu-item>
+          <mosaik-divider />
+          }
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-select-' + item.id"
+            [label]="'Select for delivery'"
+            [iconName]="'checkmark'"
+            [appearance]="'plain'"
+            [isChecked]="presenter.isSelected(item.id)"
+            (activated)="toggleCardSelection(item.id); contextActions.invoke('close')"
+          />
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-open-' + item.id"
+            [label]="'Open work item'"
+            [iconName]="'open'"
+            [appearance]="'plain'"
+            (activated)="presenter.openTaskCommand.execute(item.id); contextActions.invoke('close')"
+          />
+          @if (workflowAvailable) {
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-process-' + item.id"
+            [label]="'Show process'"
+            [iconName]="'flow'"
+            [appearance]="'plain'"
+            (activated)="presenter.openProcessCommand.execute(item.id); contextActions.invoke('close')"
+          />
+          } @if (item | workItemLinkPresentation; as link) {
+          <mosaik-divider />
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-open-external-' + item.id"
+            [label]="link.openLabel"
+            [iconName]="link.openIconName"
+            [appearance]="'plain'"
+            (activated)="presenter.openWorkItemUrlCommand.execute(item); contextActions.invoke('close')"
+          />
+          <mosaik-menu-item
+            [attr.test-id]="'board-item-action-copy-url-' + item.id"
+            [label]="link.copyLabel"
+            [iconName]="'copy'"
+            [appearance]="'plain'"
+            (activated)="presenter.copyWorkItemUrlCommand.execute(item); contextActions.invoke('close')"
+          />
+          }
+        </mosaik-menu>
+      </mosaik-dropdown-button>
+      @if (presenter.isContextActionBusy()(item.id)) {
+      <mosaik-progress-ring
+        class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        [attr.test-id]="'board-item-busy-' + item.id"
+        [attr.aria-label]="'Working on this item'"
+        [isIndeterminate]="true"
+        [radius]="'9px'"
+        [thickness]="'2px'"
+        [variant]="'primary'"
+      />
       }
     </div>
-    } @if (item.labels.length) {
-    <div class="flex min-w-0 flex-wrap gap-2" [attr.test-id]="'board-item-labels-' + item.id">
-      @for (label of item.labels; track label) {
+    @if (card.avatar; as avatar) {
+    <div class="flex flex-none">
+      <mosaik-avatar
+        [attr.test-id]="'board-item-avatar-' + item.id"
+        [attr.aria-label]="avatar.name"
+        [text]="avatar.name"
+        [src]="avatar.imageUrl ?? ''"
+        [size]="'small'"
+        [appearance]="'soft'"
+        [mosaikTooltip]="avatar.name"
+        [mosaikTooltipPlacement]="'top'"
+      />
+    </div>
+    }
+  </div>
+  <mosaik-text
+    slot="title"
+    class="w-0 min-w-full"
+    [attr.test-id]="'board-item-title-' + item.id"
+    [mosaikTypography]="'subtitle2'"
+    [text]="item.title"
+    [wrap]="true"
+  />
+  <div slot="subtitle" class="flex w-0 min-w-full flex-col gap-[10px] pt-[6px]">
+    <div class="flex min-w-0 flex-wrap items-center gap-1">
+      @let status = card | boardCardStatusPresentation; @let health = presenter.health()(item) |
+      workItemHealthPresentation;
+      <!-- The wrapper keeps the tooltip's `display: contents` host out of the gapped row. -->
       <div class="flex min-w-0 max-w-full">
         <mosaik-badge
           class="min-w-0 max-w-full"
-          [label]="label"
-          [appearance]="'soft'"
-          [variant]="'neutral'"
-          [size]="'small'"
-          [mosaikTooltip]="label"
+          [attr.test-id]="'board-item-status-' + item.id"
+          [label]="status.label"
+          [appearance]="status.appearance"
+          [variant]="status.variant"
+          [iconName]="status.iconName"
+          [mosaikTooltip]="health?.tooltip ?? ''"
+          [mosaikTooltipPlacement]="'top'"
+          [mosaikTooltipDisabled]="!health || card.status !== 'waiting-for-you'"
         />
       </div>
-      }
-    </div>
-    } @if (presenter.projectFieldEntries()(item); as projectFields) { @if (projectFields.length) {
-    <div
-      class="flex min-w-0 flex-col gap-1 wrap-break-word"
-      [attr.test-id]="'board-item-fields-' + item.id"
-    >
-      @for (field of projectFields; track field.name) {
-      <mosaik-hint [text]="field.name + ' · ' + field.value" [textOverflow]="'wrap'" />
-      }
-    </div>
-    } } @if (presenter.externalCoordination()(item); as coordination) {
-    <div class="flex min-w-0 items-start">
-      <mosaik-badge
-        class="min-w-0 max-w-full"
-        [attr.test-id]="'board-item-external-claim-' + item.id"
-        [label]="
-                    (coordination.action === 'analyze'
-                      ? 'Analyzing elsewhere'
-                      : 'Solving elsewhere') +
-                    (coordination.owner ? ' · @' + coordination.owner : '')
-                  "
+      @if (presenter.pausedDeliveryGroup(item.id); as pausedGroup) {
+      <mosaik-button
+        [attr.test-id]="'board-item-group-attention-' + item.id"
+        [label]="'Group needs attention'"
         [appearance]="'soft'"
         [variant]="'warning'"
+        [size]="'tiny'"
+        (click)="presenter.openPausedDeliveryGroup($event, pausedGroup.id)"
       />
-    </div>
-    } @if (presenter.runtimeStatus()(item.id) | taskRuntimePresentation; as runtime) {
-    <div class="flex min-w-0 flex-col items-start gap-2">
-      <div class="flex items-center gap-2">
-        @if (runtime.isRunning) {
-        <mosaik-progress-ring
-          [attr.test-id]="'board-item-progress-' + item.id"
-          [attr.aria-label]="runtime.label"
-          [isIndeterminate]="true"
-          [radius]="8"
-          [thickness]="2"
-          [variant]="'neutral'"
-        />
-        }
-        <!-- Plain rather than soft: on a row the run state should read as a sentence, not as a
-             chip. `appearance` is the only thing that changes - the variant still carries whether
-             the run failed, succeeded or is waiting, which `mosaik-hint` could not express. -->
-        <mosaik-badge
-          [attr.test-id]="'board-item-status-' + item.id"
-          [label]="runtime.label"
-          [appearance]="'plain'"
-          [variant]="runtime.variant"
+      } @else if (presenter.criticalPathProposal(item.id); as proposal) {
+      <div class="flex">
+        <mosaik-button
+          [attr.test-id]="'board-item-critical-path-' + item.id"
+          [label]="proposal.assessment.relation === 'joint-delivery' ? 'Take together?' : 'Critical path'"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [size]="'tiny'"
+          [mosaikTooltip]="'Review the shared change surface before moving this ticket.'"
+          (click)="presenter.openCriticalPath($event, proposal.id)"
         />
       </div>
-      @if (runtime.message) {
-      <symphony-markdown
-        class="block max-h-8 overflow-hidden"
-        [attr.test-id]="'board-item-progress-message-' + item.id"
-        [text]="runtime.message"
-        [compact]="true"
-        [plain]="true"
-      />
       }
     </div>
-    }
-  </div>
-  @if (presenter.assignees()(item).length) {
-  <div slot="footer" class="flex self-start" [attr.test-id]="'board-item-assignees-' + item.id">
-    <mosaik-avatar-group
-      [size]="'tiny'"
-      [appearance]="'soft'"
-      [variant]="'primary'"
-      [maxLength]="3"
+    <div
+      class="flex min-w-0 items-center gap-1"
+      role="img"
+      [attr.test-id]="'board-item-progress-' + item.id"
+      [attr.aria-label]="card.completedSteps + ' of ' + deliveryStepCount + ' delivery steps done'"
     >
-      @for (assignee of presenter.assignees()(item); track assignee.login) {
-      <mosaik-avatar
-        [id]="'board-item-assignee-anchor-' + item.id + '-' + $index"
-        [attr.test-id]="'board-item-assignee-' + item.id + '-' + $index"
-        [attr.aria-label]="assignee.displayName ?? assignee.login"
-        [text]="assignee.displayName ?? assignee.login"
-        [src]="assignee.avatarUrl ?? ''"
+      <div class="flex min-w-0 flex-1 items-center gap-[3px]" aria-hidden="true">
+        @for (step of deliverySteps; track step) {
+        <mosaik-progress-bar
+          class="min-w-0 flex-1"
+          [min]="0"
+          [max]="1"
+          [value]="step < card.completedSteps || step === card.blockedStep ? 1 : 0"
+          [thickness]="4"
+          [variant]="step === card.blockedStep ? 'danger' : 'primary'"
+        />
+        }
+      </div>
+      <mosaik-text
+        class="flex-none"
+        aria-hidden="true"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="card.completedSteps + '/' + deliveryStepCount"
       />
-      }
-    </mosaik-avatar-group>
-    @for (assignee of presenter.assignees()(item); track assignee.login) {
-    <mosaik-tooltip
-      [for]="'board-item-assignee-anchor-' + item.id + '-' + $index"
-      [content]="assignee.displayName ?? assignee.login"
-      [placement]="'top'"
-    />
-    }
+    </div>
   </div>
-  }
 </mosaik-flow-board-column-item>
-}
+} }

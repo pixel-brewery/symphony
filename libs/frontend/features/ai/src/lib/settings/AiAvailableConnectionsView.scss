@@ -1,0 +1,5 @@
+// The rows share the Connected services frame with other features' rows; the frame draws the line
+// between features, this rule the line between this feature's own rows.
+[part~='settings-row'] + [part~='settings-row'] {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}

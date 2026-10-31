@@ -3,6 +3,7 @@
 import { SqliteDatabase } from '@symphony/persistence-core';
 import { SqliteRepositoryTrustRepository } from '@symphony/persistence-workspace';
 import {
+  SqliteCiRunHistoryRepository,
   SqliteVerificationRepository,
   SqliteLocalCiExecutionRepository,
 } from '@symphony/persistence-ci';
@@ -50,6 +51,14 @@ export class SqliteRuntimeRepositories {
    */
   public readonly localCi: SqliteLocalCiExecutionRepository;
 
+  /**
+   * Finished workflow runs kept beyond the provider's newest-runs window.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly ciRunHistory: SqliteCiRunHistoryRepository;
+
   // #endregion
 
   // #region Ctor
@@ -65,6 +74,7 @@ export class SqliteRuntimeRepositories {
     this.trust = new SqliteRepositoryTrustRepository(this.database);
     this.verification = new SqliteVerificationRepository(this.database);
     this.localCi = new SqliteLocalCiExecutionRepository(this.database);
+    this.ciRunHistory = new SqliteCiRunHistoryRepository(this.database);
   }
 
   // #endregion
@@ -99,6 +109,9 @@ export class SqliteRuntimeRepositories {
         .run(workspaceId);
       this.database.connection
         .prepare('DELETE FROM local_ci_executions WHERE workspace_id = ?')
+        .run(workspaceId);
+      this.database.connection
+        .prepare('DELETE FROM ci_run_history WHERE workspace_id = ?')
         .run(workspaceId);
     });
   }

@@ -36,6 +36,11 @@ export interface IPresentationContext {
   removeQueueEntry(entryId: string): Promise<boolean>;
   /** Refreshes CI only when included in this product. @public */
   refreshContinuousIntegrationRuns(): Promise<void>;
+  /**
+   * Synchronises with GitHub: the orchestration snapshot (work items, pull requests) and, when CI
+   * is included, the Actions runs. @public
+   */
+  synchronize(): Promise<void>;
   /** Changes scope through Workspace's actual selection owner. @public */
   selectWorkspaceScope(workspaceId: string): Promise<void>;
 }

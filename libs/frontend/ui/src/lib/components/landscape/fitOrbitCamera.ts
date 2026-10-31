@@ -11,8 +11,13 @@ export function fitOrbitCamera(scene: IOrbitScene, width: number, height: number
     .map((node) => ({
       ...node.position,
       radius:
-        (node.kind === 'production' ? 3.6 : node.kind === 'target' ? 1.3 : 0.4) *
-        (node.celestialBody === 'saturn' ? 2.32 : 1),
+        (node.kind === 'production'
+          ? 3.6
+          : node.kind === 'target'
+            ? 1.3
+            : node.kind === 'group'
+              ? 1.2
+              : 0.4) * (node.celestialBody === 'saturn' ? 2.32 : 1),
     }))
     .filter(
       (point) => Number.isFinite(point.x) && Number.isFinite(point.y) && Number.isFinite(point.z),
@@ -43,7 +48,9 @@ export function fitOrbitCamera(scene: IOrbitScene, width: number, height: number
   const target = sun ? { ...sun.position } : { x: 0, y: 0, z: 0 };
   const safeWidth = Math.max(160, Number.isFinite(width) ? width : 320);
   const safeHeight = Math.max(160, Number.isFinite(height) ? height : 480);
-  const direction = { x: 0.52, y: 0.43, z: 0.73 };
+  // A steep view from above keeps the work-item belt a near circle around the destination, as the
+  // orbit diagram draws it, while the bodies and destination orbits keep their depth.
+  const direction = { x: 0, y: 0.94, z: 0.34 };
   const length = Math.hypot(direction.x, direction.y, direction.z);
   const forward = { x: direction.x / length, y: direction.y / length, z: direction.z / length };
   const horizontalLength = Math.hypot(forward.x, forward.z);

@@ -1,0 +1,14 @@
+// Game cards are framed as the artboard draws them: a 10px hairline frame without Soho's trailing
+// card inset, so the 14px content padding is the only spacing.
+mosaik-card[part~='arcade-card'] {
+  --card-padding-bottom: 0;
+  --card-border-radius: var(--mosaik-layout-radius);
+  --card-border-color: var(--mosaik-scheme-highlight);
+}
+
+// The cover well: each box cover sits on the dark neutral frame the artboard draws, so portrait
+// covers keep their print proportions inside the 16:10 well.
+mosaik-image[part~='arcade-cover'] {
+  --image-background-color: var(--mosaik-color-neutral-900);
+  --image-border-radius: calc(var(--mosaik-layout-radius) - 2px);
+}

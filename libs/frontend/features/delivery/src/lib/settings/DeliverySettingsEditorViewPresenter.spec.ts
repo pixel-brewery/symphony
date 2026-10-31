@@ -6,7 +6,7 @@ import '@angular/compiler';
 import { ChangeDetectorRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { DRAWER_REF, DRAWER_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
+import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angular';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
@@ -100,6 +100,25 @@ describe('DeliverySettingsEditorViewPresenter', () => {
     ).toHaveLength(1);
     expect(connectGitHub).not.toHaveBeenCalled();
     expect(close).not.toHaveBeenCalled();
+  });
+
+  it('keeps Save disabled and names the missing repository details until they are entered', () => {
+    // arrange
+    const { presenter } = arrange({ kind: 'repository', workspaceId: 'personal' });
+
+    // act
+    const before = {
+      canSave: presenter.canSave(),
+      issues: presenter.repositoryValidationIssues(),
+    };
+    presenter.repository.displayName = 'Symphony';
+    presenter.repository.owner = 'example';
+    presenter.repository.name = 'symphony';
+
+    // assert
+    expect(before).toEqual({ canSave: false, issues: ['display-name', 'owner', 'name'] });
+    expect(presenter.repositoryValidationIssues()).toEqual([]);
+    expect(presenter.canSave()).toBe(true);
   });
 
   it('validates duplicate destinations within their exact workspace and repository before saving', async () => {
@@ -242,8 +261,8 @@ function arrange(data: DeliverySettingsEditorRequest) {
     providers: [
       DeliverySettingsEditorViewPresenter,
       { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn() } },
-      { provide: DRAWER_REF, useValue: { close } },
-      { provide: DRAWER_REF_DATA, useValue: data },
+      { provide: DIALOG_REF, useValue: { close } },
+      { provide: DIALOG_REF_DATA, useValue: data },
       { provide: DELIVERY_CI_OPERATIONS, useValue: null },
       {
         provide: DELIVERY_SETTINGS_CONTEXT,

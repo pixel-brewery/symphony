@@ -1,20 +1,30 @@
-<ng-template mosaikDrawerHeader>
-  <mosaik-drawer-header
+<ng-template mosaikDialogHeader>
+  <mosaik-dialog-header
+    slot="header"
+    class="flex min-w-0 flex-1"
     [text]="presenter.data.sourceId ? 'Edit Microsoft Teams feedback intake' : 'Add Microsoft Teams feedback intake'"
     [subText]="'FLAMOX365 feedback to GitHub work items'"
   >
-    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
-  </mosaik-drawer-header>
+    <mosaik-button
+      slot="suffix"
+      test-id="close-settings-editor"
+      [icon]="'clear'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [attr.aria-label]="'Close'"
+      (click)="presenter.closeCommand.execute()"
+    />
+  </mosaik-dialog-header>
 </ng-template>
-<ng-template mosaikDrawerContent>
+<ng-template mosaikDialogContent>
   <div
     test-id="settings-editor-drawer"
-    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+    class="flex max-h-[calc(100dvh-220px)] min-h-0 min-w-0 flex-1 flex-col gap-1.75 overflow-y-auto py-0.5"
   >
     @if (presenter.isHydrating()) {
     <section
       test-id="settings-editor-loading-skeleton"
-      class="flex min-w-0 flex-col gap-4"
+      class="flex min-w-0 flex-col gap-2"
       role="status"
       aria-busy="true"
       aria-label="Loading settings"
@@ -27,7 +37,7 @@
           <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
         </div>
       </div>
-      <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+      <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
         @for (field of [1, 2, 3, 4]; track field) {
         <div class="flex min-w-0 flex-col gap-0.75">
           <div class="flex h-2.5 items-center">
@@ -40,25 +50,33 @@
     </section>
     }
     <div class="min-w-0" [hidden]="presenter.isHydrating()">
-      <section class="flex min-w-0 flex-col gap-4" test-id="teams-feedback-intake-editor">
-        <mosaik-banner
+      <section class="flex min-w-0 flex-col gap-1.75" test-id="teams-feedback-intake-editor">
+        <mosaik-message
+          class="block w-full"
           test-id="teams-feedback-setup-guide"
-          [isOpen]="true"
           [appearance]="'soft'"
           [variant]="'info'"
-          [iconName]="'info'"
+          [fit]="'width'"
+          [icon]="'info'"
           [iconSize]="'small'"
-        >
-          <mosaik-banner-header [text]="'Read FLAMOX365 feedback from Microsoft Teams'" />
-          <mosaik-banner-sub-header
-            [text]="'Register a Microsoft Entra application, grant the Teams app ChannelMessage.Read.Group for the target team, and store its client secret in an environment variable. Symphony reads only the configured channel every 15 minutes and creates a GitHub work item when @Symphony is mentioned on a FLAMOX365 feedback card.'"
-          />
-        </mosaik-banner>
-        <symphony-headline
-          header="Microsoft Teams channel"
-          description="Connect one channel to an existing GitHub Project and repository in this workspace."
+          [header]="'Read FLAMOX365 feedback from Microsoft Teams'"
+          [content]="'Register a Microsoft Entra application, grant the Teams app ChannelMessage.Read.Group for the target team, and store its client secret in an environment variable. Symphony reads only the configured channel every 15 minutes and creates a GitHub work item when @Symphony is mentioned on a FLAMOX365 feedback card.'"
         />
-        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+        <div class="flex min-w-0 flex-col gap-0.5">
+          <mosaik-text
+            part="settings-group-heading"
+            [mosaikTypography]="'subtitle2'"
+            [wrap]="true"
+            [text]="'Microsoft Teams channel'"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="'Connect one channel to an existing GitHub Project and repository in this workspace.'"
+          />
+        </div>
+        <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
           <mosaik-textbox
             test-id="teams-feedback-display-name"
             [label]="'Display name'"
@@ -127,40 +145,54 @@
             }
           </mosaik-select>
         </div>
-        <mosaik-toggle-switch
-          [variant]="'primary'"
-          test-id="teams-feedback-enabled"
-          [isChecked]="presenter.teams.enabled"
-          (checked)="presenter.teams.enabled = true"
-          (unchecked)="presenter.teams.enabled = false"
-        >
-          <div slot="label" class="flex min-w-0 flex-col gap-1">
-            <mosaik-text
-              [text]="'Create work items from @Symphony feedback requests'"
-              [wrap]="true"
+        <div part="settings-group-rows" class="flex min-w-0 flex-col">
+          <symphony-settings-row
+            [label]="'Create work items from @Symphony feedback requests'"
+            [description]="'Existing messages become the initial baseline and are never imported retroactively.'"
+          >
+            <mosaik-toggle-switch
+              test-id="teams-feedback-enabled"
+              aria-label="Create work items from @Symphony feedback requests"
+              [variant]="'primary'"
+              [isChecked]="presenter.teams.enabled"
+              (checked)="presenter.teams.enabled = true"
+              (unchecked)="presenter.teams.enabled = false"
             />
-            <mosaik-hint
-              [textOverflow]="'wrap'"
-              [text]="'Existing messages become the initial baseline and are never imported retroactively.'"
-            />
-          </div>
-        </mosaik-toggle-switch>
+          </symphony-settings-row>
+        </div>
         <mosaik-button
+          class="self-start"
           test-id="test-teams-feedback-connection"
           [label]="'Test connection'"
-          [iconName]="'sync'"
+          [icon]="'sync'"
+          [iconSize]="'small'"
           [appearance]="'outline'"
           [variant]="'primary'"
           [isBusy]="presenter.feedbackIntakeTestBusy()"
           [disabled]="!presenter.canTestTeamsFeedback() || presenter.feedbackIntakeTestBusy()"
           (click)="presenter.testTeamsFeedbackCommand.execute()"
         />
+        @if (presenter.validationIssues().length) {
+        <symphony-settings-conditional [condition]="'With missing details'">
+          <mosaik-message
+            class="block w-full"
+            test-id="teams-feedback-validation-summary"
+            [appearance]="'soft'"
+            [variant]="'warning'"
+            [fit]="'width'"
+            [icon]="'warning'"
+            [iconSize]="'small'"
+            [header]="'Finish these details before saving'"
+            [content]="presenter.validationIssues() | teamsFeedbackValidationIssuesLabel"
+          />
+        </symphony-settings-conditional>
+        }
       </section>
     </div>
   </div>
 </ng-template>
-<ng-template mosaikDrawerFooter>
-  <div class="flex w-full min-w-0 flex-wrap justify-end gap-2">
+<ng-template mosaikDialogFooter>
+  <div class="flex w-full min-w-0 items-center gap-1">
     @if (presenter.hasExistingTeamsFeedback()) {
     <mosaik-button
       test-id="remove-teams-feedback-intake"
@@ -171,6 +203,7 @@
       (click)="presenter.removeTeamsFeedbackCommand.execute()"
     />
     }
+    <div class="flex-1"></div>
     <mosaik-button
       test-id="cancel-settings-editor"
       [label]="'Cancel'"

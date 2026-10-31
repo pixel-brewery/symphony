@@ -17,6 +17,7 @@ import { PlatformContext } from '../adapters/PlatformContext';
 import { AppearanceSettingsStore } from '../state/AppearanceSettingsStore';
 import { DesktopThemeStore } from '../theme/DesktopThemeStore';
 import { withPlatformSettings } from './withPlatformSettings';
+import { withPlatformNotifications } from './withPlatformNotifications';
 
 // #endregion
 
@@ -38,6 +39,7 @@ export function providePlatformFeature(): EnvironmentProviders {
         { provide: PLATFORM_SETTINGS_CONTEXT, useExisting: PlatformContext },
         { provide: PLATFORM_OPERATIONS, useExisting: PlatformStore },
         { provide: APPLICATION_BOOTSTRAP_PLATFORM, useExisting: PlatformStore },
+        ...withPlatformNotifications().provide(),
       ],
       withPlatformSettings(),
     ),

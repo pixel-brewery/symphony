@@ -26,4 +26,6 @@ export interface IOrbitNode {
   readonly observedAt?: string;
   readonly deliveryState?:
     'unassigned' | 'unconfirmed' | 'confirmed' | 'pending' | 'failed' | 'stale';
+  /** Cluster meaning that colours a ticket or a cluster label instead of its work stage. */
+  readonly tone?: 'neutral' | 'success' | 'danger';
 }

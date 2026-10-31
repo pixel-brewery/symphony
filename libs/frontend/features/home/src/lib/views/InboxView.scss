@@ -1,0 +1,115 @@
+:host {
+  display: flex;
+}
+
+// The list pane is a Mosaik list drawn as the artboard's pane: the neutral-50 canvas without a
+// frame, radius or header line; the split divider draws the hairline beside it. The filter is the
+// list's fixed header and only the rows scroll below it. Mosaik pads only its header and footer,
+// so the header's own padding is cleared (the filter row brings the drawn 16px) and the rows get
+// the pane's 12px inset, 4px below the filter and 16px above the bottom edge.
+[part~='list-pane'] {
+  --list-background-color: var(--mosaik-color-neutral-50);
+  --list-border-width: 0;
+  --list-border-radius: 0;
+  --list-line-thickness: 0;
+  --list-gap: 4px;
+  --list-padding-top: 0;
+  --list-padding-right: 0;
+  --list-padding-bottom: 0;
+  --list-padding-left: 0;
+
+  &::part(items) {
+    padding: 4px 12px 16px;
+  }
+
+  // The rows show keyboard focus themselves; the list does not frame the whole pane.
+  &::part(focusRing) {
+    display: none;
+  }
+}
+
+// The filter is a segmented group on a neutral track.
+[part~='filter'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+// List entries are Mosaik list items drawn as the artboard's rows: a 12px padded row with a
+// transparent frame, and the selected one raised onto a surface. The rows keep no hover fill of
+// their own, as drawn.
+[part~='entry'] {
+  --list-item-background-color: transparent;
+  --list-item-border-color: transparent;
+  --list-item-border-radius: var(--mosaik-layout-radius);
+  --list-item-border-style: solid;
+  --list-item-border-width: var(--mosaik-layout-thickness);
+  --list-item-padding-top: 12px;
+  --list-item-padding-right: 12px;
+  --list-item-padding-bottom: 12px;
+  --list-item-padding-left: 12px;
+  cursor: pointer;
+}
+
+[part~='entry'][part~='selected'] {
+  --list-item-background-color: var(--mosaik-scheme-surface);
+  --list-item-border-color: var(--mosaik-scheme-highlight);
+  box-shadow: var(--mosaik-elevation-light);
+}
+
+// Stepper markers: a filled check when done, a strong ring while running, a light ring ahead.
+[part~='step-marker'] {
+  border: calc(var(--mosaik-layout-thickness) * 1.5) solid var(--mosaik-color-neutral-300);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+[part~='step-marker'][part~='active'] {
+  border: calc(var(--mosaik-layout-thickness) * 2) solid var(--mosaik-color-neutral-900);
+}
+
+[part~='step-marker'][part~='done'] {
+  background-color: var(--mosaik-color-neutral-900);
+  border-color: var(--mosaik-color-neutral-900);
+
+  mosaik-icon {
+    --icon-foreground-color: var(--mosaik-scheme-background);
+    --icon-padding-top: 0;
+    --icon-padding-bottom: 0;
+    --icon-padding-left: 0;
+    --icon-padding-right: 0;
+  }
+}
+
+[part~='step-line'] {
+  background-color: var(--mosaik-scheme-highlight);
+}
+
+[part~='step-line'][part~='done'] {
+  background-color: var(--mosaik-color-neutral-900);
+}
+
+// Continuation options are selectable cards; the chosen one carries a strong frame.
+[part~='option'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
+  cursor: pointer;
+  margin: var(--mosaik-layout-thickness);
+}
+
+[part~='option'][part~='selected'] {
+  border: calc(var(--mosaik-layout-thickness) * 2) solid var(--mosaik-color-neutral-900);
+  margin: 0;
+}
+
+[part~='finding'] + [part~='finding'] {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// Cards here draw their own rows and paddings, as the artboard does.
+mosaik-card {
+  --card-padding-top: 0;
+  --card-padding-right: 0;
+  --card-padding-bottom: 0;
+  --card-padding-left: 0;
+}

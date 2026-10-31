@@ -1,0 +1,26 @@
+// The `Fix failed checks` rail: a dot per switch and a line to the next one. A switch that is on
+// is filled, one that can be turned on is outlined, one whose prerequisite is off is outlined
+// faintly; the line below a switch that is on is drawn in the foreground colour.
+
+[part~='ladder-dot'] {
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: calc(var(--mosaik-layout-thickness) * 2) solid var(--mosaik-color-neutral-500);
+}
+
+[part~='ladder-dot'][data-state='on'] {
+  background-color: var(--mosaik-scheme-foreground);
+  border-color: var(--mosaik-scheme-foreground);
+}
+
+[part~='ladder-dot'][data-state='blocked'] {
+  border-color: var(--mosaik-color-neutral-300);
+}
+
+[part~='ladder-line'] {
+  background-color: var(--mosaik-scheme-highlight);
+}
+
+[part~='ladder-line'][data-on='true'] {
+  background-color: var(--mosaik-scheme-foreground);
+}

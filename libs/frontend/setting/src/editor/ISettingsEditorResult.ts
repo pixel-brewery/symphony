@@ -5,7 +5,7 @@ import type { ISettingsEditorRequest } from './ISettingsEditorRequest';
 // #endregion
 
 /**
- * Describes an optional follow-up editor requested when a feature-owned drawer closes.
+ * Describes an optional follow-up editor requested when a feature-owned sheet closes.
  *
  * @public
  */

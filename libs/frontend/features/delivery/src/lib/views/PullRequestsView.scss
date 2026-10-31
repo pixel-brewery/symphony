@@ -1,3 +1,43 @@
 :host {
-  display: block;
+  display: flex;
+}
+
+// The segment row and the inspector are plain surfaces of the screen, separated from the table by
+// hairlines, as drawn.
+[part~='pull-requests-bar'] {
+  border-bottom: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+// The `Open · Needs action · Drafts` segment sits on a neutral track.
+[part~='segment-track'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+// The checks of the inspected pull request form one framed list with a hairline between rows.
+[part~='checks-list'] {
+  background-color: var(--mosaik-scheme-surface);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+[part~='checks-list'] > * + * {
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}
+
+[part~='section-heading'] {
+  --text-font-weight: 600;
+}
+
+// Rows are focusable to select a pull request with the keyboard; the row hides its own focus ring.
+[part~='pull-request-row']:focus-visible {
+  outline: calc(var(--mosaik-layout-thickness) * 2) solid var(--mosaik-color-neutral-400);
+  outline-offset: calc(var(--mosaik-layout-thickness) * -2);
+}
+
+// Ids, numbers and branches are caption-sized monospace, as drawn. The typography directive would
+// pin the sans family inline, so the caption role is set here with the shared technical family.
+[part~='technical-caption'] {
+  font: var(--mosaik-typography-caption);
+  font-family: var(--technical-value-font-family);
 }

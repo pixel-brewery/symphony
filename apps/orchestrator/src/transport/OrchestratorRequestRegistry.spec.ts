@@ -22,7 +22,7 @@ function feedbackHandler() {
 }
 
 describe('OrchestratorRequestRegistry', () => {
-  it('retains all 113 methods in canonical order and seals its public list', () => {
+  it('retains all 115 methods in canonical order and seals its public list', () => {
     // arrange
     const registry = new OrchestratorRequestRegistry(
       orchestratorFeatureMethods,
@@ -33,7 +33,7 @@ describe('OrchestratorRequestRegistry', () => {
     registry.seal();
     // assert
     expect(registry.methods).toEqual(Object.keys(requestSchemas));
-    expect(registry.methods).toHaveLength(113);
+    expect(registry.methods).toHaveLength(115);
     expect(Object.isFrozen(registry.methods)).toBe(true);
     expect(() => registry.register({ id: 'feedback', handlers: [] })).toThrow('sealed');
   });

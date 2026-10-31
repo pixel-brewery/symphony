@@ -1,3 +1,37 @@
-:host {
-  display: block;
+// The AI team section draws a few plain-element surfaces that no Mosaik input expresses; each uses
+// only Mosaik tokens.
+
+// The rail between two delivery-flow steps.
+[part~='flow-rail'] {
+  background-color: var(--mosaik-scheme-highlight);
+}
+
+// The step icon sits on a 30px neutral disc.
+[part~='flow-step-icon'] {
+  background-color: var(--mosaik-color-neutral-200);
+  border-radius: 50%;
+}
+
+// An agent in the delivery flow: figure, name and job title on a pill.
+[part~='agent-pill'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  border-radius: calc(var(--mosaik-layout-radius) * 2);
+}
+
+[part~='agent-pill-name'],
+[part~='agent-card-name'] {
+  --text-font-weight: 600;
+}
+
+// The `Add an AI agent` card is drawn as a dashed placeholder beside the agent cards.
+[part~='add-agent-card'] {
+  border: var(--mosaik-layout-thickness) dashed var(--mosaik-color-neutral-300);
+  border-radius: var(--mosaik-layout-radius);
+  min-height: 120px;
+}
+
+// The card's content brings its own padding; Soho's card adds bottom padding of its own.
+mosaik-card {
+  --card-padding-bottom: 0px;
 }

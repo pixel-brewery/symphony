@@ -1,37 +1,50 @@
 // #region Imports
 
+import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   AvatarComponent,
   ButtonComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
+  DotComponent,
   IconNameDirective,
+  TextComponent,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { HeadlineComponent } from '@symphony/frontend-ui';
-import { WorkspaceSettingsViewPresenter } from './WorkspaceSettingsViewPresenter';
+import {
+  SettingsConditionalComponent,
+  SettingsGroupComponent,
+  SettingsRowComponent,
+} from '@symphony/frontend-setting';
+import { StorageSizePipe, WorkspaceAvatarSourcePipe } from '@symphony/frontend-ui';
+import { WorkspaceDirectoryViewPresenter } from './WorkspaceDirectoryViewPresenter';
 
 // #endregion
 
 /**
- * Feature-owned Workspace settings card.
+ * Settings `Workspaces`: every workspace with its summary, state and `Open`, plus
+ * `Import workspace` and `Add workspace`; disabled workspaces sit in their own frame.
  *
  * @public
  */
 @Component({
   selector: 'symphony-workspace-directory-card',
-  host: { class: 'block' },
+  host: { class: 'flex min-w-0 flex-col gap-3' },
   imports: [
+    AsyncPipe,
     AvatarComponent,
     ButtonComponent,
-    CardComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    HeadlineComponent,
+    DotComponent,
     IconNameDirective,
+    NgTemplateOutlet,
+    SettingsConditionalComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
+    StorageSizePipe,
+    TextComponent,
+    TypographyDirective,
+    WorkspaceAvatarSourcePipe,
   ],
-  providers: [WorkspaceSettingsViewPresenter],
+  providers: [WorkspaceDirectoryViewPresenter],
   templateUrl: './WorkspaceDirectoryCardView.html',
   styleUrl: './WorkspaceDirectoryCardView.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,12 +53,15 @@ export class WorkspaceDirectoryCardView {
   // #region Fields
 
   /**
-   * Workspace-owned state and actions.
+   * Workspace list state and actions.
    *
    * @protected
    * @readonly
    */
-  protected readonly presenter = inject(WorkspaceSettingsViewPresenter);
+  protected readonly presenter = inject(WorkspaceDirectoryViewPresenter);
+
+  /** Shows the workspace short code itself instead of initials derived from it. */
+  protected readonly shortCodeAccessor = (value: string): string => value.slice(0, 2).toUpperCase();
 
   // #endregion
 }

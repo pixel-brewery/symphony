@@ -1,0 +1,14 @@
+// The mode switch of the artboard: two buttons on a neutral track, the chosen one framed.
+[part~='mode-switch'] {
+  background-color: var(--mosaik-color-neutral-100);
+  border-radius: var(--mosaik-layout-radius);
+}
+
+// The artboard's footer is a band on neutral-50 below a hairline that runs to the sheet's edges,
+// so it reaches past the dialog's padding (read from the dialog's own public properties).
+[part~='sheet-footer'] {
+  margin: 0 calc(-1 * var(--dialog-padding-right, 0px)) calc(-1 * var(--dialog-padding-bottom, 0px))
+    calc(-1 * var(--dialog-padding-left, 0px));
+  background-color: var(--mosaik-color-neutral-50);
+  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+}

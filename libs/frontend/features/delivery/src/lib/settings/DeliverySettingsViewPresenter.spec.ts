@@ -6,13 +6,13 @@ import '@angular/compiler';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { MessageBoxService } from '@pixel-brewery/mosaik-elements-angular';
 import {
   applicationSettingsSchema,
   createDefaultApplicationSettings,
 } from '@symphony/configuration-composition';
 import {
   SETTINGS_WORKSPACE_CONTEXT,
+  SettingsAlertService,
   SettingsEditorService,
   SettingsHostSession,
 } from '@symphony/frontend-setting';
@@ -48,7 +48,7 @@ describe('DeliverySettingsViewPresenter', () => {
     expect(remounted.repositoryRuntimeAvailable).toBe(false);
   });
 
-  it('requires a positive confirmation and preserves destinations of the other project', () => {
+  it('requires a positive confirmation and preserves destinations of the other project', async () => {
     // arrange
     const { presenter, decisions, saveSettings } = arrange();
 
@@ -59,12 +59,21 @@ describe('DeliverySettingsViewPresenter', () => {
     presenter.removeDeliveryTargetCommand.execute('first-target');
     decisions[1]!.next({ reason: 'positive' });
     decisions[1]!.complete();
+    await new Promise((resolve) => setTimeout(resolve));
 
     // assert
     expect(saveSettings).toHaveBeenCalledOnce();
     expect(saveSettings.mock.calls[0]![0].deliveryTargets.map((target) => target.id)).toEqual([
       'second-target',
     ]);
+    expect(
+      vi.mocked(TestBed.inject(SettingsAlertService).confirm).mock.calls[0]?.[0],
+    ).toMatchObject({
+      header: 'Remove Production?',
+      tone: 'danger',
+      confirmLabel: 'Remove destination',
+      destructive: true,
+    });
   });
 });
 
@@ -116,13 +125,16 @@ function arrange() {
         useValue: { settings: signal(settings), configurationBusy: signal(false) },
       },
       {
-        provide: MessageBoxService,
+        provide: SettingsAlertService,
         useValue: {
-          show: vi.fn(() => {
-            const closed = new Subject<{ readonly reason: string }>();
-            decisions.push(closed);
-            return { closed };
-          }),
+          confirm: vi.fn(
+            () =>
+              new Promise<boolean>((resolve) => {
+                const closed = new Subject<{ readonly reason: string }>();
+                decisions.push(closed);
+                closed.subscribe((decision) => resolve(decision.reason === 'positive'));
+              }),
+          ),
         },
       },
     ],

@@ -38,7 +38,7 @@ test('links an implementation branch only after pull-request publication', async
     const page = await app.firstWindow();
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     const workItemId = await page.evaluate(async (localPath) => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
       const settings = await api.request('settings.get', {});
@@ -133,7 +133,7 @@ test('links an implementation branch only after pull-request publication', async
           ?.reload(),
       page.url(),
     );
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     await page.getByTestId('navigation-board').click();
     const card = page.getByTestId(`board-item-${workItemId}`);
     await expect(card).toBeVisible();
@@ -167,7 +167,7 @@ test('links an implementation branch only after pull-request publication', async
       )
       .toBe('succeeded');
     // Before delivery the card offers no pull-request entry, because there is none to act on.
-    await page.getByTestId('task-drawer-header-close').click();
+    await page.getByTestId('navigate-back').click();
     await expect(page.getByTestId('task-drawer')).toHaveCount(0);
     await card.click({ button: 'right' });
     await expect(page.getByTestId(`board-item-action-open-${workItemId}`)).toBeVisible();
@@ -189,7 +189,7 @@ test('links an implementation branch only after pull-request publication', async
 
     // A delivered card carries the pull request's own actions, so a run can be driven from the
     // board instead of only from the pull-request page.
-    await page.getByTestId('task-drawer-header-close').click();
+    await page.getByTestId('navigate-back').click();
     await expect(page.getByTestId('task-drawer')).toHaveCount(0);
     await card.click({ button: 'right' });
     const pullRequestEntry = page.getByTestId(`board-item-action-pull-request-${workItemId}`);
@@ -206,6 +206,21 @@ test('links an implementation branch only after pull-request publication', async
       path: resolve(outputDirectory, 'board-card-pull-request-actions.png'),
       fullPage: true,
     });
+    await page.keyboard.press('Escape');
+
+    // The published pull request names the work item it delivers and the agent behind it, and the
+    // item opens from its row again.
+    await page.getByTestId('navigation-pull-requests').click();
+    await expect(page.getByTestId('pull-requests-view')).toHaveAttribute('aria-busy', 'false', {
+      timeout: 15_000,
+    });
+    const pullRequestId = 'branch-publication-repository:142';
+    await expect(page.getByTestId(`pull-request-item-${pullRequestId}`)).toHaveText('#142');
+    const row = page.getByTestId(`pull-request-${pullRequestId}`);
+    await row.click({ button: 'right' });
+    await page.getByTestId(`pull-request-action-work-item-${pullRequestId}`).click();
+    // The Board owns the work-item deep link and opens the item it names.
+    await expect(page).toHaveURL(new RegExp(`/main/board.*${workItemId}`, 'u'));
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();

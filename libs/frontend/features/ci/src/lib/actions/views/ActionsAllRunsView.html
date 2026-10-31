@@ -1,0 +1,217 @@
+<header class="flex min-w-0 flex-col gap-[2px]" test-id="actions-all-runs-header">
+  <mosaik-text [mosaikTypography]="'headline5'" [text]="'All runs'" />
+  <mosaik-text
+    [mosaikTypography]="'caption'"
+    [variant]="'neutral'"
+    [wrap]="true"
+    [text]="'Every workflow in '
+      + (presenter.repositoryNames().length === 1
+        ? presenter.repositoryNames()[0]
+        : presenter.repositoryNames().length + ' repositories')
+      + ', on GitHub' + (presenter.localRunnerAvailable() ? ' and the managed local runner' : '')"
+  />
+</header>
+
+<section class="flex min-w-0 flex-col gap-1.25" test-id="actions-running" aria-label="Running now">
+  <div class="flex min-w-0 flex-col gap-[2px]">
+    <mosaik-text
+      part="actions-section-heading"
+      test-id="actions-running-heading"
+      [mosaikTypography]="'subtitle2'"
+      [text]="'Running now · ' + presenter.overview().running.length"
+    />
+    <mosaik-text
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [text]="'Live from GitHub' + (presenter.localRunnerAvailable() ? ' and the local runner' : '')"
+    />
+  </div>
+  <div part="actions-frame" class="flex min-w-0 flex-col" role="list">
+    @for (row of presenter.overview().running; track row.id) {
+    <div
+      class="flex min-w-0 items-center gap-1.5 px-1.75 py-1.25"
+      role="listitem"
+      [attr.test-id]="'actions-running-' + row.id"
+    >
+      <span class="flex w-8 flex-none items-center justify-start">
+        @if (row.status === 'in-progress') {
+        <mosaik-progress-ring
+          role="img"
+          [attr.aria-label]="'Running'"
+          [isIndeterminate]="true"
+          [variant]="'primary'"
+          [radius]="9"
+          [thickness]="2"
+        />
+        } @else {
+        <mosaik-badge
+          [label]="(row.status | actionRunBadge).label"
+          [variant]="(row.status | actionRunBadge).variant"
+          [appearance]="(row.status | actionRunBadge).appearance"
+        />
+        }
+      </span>
+      <span class="flex min-w-0 flex-1 flex-col gap-[2px]">
+        <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="row.workflowName" />
+        <mosaik-text
+          part="actions-technical"
+          class="technical-value"
+          [variant]="'neutral'"
+          [truncate]="true"
+          [text]="row | actionRunRevision"
+        />
+      </span>
+      <mosaik-text
+        class="w-[110px] flex-none"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="row.runner | actionRunnerLabel"
+      />
+      <mosaik-text
+        class="w-[90px] flex-none"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="(row.status === 'queued' ? 'waiting ' : 'running ') + (row.startedAt | relativeTime: presenter.now())"
+      />
+      <span class="flex w-[200px] flex-none items-center justify-end gap-0.5">
+        @if (presenter.runControls()(row); as controls) { @if (controls.canViewLog) {
+        <mosaik-button
+          [attr.test-id]="'actions-running-log-' + row.id"
+          [label]="'View log'"
+          [iconName]="'open'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          (click)="presenter.viewLogCommand.execute(row)"
+        />
+        } @if (row.status === 'queued') {
+        <mosaik-button
+          [attr.test-id]="'actions-running-cancel-' + row.id"
+          [label]="'Cancel'"
+          [iconName]="'clear'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          [disabled]="!controls.canCancel"
+          (click)="presenter.cancelRunCommand.execute(row)"
+        />
+        } @else {
+        <mosaik-button
+          [attr.test-id]="'actions-running-stop-' + row.id"
+          [label]="'Stop'"
+          [iconName]="'clear'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          [disabled]="!controls.canStop"
+          [mosaikTooltip]="controls.canStop ? '' : 'The local runner is still preparing this run.'"
+          (click)="presenter.stopRunCommand.execute(row)"
+        />
+        } }
+      </span>
+    </div>
+    } @empty {
+    <div class="flex min-w-0 flex-col gap-[2px] px-1.75 py-1.25" test-id="actions-running-empty">
+      <mosaik-text
+        [mosaikTypography]="'body2'"
+        [text]="presenter.isFiltered() ? 'No running run matches the filter' : 'Nothing is running'"
+      />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="'Runs appear here as soon as one starts.'"
+      />
+    </div>
+    }
+  </div>
+</section>
+
+<section class="flex min-w-0 flex-col gap-1.25" test-id="actions-history" aria-label="History">
+  <div class="flex min-w-0 flex-col gap-[2px]">
+    <mosaik-text
+      part="actions-section-heading"
+      [mosaikTypography]="'subtitle2'"
+      [text]="'History'"
+    />
+    <mosaik-text
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [text]="(presenter.sort() === 'started-ascending' ? 'Oldest first' : 'Newest first') + ', across all workflows'"
+    />
+  </div>
+  <div part="actions-frame" class="flex min-w-0 flex-col px-1 py-0.5">
+    @if (presenter.overview().history.length) {
+    <mosaik-table
+      aria-label="Finished runs"
+      [appearance]="'plain'"
+      [columns]="'100px 150px minmax(0, 1fr) 120px 80px 110px'"
+    >
+      <mosaik-table-header>
+        <mosaik-table-header-row>
+          <mosaik-table-header-cell [text]="'Result'" />
+          <mosaik-table-header-cell [text]="'Workflow'" />
+          <mosaik-table-header-cell [text]="'Revision'" />
+          <mosaik-table-header-cell [text]="'Runner'" />
+          <mosaik-table-header-cell [text]="'Duration'" />
+          <mosaik-table-header-cell [text]="'Started'" />
+        </mosaik-table-header-row>
+      </mosaik-table-header>
+      <mosaik-table-body>
+        @for (row of presenter.overview().history; track row.id) {
+        <mosaik-table-body-row
+          part="actions-run-row"
+          tabindex="0"
+          [attr.test-id]="'actions-history-' + row.id"
+          [attr.aria-label]="row.workflowName + ', ' + (row.status | actionRunBadge).label"
+          (click)="presenter.openRunCommand.execute(row)"
+          (keydown.enter)="presenter.openRunCommand.execute(row)"
+        >
+          <mosaik-table-body-cell>
+            <mosaik-badge
+              [label]="(row.status | actionRunBadge).label"
+              [variant]="(row.status | actionRunBadge).variant"
+              [appearance]="(row.status | actionRunBadge).appearance"
+            />
+          </mosaik-table-body-cell>
+          <mosaik-table-body-cell [text]="row.workflowName" [textOverflow]="'truncate'" />
+          <mosaik-table-body-cell>
+            <mosaik-text
+              part="actions-technical"
+              class="technical-value min-w-0"
+              [truncate]="true"
+              [text]="row | actionRunRevision"
+            />
+          </mosaik-table-body-cell>
+          <mosaik-table-body-cell [text]="row.runner | actionRunnerLabel" />
+          <mosaik-table-body-cell
+            [text]="(row.startedAt | actionRunDuration: row.finishedAt) || '—'"
+          />
+          <mosaik-table-body-cell
+            [text]="(row.startedAt ?? row.finishedAt) | actionRunStarted: presenter.now()"
+          />
+        </mosaik-table-body-row>
+        }
+      </mosaik-table-body>
+    </mosaik-table>
+    } @else {
+    <div class="flex min-w-0 flex-col gap-[2px] px-0.75 py-1" test-id="actions-history-empty">
+      <mosaik-text
+        [mosaikTypography]="'body2'"
+        [text]="presenter.isFiltered() ? 'No finished run matches the filter' : 'No finished runs yet'"
+      />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="'Finished runs of every workflow are listed here, newest first.'"
+      />
+    </div>
+    }
+  </div>
+  @if (presenter.overview().hasOlderRuns) {
+  <div class="flex justify-center">
+    <mosaik-button
+      test-id="actions-history-more"
+      [label]="'Show older runs'"
+      [appearance]="'plain'"
+      (click)="presenter.showOlderRunsCommand.execute()"
+    />
+  </div>
+  }
+</section>

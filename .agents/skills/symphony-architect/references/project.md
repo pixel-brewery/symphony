@@ -1,6 +1,6 @@
 # Symphony project contract
 
-Read for every task with `AGENTS.md` and [shared workflow](common/workflow.md). The common modules are unchanged copies of the peer architects; this file and the local domain references apply them to Symphony.
+Read for every task with `AGENTS.md` and [shared workflow](../../architecture/references/common/workflow.md). The common modules come from the locked Pixel Brewery Architecture base; this file and the local domain references apply them to Symphony.
 
 ## Owners and authority
 
@@ -27,4 +27,4 @@ Read for every task with `AGENTS.md` and [shared workflow](common/workflow.md). 
 - Inspect the combined diff for duplication, bypassed owners, state/lifecycle drift, changed consumers and generated output. Verify meaningful behavior through the lowest reliable layer, then run the repository-required checks appropriate to the change. Report actual checks and material prerequisites.
 - `yarn verify` runs agent synchronization checks, instruction/UI/design checks, formatting, lint, typecheck, tests and builds. After building, `yarn e2e` exercises real Electron processes; `yarn forge:package` checks packaging. Do not claim those results from a focused check.
 - Invoke [definition-of-done](../../definition-of-done/SKILL.md) only on explicit user request; its complete release-candidate sequence remains distinct from ordinary verification. German/EU legal review is also explicit-only. The architect does not authorize releases.
-- Keep common modules and the shared entrypoint block unchanged. Compare peers through `.agents/scripts/sync_architect_core.py --peer <other-checkout> --check`; ordinary skill use remains independent of peer checkouts.
+- Keep the installed Architecture base unchanged. Propose shared changes in `pixel-brewery/skills`, install an explicitly selected immutable revision with the Skills CLI, then validate the lock and inheritance through `.agents/scripts/sync_architect_core.py --check`. Ordinary skill use needs no peer checkout.

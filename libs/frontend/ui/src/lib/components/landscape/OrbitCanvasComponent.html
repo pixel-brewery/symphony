@@ -9,6 +9,7 @@
   [attr.data-crew-count]="crew().length"
   [attr.data-flight-count]="frame()?.activeFlybyCount ?? 0"
   [attr.data-zoom-level]="frame()?.zoomLevel ?? 'system'"
+  [attr.data-zoom]="frame()?.zoom ?? 1"
   [attr.data-camera-x]="frame()?.camera?.position?.x"
   [attr.data-camera-y]="frame()?.camera?.position?.y"
   [attr.data-camera-z]="frame()?.camera?.position?.z"
@@ -25,6 +26,8 @@
       data-orbit-label
       [attr.test-id]="'orbit-label-' + label.node.id"
       [attr.data-node-id]="label.node.id"
+      [attr.data-kind]="label.node.kind"
+      [attr.data-align]="label.align ?? 'center'"
       [attr.data-celestial-body]="label.node.celestialBody"
       [attr.data-scene-x]="label.anchorX"
       [attr.data-scene-y]="label.anchorY"
@@ -36,6 +39,29 @@
       (focusin)="pinNode(label.node.id)"
       (keydown)="labelKeydown($event, label.node.id)"
     >
+      @switch (label.node.kind) { @case ('group') {
+      <!-- A cluster label is the drawn badge on a surface pill; the button around it selects the
+           cluster for the inspector. -->
+      <div part="orbit-cluster-label">
+        <mosaik-button
+          [appearance]="'plain'"
+          [attr.aria-label]="label.node.label + ', ' + (label.node.count ?? 0) + ' work items'"
+          [attr.aria-pressed]="selectedId() === label.node.id"
+          (click)="selectNode(label.node.id)"
+          (dblclick)="focusNode(label.node.id)"
+        >
+          <mosaik-badge
+            slot="label"
+            [attr.test-id]="'orbit-group-count-' + label.node.id"
+            [attr.data-count]="label.node.count ?? 0"
+            [label]="label.node.label + ' · ' + (label.node.count ?? 0)"
+            [appearance]="label.node.tone === 'danger' || label.node.tone === 'success' ? 'soft' : 'outline'"
+            [variant]="label.node.tone === 'danger' || label.node.tone === 'success' ? label.node.tone : 'default'"
+            [icon]="label.node.tone === 'danger' ? 'errorCircle' : undefined"
+          />
+        </mosaik-button>
+      </div>
+      } @case ('ticket') {
       <mosaik-button
         [orientation]="'vertical'"
         [size]="'small'"
@@ -48,30 +74,72 @@
         (dblclick)="focusNode(label.node.id)"
       >
         <span slot="label" class="flex min-w-0 flex-col items-center">
-          @if (label.node.kind === 'group' && label.node.count !== undefined) {
-          <span [mosaikTypography]="'caption'" [attr.test-id]="'orbit-group-count-' + label.node.id"
-            >{{ label.node.count }} {{ label.node.label }}</span
-          >
-          } @else {
-          <mosaik-text [text]="label.node.label" [mosaikTypography]="'caption'" [maxLines]="1" />
-          } @if (label.node.kind === 'ticket' && label.node.stageLabel) {
+          <mosaik-text
+            class="technical-value"
+            [text]="label.node.label"
+            [mosaikTypography]="'caption'"
+            [maxLines]="1"
+          />
+          @if (label.node.stageLabel) {
           <mosaik-text
             [text]="label.node.stageLabel"
             [mosaikTypography]="'caption'"
             [maxLines]="1"
           />
-          } @else if (label.node.kind === 'production' || label.node.kind === 'target') { @if
-          (label.node.deliveryState === 'confirmed' && label.node.version) {
-          <mosaik-text [text]="label.node.version" [mosaikTypography]="'caption'" [maxLines]="1" />
-          } @else {
-          <mosaik-text
-            [text]="'No confirmed version'"
-            [mosaikTypography]="'caption'"
-            [maxLines]="1"
-          />
-          } }
+          }
         </span>
       </mosaik-button>
+      } @default {
+      <!-- A destination label is the drawn name card: its name and its confirmed version. -->
+      <mosaik-card part="orbit-body-label" [elevation]="'none'">
+        <mosaik-button
+          slot="content"
+          [orientation]="'vertical'"
+          [size]="'small'"
+          [fit]="'width'"
+          [appearance]="selectedId() === label.node.id ? 'soft' : 'plain'"
+          [attr.aria-label]="label.node.label"
+          [attr.aria-pressed]="selectedId() === label.node.id"
+          (click)="selectNode(label.node.id)"
+          (dblclick)="focusNode(label.node.id)"
+        >
+          <span slot="label" class="flex min-w-0 flex-col items-center">
+            <mosaik-text
+              [text]="label.node.label"
+              [mosaikTypography]="'subtitle2'"
+              [maxLines]="1"
+            />
+            @if (label.node.deliveryState === 'confirmed' && label.node.version) {
+            <mosaik-text
+              [text]="
+                label.node.version +
+                (label.node.observedAt
+                  ? ' · confirmed ' + (label.node.observedAt | date: 'MMM d')
+                  : '')
+              "
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [maxLines]="1"
+            />
+            } @else if (label.node.deliveryState === 'unassigned') {
+            <mosaik-text
+              [text]="'No destination configured'"
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [maxLines]="1"
+            />
+            } @else {
+            <mosaik-text
+              [text]="'No confirmed version'"
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [maxLines]="1"
+            />
+            }
+          </span>
+        </mosaik-button>
+      </mosaik-card>
+      } }
     </div>
     }
   </div>
@@ -98,21 +166,35 @@
   @if (renderState() === 'unavailable' || renderState() === 'context-lost') {
   <div
     data-orbit-fallback
-    class="absolute inset-0 flex items-center justify-center p-6"
+    class="absolute inset-0 flex items-center justify-center p-3"
     role="status"
     test-id="orbit-webgl-fallback"
   >
-    <div class="flex max-w-80 flex-col items-center gap-4">
+    <div class="flex max-w-[400px] flex-col items-center gap-2">
       <mosaik-text
         [text]="renderState() === 'context-lost' ? '3D was interrupted' : '3D is unavailable'"
         [wrap]="true"
         [alignment]="'center'"
       />
       <mosaik-text
-        [text]="'Find tickets in the object browser.'"
+        [text]="'Choose a destination or a cluster of work items here instead.'"
+        [variant]="'neutral'"
         [wrap]="true"
         [alignment]="'center'"
       />
+      <!-- Without 3D the destinations and clusters stay reachable as plain buttons. -->
+      <div class="flex flex-wrap justify-center gap-1" role="group" aria-label="Orbit objects">
+        @for (node of fallbackNodes(); track node.id) {
+        <mosaik-button
+          [attr.test-id]="'orbit-fallback-' + node.id"
+          [size]="'small'"
+          [appearance]="selectedId() === node.id ? 'soft' : 'outline'"
+          [label]="node.kind === 'group' ? node.label + ' · ' + (node.count ?? 0) : node.label"
+          [attr.aria-pressed]="selectedId() === node.id"
+          (click)="selectNode(node.id)"
+        />
+        }
+      </div>
       <mosaik-button
         [label]="'Retry'"
         [appearance]="'soft'"

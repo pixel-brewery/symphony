@@ -5,7 +5,8 @@ import type { Routes } from '@angular/router';
 // #endregion
 
 /**
- * Exposes the generic settings host and preserves existing Projects bookmarks.
+ * Settings opens inside the main window: the route renders the section content, and the screen
+ * replaces the sidebar's destinations with the Settings navigation while it is open.
  *
  * @public
  */

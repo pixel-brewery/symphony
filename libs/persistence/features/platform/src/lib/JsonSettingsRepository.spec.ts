@@ -55,6 +55,11 @@ describe('JsonSettingsRepository', () => {
     };
     const saved = repository.save({
       ...defaults,
+      workspaces: defaults.workspaces.map((workspace) => ({
+        ...workspace,
+        avatar: { kind: 'emoji' as const, value: '👩🏽‍💻' },
+        color: '#ff6900',
+      })),
       user: { ...defaults.user, displayName: 'Ada' },
       localCi: {
         reuseVirtualMachine: false,
@@ -87,6 +92,10 @@ describe('JsonSettingsRepository', () => {
 
     // assert
     expect(loaded).toEqual(saved);
+    expect(loaded.workspaces[0]).toMatchObject({
+      avatar: { kind: 'emoji', value: '👩🏽‍💻' },
+      color: '#ff6900',
+    });
     expect(loaded.repositoryBindings[0]?.localPath).toBe('/src/platform');
     expect(
       loaded.agentTeams[0]?.assignments.find((assignment) => assignment.role === 'analysis')

@@ -161,6 +161,13 @@ interface IGitHubPullRequestResponse {
   readonly merge_commit_sha?: string;
   readonly head?: { readonly ref?: string; readonly sha?: string };
   readonly base?: { readonly ref?: string };
+  readonly requested_reviewers?: readonly { readonly login?: string }[] | null;
+  readonly requested_teams?:
+    | readonly {
+        readonly slug?: string;
+        readonly organization?: { readonly login?: string };
+      }[]
+    | null;
   readonly created_at?: string;
   readonly updated_at?: string;
 }
@@ -804,39 +811,10 @@ export class GitHubCloudProvider
   ): Promise<readonly ICiRun[]> {
     const settings = this._options.settings();
     const selectedWorkspaceIds = new Set(settings.activeViewScope.workspaceIds);
-    const bindings = settings.ciBindings.filter(
-      (binding) =>
-        binding.enabled &&
-        binding.provider === 'github-actions' &&
-        (scope === 'operational' || selectedWorkspaceIds.has(binding.workspaceId)),
+    return this.listRunsForWorkspaces(
+      settings,
+      scope === 'operational' ? undefined : selectedWorkspaceIds,
     );
-    const results = await Promise.all(
-      bindings.map(async (binding): Promise<readonly ICiRun[]> => {
-        const repository = settings.repositoryBindings.find(
-          (candidate) =>
-            candidate.id === binding.repositoryBindingId &&
-            candidate.workspaceId === binding.workspaceId,
-        );
-        const connection = settings.connections.find(
-          (candidate): candidate is Extract<ProviderConnection, { kind: 'github' }> =>
-            candidate.kind === 'github' &&
-            candidate.id === binding.sourceControlConnectionId &&
-            candidate.workspaceId === binding.workspaceId,
-        );
-        if (!repository || !connection) return [];
-        const response = await this.api<IGitHubWorkflowRunsResponse>(
-          connection,
-          `repos/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.name)}/actions/runs?per_page=50`,
-          'GET',
-        );
-        return Promise.all(
-          (response.workflow_runs ?? []).map((run) =>
-            this.projectRun(binding, repository, connection, run),
-          ),
-        );
-      }),
-    );
-    return results.flat();
   }
 
   /**
@@ -845,14 +823,14 @@ export class GitHubCloudProvider
    * @public
    */
   public async listManagedLocalRunCandidates(): Promise<readonly ICiRun[]> {
+    const settings = this._options.settings();
     const enabledWorkspaceIds = new Set(
-      this._options
-        .settings()
-        .workspaces.filter((workspace) => workspace.localCiEnabled)
+      settings.workspaces
+        .filter((workspace) => workspace.localCiEnabled)
         .map((workspace) => workspace.id),
     );
     if (!enabledWorkspaceIds.size) return [];
-    const runs = await this.listRuns('operational');
+    const runs = await this.listRunsForWorkspaces(settings, enabledWorkspaceIds);
     return runs
       .filter(
         (run) =>
@@ -1685,6 +1663,45 @@ export class GitHubCloudProvider
    */
   public async workflowWorkspaceId(workflowId: string): Promise<string> {
     return (await this.requireWorkflowTarget(workflowId)).repository.workspaceId;
+  }
+
+  private async listRunsForWorkspaces(
+    settings: IApplicationSettings,
+    workspaceIds?: ReadonlySet<string>,
+  ): Promise<readonly ICiRun[]> {
+    const bindings = settings.ciBindings.filter(
+      (binding) =>
+        binding.enabled &&
+        binding.provider === 'github-actions' &&
+        (workspaceIds === undefined || workspaceIds.has(binding.workspaceId)),
+    );
+    const results = await Promise.all(
+      bindings.map(async (binding): Promise<readonly ICiRun[]> => {
+        const repository = settings.repositoryBindings.find(
+          (candidate) =>
+            candidate.id === binding.repositoryBindingId &&
+            candidate.workspaceId === binding.workspaceId,
+        );
+        const connection = settings.connections.find(
+          (candidate): candidate is Extract<ProviderConnection, { kind: 'github' }> =>
+            candidate.kind === 'github' &&
+            candidate.id === binding.sourceControlConnectionId &&
+            candidate.workspaceId === binding.workspaceId,
+        );
+        if (!repository || !connection) return [];
+        const response = await this.api<IGitHubWorkflowRunsResponse>(
+          connection,
+          `repos/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.name)}/actions/runs?per_page=50`,
+          'GET',
+        );
+        return Promise.all(
+          (response.workflow_runs ?? []).map((run) =>
+            this.projectRun(binding, repository, connection, run),
+          ),
+        );
+      }),
+    );
+    return results.flat();
   }
 
   private async requireWorkflowTarget(workflowId: string): Promise<IWorkflowTarget> {
@@ -2816,9 +2833,37 @@ export class GitHubCloudProvider
         : {}),
       targetBranch: pullRequest.base?.ref ?? repository.defaultBranch,
       baseBranchStatus: this.pullRequestBaseBranchStatus(pullRequest),
+      ...this.pullRequestReviewRequests(repository, pullRequest),
       externalUrl: pullRequest.html_url,
       createdAt: pullRequest.created_at ?? pullRequest.updated_at ?? this.now().toISOString(),
       updatedAt: pullRequest.updated_at ?? pullRequest.created_at ?? this.now().toISOString(),
+    };
+  }
+
+  /** Pending review requests: reviewer logins and `organization/team` names, bounded to 100 each. */
+  private pullRequestReviewRequests(
+    repository: IRepositoryBinding,
+    pullRequest: IGitHubPullRequestResponse,
+  ): Pick<IPullRequestSummary, 'requestedReviewers' | 'requestedTeams'> {
+    const reviewers = [
+      ...new Set(
+        (pullRequest.requested_reviewers ?? []).flatMap((reviewer) =>
+          reviewer.login?.trim() ? [reviewer.login.trim()] : [],
+        ),
+      ),
+    ].slice(0, 100);
+    const teams = [
+      ...new Set(
+        (pullRequest.requested_teams ?? []).flatMap((team) =>
+          team.slug?.trim()
+            ? [`${team.organization?.login?.trim() || repository.owner}/${team.slug.trim()}`]
+            : [],
+        ),
+      ),
+    ].slice(0, 100);
+    return {
+      ...(reviewers.length ? { requestedReviewers: reviewers } : {}),
+      ...(teams.length ? { requestedTeams: teams } : {}),
     };
   }
 

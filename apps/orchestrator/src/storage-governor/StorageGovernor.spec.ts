@@ -15,11 +15,13 @@ const temporaryDirectories: string[] = [];
 
 const TEST_AVAILABLE_FILESYSTEM_BYTES = 100 * 1024 ** 3;
 
+// Removing the 11,000-file tree of the oversized-tree case takes longer than the default hook
+// timeout on Windows runners.
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
-    rmSync(directory, { force: true, recursive: true });
+    rmSync(directory, { force: true, recursive: true, maxRetries: 3 });
   }
-});
+}, 60_000);
 
 describe('StorageGovernor', () => {
   it('resolves VM profiles against detected host and storage capacity', () => {
@@ -219,7 +221,8 @@ describe('StorageGovernor', () => {
       availableFilesystemBytes: () => TEST_AVAILABLE_FILESYSTEM_BYTES,
     });
     expect(restartedGovernor.report().measured).toBe(true);
-  }, 30_000);
+    // Writing and walking 11,000 files takes about 40 s on Windows runners.
+  }, 120_000);
 
   it('splits every usage group into the categories that physically fill it', () => {
     // arrange

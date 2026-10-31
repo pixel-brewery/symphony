@@ -1,0 +1,19 @@
+@if (presenter.power.state()) {
+<mosaik-toggle-switch
+  test-id="keep-awake-while-busy"
+  [variant]="'primary'"
+  [isChecked]="presenter.keepAwake.value()"
+  [disabled]="presenter.power.busy()"
+  [attr.aria-label]="'Keep this Mac awake while tasks run'"
+  (checked)="presenter.setKeepAwakeCommand.execute(true)"
+  (unchecked)="presenter.setKeepAwakeCommand.execute(false)"
+/>
+} @else {
+<mosaik-skeleton
+  role="status"
+  aria-label="Loading sleep settings"
+  [width]="'32px'"
+  [height]="'18px'"
+  [shimmer]="true"
+/>
+}

@@ -6,4 +6,6 @@ export interface IOrbitRing {
   readonly tilt: number;
   readonly rotation: number;
   readonly targetId?: string;
+  /** Destination orbits are dashed; the work-item belt is a solid guide. Defaults to solid. */
+  readonly style?: 'solid' | 'dashed';
 }

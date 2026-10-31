@@ -1,8 +1,8 @@
 // #region Imports
 
 import { computed, inject, Injectable } from '@angular/core';
-import { MessageBoxService } from '@pixel-brewery/mosaik-elements-angular';
 import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
+import { SettingsAlertService } from '@symphony/frontend-setting';
 import type { RuntimeHealthDto } from '@symphony/ipc-contracts-platform';
 import type { IRuntimeDependencyView } from '../models/IRuntimeDependencyView';
 import type { RuntimeDependencyCommand } from '../models/RuntimeDependencyCommand';
@@ -19,7 +19,7 @@ import { PlatformStore } from '../state/PlatformStore';
 export class DeveloperToolsSettingsViewPresenter extends Hydratable(ViewPresenter) {
   // #region Fields
 
-  private readonly _messageBoxService = inject(MessageBoxService);
+  private readonly _alerts = inject(SettingsAlertService);
   /**
    * Sole native inspection and installer activity owner.
    *
@@ -119,20 +119,18 @@ export class DeveloperToolsSettingsViewPresenter extends Hydratable(ViewPresente
     if (!command || item.health.available || !this.store.runtimeHealth()?.homebrew.available) {
       return;
     }
-    const confirmation = this._messageBoxService.show({
-      id: `install-runtime-dependency-${item.id}`,
-      header: `Install ${label}?`,
-      message: `Homebrew will download and install ${label} on this Mac. Symphony uses a fixed package recipe and verifies the command after installation.`,
-      buttons: 'yesNo',
-      variant: 'warning',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Install with Homebrew', noLabel: 'Cancel' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision.reason === 'positive') {
-        void this.store.installRuntimeDependency(command);
-      }
-    });
+    void this._alerts
+      .confirm({
+        id: `install-runtime-dependency-${item.id}`,
+        header: `Install ${label}?`,
+        message: `Homebrew will download and install ${label} on this Mac. Symphony uses a fixed package recipe and verifies the command after installation.`,
+        tone: 'warning',
+        confirmLabel: 'Install with Homebrew',
+        cancelLabel: 'Cancel',
+      })
+      .then((confirmed) => {
+        if (confirmed) void this.store.installRuntimeDependency(command);
+      });
   }
 
   private runtimeDependency(

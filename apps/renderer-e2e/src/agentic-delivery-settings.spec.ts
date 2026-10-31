@@ -2,7 +2,9 @@
 
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test, _electron as electron, type ElectronApplication } from '@playwright/test';
+import { expect, test, _electron as electron } from '@playwright/test';
+import { openSettings } from './openSettings';
+import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
@@ -12,15 +14,23 @@ interface IAgenticDeliverySettingsApi {
     payload: Record<string, never>,
   ): Promise<{
     runtime: {
-      agenticDelivery: {
-        enabled: boolean;
-        observeFailures: boolean;
-      };
+      agenticDelivery: Record<string, boolean | number>;
     };
   }>;
 }
 
-test('keeps agentic delivery disabled until the global policy is explicitly saved', async () => {
+const LADDER = [
+  'agentic-delivery-enabled',
+  'agentic-observe-failures',
+  'agentic-ai-diagnosis',
+  'agentic-ci-rerun',
+  'agentic-managed-branch-updates',
+  'agentic-source-repair',
+  'agentic-workflow-repair',
+  'agentic-replacement-pr',
+] as const;
+
+test('keeps agentic delivery off until a level is chosen and enforces the switch dependencies', async () => {
   // arrange
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
@@ -45,47 +55,83 @@ test('keeps agentic delivery disabled until the global policy is explicitly save
 
   // assert
   try {
-    const page = await mainWindow(app);
+    const page = await prepareMainWindow(app);
     const rendererErrors: string[] = [];
     page.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
-    await page.getByTestId('global-workspace-filter').click();
-    await page.getByTestId('workspace-menu-settings').click();
-    await page.getByTestId('global-settings-section-automation').click();
+    const settings = await openSettings(page);
+    await settings.getByTestId('global-settings-section-automation').click();
 
-    const group = page.getByTestId('agentic-delivery-settings-group');
+    const group = settings.getByTestId('agentic-delivery-settings-group');
     await group.scrollIntoViewIfNeeded();
     await expect(group).toBeVisible();
-    for (const testId of [
-      'agentic-delivery-enabled',
-      'agentic-observe-failures',
-      'agentic-ai-diagnosis',
-      'agentic-source-repair',
-      'agentic-workflow-repair',
-      'agentic-managed-branch-updates',
-      'agentic-ci-rerun',
-      'agentic-replacement-pr',
-      'agentic-conflict-serialization',
-    ]) {
-      await expect(page.getByTestId(testId)).toHaveJSProperty('isChecked', false);
+    for (const testId of [...LADDER, 'agentic-conflict-serialization', 'agentic-review-feedback']) {
+      await expect(settings.getByTestId(testId)).toHaveJSProperty('isChecked', false);
     }
+    await expect(settings.getByTestId('agentic-level-off')).toHaveJSProperty('isChecked', true);
+    // A switch whose prerequisite is off is disabled and names that prerequisite.
+    await expect(settings.getByTestId('agentic-observe-failures')).toHaveJSProperty(
+      'disabled',
+      true,
+    );
+    await expect(settings.getByTestId('agentic-observe-failures-needs')).toContainText(
+      'Needs “Enable agentic delivery”',
+    );
+    await expect(settings.getByTestId('save-runtime-settings')).toHaveCount(0);
 
-    await page.getByTestId('agentic-delivery-enabled').click();
-    await page.getByTestId('agentic-observe-failures').click();
-    await page.getByTestId('save-runtime-settings').click();
-    await expect(page.getByTestId('notification-success').last()).toContainText('Settings saved');
-    await expect
-      .poll(() =>
-        page.evaluate(async () => {
-          const api = (window as unknown as { orchestration: IAgenticDeliverySettingsApi })
-            .orchestration;
-          return (await api.request('settings.get', {})).runtime.agenticDelivery;
-        }),
-      )
-      .toMatchObject({ enabled: true, observeFailures: true });
-    await page.screenshot({
+    const storedPolicy = () =>
+      settings.evaluate(async () => {
+        const api = (window as unknown as { orchestration: IAgenticDeliverySettingsApi })
+          .orchestration;
+        return (await api.request('settings.get', {})).runtime.agenticDelivery;
+      });
+
+    // Choosing a level sets its switches in one go and applies at once.
+    await settings.getByTestId('agentic-level-diagnose').click();
+    await expect.poll(storedPolicy).toMatchObject({
+      enabled: true,
+      observeFailures: true,
+      aiDiagnosisEnabled: true,
+      ciRerunEnabled: true,
+      managedBranchUpdatesEnabled: false,
+      sourceRepairEnabled: false,
+      workflowRepairEnabled: false,
+      replacementPullRequestEnabled: false,
+    });
+    await expect(settings.getByTestId('agentic-source-repair')).toHaveJSProperty('disabled', true);
+    await expect(settings.getByTestId('agentic-source-repair-needs')).toContainText(
+      'Needs “Update managed pull-request branches”',
+    );
+    await expect(settings.getByTestId('agentic-replacement-pr-needs')).toContainText(
+      'Needs “Repair source failures”',
+    );
+
+    // Switching one switch reads Custom.
+    await settings.getByTestId('agentic-ci-rerun').click();
+    await expect(settings.getByTestId('agentic-level-custom')).toHaveJSProperty('isChecked', true);
+    await expect.poll(storedPolicy).toMatchObject({ ciRerunEnabled: false });
+
+    await settings.getByTestId('agentic-level-full').click();
+    await expect.poll(storedPolicy).toMatchObject({
+      managedBranchUpdatesEnabled: true,
+      sourceRepairEnabled: true,
+      workflowRepairEnabled: true,
+      replacementPullRequestEnabled: true,
+      ciRerunEnabled: true,
+    });
+    await expect(settings.getByTestId('agentic-replacement-pr')).toHaveJSProperty(
+      'disabled',
+      false,
+    );
+    await settings.screenshot({
       path: resolve(outputDirectory, 'agentic-delivery-settings.png'),
       fullPage: true,
+    });
+
+    await settings.getByTestId('agentic-level-off').click();
+    await expect.poll(storedPolicy).toMatchObject({
+      enabled: false,
+      observeFailures: false,
+      replacementPullRequestEnabled: false,
     });
     expect(rendererErrors).toEqual([]);
   } finally {
@@ -93,13 +139,3 @@ test('keeps agentic delivery disabled until the global policy is explicitly save
     rmSync(configurationRoot, { force: true, recursive: true });
   }
 });
-
-async function mainWindow(app: ElectronApplication) {
-  const existing = app.windows().find((page) => !page.url().includes('#/menu-bar'));
-  return (
-    existing ??
-    (await app.waitForEvent('window', {
-      predicate: (page) => !page.url().includes('#/menu-bar'),
-    }))
-  );
-}

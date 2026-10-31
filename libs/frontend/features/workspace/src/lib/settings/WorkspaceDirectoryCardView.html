@@ -1,76 +1,98 @@
-<section test-id="workspace-directory" class="flex min-w-0 flex-col gap-4">
-  <symphony-headline
-    header="Workspaces"
-    description="Open one workspace to manage its organization, accounts, repositories and storage in isolation."
-  />
-  <div
-    test-id="workspace-directory-list"
-    class="grid min-w-0 grid-cols-3 gap-4 max-[1000px]:grid-cols-2 max-[560px]:grid-cols-1"
-  >
-    <mosaik-button
-      test-id="add-workspace"
-      class="min-h-32 min-w-0"
-      [fit]="'both'"
-      [orientation]="'vertical'"
-      [horizontalContentAlignment]="'center'"
-      [verticalContentAlignment]="'center'"
-      [appearance]="'soft'"
-      [variant]="'primary'"
-      [iconName]="'add'"
-      [label]="'Add workspace'"
-      (click)="presenter.openWorkspaceCommand.execute()"
-    />
-
+<symphony-settings-group
+  test-id="workspace-directory"
+  [heading]="'Workspaces'"
+  [description]="'Open one workspace to manage its organization, accounts, repositories and storage in isolation.'"
+>
+  <div slot="actions" class="flex flex-none items-center gap-1">
     <mosaik-button
       test-id="import-workspace"
-      class="min-h-32 min-w-0"
-      [fit]="'both'"
-      [orientation]="'vertical'"
-      [horizontalContentAlignment]="'center'"
-      [verticalContentAlignment]="'center'"
-      [appearance]="'soft'"
-      [variant]="'primary'"
+      [label]="presenter.store.workspaceTransferBusy() === 'import' ? 'Importing workspace…' : 'Import workspace'"
       [iconName]="'folderOpen'"
-      [label]="
-                  presenter.store.workspaceTransferBusy() === 'import'
-                    ? 'Importing workspace…'
-                    : 'Import workspace'
-                "
-      [disabled]="!!presenter.store.workspaceTransferBusy()"
-      (click)="presenter.chooseWorkspaceImportCommand.execute()"
-    />
-
-    @for (workspace of presenter.workspaces(); track workspace.id) {
-    <mosaik-card
-      [attr.test-id]="'workspace-directory-item-' + workspace.id"
-      class="block min-w-0"
+      [iconSize]="'small'"
       [appearance]="'outline'"
-    >
-      <mosaik-card-header
-        [text]="workspace.displayName"
-        [subText]="workspace.enabled ? 'Available' : 'Disabled'"
-      >
-        <mosaik-avatar
-          slot="prefix"
-          [size]="'medium'"
-          [appearance]="'soft'"
-          [text]="workspace.shortCode"
-        />
-      </mosaik-card-header>
-      <mosaik-card-footer>
-        <div class="flex w-full min-w-0 items-center justify-end gap-2">
-          <mosaik-button
-            [attr.test-id]="'open-workspace-settings-' + workspace.id"
-            [label]="'Open'"
-            [iconName]="'open'"
-            [iconPosition]="'after'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            (click)="presenter.openSettingsWorkspaceCommand.execute(workspace.id)"
-          />
-        </div>
-      </mosaik-card-footer>
-    </mosaik-card>
+      [disabled]="!!presenter.store.workspaceTransferBusy()"
+      (click)="presenter.importWorkspaceCommand.execute()"
+    />
+    <mosaik-button
+      test-id="add-workspace"
+      [label]="'Add workspace'"
+      [iconName]="'add'"
+      [iconSize]="'small'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      (click)="presenter.addWorkspaceCommand.execute()"
+    />
+  </div>
+  @for (entry of presenter.enabledEntries(); track entry.workspace.id) {
+  <ng-container
+    [ngTemplateOutlet]="workspaceRow"
+    [ngTemplateOutletContext]="{ $implicit: entry }"
+  />
+  }
+</symphony-settings-group>
+
+@if (!presenter.enabledEntries().length && !presenter.disabledEntries().length) {
+<mosaik-text
+  [mosaikTypography]="'caption'"
+  [variant]="'neutral'"
+  [wrap]="true"
+  [text]="'No workspace yet. Add one to connect its accounts, repositories and storage.'"
+/>
+} @else {
+<mosaik-text
+  [mosaikTypography]="'caption'"
+  [variant]="'neutral'"
+  [wrap]="true"
+  [text]="'Opening a workspace shows its AI team first. Problems such as an account that is not signed in or a repository that is not prepared appear in the notifications of the main window.'"
+/>
+} @if (presenter.disabledEntries().length) {
+<symphony-settings-conditional
+  test-id="workspace-directory-disabled"
+  [condition]="'While a workspace is disabled'"
+>
+  <div part="settings-group-rows" class="flex min-w-0 flex-col">
+    @for (entry of presenter.disabledEntries(); track entry.workspace.id) {
+    <ng-container
+      [ngTemplateOutlet]="workspaceRow"
+      [ngTemplateOutletContext]="{ $implicit: entry }"
+    />
     }
   </div>
-</section>
+</symphony-settings-conditional>
+}
+
+<ng-template #workspaceRow let-entry>
+  <symphony-settings-row
+    [attr.test-id]="'workspace-directory-item-' + entry.workspace.id"
+    [label]="entry.workspace.displayName"
+    [description]="entry.workspace.enabled ? (entry.agents + (entry.agents === 1 ? ' agent' : ' agents') + ' · ' + entry.aiAccounts + (entry.aiAccounts === 1 ? ' AI account' : ' AI accounts') + ' · ' + entry.repositories + (entry.repositories === 1 ? ' repository' : ' repositories') + (entry.unpreparedRepositories ? ', ' + entry.unpreparedRepositories + ' not prepared locally' : '') + ' · ' + (entry.storage ? (entry.storage.allocatedBytes | storageSize) : '—') + ' of ' + entry.workspace.storageLimitGiB + ' GB') : 'Disabled · not used for configuration and task routing'"
+  >
+    <mosaik-avatar
+      slot="leading"
+      class="flex-none"
+      aria-hidden="true"
+      [attr.test-id]="'workspace-directory-avatar-' + entry.workspace.id"
+      [size]="'medium'"
+      [appearance]="'soft'"
+      [text]="entry.workspace.shortCode"
+      [src]="(entry.workspace | workspaceAvatarSource | async) ?? undefined"
+      [textAccessor]="shortCodeAccessor"
+    />
+    @if (entry.workspace.enabled) {
+    <span class="inline-flex items-center gap-[6px]" test-id="workspace-directory-state">
+      <mosaik-dot [variant]="'success'" [size]="'small'" />
+      <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Available'" />
+    </span>
+    }
+    <mosaik-button
+      [attr.test-id]="'open-workspace-settings-' + entry.workspace.id"
+      [label]="'Open'"
+      [iconName]="'chevronRight'"
+      [iconSize]="'small'"
+      [iconPosition]="'after'"
+      [appearance]="'outline'"
+      [attr.aria-label]="'Open ' + entry.workspace.displayName"
+      (click)="presenter.openSettingsWorkspaceCommand.execute(entry.workspace.id)"
+    />
+  </symphony-settings-row>
+</ng-template>

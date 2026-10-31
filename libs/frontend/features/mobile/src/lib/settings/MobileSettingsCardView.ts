@@ -1,35 +1,28 @@
 // #region Imports
 
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { MobileSettingsCardViewPresenter } from './MobileSettingsCardViewPresenter';
 import {
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
-  CardComponent,
-  CardContentComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
-  CellComponent,
-  DividerComponent,
-  HintComponent,
+  DotComponent,
+  IconNameDirective,
+  MessageComponent,
   QRCodeComponent,
   SkeletonComponent,
   TextBoxComponent,
   TextComponent,
   ToggleSwitchComponent,
-  IconNameDirective,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { HeadlineComponent } from '@symphony/frontend-ui';
+import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { SettingsGroupComponent, SettingsRowComponent } from '@symphony/frontend-setting';
 import { MobileAccessStatusLabelPipe } from '../pipes/MobileAccessStatusLabelPipe';
-import { NgTemplateOutlet } from '@angular/common';
+import { MobileSettingsCardViewPresenter } from './MobileSettingsCardViewPresenter';
 
 // #endregion
 
 /**
- * Mobile-owned desktop access, pairing and phone management card.
+ * Mobile access: local network access, pairing a phone and the paired phones.
  *
  * @public
  */
@@ -37,26 +30,20 @@ import { NgTemplateOutlet } from '@angular/common';
   selector: 'symphony-mobile-settings-card',
   host: { class: 'contents' },
   imports: [
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
     ButtonComponent,
-    CardComponent,
-    CardContentComponent,
-    CardFooterComponent,
-    CardHeaderComponent,
-    CellComponent,
-    DividerComponent,
-    HeadlineComponent,
-    HintComponent,
+    DatePipe,
+    DotComponent,
+    IconNameDirective,
+    MessageComponent,
     MobileAccessStatusLabelPipe,
-    NgTemplateOutlet,
     QRCodeComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
     SkeletonComponent,
     TextBoxComponent,
     TextComponent,
     ToggleSwitchComponent,
-    IconNameDirective,
+    TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: MobileSettingsCardViewPresenter }],
   templateUrl: './MobileSettingsCardView.html',

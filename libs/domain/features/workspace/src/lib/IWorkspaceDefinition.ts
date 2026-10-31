@@ -2,6 +2,7 @@
 
 import type { IRunnerImageDefinition } from '@symphony/domain-core';
 import type { WorkspaceIsolationMode } from './WorkspaceIsolationMode';
+import type { WorkspaceAvatar } from './WorkspaceAvatar';
 
 // #endregion
 
@@ -10,6 +11,12 @@ export interface IWorkspaceDefinition {
   displayName: string;
   shortCode: string;
   color: string;
+  /**
+   * Optional glyph; absent selections continue to display the workspace short code.
+   *
+   * @public
+   */
+  avatar?: WorkspaceAvatar;
   enabled: boolean;
   isolation: WorkspaceIsolationMode;
   storageLimitGiB: number;

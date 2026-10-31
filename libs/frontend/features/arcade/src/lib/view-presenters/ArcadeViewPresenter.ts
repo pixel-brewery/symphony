@@ -6,6 +6,7 @@ import { DialogService } from '@pixel-brewery/mosaik-elements-angular';
 import { Command, ViewPresenter } from '@symphony/frontend-core';
 import { ArcadeLeaderboardDialogView } from '../leaderboard/ArcadeLeaderboardDialogView';
 import { ArcadeLeaderboardStore } from '../leaderboard/ArcadeLeaderboardStore';
+import type { IArcadeGame } from './IArcadeGame';
 
 // #endregion
 
@@ -41,8 +42,16 @@ export class ArcadeViewPresenter extends ViewPresenter {
   /** Opens every game's ranked completed results from the Arcade hub. @public */
   public readonly showLeaderboardCommand: Command<void>;
 
-  /** Shared result history used by the leaderboard tile count. @public @readonly */
+  /** Shared result history shown by the leaderboard dialog. @public @readonly */
   public readonly leaderboardEntries: ArcadeLeaderboardStore['entries'];
+
+  /**
+   * The shipped games in catalog order, each with the player counts its own setup offers.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly games: readonly IArcadeGame[];
 
   // #endregion
 
@@ -80,6 +89,23 @@ export class ArcadeViewPresenter extends ViewPresenter {
     this.playRiverRaidCommand = new Command(() => {
       void router.navigate(['/main/arcade/river-raid']);
     });
+    this.games = [
+      game('pong', 'Pong', 'Pong', 2, 2, this.playPongCommand),
+      game('breakout', 'Breakout', 'Breakout', 1, 4, this.playBreakoutCommand),
+      game('pitfall', 'Pitfall!', 'Pitfall!', 1, 1, this.playPitfallCommand),
+      game('pitfall-ii', 'Pitfall II', 'Pitfall II: Lost Caverns', 1, 1, this.playPitfallIICommand),
+      game('river-raid', 'River Raid', 'River Raid', 1, 2, this.playRiverRaidCommand),
+      game('seaquest', 'Seaquest', 'Seaquest', 1, 2, this.playSeaquestCommand),
+      game('jungle-hunt', 'Jungle Hunt', 'Jungle Hunt', 1, 1, this.playJungleHuntCommand),
+      game(
+        'realsports-boxing',
+        'RealSports Boxing',
+        'RealSports Boxing',
+        1,
+        2,
+        this.playRealSportsBoxingCommand,
+      ),
+    ];
     this.showLeaderboardCommand = new Command(() => {
       dialogService.show(ArcadeLeaderboardDialogView, {
         data: { entries: leaderboard.entries() },
@@ -95,4 +121,15 @@ export class ArcadeViewPresenter extends ViewPresenter {
   }
 
   // #endregion
+}
+
+function game(
+  id: string,
+  title: string,
+  fullTitle: string,
+  minPlayers: number,
+  maxPlayers: number,
+  play: Command<void>,
+): IArcadeGame {
+  return { id, title, fullTitle, cover: `arcade/${id}.webp`, minPlayers, maxPlayers, play };
 }

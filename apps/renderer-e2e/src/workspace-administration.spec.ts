@@ -4,6 +4,7 @@ import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -64,63 +65,63 @@ for (const enabled of [false, true]) {
           page.url(),
         ),
       ]);
-      await expect(page.getByTestId('orbit-view')).toBeVisible();
+      await expect(page.getByTestId('navigation-settings')).toBeVisible();
       const initialWrite = statSync(settingsPath, { bigint: true }).mtimeNs;
-      const grouping = page.getByTestId(`workspace-automatic-delivery-grouping-${workspaceId}`);
-      const saveLimit = page.getByTestId(`save-workspace-storage-limit-${workspaceId}`);
-      const success = page.getByTestId('notification-success');
-      const readGrouping = () =>
+      const readWorkspace = () =>
         page.evaluate(async (id) => {
           const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
           const settings = await api.request('settings.get', {});
-          return settings.workspaces.find((workspace) => workspace.id === id)
-            ?.automaticDeliveryGroupingEnabled;
+          return settings.workspaces.find((workspace) => workspace.id === id);
         }, workspaceId);
+      const readGrouping = async () => (await readWorkspace())?.automaticDeliveryGroupingEnabled;
 
       // act
-      await page.getByTestId('global-workspace-filter').click();
-      await page.getByTestId('workspace-menu-settings').click();
-      await page.getByTestId(`open-workspace-settings-${workspaceId}`).click();
-      await page.getByTestId('workspace-settings-section-administration').click();
+      const settings = await openSettings(page);
+      await settings.getByTestId(`workspace-navigation-item-${workspaceId}`).click();
+      await settings.getByTestId('workspace-settings-section-administration').click();
+      const grouping = settings.getByTestId(`workspace-automatic-delivery-grouping-${workspaceId}`);
+      const limit = settings.getByTestId(`workspace-storage-limit-${workspaceId}`);
+      const success = settings.getByTestId('notification-success');
 
       // assert
       await expect(grouping).toHaveJSProperty('isChecked', enabled);
-      await expect(saveLimit).toBeEnabled();
+      await expect(limit).toBeEnabled();
+      await expect(settings.getByTestId(`save-workspace-storage-limit-${workspaceId}`)).toHaveCount(
+        0,
+      );
       await expect(success).toHaveCount(0);
       expect(statSync(settingsPath, { bigint: true }).mtimeNs).toBe(initialWrite);
       expect(await readGrouping()).toBe(enabled);
 
-      await page.getByTestId('workspace-settings-section-services').click();
-      await page.getByTestId('workspace-settings-section-administration').click();
+      await settings.getByTestId('workspace-settings-section-services').click();
+      await settings.getByTestId('workspace-settings-section-administration').click();
       await expect(grouping).toHaveJSProperty('isChecked', enabled);
-      await expect(saveLimit).toBeEnabled();
       await expect(success).toHaveCount(0);
       expect(statSync(settingsPath, { bigint: true }).mtimeNs).toBe(initialWrite);
-      await page.screenshot({
+      await settings.screenshot({
         path: resolve(outputDirectory, `workspace-administration-${enabled}.png`),
         fullPage: true,
         animations: 'disabled',
       });
 
+      // Every control applies when it changes.
       await grouping.click();
       await expect.poll(readGrouping).toBe(!enabled);
       await expect(success).toHaveCount(1);
       await expect(success).toContainText('Settings saved');
-      await page.screenshot({
+      await settings.screenshot({
         path: resolve(outputDirectory, `workspace-administration-saved-${enabled}.png`),
         fullPage: true,
         animations: 'disabled',
       });
-      await expect(saveLimit).toBeEnabled();
       const changedWrite = statSync(settingsPath, { bigint: true }).mtimeNs;
       expect(changedWrite).not.toBe(initialWrite);
-      await page.keyboard.press('Escape');
+      await settings.keyboard.press('Escape');
       await expect(success).toHaveCount(0);
 
-      await page.getByTestId('workspace-settings-section-services').click();
-      await page.getByTestId('workspace-settings-section-administration').click();
+      await settings.getByTestId('workspace-settings-section-services').click();
+      await settings.getByTestId('workspace-settings-section-administration').click();
       await expect(grouping).toHaveJSProperty('isChecked', !enabled);
-      await expect(saveLimit).toBeEnabled();
       await expect(success).toHaveCount(0);
       expect(statSync(settingsPath, { bigint: true }).mtimeNs).toBe(changedWrite);
 
@@ -128,6 +129,13 @@ for (const enabled of [false, true]) {
       await expect.poll(readGrouping).toBe(enabled);
       await expect(success).toHaveCount(1);
       await expect(success).toContainText('Settings saved');
+
+      // A number applies on commit; a value outside 2 to 1024 GB keeps the stored limit.
+      const limitInput = limit.locator('input');
+      await limitInput.fill('37');
+      await limitInput.press('Tab');
+      await expect.poll(async () => (await readWorkspace())?.storageLimitGiB).toBe(37);
+      await expect(limit).toHaveJSProperty('value', 37);
       expect(rendererErrors).toEqual([]);
     } finally {
       await app.close();

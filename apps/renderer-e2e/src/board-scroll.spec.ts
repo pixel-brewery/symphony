@@ -4,6 +4,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { expandBoardColumn } from './expandBoardColumn';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -39,7 +40,7 @@ test('scrolls a dense board column to both boundaries', async () => {
     page.on('console', (message) => {
       if (message.type() === 'error') rendererErrors.push(message.text());
     });
-    await expect(page.getByTestId('orbit-view')).toBeVisible();
+    await expect(page.getByTestId('home-view')).toBeVisible();
     const longTitle =
       'CR-0372 – [Abholorte] Kontaktwege zwischen Adresse und Wochenöffnungszeiten ergänzen · ' +
       'Wiederherstellungsprüfung'.repeat(4);
@@ -72,6 +73,8 @@ test('scrolls a dense board column to both boundaries', async () => {
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
+    // Backlog starts as a collapsed strip; its long card and its 133 entries are under test.
+    await expandBoardColumn(page, 'backlog');
 
     const cards = page.locator('mosaik-flow-board-column-item');
     const backlogViewport = page.getByTestId('board-column-viewport-backlog');
@@ -79,7 +82,6 @@ test('scrolls a dense board column to both boundaries', async () => {
     await expect(backlogViewport).toBeVisible();
     const longCard = page.getByTestId('board-item-work-item-142');
     await expect(longCard).toContainText(longTitle);
-    await expect(page.getByTestId('board-item-fields-work-item-142')).toContainText(longFieldValue);
     await expect
       .poll(() =>
         backlogViewport.evaluate((viewport) => ({
@@ -88,21 +90,13 @@ test('scrolls a dense board column to both boundaries', async () => {
         })),
       )
       .toEqual({ horizontalOverflow: 0, horizontalOffset: 0 });
-    // Verify the actual glyph ranges as well: hiding overflow must not make a clipped
-    // compound title or an unbroken project-field value look like a fitting card.
+    // Verify the actual glyph ranges as well: hiding overflow must not make a clipped compound
+    // title look like a fitting card. The card shows the title, the id and the status; the
+    // project fields live on the work item's own screen.
     await expect
       .poll(() =>
         longCard.evaluate((card) => {
-          const title = card.querySelector<HTMLElement>('[test-id^="board-item-title-"]');
-          const fieldHints = card.querySelectorAll<HTMLElement>(
-            '[test-id^="board-item-fields-"] mosaik-hint',
-          );
-          const texts = [
-            title,
-            ...[...fieldHints].map((hint) =>
-              hint.shadowRoot?.querySelector<HTMLElement>('mosaik-text'),
-            ),
-          ];
+          const texts = [card.querySelector<HTMLElement>('[test-id^="board-item-title-"]')];
           const cardBounds = card.getBoundingClientRect();
           return texts.every((text) => {
             const content = text?.shadowRoot?.querySelector('[part="text"]');
@@ -124,9 +118,9 @@ test('scrolls a dense board column to both boundaries', async () => {
       .toBe(true);
     await page.getByTestId('board-item-actions-work-item-142').focus();
     await expect.poll(() => backlogViewport.evaluate((viewport) => viewport.scrollLeft)).toBe(0);
-    const neighbouringColumn = page.getByTestId('board-column-qualified');
-    await neighbouringColumn.locator('[part~="toggle"]').click();
-    await expect(neighbouringColumn).toHaveJSProperty('isExpanded', false);
+    const neighbouringColumn = page.getByTestId('board-column-ready');
+    await page.getByTestId('board-column-collapse-ready').click();
+    await expect(neighbouringColumn).toHaveAttribute('aria-expanded', 'false');
     await app.evaluate(({ BrowserWindow }, rendererUrl) => {
       BrowserWindow.getAllWindows()
         .find((window) => window.webContents.getURL() === rendererUrl)
@@ -150,7 +144,7 @@ test('scrolls a dense board column to both boundaries', async () => {
         .find((window) => window.webContents.getURL() === rendererUrl)
         ?.webContents.setZoomFactor(1);
     }, page.url());
-    await expect(neighbouringColumn).toHaveJSProperty('isExpanded', false);
+    await expect(neighbouringColumn).toHaveAttribute('aria-expanded', 'false');
     await expect.poll(() => backlogViewport.evaluate((viewport) => viewport.scrollLeft)).toBe(0);
     await page.screenshot({ path: resolve(outputDirectory, 'board-cards-fit-column.png') });
     await expect.poll(() => cards.count()).toBeLessThan(30);

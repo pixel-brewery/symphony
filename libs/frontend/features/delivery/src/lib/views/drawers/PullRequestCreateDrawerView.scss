@@ -1,3 +1,10 @@
 :host {
   display: block;
 }
+
+// The repository under the sheet title is a caption-sized technical value. The typography
+// directive would pin the sans family inline, so the caption role is set here.
+[part~='technical-caption'] {
+  font: var(--mosaik-typography-caption);
+  font-family: var(--technical-value-font-family);
+}

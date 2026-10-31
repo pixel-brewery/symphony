@@ -1,11 +1,12 @@
 // #region Imports
 
-import { computed, effect, inject, Injectable, signal, type WritableSignal } from '@angular/core';
-import { MessageBoxService } from '@pixel-brewery/mosaik-elements-angular';
+import { computed, inject, Injectable } from '@angular/core';
 import { Command } from '@symphony/frontend-core';
 import {
+  createImmediateSetting,
   mosaikEventValue,
   SETTINGS_WORKSPACE_CONTEXT,
+  SettingsAlertService,
   SettingsEditorService,
   SettingsHostSession,
 } from '@symphony/frontend-setting';
@@ -19,14 +20,13 @@ import { WorkspaceStore } from '../state/WorkspaceStore';
 // #endregion
 
 type Workspace = ApplicationSettingsDto['workspaces'][number];
-interface IWorkspaceSettingsDraft {
-  settings: ApplicationSettingsDto | undefined;
-  readonly storageLimits: WritableSignal<Readonly<Record<string, number>>>;
-}
-const DRAFTS = new WeakMap<SettingsHostSession, IWorkspaceSettingsDraft>();
+
+/** Smallest and largest storage limit a workspace accepts, in GB. */
+const STORAGE_LIMIT_RANGE = { min: 2, max: 1024 } as const;
 
 /**
- * Owns Workspace's directory and administration actions through consumed state and the one settings writer.
+ * Owns a workspace's `Administration` section: its storage limit and delivery grouping, which apply
+ * as soon as they change, and the edit, scope, export and delete actions.
  *
  * @public
  */
@@ -37,12 +37,11 @@ export class WorkspaceSettingsViewPresenter {
   private readonly _context = inject(WORKSPACE_SETTINGS_CONTEXT);
   private readonly _configuration = inject(WORKSPACE_CONFIGURATION);
   private readonly _paths = inject(WORKSPACE_PATH_SELECTOR);
-  private readonly _messages = inject(MessageBoxService);
+  private readonly _alerts = inject(SettingsAlertService);
   private readonly _editors = inject(SettingsEditorService);
   private readonly _session = inject(SettingsHostSession);
   private readonly _selection = inject(SETTINGS_WORKSPACE_CONTEXT, { optional: true });
   private readonly _scope = inject(WorkspaceSelectionStore);
-  private readonly _draft: IWorkspaceSettingsDraft;
   /**
    * Feature-owned management busy state.
    *
@@ -95,24 +94,28 @@ export class WorkspaceSettingsViewPresenter {
   public readonly storageMeasured = computed(
     () => this._context.storageStatus()?.measured ?? false,
   );
-  /**
-   * Selected workspace's retained, unsaved storage limit.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly storageLimit = computed(
-    () => this._draft.storageLimits()[this.workspace()?.id ?? ''] ?? 20,
+  private readonly _storageLimit = createImmediateSetting(
+    () => this.workspace()?.storageLimitGiB ?? 20,
+  );
+  private readonly _automaticDeliveryGrouping = createImmediateSetting(
+    () => this.workspace()?.automaticDeliveryGroupingEnabled ?? false,
   );
   /**
-   * Opens an existing workspace's Settings.
+   * Selected workspace's storage limit in GB as the number box shows it: the stored limit, the
+   * committed one while it is saved, and the stored one again when saving failed.
    *
    * @public
    * @readonly
    */
-  public readonly openSettingsWorkspaceCommand = new Command<string>((id) => {
-    if (this.workspaces().some((workspace) => workspace.id === id)) this._session.openWorkspace(id);
-  });
+  public readonly storageLimit = this._storageLimit.value;
+  /**
+   * Whether fully compatible tickets of the selected workspace start one shared delivery workflow
+   * without a second confirmation, as the switch shows it.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly automaticDeliveryGrouping = this._automaticDeliveryGrouping.value;
   /**
    * Opens the feature-owned Workspace editor.
    *
@@ -121,15 +124,6 @@ export class WorkspaceSettingsViewPresenter {
    */
   public readonly openWorkspaceCommand = new Command<string | undefined>((workspaceId) => {
     void this._editors.open({ kind: 'workspace', workspaceId });
-  });
-  /**
-   * Chooses and confirms a portable workspace import.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly chooseWorkspaceImportCommand = new Command<void>(() => {
-    void this.importWorkspace();
   });
   /**
    * Chooses a workspace's portable export destination.
@@ -141,13 +135,13 @@ export class WorkspaceSettingsViewPresenter {
     void this.exportWorkspace(workspace);
   });
   /**
-   * Confirms the existing destructive workspace operation.
+   * Confirms the existing destructive workspace operation in an alert sheet.
    *
    * @public
    * @readonly
    */
-  public readonly confirmDeleteWorkspaceCommand = new Command<Workspace>((workspace) =>
-    this.confirmDelete(workspace),
+  public readonly confirmDeleteWorkspaceCommand = new Command<Workspace>(
+    (workspace) => void this.confirmDelete(workspace),
   );
   /**
    * Changes active application scope only on explicit user action.
@@ -159,133 +153,85 @@ export class WorkspaceSettingsViewPresenter {
     void this._scope.selectWorkspaceScope(id);
   });
   /**
-   * Updates the unsaved selected workspace limit.
+   * Saves the selected workspace's storage limit when the number box commits a value between 2
+   * and 1024 GB; any other value shows the stored limit again.
    *
    * @public
    * @readonly
    */
-  public readonly updateWorkspaceStorageLimitCommand = new Command<unknown>((event) => {
-    const id = this.workspace()?.id;
-    const value = Number(mosaikEventValue(event));
-    if (id && Number.isFinite(value))
-      this._draft.storageLimits.update((current) => ({ ...current, [id]: value }));
-  });
+  public readonly commitWorkspaceStorageLimitCommand = new Command<unknown>(
+    (event) => void this.commitStorageLimit(event),
+  );
   /**
-   * Persists only the requested limit against the current complete settings.
+   * Saves the workspace's delivery-grouping opt-in as soon as the switch changes.
    *
    * @public
    * @readonly
    */
-  public readonly saveWorkspaceStorageLimitCommand = new Command<void>(() => {
-    void this.saveStorageLimit();
-  });
-
-  /** Updates the existing workspace grouping opt-in through one command. @public @readonly */
   public readonly setAutomaticDeliveryGroupingCommand = new Command<
     readonly [workspaceId: string, enabled: boolean]
   >(([workspaceId, enabled]) => void this.setAutomaticDeliveryGrouping(workspaceId, enabled));
 
   // #endregion
 
-  // #region Ctor
-
-  /**
-   * Retains section drafts for the lifetime of the owning Settings route.
-   *
-   * @public
-   */
-  public constructor() {
-    let draft = DRAFTS.get(this._session);
-    if (!draft) {
-      draft = { settings: undefined, storageLimits: signal<Readonly<Record<string, number>>>({}) };
-      DRAFTS.set(this._session, draft);
-    }
-    this._draft = draft;
-    effect(() => {
-      const settings = this._context.settings();
-      if (settings && settings !== this._draft.settings) {
-        this._draft.settings = settings;
-        this._draft.storageLimits.set(
-          Object.fromEntries(
-            settings.workspaces.map((workspace) => [workspace.id, workspace.storageLimitGiB]),
-          ),
-        );
-      }
-    });
-  }
-
-  // #endregion
-
   // #region Methods
 
   /**
-   * Saves the existing opt-in without reacting to Mosaik's persisted checked event.
+   * Saves the opt-in, ignoring the `checked` event Mosaik reflects when the stored value is bound.
    *
    * @private
    */
   private async setAutomaticDeliveryGrouping(workspaceId: string, enabled: boolean): Promise<void> {
-    if (this.configurationBusy()) return;
-    const current = this.requireSettings();
-    const workspace = current.workspaces.find((item) => item.id === workspaceId);
-    if (!workspace || workspace.automaticDeliveryGroupingEnabled === enabled) return;
-    await this._configuration.saveSettings({
-      ...current,
-      workspaces: current.workspaces.map((item) =>
-        item.id === workspaceId ? { ...item, automaticDeliveryGroupingEnabled: enabled } : item,
-      ),
-    });
+    if (this.configurationBusy() || workspaceId !== this.workspace()?.id) return;
+    await this._automaticDeliveryGrouping.apply(enabled, (value) =>
+      this.saveWorkspace(workspaceId, { automaticDeliveryGroupingEnabled: value }),
+    );
   }
 
-  private async saveStorageLimit(): Promise<void> {
+  private async commitStorageLimit(event: unknown): Promise<void> {
     const workspaceId = this.workspace()?.id;
     if (!workspaceId) return;
+    const limit = Number(mosaikEventValue(event));
+    const valid =
+      Number.isInteger(limit) &&
+      limit >= STORAGE_LIMIT_RANGE.min &&
+      limit <= STORAGE_LIMIT_RANGE.max;
+    const next = valid ? limit : (this.workspace()?.storageLimitGiB ?? 20);
+    await this._storageLimit.apply(next, (value) =>
+      this.saveWorkspace(workspaceId, { storageLimitGiB: value }),
+    );
+  }
+
+  /**
+   * Writes one workspace's changed fields into the latest complete settings.
+   *
+   * @private
+   */
+  private async saveWorkspace(
+    workspaceId: string,
+    changes: Partial<Pick<Workspace, 'storageLimitGiB' | 'automaticDeliveryGroupingEnabled'>>,
+  ): Promise<boolean> {
     const current = this.requireSettings();
-    const storageLimitGiB = this.storageLimit();
-    await this._configuration.saveSettings({
+    return this._configuration.saveSettings({
       ...current,
       workspaces: current.workspaces.map((item) =>
-        item.id === workspaceId ? { ...item, storageLimitGiB } : item,
+        item.id === workspaceId ? { ...item, ...changes } : item,
       ),
     });
   }
 
-  private confirmDelete(workspace: Workspace): void {
-    const confirmation = this._messages.show({
+  private async confirmDelete(workspace: Workspace): Promise<void> {
+    const confirmed = await this._alerts.confirm({
       id: `delete-workspace-confirmation-${workspace.id}`,
       header: `Delete ${workspace.displayName}?`,
       message:
         'This permanently removes its connections, execution history, managed worktrees, and isolated AI account data. Configured repository checkouts are kept.',
-      buttons: 'yesNo',
-      variant: 'danger',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Delete workspace', noLabel: 'Keep workspace' },
+      tone: 'danger',
+      confirmLabel: 'Delete workspace',
+      cancelLabel: 'Keep workspace',
+      destructive: true,
     });
-    confirmation.closed.subscribe((result) => {
-      if (result?.reason === 'positive') void this.store.deleteWorkspace(workspace.id);
-    });
-  }
-
-  private async importWorkspace(): Promise<void> {
-    const result = await this._paths.selectPath({
-      kind: 'file',
-      title: 'Choose Symphony workspace bundle',
-      filters: [{ name: 'Symphony workspace bundle', extensions: ['json'] }],
-    });
-    const sourcePath = result.paths[0];
-    if (result.canceled || !sourcePath) return;
-    const confirmation = this._messages.show({
-      id: 'workspace-import-confirmation',
-      header: 'Import workspace configuration?',
-      message:
-        'A matching workspace is replaced with the portable configuration. Secrets, signed-in accounts, and local repository paths are never read from the bundle.',
-      buttons: 'yesNo',
-      variant: 'primary',
-      pressEscapeToClose: true,
-      intl: { yesLabel: 'Import workspace', noLabel: 'Cancel' },
-    });
-    confirmation.closed.subscribe((decision) => {
-      if (decision?.reason === 'positive') void this.store.importWorkspace(sourcePath);
-    });
+    if (confirmed) await this.store.deleteWorkspace(workspace.id);
   }
 
   private async exportWorkspace(workspace: Workspace): Promise<void> {

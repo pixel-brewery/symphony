@@ -1,6 +1,9 @@
 // #region Imports
 import { type AnalyzerService } from '@symphony/application-execution';
-import { type WorkflowEngineService } from '@symphony/application-workflow';
+import {
+  type WorkflowEngineService,
+  type WorkflowStageHistoryService,
+} from '@symphony/application-workflow';
 import { type OrchestratorSettingsState } from '../../composition/OrchestratorSettingsState';
 import { type IStorageWriteAdmission } from '../../storage-governor/IStorageWriteAdmission';
 // #endregion
@@ -18,4 +21,6 @@ export interface IProvideWorkflowOrchestratorFeatureDependencies {
     'applyOperatorDecision' | 'auditTrail' | 'record' | 'answerHumanRequest'
   >;
   readonly settingsState: Readonly<Pick<OrchestratorSettingsState, 'current'>>;
+  /** Bulk stage-change reads for reporting. */
+  readonly stageHistory: Pick<WorkflowStageHistoryService, 'list'>;
 }

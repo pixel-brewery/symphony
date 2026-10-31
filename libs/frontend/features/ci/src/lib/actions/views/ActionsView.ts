@@ -1,92 +1,71 @@
 // #region Imports
 
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  AnchorComponent,
   BannerComponent,
   BannerHeaderComponent,
   BannerSubHeaderComponent,
   ButtonComponent,
-  ChipComponent,
-  DividerComponent,
+  DotComponent,
   DropDownButtonComponent,
   EmptyStateComponent,
-  IconComponent,
   IconNameDirective,
   MenuComponent,
   MenuItemComponent,
-  PageComponent,
-  PageContentComponent,
-  PageHeaderComponent,
-  PagePreContentComponent,
-  ProgressRingComponent,
-  SelectComponent,
-  SelectItemComponent,
   SkeletonComponent,
-  TimeAgoPipe,
+  SplitComponent,
+  TextComponent,
   TooltipDirective,
-  TextBoxComponent,
-  DisclosureComponent,
+  TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { View, VIEW_PRESENTER, WorkspaceScopePresenter } from '@symphony/frontend-core';
 import {
-  CollectionListComponent,
-  CollectionListEmptyDirective,
-  CollectionListItemDirective,
-  CollectionListLoadingItemDirective,
-  CiRunDurationPipe,
-  CiRunStatusLabelPipe,
-  CiRunStatusVariantPipe,
-  HoverRevealForDirective,
-  PageToolbarComponent,
-} from '@symphony/frontend-ui';
+  PaneSizeDirective,
+  View,
+  VIEW_PRESENTER,
+  WindowToolbarDirective,
+  WorkspaceScopePresenter,
+} from '@symphony/frontend-core';
+import { RelativeTimePipe } from '@symphony/frontend-ui';
+import { WorkflowHealthPresentationPipe } from '../../pipes/WorkflowHealthPresentationPipe';
 import { ActionsViewPresenter } from '../view-presenters/ActionsViewPresenter';
+import { ActionsAllRunsView } from './ActionsAllRunsView';
+import { ActionsWorkflowView } from './ActionsWorkflowView';
 
 // #endregion
 
+/**
+ * The `Actions` screen: the `All runs` entry and the `WORKFLOWS` list on the left, and either the
+ * overview of every run or the selected workflow on the right.
+ *
+ * @public
+ */
 @Component({
   selector: 'symphony-actions-view',
-  host: { class: 'flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden' },
+  host: { class: 'flex min-h-0 min-w-0 flex-1' },
   imports: [
-    FormsModule,
-    AnchorComponent,
+    ActionsAllRunsView,
+    ActionsWorkflowView,
     BannerComponent,
     BannerHeaderComponent,
     BannerSubHeaderComponent,
     ButtonComponent,
-    ChipComponent,
-    CiRunDurationPipe,
-    CiRunStatusLabelPipe,
-    CiRunStatusVariantPipe,
-    CollectionListComponent,
-    CollectionListEmptyDirective,
-    CollectionListItemDirective,
-    CollectionListLoadingItemDirective,
     DatePipe,
-    DividerComponent,
+    DotComponent,
     DropDownButtonComponent,
     EmptyStateComponent,
-    HoverRevealForDirective,
-    IconComponent,
     IconNameDirective,
     MenuComponent,
     MenuItemComponent,
-    NgTemplateOutlet,
-    PageComponent,
-    PageContentComponent,
-    PageHeaderComponent,
-    PagePreContentComponent,
-    PageToolbarComponent,
-    ProgressRingComponent,
-    SelectComponent,
-    SelectItemComponent,
+    PaneSizeDirective,
+    RelativeTimePipe,
     SkeletonComponent,
-    TimeAgoPipe,
+    SplitComponent,
+    TextComponent,
     TooltipDirective,
-    TextBoxComponent,
-    DisclosureComponent,
+    TypographyDirective,
+    WindowToolbarDirective,
+    WorkflowHealthPresentationPipe,
   ],
   providers: [
     WorkspaceScopePresenter,

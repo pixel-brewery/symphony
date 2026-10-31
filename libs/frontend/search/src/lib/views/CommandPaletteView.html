@@ -1,0 +1,128 @@
+<mosaik-backdrop
+  part="palette-backdrop"
+  test-id="command-palette-backdrop"
+  class="absolute inset-0"
+  (click)="presenter.closeCommand.execute()"
+/>
+<div
+  class="pointer-events-none absolute inset-0 flex items-start justify-center px-2 pt-[110px] pb-3"
+>
+  <mosaik-card
+    part="palette"
+    test-id="command-palette"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Command palette"
+    class="pointer-events-auto flex max-h-full w-[640px] max-w-full"
+    [elevation]="'extrabold'"
+    (keydown)="onKeydown($event)"
+  >
+    <div slot="header" class="flex min-w-0 flex-1 items-center gap-1 py-[10px] pr-[18px] pl-1">
+      <mosaik-searchbox
+        part="palette-search"
+        test-id="command-palette-search"
+        class="min-w-0 flex-1"
+        [appearance]="'plain'"
+        [placeholder]="'Search work items, pull requests and commands'"
+        [value]="presenter.query()"
+        [attr.aria-label]="'Search work items, pull requests and commands'"
+        (input)="presenter.updateQueryCommand.execute($event)"
+      />
+      <mosaik-kbd part="palette-key" aria-hidden="true">esc</mosaik-kbd>
+      <span class="sr-only" aria-live="polite" test-id="command-palette-announcement">
+        @if (presenter.selectedResult(); as selected) { @if (selected.reference) { {{
+        selected.reference }} · } {{ selected.title }}, {{ presenter.selectedIndex() + 1 }} of {{
+        presenter.results().length }} } @else if (presenter.hasNoResults()) { No results }
+      </span>
+    </div>
+
+    <div
+      slot="content"
+      part="palette-results"
+      test-id="command-palette-results"
+      role="listbox"
+      aria-label="Results"
+      class="flex min-w-0 flex-col gap-[2px] p-1"
+    >
+      @for (section of presenter.sections(); track section.group) {
+      <mosaik-text
+        role="presentation"
+        class="px-1.5 pb-[2px]"
+        [class]="$first ? 'pt-[6px]' : 'pt-[10px]'"
+        [attr.test-id]="'command-palette-group-' + section.group"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="section.group | paletteGroupLabel"
+      />
+      @for (result of section.results; track result.id; let row = $index) {
+      <div
+        part="palette-option"
+        role="option"
+        class="flex min-w-0 items-center gap-1.5 px-1.5 py-[9px]"
+        [id]="'command-palette-option-' + (section.offset + row)"
+        [attr.test-id]="'command-palette-option-' + result.id"
+        tabindex="-1"
+        [attr.aria-selected]="presenter.selectedIndex() === section.offset + row"
+        (pointermove)="onPointerMove($event, section.offset + row)"
+        (mousedown)="$event.preventDefault()"
+        (click)="presenter.openCommand.execute(result)"
+        (keydown.enter)="$event.stopPropagation(); presenter.openCommand.execute(result)"
+      >
+        <mosaik-icon class="flex-none" [icon]="result.icon" [size]="'small'" />
+        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [truncate]="true"
+            [text]="result.reference ? result.reference + ' · ' + result.title : result.title"
+          />
+          @if (result.facts?.length) {
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="result.facts.join(' · ')"
+          />
+          }
+        </div>
+        @if (result.shortcut) {
+        <mosaik-kbd part="palette-key" class="flex-none"
+          >{{ isMacOS ? '⌘' : 'Ctrl+' }}{{ result.shortcut }}</mosaik-kbd
+        >
+        } @else if (presenter.selectedIndex() === section.offset + row) {
+        <mosaik-kbd part="palette-key" class="flex-none" aria-hidden="true">↵</mosaik-kbd>
+        }
+      </div>
+      } } @if (presenter.hasNoResults()) {
+      <!-- The header is slotted: the empty state does not re-render when its header input changes. -->
+      <mosaik-empty-state
+        test-id="command-palette-no-results"
+        class="py-3"
+        [icon]="'search'"
+        [content]="'Try a work item id, a pull request number or a command such as New work item.'"
+      >
+        <mosaik-text
+          slot="header"
+          test-id="command-palette-no-results-header"
+          [mosaikTypography]="'subtitle1'"
+          [wrap]="true"
+          [alignment]="'center'"
+          [text]="'No results for “' + presenter.trimmedQuery() + '”'"
+        />
+      </mosaik-empty-state>
+      }
+    </div>
+
+    <div
+      slot="footer"
+      part="palette-hint"
+      class="flex min-w-0 flex-1 items-center px-[18px] py-[10px]"
+    >
+      <mosaik-text
+        test-id="command-palette-hint"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="'↑↓ to move · ↵ to open'"
+      />
+    </div>
+  </mosaik-card>
+</div>

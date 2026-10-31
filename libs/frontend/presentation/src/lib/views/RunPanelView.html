@@ -1,0 +1,179 @@
+<section class="flex w-full min-w-0 flex-col gap-0.5" test-id="run-panel" aria-label="Runs">
+  @if (presenter.executionAvailable && presenter.ciAvailable) {
+  <div
+    part="run-switch"
+    role="group"
+    aria-label="Runs"
+    test-id="rail-run-segment"
+    class="mx-1 mb-0.5 flex gap-[2px] p-[2px]"
+  >
+    <div class="min-w-0 flex-1">
+      <mosaik-button
+        class="w-full"
+        test-id="rail-run-segment-agent-runs"
+        [label]="'Agents'"
+        [fit]="'width'"
+        [appearance]="presenter.selectedRunView() === 'agents' ? 'soft' : 'plain'"
+        [attr.aria-pressed]="presenter.selectedRunView() === 'agents'"
+        (click)="presenter.selectRunViewCommand.execute('agents')"
+      />
+    </div>
+    <div class="min-w-0 flex-1">
+      <mosaik-button
+        class="w-full"
+        test-id="rail-run-segment-actions"
+        [label]="presenter.activeActionRunCount() ? 'Actions · ' + presenter.activeActionRunCount() : 'Actions'"
+        [fit]="'width'"
+        [appearance]="presenter.selectedRunView() === 'actions' ? 'soft' : 'plain'"
+        [attr.aria-pressed]="presenter.selectedRunView() === 'actions'"
+        (click)="presenter.selectRunViewCommand.execute('actions')"
+      />
+    </div>
+  </div>
+  }
+
+  <div
+    class="flex max-h-[220px] min-h-0 flex-col overflow-y-auto overscroll-contain"
+    test-id="rail-run-list"
+  >
+    @if (presenter.selectedRunView() === 'agents' && presenter.executionAvailable) { @for (agent of
+    presenter.agentRows(); track agent.id) {
+    <div
+      class="flex w-full min-w-0 items-center gap-1 px-1 py-0.5"
+      [attr.role]="agent.executionId ? 'button' : null"
+      [attr.tabindex]="agent.executionId ? 0 : null"
+      [attr.test-id]="'rail-agent-' + agent.id"
+      [attr.aria-label]="agent.name + ', ' + (agent.state | agentActivityLabel: agent.role) + (agent.workItemKey ? ' ' + agent.workItemKey : '')"
+      (click)="presenter.openAgentCommand.execute(agent.executionId)"
+      (keydown.enter)="presenter.openAgentCommand.execute(agent.executionId)"
+    >
+      <mosaik-avatar class="flex-none" [text]="agent.name" [size]="'small'" [appearance]="'soft'" />
+      <span class="flex min-w-0 flex-1 flex-col gap-[2px]">
+        <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="agent.name" />
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [truncate]="true"
+          [text]="agent.state === 'idle'
+            ? 'Idle · ' + agent.runsToday + (agent.runsToday === 1 ? ' run today' : ' runs today')
+            : (agent.state | agentActivityLabel: agent.role) + (agent.workItemKey ? ' ' + agent.workItemKey : '')"
+        />
+      </span>
+      <mosaik-dot
+        class="flex-none"
+        [size]="'small'"
+        [variant]="agent.state | agentActivityVariant"
+        [attr.aria-hidden]="true"
+      />
+    </div>
+    } @empty {
+    <div class="flex flex-col gap-0.5 px-1 py-0.5" test-id="rail-agents-empty">
+      <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'No agent in this workspace'" />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="'Connect an AI account and add an agent in Settings › AI team.'"
+      />
+      <mosaik-button
+        class="self-start"
+        test-id="rail-agents-connect"
+        [label]="'Open AI team'"
+        [appearance]="'plain'"
+        [size]="'small'"
+        (click)="openAiTeam()"
+      />
+    </div>
+    } } @if (presenter.selectedRunView() === 'agents' && presenter.executionAvailable) { @for (run
+    of presenter.waitingAgentSteps(); track run.id) {
+    <div
+      class="flex w-full min-w-0 items-center gap-1 px-1 py-0.5"
+      [attr.test-id]="'rail-run-' + run.id"
+    >
+      <span class="flex h-[24px] w-[24px] flex-none items-center justify-center">
+        <mosaik-icon [icon]="'executionOutline'" [size]="'small'" [variant]="'neutral'" />
+      </span>
+      <span class="flex min-w-0 flex-1 flex-col gap-[2px]">
+        <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="run.title" />
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [truncate]="true"
+          [text]="run.statusLabel + ' · waiting for a free slot'"
+        />
+      </span>
+      <mosaik-button
+        class="flex-none"
+        [attr.test-id]="'rail-run-dequeue-' + run.id"
+        [iconName]="'clear'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [size]="'small'"
+        [attr.aria-label]="'Remove ' + run.title + ' from the queue'"
+        [mosaikTooltip]="'Remove from the queue'"
+        (click)="presenter.removeQueuedRunCommand.execute([run, $event])"
+      />
+    </div>
+    } } @else { @for (run of presenter.currentActionRuns(); track run.id) {
+    <div
+      class="flex w-full min-w-0 items-center gap-1 px-1 py-0.5"
+      role="button"
+      tabindex="0"
+      [attr.test-id]="'rail-run-' + run.id"
+      (click)="presenter.openRailRunCommand.execute(run)"
+      (keydown.enter)="presenter.openRailRunCommand.execute(run)"
+    >
+      <span class="flex h-[24px] w-[24px] flex-none items-center justify-center">
+        @if (run.active) {
+        <mosaik-progress-ring
+          [attr.test-id]="'rail-run-progress-' + run.id"
+          [attr.aria-label]="'Run in progress'"
+          [isIndeterminate]="true"
+          [variant]="'primary'"
+          [radius]="8"
+          [thickness]="2"
+        />
+        } @else {
+        <mosaik-icon
+          [icon]="(run.state | railRunStatePresentation).icon"
+          [size]="'small'"
+          [variant]="(run.state | railRunStatePresentation).variant"
+        />
+        }
+      </span>
+      <span class="flex min-w-0 flex-1 flex-col gap-[2px]">
+        <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="run.title" />
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [truncate]="true"
+          [text]="run.statusLabel + ' · ' + run.sourceLabel"
+        />
+      </span>
+      @if (run.queueEntryId) {
+      <mosaik-button
+        class="flex-none"
+        [attr.test-id]="'rail-run-dequeue-' + run.id"
+        [iconName]="'clear'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [size]="'small'"
+        [attr.aria-label]="'Remove ' + run.title + ' from the queue'"
+        [mosaikTooltip]="'Remove from the queue'"
+        (click)="presenter.removeQueuedRunCommand.execute([run, $event])"
+      />
+      }
+    </div>
+    } @empty {
+    <div class="flex flex-col gap-0.5 px-1 py-0.5" test-id="rail-actions-empty">
+      <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'No action is running'" />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="'Runs appear here as soon as one starts.'"
+      />
+    </div>
+    } }
+  </div>
+</section>

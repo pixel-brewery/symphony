@@ -62,6 +62,7 @@ import {
   reiconAlertCircle,
   reiconArrowRightCircle,
   reiconArrowUpRightSquare,
+  reiconBell,
   reiconBranchUp,
   reiconCheck,
   reiconCheckCircle,
@@ -134,7 +135,6 @@ const SIGNAL_FORM_STATUS_CLASSES: SignalFormsConfig['classes'] = {
 };
 
 function resolveInitialThemeMode(): ThemeMode {
-  if (window.location.hash === '#/menu-bar') return 'dark';
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return resolveThemeMode(readThemePreference(window.localStorage), prefersDark);
 }
@@ -167,7 +167,7 @@ export const shellConfig: ApplicationConfig = {
       mode: initialThemeMode,
       overrides: applicationThemeOverrides,
     }),
-    provideAppComponent({ hasHeader: true, hasNav: false }),
+    provideAppComponent({ hasHeader: false, hasNav: false }),
     provideBreakpoints(),
     provideAnimate({
       animations: {
@@ -273,6 +273,7 @@ export const shellConfig: ApplicationConfig = {
     provideDefaultIconSet('reicon'),
     provideIcons({
       arrowRight: reiconArrowRightCircle,
+      bell: reiconBell,
       cloudArrowRight: reiconCloudUpload,
       bot: reiconCpu,
       add: reiconAdd,

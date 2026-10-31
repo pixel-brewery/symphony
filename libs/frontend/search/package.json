@@ -11,15 +11,21 @@
       "import": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./views": {
+      "types": "./src/views.ts",
+      "import": "./src/views.ts",
+      "default": "./src/views.ts"
+    }
   },
   "dependencies": {
-    "@angular/core": "22.2.0",
-    "@angular/router": "22.2.0",
+    "@angular/core": "22.2.3",
+    "@angular/router": "22.2.3",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.183",
     "@symphony/frontend-core": "workspace:*"
   },
   "devDependencies": {
-    "@angular/platform-browser": "22.2.0",
+    "@angular/platform-browser": "22.2.3",
     "vitest": "5.0.5"
   }
 }

@@ -1,5 +1,6 @@
 // #region Imports
 
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -7,67 +8,59 @@ import {
   effect,
   inject,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import {
   AvatarComponent,
-  BannerComponent,
-  BannerHeaderComponent,
-  BannerSubHeaderComponent,
   ButtonComponent,
-  CellComponent,
-  CellGroupComponent,
-  DismissComponent,
-  DrawerContentDirective,
-  DrawerFooterDirective,
-  DrawerHeaderComponent,
-  DrawerHeaderDirective,
+  DialogContentDirective,
+  DialogFooterDirective,
+  DialogHeaderComponent,
+  DialogHeaderDirective,
   ExpanderComponent,
-  HintComponent,
+  MessageComponent,
   PasswordBoxComponent,
+  SearchBoxComponent,
   SelectComponent,
   SelectItemComponent,
   SkeletonComponent,
   TextBoxComponent,
   TextComponent,
   ToggleSwitchComponent,
-  IconNameDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { HeadlineComponent, SelectionAppearancePipe } from '@symphony/frontend-ui';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
+import { SettingsConditionalComponent, SettingsRowComponent } from '@symphony/frontend-setting';
+import { SelectionAppearancePipe } from '@symphony/frontend-ui';
+import { AzureDevOpsValidationIssuesLabelPipe } from './AzureDevOpsValidationIssuesLabelPipe';
 import { WorkSourceSettingsEditorViewPresenter } from './WorkSourceSettingsEditorViewPresenter';
 
 // #endregion
 
+/** The GitHub Projects board and Azure DevOps source sheets of the Settings window. @public */
 @Component({
   selector: 'symphony-work-source-settings-editor-view',
   host: { class: 'block' },
   imports: [
-    NgTemplateOutlet,
     AvatarComponent,
-    BannerComponent,
-    BannerHeaderComponent,
-    BannerSubHeaderComponent,
+    AzureDevOpsValidationIssuesLabelPipe,
     ButtonComponent,
-    CellComponent,
-    CellGroupComponent,
-    DismissComponent,
-    DrawerContentDirective,
-    DrawerFooterDirective,
-    DrawerHeaderComponent,
-    DrawerHeaderDirective,
+    DialogContentDirective,
+    DialogFooterDirective,
+    DialogHeaderComponent,
+    DialogHeaderDirective,
     ExpanderComponent,
-    HeadlineComponent,
-    HintComponent,
+    MessageComponent,
+    NgTemplateOutlet,
     PasswordBoxComponent,
+    SearchBoxComponent,
     SelectComponent,
     SelectItemComponent,
     SelectionAppearancePipe,
+    SettingsConditionalComponent,
+    SettingsRowComponent,
     SkeletonComponent,
     TextBoxComponent,
     TextComponent,
     ToggleSwitchComponent,
-    IconNameDirective,
     TypographyDirective,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: WorkSourceSettingsEditorViewPresenter }],

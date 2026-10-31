@@ -5,7 +5,7 @@
 .agents/packages
 # Retain the architect's shared core byte for byte across the peer repositories.
 .agents/skills/symphony-architect/SKILL.md
-.agents/skills/symphony-architect/references/common
+.agents/skills/architecture
 # Retain imported documentation skills apart from Symphony names and documentation paths.
 .agents/skills/symphony-docs
 .agents/skills/symphony-technical-docs

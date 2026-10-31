@@ -1,15 +1,302 @@
-<mosaik-page
-  class="flex h-full min-h-0 w-full flex-1 overflow-hidden"
+<!-- The window toolbar carries the title, the scope and the refresh; the board's own controls sit
+     in the filter bar below it, as drawn. -->
+<ng-template
+  symphonyWindowToolbar
+  [toolbarTitle]="'Board'"
+  [toolbarSubtitle]="presenter.isHydrating() ? '' : (presenter.selectedWorkspaces() | workspaceSelectionSummary: presenter.workItems().length)"
+>
+  <mosaik-button
+    test-id="refresh-board"
+    [iconName]="'sync'"
+    [iconSize]="'small'"
+    [appearance]="'plain'"
+    [disabled]="presenter.isHydrating()"
+    [attr.aria-label]="'Refresh work items and build runs'"
+    [mosaikTooltip]="'Refresh work items and build runs'"
+    (click)="presenter.refreshCommand.execute()"
+  />
+</ng-template>
+
+<section
   test-id="board-view"
+  aria-label="Board"
+  class="flex min-h-0 min-w-0 flex-1 flex-col"
   [attr.aria-busy]="presenter.isHydrating()"
 >
+  <!-- The filter bar is static, so it renders while the board loads; its actions stay disabled
+       until the work items and their filters are known. -->
+  <div
+    part="board-filter-bar"
+    test-id="board-filter-bar"
+    class="flex min-w-0 flex-none items-center gap-1 px-[20px] py-[14px]"
+  >
+    <div
+      part="board-segment"
+      role="group"
+      aria-label="Show work items"
+      test-id="board-segment"
+      class="flex min-w-0 flex-none items-center gap-[2px] p-[2px]"
+    >
+      <mosaik-button
+        test-id="board-segment-all"
+        [label]="'All'"
+        [appearance]="presenter.segment() === 'all' ? 'outline' : 'plain'"
+        [attr.aria-pressed]="presenter.segment() === 'all'"
+        (click)="presenter.selectSegmentCommand.execute('all')"
+      />
+      <mosaik-button
+        test-id="board-segment-attention"
+        [label]="presenter.attentionCount() ? 'Needs you · ' + presenter.attentionCount() : 'Needs you'"
+        [appearance]="presenter.segment() === 'attention' ? 'outline' : 'plain'"
+        [attr.aria-pressed]="presenter.segment() === 'attention'"
+        (click)="presenter.selectSegmentCommand.execute('attention')"
+      />
+      <mosaik-button
+        test-id="board-segment-running"
+        [label]="presenter.runningCount() ? 'Agents running · ' + presenter.runningCount() : 'Agents running'"
+        [appearance]="presenter.segment() === 'running' ? 'outline' : 'plain'"
+        [attr.aria-pressed]="presenter.segment() === 'running'"
+        (click)="presenter.selectSegmentCommand.execute('running')"
+      />
+      <!-- The wrapper keeps the tooltip's `display: contents` host out of the gapped track. -->
+      <div class="flex">
+        <mosaik-button
+          test-id="board-segment-mine"
+          [label]="'Mine'"
+          [appearance]="presenter.segment() === 'mine' ? 'outline' : 'plain'"
+          [disabled]="!presenter.canShowMine()"
+          [attr.aria-pressed]="presenter.segment() === 'mine'"
+          [mosaikTooltip]="'Sign in to GitHub in the workspace settings to see the work assigned to you.'"
+          [mosaikTooltipDisabled]="presenter.canShowMine()"
+          (click)="presenter.selectSegmentCommand.execute('mine')"
+        />
+      </div>
+    </div>
+    @if (presenter.searchQuery().trim()) {
+    <mosaik-button
+      class="min-w-0"
+      test-id="board-clear-search"
+      [label]="'“' + presenter.searchQuery().trim() + '”'"
+      [iconName]="'clear'"
+      [iconSize]="'small'"
+      [appearance]="'soft'"
+      [attr.aria-label]="'Clear search for ' + presenter.searchQuery().trim()"
+      (click)="presenter.clearSearchCommand.execute()"
+    />
+    } @if (presenter.selectedStageId()) {
+    <mosaik-button
+      test-id="board-clear-stage-filter"
+      [label]="'Clear stage filter'"
+      [iconName]="'clear'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      (click)="presenter.clearStageFilterCommand.execute()"
+    />
+    } @if (presenter.selectedItemKeys().length; as selectionCount) {
+    <div class="flex min-w-0 items-center gap-1" test-id="board-selection-actions">
+      <!-- The wrapper keeps the tooltip's `display: contents` host out of the gapped row; its
+           shadow children would otherwise join the row as extra flex items. -->
+      <div class="flex">
+        <mosaik-button
+          test-id="board-deliver-selected"
+          [label]="'Deliver together (' + selectionCount + ')'"
+          [appearance]="'soft'"
+          [variant]="'primary'"
+          [disabled]="!presenter.selectionEligibility().canDeliver"
+          [mosaikTooltip]="presenter.selectionEligibility().blockedReason ?? ''"
+          [mosaikTooltipPlacement]="'bottom'"
+          [mosaikTooltipDisabled]="!presenter.selectionEligibility().blockedReason"
+          (click)="presenter.deliverSelectedTogether()"
+        />
+      </div>
+      <mosaik-button
+        test-id="board-clear-selection"
+        [label]="'Clear selection'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        (click)="presenter.clearSelection()"
+      />
+    </div>
+    }
+    <span class="min-w-0 flex-1"></span>
+    @if (presenter.availableRepositories().length) {
+    <mosaik-dropdown-button
+      #repositoryMenu
+      class="min-w-0 max-w-64"
+      test-id="board-repository-filter"
+      [label]="presenter.selectedRepository() ?? (presenter.availableRepositories().length === 1 ? presenter.availableRepositories()[0] : 'All repositories')"
+      [iconName]="'github'"
+      [iconSize]="'small'"
+      [caretVisible]="false"
+      [disabled]="presenter.isHydrating()"
+      [appearance]="'outline'"
+      [dropDownPlacement]="'bottom-end'"
+      [dropDownMaxHeight]="'20rem'"
+      [attr.aria-label]="'Repository'"
+    >
+      <mosaik-menu>
+        <mosaik-menu-item
+          force-close="true"
+          test-id="board-repository-filter-all"
+          [label]="'All repositories'"
+          [isChecked]="!presenter.selectedRepository()"
+          (click)="presenter.filterByRepositoryCommand.execute(undefined); repositoryMenu.invoke('close')"
+        />
+        @for (repository of presenter.availableRepositories(); track repository) {
+        <mosaik-menu-item
+          force-close="true"
+          class="technical-value"
+          [attr.test-id]="'board-repository-filter-option-' + repository"
+          [label]="repository"
+          [isChecked]="presenter.selectedRepository() === repository"
+          (click)="presenter.filterByRepositoryCommand.execute(repository); repositoryMenu.invoke('close')"
+        />
+        }
+      </mosaik-menu>
+    </mosaik-dropdown-button>
+    }
+    <mosaik-dropdown-button
+      #filterMenu
+      test-id="board-filter"
+      aria-label="Filter board"
+      [label]="presenter.activeFilterCount() ? 'Filter · ' + presenter.activeFilterCount() : 'Filter'"
+      [iconName]="'filter'"
+      [iconSize]="'small'"
+      [caretVisible]="false"
+      [disabled]="presenter.isHydrating()"
+      [appearance]="'outline'"
+      [dropDownPlacement]="'bottom-end'"
+      [dropDownMaxHeight]="'20rem'"
+    >
+      <mosaik-menu>
+        @if (presenter.canSwitchBoards()) {
+        <mosaik-menu-item
+          test-id="board-selector"
+          [label]="'Board'"
+          [subLabel]="presenter.selectedBoard()?.displayName ?? 'All boards'"
+          menu-mode="popover"
+        >
+          <mosaik-menu slot="submenu">
+            <mosaik-menu-item
+              force-close="true"
+              test-id="board-selector-all"
+              [label]="'All boards'"
+              [subLabel]="'Merge every board in the selected workspaces'"
+              [isChecked]="!presenter.selectedBoard()"
+              (click)="presenter.selectBoardCommand.execute(undefined); filterMenu.invoke('close')"
+            />
+            @for (board of presenter.boards(); track board.id) {
+            <mosaik-menu-item
+              force-close="true"
+              [attr.test-id]="'board-selector-' + board.id"
+              [label]="board.displayName"
+              [subLabel]="board | boardSourceSummary"
+              [isChecked]="presenter.isBoardSelected()(board.id)"
+              (click)="presenter.selectBoardCommand.execute(board.id); filterMenu.invoke('close')"
+            />
+            }
+          </mosaik-menu>
+        </mosaik-menu-item>
+        }
+        <mosaik-menu-item
+          test-id="board-column-filter"
+          [label]="'Columns'"
+          [subLabel]="presenter.selectedColumn()?.label ?? 'All columns'"
+          menu-mode="popover"
+        >
+          <mosaik-menu slot="submenu">
+            <mosaik-menu-item
+              force-close="true"
+              test-id="board-column-filter-all"
+              [label]="'All columns'"
+              [isChecked]="!presenter.selectedColumnId()"
+              (click)="presenter.filterByColumnCommand.execute(); filterMenu.invoke('close')"
+            />
+            @for (column of presenter.allColumns(); track column.id) {
+            <mosaik-menu-item
+              force-close="true"
+              [attr.test-id]="'board-column-filter-option-' + column.id"
+              [label]="column.label"
+              [isChecked]="presenter.selectedColumnId() === column.id"
+              (click)="presenter.filterByColumnCommand.execute(column.id); filterMenu.invoke('close')"
+            />
+            }
+          </mosaik-menu>
+        </mosaik-menu-item>
+        <mosaik-menu-item
+          test-id="board-label-filter"
+          [label]="'Labels'"
+          [subLabel]="presenter.selectedLabel() ?? 'All labels'"
+          menu-mode="popover"
+        >
+          <mosaik-menu slot="submenu">
+            <mosaik-menu-item
+              force-close="true"
+              test-id="board-label-filter-all"
+              [label]="'All labels'"
+              [isChecked]="!presenter.selectedLabel()"
+              (click)="presenter.filterByLabelCommand.execute(); filterMenu.invoke('close')"
+            />
+            @for (label of presenter.availableLabels(); track label) {
+            <mosaik-menu-item
+              force-close="true"
+              [attr.test-id]="'board-label-filter-option-' + label"
+              [label]="label"
+              [isChecked]="presenter.selectedLabel() === label"
+              (click)="presenter.filterByLabelCommand.execute(label); filterMenu.invoke('close')"
+            />
+            }
+          </mosaik-menu>
+        </mosaik-menu-item>
+        <mosaik-menu-item
+          test-id="board-assignee-filter"
+          [label]="'Assignees'"
+          [subLabel]="presenter.selectedAssignee() ? (presenter.selectedAssignee()!.displayName ?? presenter.selectedAssignee()!.login) : 'All assignees'"
+          menu-mode="popover"
+        >
+          <mosaik-menu slot="submenu">
+            <mosaik-menu-item
+              force-close="true"
+              test-id="board-assignee-filter-all"
+              [label]="'All assignees'"
+              [isChecked]="!presenter.selectedAssigneeLogin()"
+              (click)="presenter.filterByAssigneeCommand.execute(); filterMenu.invoke('close')"
+            />
+            @for (assignee of presenter.availableAssignees(); track assignee.login) {
+            <mosaik-menu-item
+              force-close="true"
+              [attr.test-id]="'board-assignee-filter-option-' + assignee.login"
+              [label]="assignee.displayName ?? assignee.login"
+              [subLabel]="assignee.displayName ? assignee.login : undefined"
+              [isChecked]="presenter.selectedAssigneeLogin() === assignee.login"
+              (click)="presenter.filterByAssigneeCommand.execute(assignee.login); filterMenu.invoke('close')"
+            />
+            }
+          </mosaik-menu>
+        </mosaik-menu-item>
+      </mosaik-menu>
+    </mosaik-dropdown-button>
+    <!-- The wrapper keeps the tooltip's `display: contents` host out of the gapped row. -->
+    <div class="flex flex-none">
+      <mosaik-button
+        test-id="create-work-item"
+        [label]="'New work item'"
+        [iconName]="'add'"
+        [iconSize]="'small'"
+        [disabled]="presenter.isHydrating() || !presenter.canCreateWorkItem()"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [mosaikTooltip]="'Select one board to create a work item'"
+        [mosaikTooltipPlacement]="'bottom'"
+        [mosaikTooltipDisabled]="presenter.isHydrating() || presenter.canCreateWorkItem()"
+        (click)="presenter.createTaskCommand.execute()"
+      />
+    </div>
+  </div>
+
   @if (!presenter.isHydrating()) { @if (presenter.workItemRemoteData(); as remoteData) { @if
   (remoteData.state !== 'current') {
-  <mosaik-page-pre-content
-    [inset]="'horizontal'"
-    [mosaikAnimate]="'fadeSlideInDown'"
-    [mosaikAnimateOptions]="{ duration: 200 }"
-  >
+  <div class="flex-none px-[20px] pb-[14px]">
     <mosaik-banner
       test-id="work-items-stale-data"
       [isOpen]="true"
@@ -46,381 +333,193 @@
         (click)="presenter.refreshCommand.execute()"
       />
     </mosaik-banner>
-  </mosaik-page-pre-content>
+  </div>
   } } }
-  <!-- The title row is static, so it renders while the board loads; its actions stay disabled
-       until the work items and their filters are known. -->
-  <mosaik-page-header slot="header" [inset]="'all'" test-id="board-page-header" [text]="'Board'">
-    <symphony-page-toolbar
-      test-id="board-page-toolbar"
-      [ariaLabel]="'Board'"
-      [mosaikAnimate]="'fadeSlideInDown'"
-      [mosaikAnimateOptions]="{ duration: 200 }"
-    >
-      @if (presenter.selectedStageId()) {<mosaik-button
-        slot="end"
-        test-id="board-clear-stage-filter"
-        [label]="'Clear stage filter'"
-        [appearance]="'plain'"
-        (click)="presenter.clearStageFilterCommand.execute()"
-      />}
-      <mosaik-button
-        slot="start"
-        test-id="create-work-item"
-        [iconName]="'add'"
-        [disabled]="presenter.isHydrating() || !presenter.canCreateWorkItem()"
-        [appearance]="'solid'"
-        [variant]="'primary'"
-        [attr.aria-label]="presenter.canCreateWorkItem() ? 'Create work item' : 'Select one board to create'"
-        [mosaikTooltip]="presenter.canCreateWorkItem() ? 'Create work item' : 'Select one board to create'"
-        (click)="presenter.createTaskCommand.execute()"
-      />
-      @if (presenter.selectedItemKeys().length; as selectionCount) {
-      <div slot="end" class="flex items-center gap-2" test-id="board-selection-actions">
-        <!-- The wrapper keeps the tooltip's `display: contents` host out of the gapped row;
-               its shadow children would otherwise join the row as extra flex items. -->
-        <div class="flex">
-          <mosaik-button
-            test-id="board-deliver-selected"
-            [label]="'Deliver together (' + selectionCount + ')'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            [disabled]="!presenter.selectionEligibility().canDeliver"
-            [mosaikTooltip]="presenter.selectionEligibility().blockedReason ?? ''"
-            [mosaikTooltipPlacement]="'top'"
-            [mosaikTooltipDisabled]="!presenter.selectionEligibility().blockedReason"
-            (click)="presenter.deliverSelectedTogether()"
-          />
-        </div>
-        <mosaik-button
-          test-id="board-clear-selection"
-          [label]="'Clear selection'"
-          [appearance]="'plain'"
-          [variant]="'neutral'"
-          (click)="presenter.clearSelection()"
-        />
-      </div>
-      } @if (presenter.canSwitchBoards()) {
-      <ng-container slot="end">
-        <mosaik-dropdown-button
-          #boardSelector
-          slot="end"
-          class="max-w-64"
-          test-id="board-selector"
-          [label]="presenter.selectedBoard()?.displayName ?? 'All boards'"
-          [iconName]="'flow'"
-          [appearance]="'outline'"
-          [dropDownPlacement]="'bottom-end'"
-          [dropDownMaxHeight]="'20rem'"
-        >
-          <mosaik-menu>
-            <mosaik-menu-item
-              force-close="true"
-              test-id="board-selector-all"
-              [label]="'All boards'"
-              [subLabel]="'Merge every board in the selected workspaces'"
-              [isChecked]="!presenter.selectedBoard()"
-              (click)="presenter.selectBoardCommand.execute(undefined); boardSelector.invoke('close')"
-            />
-            @for (board of presenter.boards(); track board.id) {
-            <mosaik-menu-item
-              force-close="true"
-              [attr.test-id]="'board-selector-' + board.id"
-              [label]="board.displayName"
-              [subLabel]="board | boardSourceSummary"
-              [isChecked]="presenter.isBoardSelected()(board.id)"
-              (click)="presenter.selectBoardCommand.execute(board.id); boardSelector.invoke('close')"
-            />
-            }
-          </mosaik-menu>
-        </mosaik-dropdown-button>
-        <mosaik-divider slot="end" [orientation]="'vertical'" />
-      </ng-container>
-      } @if (presenter.attentionOnly()) {
-      <mosaik-button
-        slot="end"
-        test-id="board-attention-filter-clear"
-        [label]="'Needs attention'"
-        [iconName]="'clear'"
-        [appearance]="'outline'"
-        [variant]="'danger'"
-        [mosaikTooltip]="'Showing only work items whose newest run failed. Click to show every item.'"
-        (click)="presenter.clearAttentionFilterCommand.execute()"
-      />
-      }
-      <mosaik-dropdown-button
-        #filterMenu
-        slot="end"
-        test-id="board-filter"
-        aria-label="Filter board"
-        [iconName]="'filter'"
-        [caretVisible]="false"
-        [disabled]="presenter.isHydrating()"
-        [appearance]="'outline'"
-        [dropDownPlacement]="'bottom-end'"
-        [dropDownMaxHeight]="'20rem'"
-        [mosaikTooltip]="'Filter board'"
-      >
-        <mosaik-menu>
-          <mosaik-menu-item
-            test-id="board-column-filter"
-            [label]="'Columns'"
-            [subLabel]="presenter.selectedColumn()?.label ?? 'All columns'"
-            menu-mode="popover"
-          >
-            <mosaik-menu slot="submenu">
-              <mosaik-menu-item
-                force-close="true"
-                test-id="board-column-filter-all"
-                [label]="'All columns'"
-                [isChecked]="!presenter.selectedColumnId()"
-                (click)="presenter.filterByColumnCommand.execute(); filterMenu.invoke('close')"
-              />
-              @for (column of presenter.allColumns(); track column.id) {
-              <mosaik-menu-item
-                force-close="true"
-                [attr.test-id]="'board-column-filter-option-' + column.id"
-                [label]="column.label"
-                [isChecked]="presenter.selectedColumnId() === column.id"
-                (click)="presenter.filterByColumnCommand.execute(column.id); filterMenu.invoke('close')"
-              />
-              }
-            </mosaik-menu>
-          </mosaik-menu-item>
-          <mosaik-menu-item
-            test-id="board-label-filter"
-            [label]="'Labels'"
-            [subLabel]="presenter.selectedLabel() ?? 'All labels'"
-            menu-mode="popover"
-          >
-            <mosaik-menu slot="submenu">
-              <mosaik-menu-item
-                force-close="true"
-                test-id="board-label-filter-all"
-                [label]="'All labels'"
-                [isChecked]="!presenter.selectedLabel()"
-                (click)="presenter.filterByLabelCommand.execute(); filterMenu.invoke('close')"
-              />
-              @for (label of presenter.availableLabels(); track label) {
-              <mosaik-menu-item
-                force-close="true"
-                [attr.test-id]="'board-label-filter-option-' + label"
-                [label]="label"
-                [isChecked]="presenter.selectedLabel() === label"
-                (click)="presenter.filterByLabelCommand.execute(label); filterMenu.invoke('close')"
-              />
-              }
-            </mosaik-menu>
-          </mosaik-menu-item>
-          <mosaik-menu-item
-            test-id="board-assignee-filter"
-            [label]="'Assignees'"
-            [subLabel]="presenter.selectedAssignee() ? (presenter.selectedAssignee()!.displayName ?? presenter.selectedAssignee()!.login) : 'All assignees'"
-            menu-mode="popover"
-          >
-            <mosaik-menu slot="submenu">
-              <mosaik-menu-item
-                force-close="true"
-                test-id="board-assignee-filter-all"
-                [label]="'All assignees'"
-                [isChecked]="!presenter.selectedAssigneeLogin()"
-                (click)="presenter.filterByAssigneeCommand.execute(); filterMenu.invoke('close')"
-              />
-              @for (assignee of presenter.availableAssignees(); track assignee.login) {
-              <mosaik-menu-item
-                force-close="true"
-                [attr.test-id]="'board-assignee-filter-option-' + assignee.login"
-                [label]="assignee.displayName ?? assignee.login"
-                [subLabel]="assignee.displayName ? assignee.login : undefined"
-                [isChecked]="presenter.selectedAssigneeLogin() === assignee.login"
-                (click)="presenter.filterByAssigneeCommand.execute(assignee.login); filterMenu.invoke('close')"
-              />
-              }
-            </mosaik-menu>
-          </mosaik-menu-item>
-        </mosaik-menu>
-      </mosaik-dropdown-button>
-      <mosaik-button
-        slot="end"
-        test-id="refresh-board"
-        [iconName]="'sync'"
-        [disabled]="presenter.isHydrating()"
-        [appearance]="'outline'"
-        [mosaikTooltip]="'Refresh work items and build runs'"
-        (click)="presenter.refreshCommand.execute()"
-      />
-    </symphony-page-toolbar>
-  </mosaik-page-header>
-  <mosaik-page-content
-    class="min-h-0 flex-1 overflow-hidden"
-    [inset]="'none'"
-    [mosaikAnimate]="'fadeSlideInDown'"
-    [mosaikAnimateOptions]="{ duration: 200 }"
+
+  <div
+    part="board-canvas"
+    test-id="board-canvas"
+    class="flex min-h-0 min-w-0 flex-1 overflow-hidden px-[20px] py-[16px]"
   >
     @if (presenter.isHydrating()) {
-    <!-- The loading board is the board itself: the same FlowBoard, expanded 24rem columns with
-         their header (title, count, collapse toggle) and cards with selection, icon, two title
-         lines, the subtitle rhythm and the avatar footer. Only the text is a skeleton. -->
+    <!-- The loading board is the board itself: the same FlowBoard, the drawn column widths and
+         collapsed strips, and cards with id, avatar, two title lines, the status chip and the
+         delivery steps. Only the text is a skeleton. -->
     <div
       test-id="board-loading-skeleton"
-      class="h-full min-h-0 w-full overflow-hidden"
+      class="flex h-full min-h-0 w-full min-w-0 gap-1.5 overflow-hidden"
       role="status"
       aria-label="Loading board"
     >
-      <mosaik-flow-board
-        class="pointer-events-none block h-full min-h-0 w-full min-w-0"
-        aria-hidden="true"
-        [displayMode]="'tasks'"
-        [orientation]="'horizontal'"
-        [mutationMode]="'controlled'"
-        [selectionMode]="'multiple'"
-        [dragdrop]="false"
-        [gap]="0"
-      >
-        @for (column of [1, 2, 3, 4]; track column) {
-        <mosaik-flow-board-column
-          class="w-[24rem] min-w-[24rem] max-w-[24rem]"
-          [appearance]="'plain'"
-          [collapsible]="true"
-          [isExpanded]="true"
-        >
-          <div slot="title" class="flex h-3 items-center">
+      @for (strip of [1, 2]; track strip) {
+      <div part="board-collapsed-column" class="w-[40px] flex-none" aria-hidden="true"></div>
+      } @for (column of [1, 2, 3, 4]; track column) {
+      <div class="flex w-[248px] flex-none flex-col gap-[10px]" aria-hidden="true">
+        <div class="flex h-[32px] items-center px-0.5">
+          <mosaik-skeleton
+            [width]="column % 2 ? '4rem' : '5.5rem'"
+            [height]="'16px'"
+            [shimmer]="true"
+          />
+        </div>
+        @for (card of [1, 2]; track card) {
+        <div part="board-skeleton-card" class="flex flex-col gap-[10px] p-1.5">
+          <div class="flex items-center justify-between">
+            <mosaik-skeleton [width]="'4rem'" [height]="'12px'" [shimmer]="true" />
             <mosaik-skeleton
-              [width]="column % 2 ? '6rem' : '8rem'"
-              [height]="'16px'"
+              [shape]="'circle'"
+              [width]="'24px'"
+              [height]="'24px'"
               [shimmer]="true"
             />
           </div>
-          <mosaik-skeleton slot="meta" [width]="'28px'" [height]="'20px'" [shimmer]="true" />
-          @for (card of [1, 2]; track card) {
-          <mosaik-flow-board-column-item
-            class="block w-full min-w-0 max-w-full"
-            [draggable]="false"
-            [reorderable]="false"
-            [ripple]="false"
-          >
-            <div slot="title" class="flex w-0 min-w-full items-start gap-2">
-              <div class="flex min-w-0 flex-1 flex-col">
-                <div class="flex h-3 items-center">
-                  <mosaik-skeleton [width]="'100%'" [height]="'16px'" [shimmer]="true" />
-                </div>
-                <div class="flex h-3 items-center">
-                  <mosaik-skeleton
-                    [width]="card === 1 ? '64%' : '48%'"
-                    [height]="'16px'"
-                    [shimmer]="true"
-                  />
-                </div>
-              </div>
-            </div>
-            <div slot="subtitle" class="flex w-0 min-w-full flex-col gap-2">
-              <div class="flex h-2.5 items-center">
-                <mosaik-skeleton [width]="'5rem'" [height]="'12px'" [shimmer]="true" />
-              </div>
-              <div class="flex h-2.5 items-center">
-                <mosaik-skeleton [width]="'10rem'" [height]="'12px'" [shimmer]="true" />
-              </div>
-              <div class="flex h-2.5 items-center">
-                <mosaik-skeleton [width]="'8rem'" [height]="'12px'" [shimmer]="true" />
-              </div>
-              <div class="flex h-2.5 items-center">
-                <mosaik-skeleton [width]="'8rem'" [height]="'12px'" [shimmer]="true" />
-              </div>
-              <div class="flex h-[18px] items-center gap-2">
-                <mosaik-skeleton [width]="'5.5rem'" [height]="'18px'" [shimmer]="true" />
-                <mosaik-skeleton [width]="'4rem'" [height]="'18px'" [shimmer]="true" />
-              </div>
-            </div>
-            <mosaik-skeleton
-              slot="footer"
-              [shape]="'circle'"
-              [width]="'20px'"
-              [height]="'20px'"
-              [shimmer]="true"
-            />
-          </mosaik-flow-board-column-item>
-          }
-        </mosaik-flow-board-column>
-        }
-      </mosaik-flow-board>
-    </div>
-    } @else {
-    <mosaik-stack [fit]="'both'">
-      @if (presenter.workItems().length && presenter.filteredWorkItems().length) {
-      <mosaik-flow-board
-        cdkDropListGroup
-        class="block h-full min-h-0 w-full min-w-0"
-        [displayMode]="'tasks'"
-        [orientation]="'horizontal'"
-        [mutationMode]="'controlled'"
-        [selectionMode]="'multiple'"
-        [dragdrop]="false"
-        [gap]="0"
-      >
-        @for (column of presenter.columns(); track column.id) {
-        <mosaik-flow-board-column
-          cdkDropList
-          [attr.test-id]="'board-column-' + column.id"
-          [cdkDropListData]="column.id"
-          [cdkDropListSortingDisabled]="true"
-          [columnKey]="column.id"
-          [appearance]="'plain'"
-          [collapsible]="true"
-          [isExpanded]="presenter.isColumnExpanded()(column.id)"
-          [class]="presenter.isColumnExpanded()(column.id) ? 'w-[24rem] min-w-[24rem] max-w-[24rem]' : ''"
-          (cdkDropListDropped)="moveVirtualizedEntry($event)"
-          (flowBoardColumnExpandChange)="presenter.setColumnExpandedCommand.execute($event)"
-        >
-          <mosaik-text slot="title" [text]="column.label" [wrap]="true" />
-          <mosaik-badge
-            slot="meta"
-            [label]="'' + presenter.items()(column.id).length"
-            [appearance]="'soft'"
+          <mosaik-skeleton [width]="'100%'" [height]="'16px'" [shimmer]="true" />
+          <mosaik-skeleton
+            [width]="card === 1 ? '64%' : '48%'"
+            [height]="'16px'"
+            [shimmer]="true"
           />
-          @if (presenter.isColumnExpanded()(column.id)) { @if
-          (presenter.columnEntries(column.id).length) {
-          <cdk-virtual-scroll-viewport
-            class="block h-full min-h-0 w-full min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto [&>.cdk-virtual-scroll-content-wrapper]:w-full"
-            [attr.test-id]="'board-column-viewport-' + column.id"
-            [symphonyDynamicSizeVirtualScroll]="presenter.columnEntryKeys(column.id)"
-            [estimatedItemSize]="240"
-            [bufferSize]="720"
-          >
-            <symphony-board-column-entry
-              *cdkVirtualFor="
-                let entry of presenter.columnEntries(column.id);
-                trackBy: presenter.trackColumnEntry;
-                let virtualIndex = index
-              "
-              cdkDrag
-              [cdkDragData]="entry"
-              [cdkDragDisabled]="
-                entry.kind === 'item' &&
-                presenter.runtimeStatus()(entry.item.id)?.execution?.state === 'running'
-              "
-              [entry]="entry"
-              [attr.data-board-virtual-index]="virtualIndex"
-              [attr.data-board-virtual-key]="entry.id"
-            />
-          </cdk-virtual-scroll-viewport>
-          } @else {
-          <mosaik-hint
-            [text]="'No items in ' + column.label.toLowerCase()"
-            [textOverflow]="'wrap'"
-          />
-          } }
-        </mosaik-flow-board-column>
+          <mosaik-skeleton [width]="'6rem'" [height]="'20px'" [shimmer]="true" />
+          <mosaik-skeleton [width]="'100%'" [height]="'4px'" [shimmer]="true" />
+        </div>
         }
-      </mosaik-flow-board>
-      } @else {
-      <mosaik-empty-state
-        test-id="board-empty"
-        [iconName]="presenter.hasActiveFilters() | booleanIcon: 'search' : 'board'"
-        [header]="presenter.workItemsUnavailable() ? presenter.workItemUnavailablePresentation().emptyHeader : (presenter.hasActiveFilters() ? 'No matching tickets' : 'No work items found')"
-        [content]="presenter.workItemsUnavailable() ? presenter.workItemUnavailablePresentation().emptyContent : (presenter.hasActiveFilters() ? 'Try a different search, column, label or assignee filter.' : 'Choose an active work-item source that contains visible items.')"
-      />
+      </div>
       }
-    </mosaik-stack>
+    </div>
+    } @else if (presenter.workItems().length && presenter.filteredWorkItems().length) {
+    <mosaik-flow-board
+      cdkDropListGroup
+      class="block h-full min-h-0 w-full min-w-0"
+      [displayMode]="'tasks'"
+      [orientation]="'horizontal'"
+      [mutationMode]="'controlled'"
+      [selectionMode]="presenter.selectedItemKeys().length ? 'multiple' : 'none'"
+      [dragdrop]="false"
+      [gap]="12"
+    >
+      @for (column of presenter.columns(); track column.id) { @if
+      (presenter.isColumnExpanded()(column.id)) {
+      <mosaik-flow-board-column
+        cdkDropList
+        class="w-[248px] min-w-[248px] max-w-[248px]"
+        [attr.test-id]="'board-column-' + column.id"
+        [cdkDropListData]="column.id"
+        [cdkDropListSortingDisabled]="true"
+        [columnKey]="column.id"
+        [appearance]="'plain'"
+        [collapsible]="false"
+        [isExpanded]="true"
+        (cdkDropListDropped)="moveVirtualizedEntry($event)"
+      >
+        <div slot="title" class="flex min-w-0 items-baseline gap-1">
+          <mosaik-text
+            part="board-column-title"
+            class="min-w-0"
+            [mosaikTypography]="'subtitle2'"
+            [truncate]="true"
+            [text]="column.label"
+          />
+          <mosaik-text
+            class="flex-none"
+            [attr.test-id]="'board-column-count-' + column.id"
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [text]="'' + presenter.items()(column.id).length"
+          />
+        </div>
+        <!-- `+` as drawn, and the collapse control as a plain button beside it: the column's own
+             Mosaik toggle would add a filled square the design does not have. -->
+        <div slot="actions" class="flex items-center">
+          <mosaik-button
+            [attr.test-id]="'board-column-create-' + column.id"
+            [iconName]="'add'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [disabled]="!presenter.canCreateWorkItem()"
+            [attr.aria-label]="'New work item in ' + column.label"
+            (click)="presenter.createTaskCommand.execute(column)"
+          />
+          <mosaik-button
+            [attr.test-id]="'board-column-collapse-' + column.id"
+            [iconName]="'chevronLeft'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [attr.aria-label]="'Collapse ' + column.label"
+            [mosaikTooltip]="'Collapse ' + column.label"
+            (click)="presenter.collapseColumnCommand.execute(column.id)"
+          />
+        </div>
+        @if (presenter.columnEntries(column.id).length) {
+        <cdk-virtual-scroll-viewport
+          class="block h-full min-h-0 w-full min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto [&>.cdk-virtual-scroll-content-wrapper]:w-full"
+          [attr.test-id]="'board-column-viewport-' + column.id"
+          [symphonyDynamicSizeVirtualScroll]="presenter.columnEntryKeys(column.id)"
+          [estimatedItemSize]="160"
+          [bufferSize]="640"
+        >
+          <symphony-board-column-entry
+            *cdkVirtualFor="
+              let entry of presenter.columnEntries(column.id);
+              trackBy: presenter.trackColumnEntry;
+              let virtualIndex = index
+            "
+            cdkDrag
+            [cdkDragData]="entry"
+            [cdkDragDisabled]="
+              entry.kind === 'item' &&
+              presenter.runtimeStatus()(entry.item.id)?.execution?.state === 'running'
+            "
+            [entry]="entry"
+            [attr.data-board-virtual-index]="virtualIndex"
+            [attr.data-board-virtual-key]="entry.id"
+          />
+        </cdk-virtual-scroll-viewport>
+        } @else {
+        <mosaik-hint [text]="'No items in ' + column.label.toLowerCase()" [textOverflow]="'wrap'" />
+        }
+      </mosaik-flow-board-column>
+      } @else {
+      <!-- A collapsed column is a narrow strip with its count and its name read downwards; the
+           strip itself expands it and still takes dropped cards. -->
+      <div
+        part="board-collapsed-column"
+        cdkDropList
+        role="button"
+        tabindex="0"
+        class="flex w-[40px] flex-none flex-col items-center gap-[10px] pt-[6px]"
+        [attr.test-id]="'board-column-' + column.id"
+        [attr.data-column-key]="column.id"
+        [attr.aria-expanded]="false"
+        [attr.aria-label]="'Show ' + column.label + ', ' + presenter.items()(column.id).length + ' work items'"
+        [cdkDropListData]="column.id"
+        [cdkDropListSortingDisabled]="true"
+        (cdkDropListDropped)="moveVirtualizedEntry($event)"
+        (click)="presenter.expandColumnCommand.execute(column.id)"
+        (keydown.enter)="presenter.expandColumnCommand.execute(column.id)"
+        (keydown.space)="$event.preventDefault(); presenter.expandColumnCommand.execute(column.id)"
+      >
+        <mosaik-text
+          [attr.test-id]="'board-column-count-' + column.id"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [text]="'' + presenter.items()(column.id).length"
+        />
+        <mosaik-text
+          part="board-collapsed-column-label"
+          [mosaikTypography]="'subtitle2'"
+          [text]="column.label"
+        />
+      </div>
+      } }
+    </mosaik-flow-board>
+    } @else {
+    <mosaik-empty-state
+      class="m-auto"
+      test-id="board-empty"
+      [iconName]="presenter.hasActiveFilters() | booleanIcon: 'search' : 'board'"
+      [header]="presenter.workItemsUnavailable() ? presenter.workItemUnavailablePresentation().emptyHeader : (presenter.hasActiveFilters() ? 'No matching tickets' : 'No work items found')"
+      [content]="presenter.workItemsUnavailable() ? presenter.workItemUnavailablePresentation().emptyContent : (presenter.hasActiveFilters() ? 'Try All, or a different search, repository, column, label or assignee filter.' : 'Choose an active work-item source that contains visible items.')"
+    />
     }
-  </mosaik-page-content>
-</mosaik-page>
+  </div>
+</section>

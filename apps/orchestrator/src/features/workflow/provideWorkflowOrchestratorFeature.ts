@@ -2,6 +2,7 @@
 import { type IProvideWorkflowOrchestratorFeatureDependencies } from './IProvideWorkflowOrchestratorFeatureDependencies';
 import { workflowRequestSchemas, workflowResponseSchemas } from '@symphony/ipc-contracts-workflow';
 import { createOrchestratorRequestHandler } from '../../transport/createOrchestratorRequestHandler';
+import { resolveRequestedWorkspaceIds } from '../../composition/resolveRequestedWorkspaceIds';
 // #endregion
 
 /**
@@ -12,7 +13,7 @@ import { createOrchestratorRequestHandler } from '../../transport/createOrchestr
 export function provideWorkflowOrchestratorFeature(
   dependencies: IProvideWorkflowOrchestratorFeatureDependencies,
 ) {
-  const { storageGovernor, service, workflowEngine, settingsState } = dependencies;
+  const { storageGovernor, service, workflowEngine, settingsState, stageHistory } = dependencies;
   async function recordOperatorDecision(input: {
     readonly workItemId: string;
     readonly optionId: string;
@@ -63,6 +64,16 @@ export function provideWorkflowOrchestratorFeature(
           }),
         };
       },
+    ),
+    createOrchestratorRequestHandler(
+      'workflow.stage-changes.list',
+      workflowRequestSchemas['workflow.stage-changes.list'],
+      workflowResponseSchemas['workflow.stage-changes.list'],
+      async (input) =>
+        stageHistory.list({
+          workspaceIds: resolveRequestedWorkspaceIds(settingsState.current, input.workspaceId),
+          since: input.since,
+        }),
     ),
   ]);
   return Object.freeze({ id: 'workflow', handlers, recordOperatorDecision });

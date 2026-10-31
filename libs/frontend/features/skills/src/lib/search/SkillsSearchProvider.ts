@@ -1,13 +1,15 @@
 // #region Imports
 
 import { Inject, inject, Injectable } from '@angular/core';
-import type { ISearchMatch, ISearchProvider } from '@symphony/frontend-search';
+import type { IPaletteResult, ISearchMatch, ISearchProvider } from '@symphony/frontend-search';
 import { SkillStore } from '../catalog/SkillStore';
+import { projectSkillsPaletteResults } from './projectSkillsPaletteResults';
 
 // #endregion
 
 /**
- * Searches the single Skills catalog owner and contributes its existing Settings alias.
+ * Searches the single Skills catalog owner and contributes its existing Settings alias and the
+ * command palette's skill packages.
  *
  * @public
  */
@@ -61,6 +63,18 @@ export class SkillsSearchProvider implements ISearchProvider {
           .includes(normalizedQuery),
       );
     return skillMatch ? { path: '/main/settings', queryParams: { section: 'skills' } } : undefined;
+  }
+
+  /**
+   * Lists `Open <skill> in Settings` for the matching installed skill packages.
+   *
+   * @param _query - Trimmed palette input; matching uses the normalized form.
+   * @param normalizedQuery - Locale-lowercased palette input; empty lists nothing.
+   * @returns Skills' palette rows.
+   * @public
+   */
+  public paletteResults(_query: string, normalizedQuery: string): readonly IPaletteResult[] {
+    return projectSkillsPaletteResults(this._catalog.skillCatalog(), normalizedQuery);
   }
 
   // #endregion

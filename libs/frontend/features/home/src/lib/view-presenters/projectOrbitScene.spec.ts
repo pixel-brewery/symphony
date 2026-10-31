@@ -4,6 +4,7 @@ import { createDefaultApplicationSettings } from '@symphony/configuration-compos
 import type { IDeliverySnapshot } from '@symphony/domain-delivery';
 import type { IWorkItem } from '@symphony/domain-work';
 import { describe, expect, it } from 'vitest';
+import type { IOrbitCluster } from './IOrbitCluster';
 import { projectOrbitScene } from './projectOrbitScene';
 
 // #endregion
@@ -71,10 +72,12 @@ describe('projectOrbitScene', () => {
     );
     expect(scene.edges).toEqual([]);
     expect(scene.nodes.find((node) => node.id === 'production')?.deliveryState).toBe('unassigned');
-    expect(scene.rings).toEqual([]);
+    expect(scene.rings.map((ring) => [ring.id, ring.style ?? 'solid'])).toEqual([
+      ['orbit:belt', 'solid'],
+    ]);
   });
 
-  it('preserves world positions through reorder, title refresh and filtering with the same project universe', () => {
+  it('keeps positions through reorder and title refresh and re-lays a filtered subset in its clusters', () => {
     // arrange
     const first = projectOrbitScene(items, workflow, delivery);
     const updated = items.toReversed().map((item) => ({ ...item, title: `Updated ${item.title}` }));
@@ -84,6 +87,7 @@ describe('projectOrbitScene', () => {
     const reordered = projectOrbitScene(updated, workflow, delivery);
     const filtered = projectOrbitScene(subset, workflow, delivery);
     const initialPositions = new Map(first.nodes.map((node) => [node.id, node.position]));
+    const filteredTickets = filtered.nodes.filter((node) => node.kind === 'ticket');
 
     // assert
     expect(
@@ -91,28 +95,69 @@ describe('projectOrbitScene', () => {
         (node) => JSON.stringify(node.position) === JSON.stringify(initialPositions.get(node.id)),
       ),
     ).toBe(true);
-    expect(
-      filtered.nodes
-        .filter((node) => node.kind === 'ticket')
-        .every(
-          (node) => JSON.stringify(node.position) === JSON.stringify(initialPositions.get(node.id)),
-        ),
-    ).toBe(true);
     expect(filtered.ticketCount).toBe(subset.length);
+    expect(new Set(filteredTickets.map((node) => JSON.stringify(node.position))).size).toBe(
+      subset.length,
+    );
   });
 
-  it('does not displace an existing ticket when a previously colliding ID arrives', () => {
+  it('draws each cluster as an arc clockwise from the top with its toned label outside the belt', () => {
     // arrange
-    const existing = { ...items[0]!, id: 'work-item-2004' };
-    const arriving = { ...items[1]!, id: 'work-item-1298' };
-    const before = projectOrbitScene([existing], workflow, undefined);
+    const clusters: IOrbitCluster[] = [
+      {
+        id: 'column:todo',
+        kind: 'column',
+        label: 'TODO',
+        columnId: 'todo',
+        tone: 'neutral',
+        memberIds: ['ticket-0', 'ticket-1', 'ticket-2'],
+      },
+      {
+        id: 'column:done',
+        kind: 'column',
+        label: 'Done',
+        columnId: 'done',
+        tone: 'success',
+        memberIds: ['ticket-3'],
+      },
+      {
+        id: 'attention',
+        kind: 'attention',
+        label: 'Needs attention',
+        tone: 'danger',
+        memberIds: ['ticket-4', 'ticket-5'],
+      },
+    ];
 
     // act
-    const after = projectOrbitScene([arriving, existing], workflow, undefined);
+    const scene = projectOrbitScene(items.slice(0, 6), workflow, delivery, false, clusters);
+    const group = (id: string) => scene.nodes.find((node) => node.id === `group:${id}`)!;
+    const ticket = (id: string) => scene.nodes.find((node) => node.id === `ticket:${id}`)!;
+    const belt = scene.rings.find((ring) => ring.id === 'orbit:belt')!;
+    const radius = (node: { position: { x: number; z: number } }) =>
+      Math.hypot(node.position.x, node.position.z);
 
     // assert
-    for (const node of before.nodes.filter((entry) => entry.workItemId === existing.id))
-      expect(after.nodes.find((entry) => entry.id === node.id)?.position).toEqual(node.position);
+    expect(scene.nodes.filter((node) => node.kind === 'group').map((node) => node.label)).toEqual([
+      'TODO',
+      'Done',
+      'Needs attention',
+    ]);
+    expect(group('column:todo').position.z).toBeLessThan(0);
+    expect(Math.abs(group('column:todo').position.x)).toBeLessThan(1e-9);
+    expect(group('column:done').position.x).toBeGreaterThan(0);
+    expect(group('attention').position.x).toBeLessThan(0);
+    expect(group('attention')).toMatchObject({ count: 2, tone: 'danger' });
+    expect(ticket('ticket-4').tone).toBe('danger');
+    expect(ticket('ticket-3').tone).toBe('success');
+    expect(radius(ticket('ticket-1'))).toBeCloseTo(belt.radius, 8);
+    expect(radius(group('column:todo'))).toBeGreaterThan(belt.radius);
+    expect(
+      scene.nodes.filter((node) => node.kind === 'ticket').every((node) => node.position.y === 0),
+    ).toBe(true);
+    expect(
+      scene.rings.filter((ring) => ring.targetId).every((ring) => ring.style === 'dashed'),
+    ).toBe(true);
   });
 
   it('represents one ticket at every proven destination and separates multiple production targets', () => {
@@ -204,7 +249,7 @@ describe('projectOrbitScene', () => {
     const scene = projectOrbitScene([items[0]!], workflow, snapshot);
 
     // assert
-    expect(scene.rings).toEqual([]);
+    expect(scene.rings.filter((ring) => ring.targetId)).toEqual([]);
     expect(scene.nodes.filter((node) => node.targetId === target.id)).toHaveLength(1);
     expect(scene.nodes.find((node) => node.id === 'production')).toMatchObject({
       kind: 'production',

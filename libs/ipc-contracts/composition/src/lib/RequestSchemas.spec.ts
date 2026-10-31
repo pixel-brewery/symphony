@@ -411,6 +411,7 @@ const expectedRequestMethods = [
   'verification.cancel',
   'ci.usage.get',
   'ci.runs.refresh',
+  'ci.runs.history.list',
   'ci.workflow.dispatch',
   'ci.workflow.local.run',
   'delivery.refresh',
@@ -457,6 +458,7 @@ const expectedRequestMethods = [
   'workflow.get',
   'workflow.decide',
   'workflow.answer',
+  'workflow.stage-changes.list',
   'skills.builtin.list',
   'skills.builtin.customize',
   'skills.get',
@@ -475,12 +477,12 @@ const expectedRequestMethods = [
 ];
 
 describe('RequestSchemas compatibility', () => {
-  it('preserves all 113 method IDs in their existing request-catalog order', () => {
+  it('preserves all 115 method IDs in their existing request-catalog order', () => {
     // arrange
     // act
     const methods = Object.keys(requestSchemas);
     // assert
-    expect(methods).toHaveLength(113);
+    expect(methods).toHaveLength(115);
     expect(methods).toEqual(expectedRequestMethods);
   });
 

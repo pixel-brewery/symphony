@@ -13,4 +13,6 @@ export interface IOrbitLabel {
   readonly height: number;
   readonly anchorX: number;
   readonly anchorY: number;
+  /** Which edge of the label box faces its anchor, so content hugs the object it names. */
+  readonly align?: 'start' | 'center' | 'end';
 }

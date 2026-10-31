@@ -2,8 +2,10 @@
 
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test, _electron as electron } from '@playwright/test';
+import { expect, test, _electron as electron, type Page } from '@playwright/test';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { closeSettings } from './closeSettings';
+import { expectSettingsInMainWindow } from './expectSettingsInMainWindow';
 import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
@@ -90,6 +92,8 @@ test('selects every Solar System body for Production, loads local maps, and pres
         page.url(),
       ),
     ]);
+    // Symphony opens on Overview; Orbit is a Delivery entry in the sidebar.
+    await page.getByTestId('navigation-orbit').click();
     await expect(page.getByTestId('orbit-label-production')).toHaveAttribute(
       'data-celestial-body',
       'sun',
@@ -99,15 +103,18 @@ test('selects every Solar System body for Production, loads local maps, and pres
         const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
         return (await api.request('settings.get', {})).deliveryTargets[0]?.celestialBody;
       });
-    const edit = async () => {
+    // Configuring the destination opens its sheet in Settings inside the main window.
+    const edit = async (): Promise<Page> => {
       await page.getByTestId('orbit-label-production').click();
       await page.getByTestId('orbit-configure-destination').click();
+      await expectSettingsInMainWindow(app, page);
       await expect(page.getByTestId('delivery-target-editor')).toBeVisible();
+      return page;
     };
 
     // act
-    await edit();
-    await expect(page.getByTestId('delivery-target-celestial-body')).toHaveJSProperty(
+    let sheet = await edit();
+    await expect(sheet.getByTestId('delivery-target-celestial-body')).toHaveJSProperty(
       'value',
       'sun',
     );
@@ -123,22 +130,25 @@ test('selects every Solar System body for Production, loads local maps, and pres
       'neptune',
     ]) {
       // assert: every choice includes a real, locally loaded transparent body portrait.
-      await expect(page.getByTestId(`delivery-body-preview-${body}`)).toHaveJSProperty(
+      await expect(sheet.getByTestId(`delivery-body-preview-${body}`)).toHaveJSProperty(
         'naturalWidth',
         384,
       );
-      await expect(page.getByTestId(`delivery-body-preview-${body}`)).toHaveJSProperty(
+      await expect(sheet.getByTestId(`delivery-body-preview-${body}`)).toHaveJSProperty(
         'naturalHeight',
         256,
       );
     }
-    await expect(page.getByTestId('delivery-body-sun')).toHaveJSProperty('isChecked', true);
-    await page.getByTestId('delivery-body-preview-mars').click();
-    await expect(page.getByTestId('delivery-body-mars')).toHaveJSProperty('isChecked', true);
-    await expect(page.getByTestId('delivery-body-sun')).toHaveJSProperty('isChecked', false);
-    await page.getByTestId('cancel-settings-editor').click();
+    await expect(sheet.getByTestId('delivery-body-sun')).toHaveJSProperty('isChecked', true);
+    await sheet.getByTestId('delivery-body-preview-mars').click();
+    await expect(sheet.getByTestId('delivery-body-mars')).toHaveJSProperty('isChecked', true);
+    await expect(sheet.getByTestId('delivery-body-sun')).toHaveJSProperty('isChecked', false);
+    await expect(sheet.getByTestId('delivery-target-orbit-preview-body-mars')).toBeVisible();
+    await sheet.getByTestId('cancel-settings-editor').click();
+    await expect(sheet.getByTestId('settings-editor-drawer')).toHaveCount(0);
     // assert: a draft does not persist or alter the legacy default.
     expect(await readBody()).toBeUndefined();
+    await closeSettings(page);
     await page.getByTestId('navigation-orbit').click();
     await expect(page.getByTestId('orbit-label-production')).toHaveAttribute(
       'data-celestial-body',
@@ -157,26 +167,27 @@ test('selects every Solar System body for Production, loads local maps, and pres
       'saturn',
     ]) {
       // act
-      await edit();
+      sheet = await edit();
       if (body === 'earth') {
-        await page.getByTestId('delivery-body-earth').focus();
-        await page.keyboard.press('Space');
+        await sheet.getByTestId('delivery-body-earth').focus();
+        await sheet.keyboard.press('Space');
       } else {
-        await page.getByTestId(`delivery-body-${body}`).click();
+        await sheet.getByTestId(`delivery-body-${body}`).click();
       }
-      await expect(page.getByTestId(`delivery-body-${body}`)).toHaveJSProperty('isChecked', true);
-      await expect(page.getByTestId('delivery-target-celestial-body')).toHaveJSProperty(
+      await expect(sheet.getByTestId(`delivery-body-${body}`)).toHaveJSProperty('isChecked', true);
+      await expect(sheet.getByTestId('delivery-target-celestial-body')).toHaveJSProperty(
         'value',
         body,
       );
       if (body === 'earth' || body === 'saturn') {
-        await page.screenshot({
+        await sheet.screenshot({
           path: resolve(outputDirectory, `orbit-body-choices-${body}.png`),
           animations: 'disabled',
         });
       }
-      await page.getByTestId('save-settings-editor').click();
-      await expect(page.getByTestId('settings-editor-drawer')).toHaveCount(0);
+      await sheet.getByTestId('save-settings-editor').click();
+      await expect(sheet.getByTestId('settings-editor-drawer')).toHaveCount(0);
+      await closeSettings(page);
       await page.getByTestId('navigation-orbit').click();
       await page.getByTestId('landscape-fit').click();
       await expect(page.getByTestId('orbit-canvas')).toHaveAttribute('data-render-state', 'ready');
@@ -208,21 +219,24 @@ test('selects every Solar System body for Production, loads local maps, and pres
     });
     await app.close();
     app = await electron.launch(launchOptions);
-    page = await prepareMainWindow(app);
+    // The restarted window reopens Orbit, the screen it showed last.
+    page = await prepareMainWindow(app, 'orbit-view');
     page.on('pageerror', (error) => errors.push(error.message));
     // assert: actual disk persistence and packaged local maps survive a full process restart.
     expect(await readBody()).toBe('saturn');
+    await page.getByTestId('navigation-orbit').click();
     await expect(page.getByTestId('orbit-label-production')).toHaveAttribute(
       'data-celestial-body',
       'saturn',
     );
     await expect(page.getByTestId('orbit-canvas')).toHaveAttribute('data-asset-state', 'ready');
-    await edit();
-    await expect(page.getByTestId('delivery-target-celestial-body')).toHaveJSProperty(
+    sheet = await edit();
+    await expect(sheet.getByTestId('delivery-target-celestial-body')).toHaveJSProperty(
       'value',
       'saturn',
     );
-    await expect(page.getByTestId('delivery-body-saturn')).toHaveJSProperty('isChecked', true);
+    await expect(sheet.getByTestId('delivery-body-saturn')).toHaveJSProperty('isChecked', true);
+    await expect(sheet.getByTestId('delivery-target-orbit-preview-body-saturn')).toBeVisible();
     expect(errors).toEqual([]);
   } finally {
     await app.close();

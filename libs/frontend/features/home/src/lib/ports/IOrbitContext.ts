@@ -28,6 +28,8 @@ export interface IOrbitContext {
   readonly scopedRepositories: Signal<readonly IRepositoryBinding[]>;
   /** Work projection supplied only when Work is included. @public @readonly */
   readonly scopedWorkItems: Signal<readonly IWorkItem[]>;
+  /** The Board's active board, whose columns the Orbit's stage clusters follow. @public @readonly */
+  readonly activeBoardId: Signal<string | undefined>;
   /** The same selected item owned by Work. @public @readonly */
   readonly selectedWorkItem: Signal<IWorkItem | undefined>;
   /** Whether that selection was explicit. @public @readonly */

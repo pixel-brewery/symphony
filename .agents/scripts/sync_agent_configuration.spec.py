@@ -10,10 +10,23 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from sync_agent_configuration import format_content
+from sync_agent_configuration import claude_files, format_content
 
 
 class AgentConfigurationFormatterTests(unittest.TestCase):
+    def test_claude_mirror_retains_explicit_skill_derivation(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="inherited mirror ") as directory:
+            root = Path(directory)
+            skill = root / ".agents/skills/derived/SKILL.md"
+            skill.parent.mkdir(parents=True)
+            skill.write_text("---\nname: derived\ndescription: Local fixture.\nmetadata:\n  inherits: architecture\n---\n\nRead [base](../architecture/SKILL.md).\n")
+
+            projected = claude_files(root, [], {})[root / ".claude/skills/derived/SKILL.md"]
+
+            self.assertIn("metadata:\n  inherits: architecture\n---", projected)
+            self.assertIn("Read [base](../architecture/SKILL.md).", projected)
+            self.assertEqual(skill.read_text().count("metadata:"), 1)
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.root = Path(__file__).resolve().parents[2]
