@@ -27,6 +27,6 @@
     "@angular/platform-browser": "22.2.0",
     "@symphony/configuration-composition": "workspace:*",
     "rxjs": "7.8.2",
-    "vitest": "4.1.11"
+    "vitest": "5.0.5"
   }
 }

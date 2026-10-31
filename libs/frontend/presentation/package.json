@@ -51,6 +51,6 @@
     "@symphony/frontend-feature-automation": "workspace:*",
     "@symphony/frontend-feature-workspace": "workspace:*",
     "@symphony/ipc-contracts-desktop": "workspace:*",
-    "vitest": "4.1.11"
+    "vitest": "5.0.5"
   }
 }
