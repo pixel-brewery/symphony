@@ -74,11 +74,12 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
         route:
           document.querySelector('[test-id="presenter-route-scroll"]')?.getBoundingClientRect()
             .width ?? 0,
+        window: window.innerWidth,
       }));
       expect(widths.page).toBeCloseTo(widths.route, 0);
-      // The 1040 px window minus the 240 px sidebar and its 1 px divider leaves 799 px for the
-      // routed screen.
-      expect(widths.page).toBeGreaterThanOrEqual(799);
+      // The routed screen takes the whole window beside the 240 px sidebar (239 px and its 1 px
+      // divider).
+      expect(widths.page).toBeGreaterThanOrEqual(widths.window - 240);
     };
     const dismissNotifications = async (target: Page = page): Promise<void> => {
       const notifications = target.locator(
@@ -1087,13 +1088,18 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       return {
         pageWidth: pageRect?.width ?? 0,
         routeWidth: routeRect?.width ?? 0,
+        windowWidth: window.innerWidth,
+        routeBottom: routeRect?.bottom ?? 0,
+        boardBottom: boardRect?.bottom ?? 0,
         boardHeight: boardRect?.height ?? 0,
         columnHeights: columnRects.map((column) => column.height),
       };
     });
     expect(boardLayout.pageWidth).toBeCloseTo(boardLayout.routeWidth, 0);
-    expect(boardLayout.pageWidth).toBeGreaterThanOrEqual(799);
-    expect(boardLayout.boardHeight).toBeGreaterThan(500);
+    expect(boardLayout.pageWidth).toBeGreaterThanOrEqual(boardLayout.windowWidth - 240);
+    // The board fills the screen down to its bottom padding, whatever the window height.
+    expect(boardLayout.boardBottom).toBeGreaterThanOrEqual(boardLayout.routeBottom - 24);
+    expect(boardLayout.boardHeight).toBeGreaterThan(400);
     expect(boardLayout.columnHeights.length).toBeGreaterThan(0);
     for (const columnHeight of boardLayout.columnHeights) {
       expect(columnHeight).toBeGreaterThanOrEqual(boardLayout.boardHeight - 24);
