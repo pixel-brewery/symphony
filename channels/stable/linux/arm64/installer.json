@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "version": "0.1.20",
+  "version": "0.1.21",
   "platform": "linux",
   "architecture": "arm64",
   "artifact": {
-    "name": "symphony_0.1.20_arm64.deb",
-    "bytes": 137759584,
-    "sha256": "81de17fa11d7ed2f48068b9a6700da4c03730182687d5eda40d5e3e7893e5474",
-    "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.20/symphony_0.1.20_arm64.deb"
+    "name": "symphony_0.1.21_arm64.deb",
+    "bytes": 137759378,
+    "sha256": "5802e33485892eab57381052df4d1fc7ecec66b8dccaf4c1892bfb8112a17fa4",
+    "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.21/symphony_0.1.21_arm64.deb"
   }
 }
