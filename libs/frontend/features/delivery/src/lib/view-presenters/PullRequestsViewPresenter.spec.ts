@@ -12,7 +12,7 @@ import type { IPullRequestSummary } from '@symphony/domain-delivery';
 import type { IExecutionRecord } from '@symphony/domain-execution';
 import { ExternalLinkService, WorkspaceScopePresenter } from '@symphony/frontend-core';
 import { EXECUTION_OPERATIONS } from '@symphony/frontend-core/execution';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { DELIVERY_CI_OPERATIONS } from '../ports/DeliveryCiOperationsToken';
 import { DELIVERY_ROUTE_HYDRATION } from '../ports/DeliveryRouteHydrationToken';
@@ -201,6 +201,22 @@ describe('PullRequestsViewPresenter', () => {
     });
   });
 
+  it('keeps the New pull request sheet inside a short window', () => {
+    // arrange
+    const { presenter, dialogs } = arrange();
+
+    // act
+    presenter.createPullRequestCommand.execute();
+
+    // assert
+    expect(dialogs.show).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(),
+      expect.objectContaining({ maxSize: { width: '100vw', height: '86dvh' } }),
+    );
+    const sheet = dialogs.show.mock.results[0]?.value as { element: HTMLElement };
+    expect(sheet.element.style.getPropertyValue('--dialog-max-height')).toBe('86dvh');
+  });
+
   it('marks a refresh busy until both pull requests and runs are loaded', async () => {
     // arrange
     const { presenter, hydration } = arrange();
@@ -291,6 +307,14 @@ function arrange(policyOverrides: { sourceRepairEnabled?: boolean } = {}) {
     selectedWorkspaceIds: signal(['workspace']),
     canCreatePullRequest: signal(true),
   };
+  const dialogs = {
+    show: vi.fn(() => ({
+      element: document.createElement('mosaik-dialog'),
+      closed: new Subject<void>(),
+      requestAttention: vi.fn(),
+    })),
+    isShown: vi.fn(() => false),
+  };
   TestBed.configureTestingModule({
     providers: [
       PullRequestsViewPresenter,
@@ -303,7 +327,7 @@ function arrange(policyOverrides: { sourceRepairEnabled?: boolean } = {}) {
           updatePullRequestBranch: vi.fn(),
         },
       },
-      { provide: DialogService, useValue: { show: vi.fn(), isShown: vi.fn(() => false) } },
+      { provide: DialogService, useValue: dialogs },
       {
         provide: ActivatedRoute,
         useValue: {
@@ -331,7 +355,7 @@ function arrange(policyOverrides: { sourceRepairEnabled?: boolean } = {}) {
   });
   const presenter = TestBed.inject(PullRequestsViewPresenter);
   TestBed.tick();
-  return { presenter, queryParams, router, startSolver, hydration };
+  return { presenter, queryParams, router, startSolver, hydration, dialogs };
 }
 
 async function settle(): Promise<void> {

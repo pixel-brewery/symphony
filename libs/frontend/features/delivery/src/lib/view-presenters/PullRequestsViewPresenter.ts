@@ -55,6 +55,8 @@ import { PullRequestStore } from '../state/PullRequestStore';
 
 // #endregion
 
+const SHEET_MAX_HEIGHT = '86dvh';
+
 /**
  * State and commands of the `Pull requests` screen: the segmented, filterable table of open pull
  * requests and the inspector of the selected one.
@@ -923,7 +925,12 @@ export class PullRequestsViewPresenter extends Hydratable(ViewPresenter) {
       clickOutsideToClose: false,
       pressEscapeToClose: true,
       size: { width: '640px' },
+      maxSize: { width: '100vw', height: SHEET_MAX_HEIGHT },
     });
+    // `maxSize` caps only the overlay pane; the dialog surface follows its own public
+    // `--dialog-max-height`. Without it the sheet outgrows a short window, and its header, the
+    // Draft switch and the create button leave the screen; capped, its content scrolls.
+    sheet.element.style.setProperty('--dialog-max-height', SHEET_MAX_HEIGHT);
     this._activeSheet = sheet;
     sheet.closed.subscribe(() => {
       if (this._activeSheet === sheet) this._activeSheet = undefined;
