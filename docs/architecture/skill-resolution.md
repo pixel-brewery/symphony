@@ -16,4 +16,4 @@ The renderer reflects the same resolution contract instead of guessing from skil
 
 No locally inspected FLAMOX365 skill body is copied. Existing skills inform responsibility boundaries and can be imported intact through the standard package architecture.
 
-Symphony's repository-local assistant skills live at `.agents/skills` and are therefore discovered when this repository is the active source. Generated wrapper skills make scoped repository agents, instructions, prompts, and rules discoverable without duplicating their bodies. See [repository AI configuration](repository-ai-configuration.md) for source ownership and synchronization.
+Symphony's repository-local assistant skills live at `.agents/skills` and are therefore discovered when this repository is the active source. Generated wrapper skills make scoped repository agents, instructions, prompts, and rules discoverable without duplicating their bodies. See [repository AI configuration](repository-ai-configuration/README.md) for source ownership and synchronization.

@@ -195,7 +195,7 @@ yarn agents:check
 yarn skills:package
 ```
 
-See [repository AI configuration](docs/architecture/repository-ai-configuration.md) for
+See [repository AI configuration](docs/architecture/repository-ai-configuration/README.md) for
 ownership, the update flow, and deliberate differences from the reference.
 
 ## Contributing and security

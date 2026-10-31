@@ -1,6 +1,6 @@
 # Backend layering and source conventions
 
-Read for NestJS services, controllers, queries, entities, Prisma and backend composition. Combine [backend contracts](backend-contracts.md), [platform](platform.md), [backend safety](backend-safety.md) and [testing](testing.md) when those boundaries change.
+Read for application services, transport controllers, queries, entities, persistence and composition. Combine [backend contracts](backend-contracts.md), [platform](platform.md), [backend safety](backend-safety.md) and [testing](testing.md) when those boundaries change. NestJS/Prisma and `repository.execute(query)` details below apply to projects using those established owners; other stacks retain the same ownership and failure principles through their local contracts.
 
 - Keep bootstrap/composition thin and behavior in the repository's established feature owners. Local project guidance decides whether those owners are application modules or libraries; do not relocate them from generic advice.
 - Controllers declare transport and call orchestration/mapping only. No private helpers, business decisions, persistence or file algorithms. Split workflow-oriented routes into focused controllers and declare static paths before parameterized paths.

@@ -16,7 +16,7 @@ Do not pin incidental labels/static copy, variants, appearance, CSS classes, gen
 
 Use English behavioral test names, clear Arrange/Act/Assert with one meaningful Act and focused assertions. Follow local production-owner filename and helper rules; never invent an empty source owner to justify a spec. Keep fixtures typed, secrets fake and state isolated.
 
-Vitest is the standard below the browser boundary; Playwright owns browser/UI tests. Inspect the actual resolved project runner/configuration before using its APIs or claiming a target exists. Use configured coverage thresholds as evidence, not a reason to mirror implementation or test trivial delegation. No new Jest suites.
+For the TypeScript stack described here, Vitest is the standard below the browser boundary and Playwright owns browser/UI tests. Other language stacks follow their established local runner. Inspect the actual resolved project runner/configuration before using its APIs or claiming a target exists. Use configured coverage thresholds as evidence, not a reason to mirror implementation or test trivial delegation. No new Jest suites in the Vitest-based stack.
 
 ## Credible failures
 

@@ -1,26 +1,20 @@
 ---
 name: symphony-architect
-description: 'Plan, implement, refactor, test, explain, document or review engineering work in Symphony. Apply the complete shared Archipel, FLAMOX365 and Synapse architecture foundations with Symphony desktop boundaries, provider-neutral orchestration, persistence, Angular/Mosaik renderer and verification rules.'
+metadata:
+  inherits: architecture
+description: 'Plan, implement, refactor, test, explain, document or review engineering work in Symphony. Derive from the shared Pixel Brewery architecture foundations with Symphony desktop boundaries, provider-neutral orchestration, persistence, Angular/Mosaik renderer and verification rules.'
 ---
 
 # Symphony Architect
 
-Carry out the requested engineering task through Symphony's canonical owners. This native skill retains every shared foundation from the Archipel, FLAMOX365 and Synapse architects and applies them through Symphony-specific references. Read the shared workflow and local project contract first; select all applicable domains without loading unrelated references.
+Carry out the requested engineering task through Symphony's canonical owners. This skill derives from the versioned Pixel Brewery Architecture skill and applies its foundations through Symphony-specific references. Read the base skill and local project contract first; select all applicable domains without loading unrelated references.
 
-<!-- architect-core:start -->
+## Inherited architecture foundation
 
-## Select and apply the relevant guidance
-
-1. Read `AGENTS.md`, [shared workflow](references/common/workflow.md) and [local project contract](references/project.md) at task start, whether or not this skill was mentioned.
-2. Identify the requested action and actual production owners. A test task is classified by both its test kind and the code it exercises.
-3. Own task decomposition, maximum useful subagent parallelism and result integration for every task. Follow [parallel subagent coordination](references/common/workflow.md#parallel-subagent-coordination); use the active Claude Code or ChatGPT/Codex client's native subagents without waiting for another delegation request.
-4. Select all applicable domain rows below; combine domain and testing guidance. Read the common module and its project reference before editing. Do not load every reference by default.
-5. Complete the canonical-owner/reference pass before implementation; inspect installed platform capabilities and actual consumers/generators. Keep the reference map in task context.
-6. Revisit routing and work allocation when another boundary is reached. Specific project rules govern their actual owners; executable configuration resolves stale paths, versions, runners and generation assumptions.
-7. Complete the task-scoped drift/duplication pass, focused verification and local documentation/consequence gates. Preserve the requested mode and output format; ordinary implementation does not imply a full architecture report, scoring rubric, Definition of Done, legal review or release.
-
-The common modules and this workflow are synchronized across the Archipel, Mosaik and FLAMOX365 architect skills. Each skill works independently from its own checkout. Keep project-specific paths, policies and compatibility choices in the local references; compare shared changes with `.agents/scripts/sync_architect_core.py --peer <other-checkout> --check` for each peer.
-<!-- architect-core:end -->
+1. Read `AGENTS.md`, the inherited [Architecture skill](../architecture/SKILL.md), its [shared workflow](../architecture/references/common/workflow.md) and the [local project contract](references/project.md) at task start, whether or not this skill was mentioned.
+2. Follow the base workflow for task scope, ownership, subagent coordination, implementation and verification. Select all applicable common modules in the table below and combine them with the local project references; classify tests by both test kind and production owner.
+3. Apply Symphony's explicit framework and runtime translations below. Local specialization does not waive the common structural, contract, lifecycle, isolation or verification foundations.
+4. The base is installed in `.agents/skills/architecture` from `pixel-brewery/skills`; `skills-lock.json` pins its immutable commit and content digest. Validate the installed base and this derivation with `python3 .agents/skills/architecture/scripts/check_inheritance.py --root . --derived symphony-architect`. If the base is missing or invalid, restore the locked skill before dependent work; do not substitute a peer checkout or a remembered copy.
 
 ## Symphony applicability and precedence
 
@@ -33,17 +27,17 @@ User instructions and the authorized scope govern the task. Symphony's `AGENTS.m
 
 | Task or production boundary | Common module | Symphony application |
 | --- | --- | --- |
-| Every task | [Workflow](references/common/workflow.md) | [Project contract](references/project.md), [Environment](references/environment.md) |
-| Solution design, architecture review, cross-cutting concerns, refactoring or migration | [Architecture](references/common/architecture.md) | [Architecture application](references/architecture.md) |
-| TypeScript abstraction, SOLID, composition, source conventions or pattern selection | [OOP/design patterns](references/common/oop.md) | [Project source conventions](references/project.md), [Architecture application](references/architecture.md) |
-| Application services, orchestration, queries, state, SQLite or persistence | [Backend](references/common/backend.md) | [Backend integration](references/backend.md) |
-| IPC/preload/process messages, runtime validation, serialization or mobile contracts | [Backend contracts](references/common/backend-contracts.md), [API URLs](references/common/api.md) | [Transport contracts](references/backend-contracts.md) |
-| Provider ports/adapters, configuration, external I/O, credentials, lifecycle or bounded resources | [Platform](references/common/platform.md) | [Platform owners](references/platform.md), [Architecture application](references/architecture.md) |
-| Authorization, AI, files/downloads, reads, external destinations, events, feedback or cleanup | [Backend safety](references/common/backend-safety.md) | [Platform integration](references/platform.md), [Backend integration](references/backend.md) |
-| Angular renderer/mobile UI, Mosaik, TypeScript/HTML/SCSS, forms, presenters, routing or localization | [Frontend](references/common/frontend.md), [Frontend patterns](references/common/frontend-patterns.md) | [Frontend integration](references/frontend.md) |
-| Calendar days, instants, time zones, expiry, scheduling, filters or presentation | [Date/time](references/common/date-time.md) | [Temporal integration](references/date-time.md) |
-| Unit/integration/IPC/contract/component tests, mocks, timers, coverage or spec ownership | [Testing](references/common/testing.md), plus the production domain | [Test integration](references/testing.md) |
-| Playwright Electron/mobile journeys and acceptance evidence | [Browser E2E](references/common/e2e.md), plus the production domain | [Browser integration](references/e2e.md) |
+| Every task | [Workflow](../architecture/references/common/workflow.md) | [Project contract](references/project.md), [Environment](references/environment.md) |
+| Solution design, architecture review, cross-cutting concerns, refactoring or migration | [Architecture](../architecture/references/common/architecture.md) | [Architecture application](references/architecture.md) |
+| TypeScript abstraction, SOLID, composition, source conventions or pattern selection | [OOP/design patterns](../architecture/references/common/oop.md) | [Project source conventions](references/project.md), [Architecture application](references/architecture.md) |
+| Application services, orchestration, queries, state, SQLite or persistence | [Backend](../architecture/references/common/backend.md) | [Backend integration](references/backend.md) |
+| IPC/preload/process messages, runtime validation, serialization or mobile contracts | [Backend contracts](../architecture/references/common/backend-contracts.md), [API URLs](../architecture/references/common/api.md) | [Transport contracts](references/backend-contracts.md) |
+| Provider ports/adapters, configuration, external I/O, credentials, lifecycle or bounded resources | [Platform](../architecture/references/common/platform.md) | [Platform owners](references/platform.md), [Architecture application](references/architecture.md) |
+| Authorization, AI, files/downloads, reads, external destinations, events, feedback or cleanup | [Backend safety](../architecture/references/common/backend-safety.md) | [Platform integration](references/platform.md), [Backend integration](references/backend.md) |
+| Angular renderer/mobile UI, Mosaik, TypeScript/HTML/SCSS, forms, presenters, routing or localization | [Frontend](../architecture/references/common/frontend.md), [Frontend patterns](../architecture/references/common/frontend-patterns.md) | [Frontend integration](references/frontend.md) |
+| Calendar days, instants, time zones, expiry, scheduling, filters or presentation | [Date/time](../architecture/references/common/date-time.md) | [Temporal integration](references/date-time.md) |
+| Unit/integration/IPC/contract/component tests, mocks, timers, coverage or spec ownership | [Testing](../architecture/references/common/testing.md), plus the production domain | [Test integration](references/testing.md) |
+| Playwright Electron/mobile journeys and acceptance evidence | [Browser E2E](../architecture/references/common/e2e.md), plus the production domain | [Browser integration](references/e2e.md) |
 | Nx generation/linking, package exports, API documentation, skills, MCP or generated output | Production domain above | [Tooling and documentation](references/tooling.md) |
 
 Examples of combined selection:

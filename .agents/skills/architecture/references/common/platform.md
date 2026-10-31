@@ -4,11 +4,11 @@ Read for backend providers, shared capabilities, ports/adapters, configuration, 
 
 ## Ownership and configuration
 
-Inspect installed Archipel/public platform capabilities and active integrations before adding auth, configuration, database, logging, storage, OpenAPI, intelligence, health, caching or queues. Prefer public extension points and a small product-owned adapter. Keep product data/policy out of shared frameworks; a genuine framework defect belongs to its source, with review/release authority preserved. Do not copy, patch, fork or compensate for owned framework responsibilities in an application.
+Inspect installed public platform capabilities and active integrations before adding auth, configuration, database, logging, storage, OpenAPI, intelligence, health, caching or queues. Prefer public extension points and a small product-owned adapter. Keep product data/policy out of shared frameworks; a genuine framework defect belongs to its source, with review/release authority preserved. Do not copy, patch, fork or compensate for owned framework responsibilities in an application.
 
-Use an abstract class as a replaceable backend port and Nest DI token; injectable adapters extend it and receive constructor dependencies. Pure type-only contracts may remain interfaces. Hide vendor SDK types and expose stable typed intent/results/errors.
+Use an explicit abstract base for a replaceable runtime seam and inject concrete adapters through the project's composition boundary. In NestJS, the abstract class is also the DI token and injectable adapters extend it; framework-neutral projects use constructor composition and explicit factories. Pure type-only contracts may remain interfaces. Hide vendor SDK types and expose stable typed intent/results/errors.
 
-Use `ConfigService`, typed `createConfigKey<T>()` entries and one exported provider config-entries collection. Validate critical configuration at startup; document safe noncritical defaults. Environment access stays at the configured bootstrap boundary. Follow the local secret source/synchronization policy.
+Use the project's typed configuration owner. In the Archipel stack, use `ConfigService`, typed `createConfigKey<T>()` entries and one exported provider config-entries collection; framework-neutral hosts supply typed options. Validate critical configuration at startup; document safe noncritical defaults. Environment access stays at the configured bootstrap boundary. Follow the local secret source/synchronization policy.
 
 ## State, idempotency and limits
 

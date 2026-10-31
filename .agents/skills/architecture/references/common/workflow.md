@@ -1,6 +1,6 @@
 # Shared architect workflow
 
-This is the common operating contract of the Archipel, Mosaik and FLAMOX365 architects. Read it for every task together with the local `project.md`. Domain references are selected by the task; project rules identify concrete owners and deliberate exceptions.
+This is the operating contract inherited by repository-specific architects. Read it with the derived skill's local project contract. Domain references are selected by the task; project rules identify concrete owners and deliberate adaptations.
 
 ## Scope and authority
 
@@ -34,13 +34,13 @@ The leading architect is responsible for task decomposition, maximum useful para
 - Choose the smallest complete change. Do not add speculative features, abstractions, configuration or impossible failure handling. Prefer a simple function when no stateful owner or substitution contract is needed.
 - Keep edits surgical, follow the owning style and remove only the orphans introduced by the change. Do not reformat or clean up unrelated work.
 - Define objective acceptance evidence before changing behavior. Use the lowest reliable check; do not manufacture tests for static copy, style output, trivial delegation or a changed line.
-- Use the workspace's package manager and Nx for configured project tasks. Resolve project names, targets and unfamiliar flags instead of guessing them. Run focused checks first and broaden only for evidenced risk or a repository-required gate.
+- Use the workspace's package manager and configured task runner (Nx where configured). Resolve project names, targets and unfamiliar flags instead of guessing them. Run focused checks first and broaden only for evidenced risk or a repository-required gate.
 - Compare the task-scoped diff with the reference map. Check dependency direction, naming, lifecycle, generated output, duplicate execution paths and bypassed shared behavior. Correct unexplained drift.
 - Record confirmed defects discovered during authorized work through the repository's issue/project-board policy, with duplicate checks and verified persistence. Reporting a side finding does not authorize fixing it or expanding the task; keep unverified suspicions separate from the confirmed backlog.
 - Report outcome, canonical references, justified deviations, checks actually run and remaining migration or consumer prerequisites. A dependency being installed does not prove the runtime path is configured or verified.
 
 ## Shared maintenance
 
-Common modules live in `references/common/` in all architect skills. Maintain them as identical files; keep project paths, policies, client projections, region ordering and special test rules in the local references. Use `.agents/scripts/sync_architect_core.py --peer <other-checkout> --check` for each peer to detect drift; `--write` deliberately copies the invoking repository's common modules and shared entrypoint block to that peer. Inspect the diff and run each repository's configured agent synchronization afterward, where available. Each skill remains usable without the peer checkouts during ordinary use.
+Common modules are maintained only in the central `pixel-brewery/skills` Architecture skill. Derived skills load this installed base and keep project paths, policies, client projections, region ordering and special test rules in local references. Pin the imported skill to a reviewed Git commit through the Skills CLI and retain its standard `skills-lock.json` entry. Run `scripts/check_inheritance.py` from the installed base with the consuming `--root` and local `--derived` name; regenerate configured client mirrors after deliberate updates. Ordinary use requires no peer checkout or network access. Do not copy common files into a local skill or modify the imported base in place.
 
 For Bicep/infrastructure templates, use lowerCamelCase identifiers, documented parameters (`@description`), symbolic resources and `.id` dependencies rather than raw `resourceId()`/unnecessary `dependsOn`, and never output secrets. Do not introduce infrastructure merely because a former instruction mentioned it.

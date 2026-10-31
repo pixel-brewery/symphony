@@ -4,7 +4,7 @@
 
 ## Ziel und Garantien
 
-Der globale Bereich **Skills** des Einstellungsfensters ordnet die eingebauten Prozessrollen und die zugeordneten Skill-Pakete den fünf Schritten des Lieferablaufs zu. Er besitzt das Ergänzen der Rollenanweisungen, das Zuordnen und Lösen von Skill-Paketen sowie Anlegen, Bearbeiten, Importieren, Exportieren und Verwerfen gemeinsam genutzter Pakete. Er ersetzt die frühere Seite `/main/skills` des Hauptfensters. Das funktionale Verhalten steht unter [Skills](../../project/skills/README.md); Paketformat und Auflösung beschreiben [Skill-Modell](../skill-model.md) und [Skill-Auflösung](../skill-resolution.md).
+Der globale Bereich **Skills** der Einstellungen ordnet die eingebauten Prozessrollen und die zugeordneten Skill-Pakete den fünf Schritten des Lieferablaufs zu. Er besitzt das Ergänzen der Rollenanweisungen, das Zuordnen und Lösen von Skill-Paketen sowie Anlegen, Bearbeiten, Importieren, Exportieren und Verwerfen gemeinsam genutzter Pakete. Er ersetzt die frühere Seite `/main/skills` des Hauptfensters. Das funktionale Verhalten steht unter [Skills](../../project/skills/README.md); Paketformat und Auflösung beschreiben [Skill-Modell](package-model.md) und [Skill-Auflösung](../skill-resolution.md).
 
 Garantien:
 
@@ -17,7 +17,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Abschnittsbeitrag `skills`, Suchbeiträge, Werkzeugleistenaktionen, Schrittprojektion, die Sheets für Rollenanweisungen, Katalog, Paketdetails und Import, Lösen einer Zuordnung, Weiterleitung von `/main/skills`, Paletten- und Kontextsuchtreffer.
-- Nicht enthalten: Paketformat, Wurzeln, Validierung und Ausführungsschnappschüsse ([Skill-Modell](../skill-model.md), [Skill-Auflösung](../skill-resolution.md)); wer einen Schritt erledigt ([AI-Team-Einstellungen](../ai-team/README.md)); Sheet-, Rückfrage- und Suchmechanik der Einstellungen ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)).
+- Nicht enthalten: Paketformat, Wurzeln, Validierung und Ausführungsschnappschüsse ([Skill-Modell](package-model.md), [Skill-Auflösung](../skill-resolution.md)); wer einen Schritt erledigt ([AI-Team-Einstellungen](../ai-team/README.md)); Sheet-, Rückfrage- und Suchmechanik der Einstellungen ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)).
 
 ## Verantwortungsgrenzen
 
@@ -176,7 +176,7 @@ Das Hauptfenster hat keinen Navigationsbeitrag `skills`.
 ## Verwandte Dokumentation
 
 - [Skills](../../project/skills/README.md)
-- [Skill-Modell](../skill-model.md)
+- [Skill-Modell](package-model.md)
 - [Skill-Auflösung](../skill-resolution.md)
 - [AI-Team-Einstellungen](../ai-team/README.md)
 - [Automation](../automation/README.md)

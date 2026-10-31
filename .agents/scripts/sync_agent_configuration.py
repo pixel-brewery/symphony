@@ -204,9 +204,12 @@ def claude_files(root: Path, guidance: list[Guidance], wrappers: dict[Path, str]
         description = metadata.get("description")
         if not description:
             raise ValueError(f".agents/skills/{name}/SKILL.md needs a description in its frontmatter")
+        header = text.split("---\n", 2)[1]
+        extra = re.search(r"^metadata:[ \t]*\n(?:[ \t]+[^\n]*\n?)*", header, re.MULTILINE)
+        extra_header = extra.group(0).rstrip() + "\n" if extra else ""
         source = f".agents/skills/{name}/SKILL.md"
         expected[root / ".claude" / "skills" / name / "SKILL.md"] = (
-            f"---\nname: {metadata.get('name', name)}\ndescription: {quote(description)}\n---\n\n"
+            f"---\nname: {metadata.get('name', name)}\ndescription: {quote(description)}\n{extra_header}---\n\n"
             f"<!-- {MARKER} -->\n\n"
             f"Source: [{source}](../../../{source}). Relative `references/` and `scripts/` paths resolve there.\n\n"
             f"{body.strip()}\n"
@@ -369,6 +372,15 @@ def main() -> int:
         if skill_copies and not tracked_copies:
             shutil.rmtree(root / ".opencode" / "skills")
             print(f"Removed {len(skill_copies)} OpenCode skill copies recreated by nx configure-ai-agents.")
+
+    if (root / ".agents/skills/symphony-architect/SKILL.md").is_file():
+        inheritance = subprocess.run(
+            [sys.executable, str(root / ".agents/scripts/sync_architect_core.py"), "--root", str(root), "--check"],
+            cwd=root,
+            check=False,
+        )
+        if inheritance.returncode:
+            return inheritance.returncode
 
     package_command = [sys.executable, str(root / ".agents" / "scripts" / "package_skills.py")]
     if args.check:

@@ -4,7 +4,7 @@ Read for forms, commands, async options, drawers, routing, localization and serv
 
 ## Forms and actions
 
-Use typed Signal Form models, schema validators and the existing form-state integration. Observe field signals for cascading resets/invariants without feedback loops. Invalid submit produces actionable inline feedback and focus/scroll through a DOM owner; do not call the mutation. Define duplicate-request protection separately from validity. The local project decides footer visibility/disabled behavior.
+Use the framework's typed form model, schema validators and existing form-state integration; Angular Signal Forms projects use typed Signal Form models and field signals. Observe the owned field state for cascading resets/invariants without feedback loops. Invalid submit produces actionable inline feedback and focus/scroll through a DOM owner; do not call the mutation. Define duplicate-request protection separately from validity. The local project decides footer visibility/disabled behavior.
 
 In a presenter architecture, Views compose templates, presenters own application state/commands, directives own DOM coordination and pure pipes own display transformations. Expose read-only signals and commands with deliberate enabled-state signals; keep handlers private. Do not disguise presentation formatting methods as getters or inject DOM querying into presenters.
 
@@ -16,7 +16,7 @@ Keep mounted select/combo controls stable and render current options directly. D
 
 Reserve loading/validation/counter space, preserve surrounding dimensions and scroll, and avoid state-driven movement of unrelated controls. Capability/permission gates can remove actions; temporary state must follow the local stable-layout and executable-feedback rules.
 
-Drawers have one constrained scroll owner, not independently scrolling shell and pane. Reuse Mosaik semantic controls for focus, keyboard, accessibility and interaction. Menu actions are separate menu items with no nested independent button/press-button; destructive press-and-hold behavior outside menus uses the owned control when required by the local policy. Simple empty states stay inline unless a wrapper owns actual behavior.
+Drawers have one constrained scroll owner, not independently scrolling shell and pane. Reuse the installed design system's semantic controls (Mosaik where used) for focus, keyboard, accessibility and interaction. Menu actions are separate menu items with no nested independent button/press-button; destructive press-and-hold behavior outside menus uses the owned control when required by the local policy. Simple empty states stay inline unless a wrapper owns actual behavior.
 
 Use typed DataTable display/sort projections with deliberate null ordering; apply actual project selection/default settings. Use theme tokens and the local layout owner; do not copy another project's CSS policy or table flags.
 

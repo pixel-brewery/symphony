@@ -11,6 +11,8 @@ Read for TypeScript/HTML/SCSS application UI, Angular and wrappers. Combine [fro
 
 ## Angular
 
+Apply this section only to Angular consumers and their local supported-version contract. It does not request Angular dependencies in other projects.
+
 Use standalone components without redundant `standalone: true`, signals/read-only derived state, `input()`/`output()`, OnPush and native `@if`/`@for`/`@switch`. Use framework-appropriate `inject()` and run effects in an injection/lifecycle context. Signals and observables have no `$` suffix. Keep observable subscriptions scoped or use async pipe/`toSignal`.
 
 Use Signal Forms for supported new form workflows and follow the local migration policy. Do not mix form ownership models. Cross-field validation lives in the form schema/reusable validators; reactive field invariants observe signals rather than duplicating state through DOM value-change handlers.

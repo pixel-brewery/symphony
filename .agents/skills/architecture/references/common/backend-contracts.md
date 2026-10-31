@@ -2,6 +2,12 @@
 
 Read for endpoint models, transport wiring, validation, serialization, OpenAPI, uploads and clients. Combine the local `backend-contracts.md` with this guide: its verified projection and bootstrap rules are part of the operation contract.
 
+For every transport, keep one owned runtime contract, validate untrusted input, preserve the distinction between domain values and wire projection, and verify serialization together with actual consumers. Preserve versioning, errors, status/media types and backward compatibility at the real boundary. IPC, stdio and framework-neutral contracts use their local validators and transport owners.
+
+## Conditional NestJS HTTP guidance
+
+The following NestJS, Swagger, Zod and response-envelope details apply only when the consuming project uses that stack. They are not requirements to add those dependencies to a framework-neutral library or desktop/IPC application. A derived project's explicit transport adaptations retain the general contract and validation foundations above.
+
 ## Availability and migration
 
 Inspect the operation, installed Nest/Swagger/Zod/Archipel APIs, actual bootstrap, generated OpenAPI, configured generator/templates and real consumers. Standard Schema is supported only when runtime validation, response serialization, JSON Schema/OpenAPI projection and the real client path all work for the boundary.
