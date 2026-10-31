@@ -46,24 +46,46 @@ test('opens the command palette with ⌘K, moves with the arrows, opens with Ent
     await expect(page.getByTestId('command-palette-option-command:new-work-item')).toBeVisible();
     await expect(page.getByTestId('command-palette-hint')).toHaveText('↑↓ to move · ↵ to open');
 
-    // act: typing finds the work item, the arrows move the selection and wrap around
+    // This fresh profile has no CI bindings and Arcade is off: its commands stay stable.
+    const rows = palette.locator('[role="option"]');
+    const commandIds = [
+      'command:new-work-item',
+      'command:sync-now',
+      'command:settings',
+      'navigation:home',
+      'navigation:inbox',
+      'navigation:board',
+      'navigation:pull-requests',
+      'navigation:actions',
+      'navigation:orbit',
+    ];
+    await expect(rows).toHaveCount(commandIds.length);
+    for (const id of commandIds) {
+      await expect(page.getByTestId(`command-palette-option-${id}`)).toBeVisible();
+    }
+    const firstCommand = page.getByTestId('command-palette-option-command:new-work-item');
+    await expect(firstCommand).toHaveAttribute('aria-selected', 'true');
+
+    // act: the arrows move between commands and wrap at both ends
+    await search.press('ArrowDown');
+    await expect(firstCommand).toHaveAttribute('aria-selected', 'false');
+    await expect(rows.nth(1)).toHaveAttribute('aria-selected', 'true');
+    await search.press('ArrowUp');
+    await expect(firstCommand).toHaveAttribute('aria-selected', 'true');
+    await search.press('ArrowUp');
+    await expect(rows.nth(commandIds.length - 1)).toHaveAttribute('aria-selected', 'true');
+    await search.press('ArrowDown');
+    await expect(firstCommand).toHaveAttribute('aria-selected', 'true');
+
+    // act: typing finds the work item and resets the selection
     await search.pressSequentially('execution diagnostics');
     const workItem = page.getByTestId('command-palette-option-work-item:work-item-138');
 
     // assert
+    await expect(rows).toHaveCount(1);
     await expect(page.getByTestId('command-palette-group-work-items')).toHaveText('WORK ITEMS');
     await expect(workItem).toHaveAttribute('aria-selected', 'true');
     await expect(workItem).toContainText('#138 · Expose execution diagnostics');
-    const rows = palette.locator('[role="option"]');
-    const rowCount = await rows.count();
-    await search.press('ArrowDown');
-    await expect(workItem).toHaveAttribute('aria-selected', rowCount > 1 ? 'false' : 'true');
-    await search.press('ArrowUp');
-    await expect(workItem).toHaveAttribute('aria-selected', 'true');
-    await search.press('ArrowUp');
-    await expect(rows.nth(rowCount - 1)).toHaveAttribute('aria-selected', 'true');
-    await search.press('ArrowDown');
-    await expect(workItem).toHaveAttribute('aria-selected', 'true');
 
     // act: Esc closes without opening anything
     await search.press('Escape');

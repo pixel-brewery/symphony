@@ -23,7 +23,7 @@ import { prepareMainWindow } from './prepareMainWindow';
 
 test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electron', async () => {
   // arrange
-  test.setTimeout(180_000);
+  test.setTimeout(240_000);
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
   const expectsNativeWindows = process.env['SYMPHONY_E2E_WINDOW_MODE'] === 'visible';
@@ -49,7 +49,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       SYMPHONY_EXTERNAL_LINKS_MODE: 'blocked',
       SYMPHONY_WORKSPACE_MODE: 'simulated',
       SYMPHONY_AGENT_MODE: 'simulated',
-      SYMPHONY_SIMULATED_AGENT_STEP_DELAY_MS: '1200',
+      SYMPHONY_SIMULATED_AGENT_STEP_DELAY_MS: '4000',
       SYMPHONY_SIMULATED_ADDITIONAL_WORK_ITEMS: '12',
     },
   });
