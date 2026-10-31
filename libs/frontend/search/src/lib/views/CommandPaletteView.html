@@ -63,7 +63,7 @@
         [attr.test-id]="'command-palette-option-' + result.id"
         tabindex="-1"
         [attr.aria-selected]="presenter.selectedIndex() === section.offset + row"
-        (pointermove)="presenter.selectCommand.execute(section.offset + row)"
+        (pointermove)="onPointerMove($event, section.offset + row)"
         (mousedown)="$event.preventDefault()"
         (click)="presenter.openCommand.execute(result)"
         (keydown.enter)="$event.stopPropagation(); presenter.openCommand.execute(result)"

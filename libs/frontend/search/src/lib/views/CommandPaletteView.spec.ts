@@ -41,6 +41,18 @@ describe('CommandPaletteView', () => {
     expect(stopPropagation).toHaveBeenCalledTimes(key === 'Escape' ? 1 : 0);
   });
 
+  it('selects a row only when the pointer really moved over it', () => {
+    // arrange
+    const { view, presenter } = setup();
+
+    // act
+    view.onPointerMove({ movementX: 0, movementY: 0 }, 0);
+    view.onPointerMove({ movementX: 0, movementY: 3 }, 2);
+
+    // assert
+    expect(presenter.selectCommand.execute).toHaveBeenCalledExactlyOnceWith(2);
+  });
+
   it('leaves typing to the search field and keeps Tab inside the palette', () => {
     // arrange
     const { view, presenter } = setup();
@@ -89,6 +101,7 @@ function setup() {
     dispose: vi.fn(),
     selectedIndex: signal(0),
     moveSelectionCommand: { execute: vi.fn() },
+    selectCommand: { execute: vi.fn() },
     openCommand: { execute: vi.fn() },
     closeCommand: { execute: vi.fn() },
   };
@@ -105,6 +118,9 @@ function setup() {
   });
   const fixture = TestBed.createComponent(CommandPaletteView);
   fixture.detectChanges();
-  const view = fixture.componentInstance as unknown as { onKeydown(event: KeyboardEvent): void };
+  const view = fixture.componentInstance as unknown as {
+    onKeydown(event: KeyboardEvent): void;
+    onPointerMove(event: Pick<PointerEvent, 'movementX' | 'movementY'>, index: number): void;
+  };
   return { fixture, view, presenter };
 }

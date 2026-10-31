@@ -96,6 +96,19 @@ export class CommandPaletteView extends View<CommandPaletteViewPresenter> {
   }
 
   /**
+   * Selects the row under the pointer when the pointer actually moved. Chromium also reports a
+   * pointer move without movement when rows shift under a resting pointer, as they do while the
+   * person types; that must not take the selection away from the keyboard.
+   *
+   * @param event - Pointer move over a row.
+   * @param index - Index of the row among all results.
+   */
+  protected onPointerMove(event: PointerEvent, index: number): void {
+    if (event.movementX === 0 && event.movementY === 0) return;
+    this.presenter.selectCommand.execute(index);
+  }
+
+  /**
    * Handles the palette's keys: `↑`/`↓` move, `↵` opens, `esc` closes, `Tab` stays in the palette.
    *
    * @param event - Key event from the search field or a row.
