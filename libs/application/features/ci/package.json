@@ -20,7 +20,7 @@
     "@symphony/domain-workspace": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "26.6.3",
+    "@types/node": "26.6.5",
     "vitest": "4.1.11"
   }
 }
