@@ -15,11 +15,13 @@ const temporaryDirectories: string[] = [];
 
 const TEST_AVAILABLE_FILESYSTEM_BYTES = 100 * 1024 ** 3;
 
+// Removing the 11,000-file tree of the oversized-tree case takes longer than the default hook
+// timeout on Windows runners.
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
-    rmSync(directory, { force: true, recursive: true });
+    rmSync(directory, { force: true, recursive: true, maxRetries: 3 });
   }
-});
+}, 60_000);
 
 describe('StorageGovernor', () => {
   it('resolves VM profiles against detected host and storage capacity', () => {

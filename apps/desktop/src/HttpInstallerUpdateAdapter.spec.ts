@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HttpInstallerUpdateAdapter } from './HttpInstallerUpdateAdapter';
 import type { IInstallerUpdate } from './update-coordinator';
@@ -206,8 +206,9 @@ describe('HttpInstallerUpdateAdapter', () => {
     expect(progress).toEqual([4, 10]);
     expect(dirname(dirname(filePath))).toBe(root);
     expect(new Uint8Array(await readFile(filePath))).toEqual(content);
-    expect((await stat(filePath)).mode & 0o777).toBe(0o600);
-    expect(await readdir(root)).toEqual([dirname(filePath).split('/').at(-1)]);
+    // Windows has no POSIX permission bits: Node reports every writable file as 0o666 there.
+    expect((await stat(filePath)).mode & 0o777).toBe(process.platform === 'win32' ? 0o666 : 0o600);
+    expect(await readdir(root)).toEqual([basename(dirname(filePath))]);
   });
 
   it.each([
