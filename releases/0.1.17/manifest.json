@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.17",
+  "sourceCommit": "94e17095d05173fb778de44ce6e0acf60d700047",
+  "createdAt": "2026-10-31T00:12:48.017Z",
+  "files": [
+    {
+      "platform": "win32",
+      "architecture": "arm64",
+      "name": "SymphonySetup.exe",
+      "bytes": 196960768,
+      "sha256": "109bab8d3d2361a1d21dab633f4305527b93adda06e648d412e649f8dc0a25e0",
+      "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.17/SymphonySetup.exe"
+    },
+    {
+      "platform": "linux",
+      "architecture": "arm64",
+      "name": "symphony_0.1.17_arm64.deb",
+      "bytes": 137759936,
+      "sha256": "3d07ddce7ff18fc7218775b41a3602d37ce8426299bbeff8ab14c1a878635f42",
+      "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.17/symphony_0.1.17_arm64.deb"
+    },
+    {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "name": "Symphony-darwin-arm64-0.1.17.dmg",
+      "bytes": 172328485,
+      "sha256": "973e98042c2d10beb808b04c192443a2f4117eeb74d413beb62cef6f2e2c697f",
+      "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.17/Symphony-darwin-arm64-0.1.17.dmg"
+    }
+  ]
+}

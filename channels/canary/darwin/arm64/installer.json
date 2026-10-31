@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.17",
+  "platform": "darwin",
+  "architecture": "arm64",
+  "artifact": {
+    "name": "Symphony-darwin-arm64-0.1.17.dmg",
+    "bytes": 172328485,
+    "sha256": "973e98042c2d10beb808b04c192443a2f4117eeb74d413beb62cef6f2e2c697f",
+    "url": "https://github.com/pixel-brewery/symphony/releases/download/v0.1.17/Symphony-darwin-arm64-0.1.17.dmg"
+  }
+}
