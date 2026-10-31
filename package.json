@@ -2,7 +2,7 @@
   "name": "symphony",
   "productName": "Symphony",
   "description": "A local-first Electron application for coordinating provider-neutral software-delivery workflows.",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "private": true,
   "author": "Pixel Brewery and Symphony contributors",
   "license": "MIT",
