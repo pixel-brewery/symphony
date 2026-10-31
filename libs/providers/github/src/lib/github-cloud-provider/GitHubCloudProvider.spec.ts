@@ -1750,6 +1750,107 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
     });
   });
 
+  it('collects local candidates without querying an inaccessible workspace that disables local CI', async () => {
+    // arrange
+    const defaults = deliverySettings('/tmp/symphony-local-ci-workspace-scope');
+    const settings: IApplicationSettings = {
+      ...defaults,
+      activeViewScope: { ...defaults.activeViewScope, workspaceIds: ['cloud-only'] },
+      workspaces: defaults.workspaces.flatMap((workspace) => [
+        { ...workspace, localCiEnabled: true },
+        { ...workspace, id: 'cloud-only', displayName: 'Cloud only', localCiEnabled: false },
+      ]),
+      connections: [
+        ...defaults.connections,
+        {
+          id: 'github-cloud-only',
+          workspaceId: 'cloud-only',
+          kind: 'github',
+          displayName: 'Cloud GitHub',
+          hostname: 'github.com',
+          gitProtocol: 'https',
+        },
+      ],
+      repositoryBindings: [
+        ...defaults.repositoryBindings,
+        {
+          id: 'repository-cloud-only',
+          workspaceId: 'cloud-only',
+          sourceControlConnectionId: 'github-cloud-only',
+          displayName: 'unavailable/project',
+          provider: 'github',
+          host: 'github.com',
+          owner: 'unavailable',
+          name: 'project',
+          defaultBranch: 'main',
+          localPath: '/tmp/symphony-cloud-only',
+          enabled: true,
+        },
+      ],
+      ciBindings: [
+        ...defaults.ciBindings,
+        {
+          id: 'ci-cloud-only',
+          workspaceId: 'cloud-only',
+          repositoryBindingId: 'repository-cloud-only',
+          sourceControlConnectionId: 'github-cloud-only',
+          displayName: 'Cloud Actions',
+          provider: 'github-actions',
+          enabled: true,
+        },
+      ],
+    };
+    const requests: string[] = [];
+    const provider = new GitHubCloudProvider({
+      settings: () => settings,
+      token: async () => 'test-token',
+      execute: async (_command, arguments_) => {
+        const path = arguments_.at(-1) ?? '';
+        requests.push(path);
+        if (path.startsWith('repos/unavailable/project/')) {
+          throw new Error('gh: Not Found (HTTP 404)');
+        }
+        if (path === 'repos/flamox/platform/actions/runs?per_page=50') {
+          return JSON.stringify({
+            workflow_runs: [
+              {
+                id: 203,
+                name: 'PR Quality',
+                status: 'queued',
+                run_attempt: 1,
+                created_at: '2026-08-17T10:00:00.000Z',
+              },
+            ],
+          });
+        }
+        if (path === 'repos/flamox/platform/actions/runs/203/jobs?filter=all&per_page=100') {
+          return JSON.stringify({
+            jobs: [
+              {
+                run_attempt: 1,
+                status: 'queued',
+                labels: ['self-hosted', 'Linux', 'symphony-local-ci', 'symphony-run-203'],
+              },
+            ],
+          });
+        }
+        throw new Error(`Unexpected GitHub path: ${path}`);
+      },
+    });
+
+    // act
+    const candidates = await provider.listManagedLocalRunCandidates();
+
+    // assert
+    expect(candidates).toEqual([
+      expect.objectContaining({ id: 'ci-1:203', workspaceId: 'personal', status: 'queued' }),
+    ]);
+    expect(requests).toEqual([
+      'repos/flamox/platform/actions/runs?per_page=50',
+      'repos/flamox/platform/actions/runs/203/jobs?filter=all&per_page=100',
+    ]);
+  });
+
   it('does not query GitHub for local candidates when no workspace enables local CI', async () => {
     // arrange
     const settings = deliverySettings('/tmp/symphony-local-ci-disabled');

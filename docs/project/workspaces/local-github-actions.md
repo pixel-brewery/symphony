@@ -8,6 +8,8 @@ Im Bereich **Local GitHub Actions** entscheidest du, ob die GitHub-Actions-Workf
 
 Der Schalter gilt sofort. Scheitert das Speichern, zeigt er wieder den gespeicherten Stand. Solange ein lokaler Lauf ausgeführt wird, ist er gesperrt.
 
+Die automatische Übernahme berücksichtigt nur Workspaces mit eingeschalteten lokalen Läufen, unabhängig von der Workspace-Auswahl im Hauptfenster. Eine nicht erreichbare GitHub-Anbindung eines Workspace mit ausgeschalteten lokalen Läufen hält die Übernahme für andere freigegebene Workspaces nicht auf.
+
 ## Gastabbild
 
 Die Gruppe **Guest image** wählt, welches veröffentlichte GitHub-Runner-Abbild der Workspace nachbildet. Symphony liest dessen Softwarebericht und installiert die angegebenen Pakete, die Node.js-Laufzeit und die Umgebung in der virtuellen Maschine.
