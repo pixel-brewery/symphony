@@ -2108,6 +2108,14 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    */
   private onExecuteFilterByColumnCommand(columnId?: string): void {
     this.selectedColumnId.set(columnId);
+    // A column drill-down (`?column=`) is part of the board's history entry. Keeping the address in
+    // step means that returning with Back shows the board as it was left, not the drill-down.
+    if (this._queryParamMap().get('column') === null) return;
+    void this._router.navigate([], {
+      queryParams: { column: columnId ?? null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   /**

@@ -221,6 +221,26 @@ describe('BoardViewPresenter', () => {
     expect(requestAttention).toHaveBeenCalledOnce();
   });
 
+  it('keeps a column drill-down in the address in step with the column filter', () => {
+    // arrange
+    const drillDown = arrange(true, { queryParameters: { column: 'qualified' } });
+    TestBed.resetTestingModule();
+    const plain = arrange(true, { queryParameters: {} });
+
+    // act
+    drillDown.presenter.filterByColumnCommand.execute(undefined);
+    plain.presenter.filterByColumnCommand.execute('ready');
+
+    // assert
+    expect(drillDown.navigate).toHaveBeenCalledExactlyOnceWith([], {
+      queryParams: { column: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    expect(plain.navigate).not.toHaveBeenCalled();
+    expect(plain.presenter.selectedColumnId()).toBe('ready');
+  });
+
   it('opens the new-work-item sheet in the column whose plus was used', () => {
     // arrange
     const { presenter, openSheet } = arrange(true, { canCreate: true, queryParameters: {} });
