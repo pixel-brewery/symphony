@@ -1,0 +1,351 @@
+<ng-template mosaikDrawerHeader>
+  <mosaik-drawer-header [text]="presenter.run().title">
+    <div slot="subHeader" class="flex min-w-0 flex-col gap-1">
+      @if (presenter.run().sources?.length) { @for (source of presenter.run().sources; track
+      source.kind) {
+      <span [attr.test-id]="'action-detail-source-' + source.kind"
+        >{{ source.label }} · {{ source.state | actionStateLabel }}</span
+      >
+      } } @else {
+      <span
+        >{{ presenter.run().sourceLabel }} · {{ presenter.run().state | actionStateLabel }}</span
+      >
+      } @if (presenter.githubContext(); as context) {
+      <div class="flex min-w-0 flex-wrap items-center gap-x-1">
+        <mosaik-anchor
+          test-id="action-detail-open-repository"
+          [label]="context.repositoryLabel"
+          [href]="context.repositoryUrl"
+          [target]="'_blank'"
+          [rel]="'noreferrer'"
+        />
+        <span aria-hidden="true">·</span>
+        @if (context.targetUrl; as targetUrl) {
+        <mosaik-anchor
+          test-id="action-detail-open-run"
+          [label]="context.branch ?? 'Open run in GitHub'"
+          [href]="targetUrl"
+          [target]="'_blank'"
+          [rel]="'noreferrer'"
+        />
+        } @else {
+        <span>{{ context.branch ?? 'Open run in GitHub' }}</span>
+        }
+      </div>
+      } @else {
+      <span>{{ presenter.run().message }}</span>
+      }
+    </div>
+    <mosaik-dismiss
+      slot="suffix"
+      test-id="action-detail-close"
+      (click)="presenter.closeCommand.execute()"
+    />
+  </mosaik-drawer-header>
+</ng-template>
+
+@if (presenter.controls().canCancelRemote || presenter.controls().canStopLocal ||
+presenter.controls().canRerunRemote || presenter.controls().canRunLocally) {
+<ng-template mosaikDrawerFooter>
+  <div class="flex w-full flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-2">
+      @if (presenter.controls().canCancelRemote) {
+      <mosaik-button
+        test-id="action-detail-cancel-remote"
+        [label]="'Cancel remote run'"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        (click)="presenter.cancelRemoteRunCommand.execute()"
+      />
+      } @if (presenter.controls().canStopLocal) {
+      <mosaik-button
+        test-id="action-detail-stop-local"
+        [label]="'Stop local runner'"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        (click)="presenter.stopLocalRunCommand.execute()"
+      />
+      }
+    </div>
+    <div class="ml-auto flex items-center gap-2">
+      @if (presenter.controls().canRerunRemote) {
+      <mosaik-button
+        test-id="action-detail-run-remote"
+        [label]="'Run remotely'"
+        [appearance]="'solid'"
+        [variant]="'highlight'"
+        (click)="presenter.rerunRemoteCommand.execute()"
+      />
+      } @if (presenter.controls().canRunLocally) {
+      <mosaik-button
+        test-id="action-detail-run-local"
+        [label]="'Run locally'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        (click)="presenter.runLocallyCommand.execute()"
+      />
+      }
+    </div>
+  </div>
+</ng-template>
+}
+
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="action-detail-drawer"
+    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+  >
+    @if (presenter.isHydrating()) {
+    <!-- The loaded layout with its text as skeleton lines: the state and start time row, then the
+         Action log with its static heading and two jobs with their steps in the real timeline. -->
+    <div
+      test-id="action-detail-loading-skeleton"
+      class="grid gap-3 p-2"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading Action log"
+    >
+      <div class="flex flex-wrap justify-between gap-x-3 gap-y-2">
+        <div class="flex h-3 items-center">
+          <mosaik-skeleton [width]="'5rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+        <div class="flex h-3 items-center">
+          <mosaik-skeleton [width]="'10rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+      </div>
+      <section class="grid min-h-0 gap-2">
+        <header class="flex items-center justify-between gap-3">
+          <div class="grid min-w-0 gap-1">
+            <h3 class="m-0">Action log</h3>
+            <mosaik-hint [text]="'Jobs, steps, and their protocol reported by the workflow.'" />
+          </div>
+        </header>
+        <div class="box-border px-1 py-2">
+          <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+            @for (job of [1, 2]; track job) {
+            <mosaik-timeline-item>
+              <mosaik-timeline-marker
+                [appearance]="'soft'"
+                [variant]="'neutral'"
+                [size]="'medium'"
+              />
+              <mosaik-timeline-content>
+                <article class="grid w-full min-w-0 gap-2">
+                  <header class="grid min-w-0 gap-1">
+                    <div class="flex h-3 items-center">
+                      <mosaik-skeleton
+                        [width]="job === 1 ? '9rem' : '7rem'"
+                        [height]="'14px'"
+                        [shimmer]="true"
+                      />
+                    </div>
+                    <div class="flex h-3 items-center">
+                      <mosaik-skeleton [width]="'4.5rem'" [height]="'14px'" [shimmer]="true" />
+                    </div>
+                  </header>
+                  <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+                    @for (step of [1, 2, 3]; track step) {
+                    <mosaik-timeline-item>
+                      <mosaik-timeline-marker
+                        [appearance]="'soft'"
+                        [variant]="'neutral'"
+                        [size]="'small'"
+                      />
+                      <mosaik-timeline-content>
+                        <div class="flex w-full min-w-0 items-center justify-between gap-2">
+                          <div class="flex h-3 items-center">
+                            <mosaik-skeleton
+                              [width]="step === 2 ? '11rem' : '8rem'"
+                              [height]="'14px'"
+                              [shimmer]="true"
+                            />
+                          </div>
+                          <mosaik-skeleton [width]="'4rem'" [height]="'12px'" [shimmer]="true" />
+                        </div>
+                      </mosaik-timeline-content>
+                    </mosaik-timeline-item>
+                    }
+                  </mosaik-timeline>
+                </article>
+              </mosaik-timeline-content>
+            </mosaik-timeline-item>
+            }
+          </mosaik-timeline>
+        </div>
+      </section>
+    </div>
+    } @else {
+    <div class="grid gap-3 p-2">
+      <div class="flex flex-wrap justify-between gap-x-3 gap-y-2">
+        <span>{{ presenter.run().state | actionStateLabel }}</span>
+        @if (presenter.run().startedAt; as startedAt) {
+        <time [attr.datetime]="startedAt">{{ startedAt | date: 'medium' }}</time>
+        }
+      </div>
+
+      @if (presenter.details()?.workflowGraph; as graph) {<symphony-ci-job-graph
+        [graph]="graph"
+        [jobs]="presenter.details()?.jobs ?? []"
+        (selected)="presenter.selectJobCommand.execute($event)"
+      />} @if (presenter.details()?.pendingApprovals?.length) {
+      <section class="grid gap-3" test-id="ci-pending-approvals">
+        <strong>Pending deployment reviews</strong
+        ><span
+          >Exact version: {{ presenter.details()?.workflowGraph?.revision ??
+          presenter.currentCiRun()?.revision }}</span
+        >
+        <mosaik-textbox
+          test-id="ci-approval-comment"
+          [label]="'Review reason'"
+          [ngModel]="presenter.approvalComment()"
+          (ngModelChange)="presenter.approvalComment.set($event)"
+        />
+        @for (approval of presenter.details()?.pendingApprovals ?? []; track approval.environmentId)
+        {
+        <div class="flex flex-wrap items-center gap-2">
+          <span>Target: {{ approval.environment }}</span>@if (approval.waitUntil) {<span
+            >Wait until {{ approval.waitUntil | date:'medium' }}</span
+          >}
+          <mosaik-button
+            [attr.test-id]="'ci-approve-'+approval.environmentId"
+            [label]="'Approve this version'"
+            [disabled]="!approval.canApprove || presenter.approvalBusy() || presenter.approvalUncertain() || !presenter.approvalComment().trim()"
+            (click)="presenter.reviewApprovalCommand.execute([approval.environmentId,'approved'])"
+          />
+          <mosaik-button
+            [label]="'Reject'"
+            [variant]="'danger'"
+            [disabled]="!approval.canApprove || presenter.approvalBusy() || presenter.approvalUncertain() || !presenter.approvalComment().trim()"
+            (click)="presenter.reviewApprovalCommand.execute([approval.environmentId,'rejected'])"
+          />
+        </div>
+        } @if (presenter.approvalUncertain()) {<mosaik-hint
+          [text]="'The review outcome is unconfirmed. Inspect the run on GitHub before reviewing again.'"
+        />}
+      </section>
+      }
+      <section class="grid min-h-0 gap-2">
+        <header class="flex items-center justify-between gap-3">
+          <div class="grid min-w-0 gap-1">
+            <h3 class="m-0">Action log</h3>
+            <mosaik-hint [text]="'Jobs, steps, and their protocol reported by the workflow.'" />
+          </div>
+          @if (presenter.isRunning()) {
+          <mosaik-progress-ring
+            test-id="action-detail-progress"
+            [attr.aria-label]="'Action in progress'"
+            [isIndeterminate]="true"
+            [variant]="'neutral'"
+            [radius]="8"
+            [thickness]="2"
+          />
+          }
+        </header>
+
+        @if (presenter.logView(); as logView) { @if (logView.jobs.length ||
+        logView.runProtocols.length) {
+        <div class="box-border px-1 py-2" test-id="action-detail-log">
+          <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+            @for (job of logView.jobs; track job.id) {
+            <mosaik-timeline-item [attr.test-id]="'action-detail-job-' + job.id">
+              <mosaik-timeline-marker
+                [iconName]="job.status | ciLogStatusIcon"
+                [variant]="job.status | ciLogStatusVariant"
+                [appearance]="'soft'"
+                [size]="'medium'"
+              />
+              <mosaik-timeline-content>
+                <article class="grid w-full min-w-0 gap-2">
+                  <header class="flex items-center justify-between gap-3">
+                    <div class="grid min-w-0 gap-1">
+                      <strong>{{ job.name }}</strong>
+                      <span>{{ job.status | ciLogStatusLabel }}</span>
+                    </div>
+                    @if (job.externalUrl; as jobUrl) {
+                    <mosaik-button
+                      [attr.test-id]="'action-detail-open-job-' + job.id"
+                      [label]="'Open job'"
+                      [appearance]="'plain'"
+                      [href]="jobUrl"
+                      [target]="'_blank'"
+                      [rel]="'noreferrer'"
+                    />
+                    }
+                  </header>
+                  @if (job.steps.length) {
+                  <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+                    @for (step of job.steps; track step.id) {
+                    <mosaik-timeline-item [attr.test-id]="'action-detail-step-' + step.id">
+                      <mosaik-timeline-marker
+                        [iconName]="step.status | ciLogStatusIcon"
+                        [variant]="step.status | ciLogStatusVariant"
+                        [appearance]="'soft'"
+                        [size]="'small'"
+                      />
+                      <mosaik-timeline-content>
+                        <div class="grid w-full min-w-0 gap-2">
+                          <div class="flex items-baseline justify-between gap-2">
+                            <strong>{{ step.name }}</strong>
+                            <small>{{ step.status | ciLogStatusLabel }}</small>
+                          </div>
+                          @if (step.protocol; as protocol) {
+                          <mosaik-disclosure
+                            [attr.test-id]="'action-detail-step-protocol-' + step.id"
+                            [summary]="'Protocol'"
+                            [isExpanded]="!!protocol && (step.status === 'failed' || step.status === 'in-progress')"
+                          >
+                            <pre class="m-0 box-border whitespace-pre-wrap break-words p-2">
+                                                            {{ protocol }}
+                                                        </pre>
+                          </mosaik-disclosure>
+                          }
+                        </div>
+                      </mosaik-timeline-content>
+                    </mosaik-timeline-item>
+                    }
+                  </mosaik-timeline>
+                  }
+                </article>
+              </mosaik-timeline-content>
+            </mosaik-timeline-item>
+            } @for (protocol of logView.runProtocols; track protocol.id) {
+            <mosaik-timeline-item [attr.test-id]="'action-detail-protocol-' + protocol.id">
+              <mosaik-timeline-marker
+                [iconName]="protocol.status | ciLogStatusIcon"
+                [variant]="protocol.status | ciLogStatusVariant"
+                [appearance]="'soft'"
+                [size]="'medium'"
+              />
+              <mosaik-timeline-content>
+                <mosaik-disclosure
+                  [attr.test-id]="'action-detail-run-protocol-' + protocol.id"
+                  [summary]="protocol.title"
+                  [isExpanded]="true"
+                >
+                  <pre class="m-0 box-border whitespace-pre-wrap break-words p-2">
+                                        {{ protocol.content }}
+                                    </pre>
+                </mosaik-disclosure>
+              </mosaik-timeline-content>
+            </mosaik-timeline-item>
+            }
+          </mosaik-timeline>
+        </div>
+        } @else if (presenter.loadFailed()) {
+        <mosaik-empty-state
+          [iconName]="'errorCircle'"
+          [header]="'Action log unavailable'"
+          [content]="'Open the workflow in GitHub to inspect its log.'"
+        />
+        } @else {
+        <mosaik-empty-state
+          [iconName]="'executionOutline'"
+          [header]="'No jobs reported yet'"
+          [content]="'The Action log will appear when the workflow schedules its first job.'"
+        />
+        } }
+      </section>
+    </div>
+    }
+  </div>
+</ng-template>

@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Create Change Request'
+  short_description: 'Create complete repository change requests'
+  default_prompt: 'Use $create-change-request to draft a complete Symphony repository issue.'

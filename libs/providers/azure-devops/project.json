@@ -1,0 +1,25 @@
+{
+  "name": "providers-azure-devops",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/azure-devops/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:azure-devops"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/azure-devops/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/azure-devops/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/azure-devops/vitest.config.ts"
+      }
+    }
+  }
+}

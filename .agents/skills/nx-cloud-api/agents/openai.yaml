@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Nx Cloud API'
+  short_description: 'Inspect read-only Nx Cloud workspace data'
+  default_prompt: 'Use $nx-cloud-api to inspect the requested Nx Cloud workspace data through its read-only client.'

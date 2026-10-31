@@ -1,0 +1,15 @@
+{
+  "name": "domain-platform",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/features/platform/src",
+  "projectType": "library",
+  "tags": ["scope:domain", "type:domain", "feature:platform"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/domain/features/platform/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

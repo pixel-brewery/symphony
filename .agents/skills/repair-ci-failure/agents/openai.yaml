@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Repair CI failure'
+  short_description: 'Repair diagnosed CI failures on managed branches'
+  default_prompt: 'Use $repair-ci-failure to apply the diagnosed CI fix in the existing managed pull-request worktree.'

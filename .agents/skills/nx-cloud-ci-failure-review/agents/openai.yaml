@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Nx Cloud CI Failure Review'
+  short_description: 'Review evidence from failed Nx Cloud pipelines'
+  default_prompt: 'Use $nx-cloud-ci-failure-review to review the requested Nx Cloud pipeline failures.'

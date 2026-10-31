@@ -1,0 +1,20 @@
+//
+// Monospace survives the switch to a sans interface, but only where the value is technical and
+// read character by character: identifiers, branch names, run names, log output, pairing
+// addresses. One shared class rather than a per-feature rule, so the exception stays countable.
+//
+// Mosaik elements never read the inherited `font-family`: every themed element declares its own
+// `--<element>-font-family` on `:host` and the shadow text resolves that property, so a plain
+// `font-family` on the host reaches ordinary children only. Both halves are therefore set here.
+.technical-value {
+  --technical-value-font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --badge-font-family: var(--technical-value-font-family);
+  --chip-font-family: var(--technical-value-font-family);
+  --hint-font-family: var(--technical-value-font-family);
+  --text-font-family: var(--technical-value-font-family);
+
+  font-family: var(--technical-value-font-family);
+  // Monospace carries its own rhythm; the sans tracking of the surrounding role would fight it.
+  letter-spacing: normal;
+}

@@ -1,0 +1,25 @@
+{
+  "name": "application-workflow",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/application/features/workflow/src",
+  "projectType": "library",
+  "tags": ["scope:application", "type:application", "feature:workflow"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/application/features/workflow/tsconfig.lib.json --noEmit",
+          "tsc -p libs/application/features/workflow/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/application/features/workflow/vitest.config.ts"
+      }
+    }
+  }
+}

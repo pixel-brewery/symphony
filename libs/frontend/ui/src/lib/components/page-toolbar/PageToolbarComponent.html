@@ -1,0 +1,26 @@
+<div
+  class="flex w-max max-w-full items-center gap-2"
+  role="toolbar"
+  [attr.aria-label]="ariaLabel()"
+>
+  <mosaik-toolbar
+    class="empty:hidden"
+    part="primary-actions"
+    test-id="page-toolbar-primary-actions"
+    role="group"
+    aria-label="Primary actions"
+    [appearance]="'plain'"
+  >
+    <ng-content select="[slot=start]" />
+  </mosaik-toolbar>
+  <mosaik-toolbar
+    class="empty:hidden"
+    part="secondary-actions"
+    test-id="page-toolbar-secondary-actions"
+    role="group"
+    aria-label="Secondary actions"
+    [appearance]="'plain'"
+  >
+    <ng-content select="[slot=end]" />
+  </mosaik-toolbar>
+</div>

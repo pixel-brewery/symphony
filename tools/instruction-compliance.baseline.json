@@ -1,0 +1,20 @@
+{
+  "no-path-header": 0,
+  "imports-region": 0,
+  "import-contiguous": 0,
+  "single-export": 0,
+  "file-name-pascal-case": 0,
+  "file-name-matches-export": 0,
+  "interface-i-prefix": 0,
+  "private-field-underscore": 0,
+  "private-method-no-underscore": 0,
+  "member-access-modifier": 0,
+  "class-regions": 0,
+  "no-any": 0,
+  "no-arrow-method": 0,
+  "tsdoc-public-member": 0,
+  "view-triple-file": 0,
+  "presenter-command-only": 0,
+  "spec-file-matches-source": 0,
+  "spec-aaa-markers": 0
+}

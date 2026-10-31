@@ -1,0 +1,23 @@
+@if(presenter.workspace(); as item){ @for (runtime of presenter.aiRuntimes; track runtime) {
+<mosaik-cell
+  [attr.test-id]="'ai-runtime-account-' + runtime + '-' + item.id"
+  [label]="presenter.aiRuntimeLabel()(runtime)"
+  [subLabel]="presenter.aiRuntimeSummary()(runtime)"
+>
+  <mosaik-avatar
+    slot="start"
+    [size]="'small'"
+    [appearance]="'soft'"
+    [iconName]="runtime | connectionIcon"
+  />
+  <mosaik-button
+    slot="end"
+    [attr.test-id]="'add-ai-runtime-account-' + runtime + '-' + item.id"
+    [label]="'Connect'"
+    [iconName]="'add'"
+    [appearance]="'solid'"
+    [variant]="'primary'"
+    (click)="presenter.openAiAccountCommand.execute([item.id, runtime])"
+  />
+</mosaik-cell>
+} }

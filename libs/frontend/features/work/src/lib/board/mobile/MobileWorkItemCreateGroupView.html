@@ -1,0 +1,93 @@
+<section class="grid overflow-hidden p-3 gap-2" aria-labelledby="mobile-create-work-item-heading">
+  <div class="flex items-start justify-between gap-3">
+    <div>
+      <mosaik-text [mosaikTypography]="'overline'" [text]="'NEW WORK ITEM'" />
+      <mosaik-text
+        id="mobile-create-work-item-heading"
+        class="mt-1"
+        role="heading"
+        aria-level="2"
+        [mosaikTypography]="'subtitle1'"
+        [text]="'Turn an idea into a ticket'"
+        [wrap]="true"
+      />
+    </div>
+    <span aria-hidden="true">
+      <mosaik-text [mosaikTypography]="'headline6'" [text]="'✦'" />
+    </span>
+  </div>
+  <mosaik-cell-group class="block overflow-hidden">
+    <a
+      symphonyPseudoLink
+      class="block"
+      [routerLink]="['/tickets/new']"
+      [queryParams]="{ mode: 'manual' }"
+      test-id="mobile-dashboard-create-manual"
+    >
+      <mosaik-cell>
+        <span
+          slot="start"
+          class="inline-grid h-6 w-6 flex-none place-items-center"
+          aria-hidden="true"
+        >
+          <mosaik-text [mosaikTypography]="'headline6'" [text]="'＋'" />
+        </span>
+        <mosaik-text
+          slot="label"
+          class="min-w-0 max-w-full"
+          [mosaikTypography]="'subtitle2'"
+          [text]="'Create manually'"
+          [truncate]="true"
+        />
+        <mosaik-text
+          slot="subLabel"
+          class="min-w-0 max-w-full"
+          [mosaikTypography]="'body2'"
+          [text]="'Enter title, details and project fields'"
+          [wrap]="true"
+          [maxLines]="2"
+          [readonly]="true"
+        />
+        <span slot="end" class="self-center" aria-hidden="true">
+          <mosaik-text [mosaikTypography]="'headline5'" [text]="'›'" />
+        </span>
+      </mosaik-cell>
+    </a>
+    <a
+      symphonyPseudoLink
+      class="block"
+      [routerLink]="['/tickets/new']"
+      [queryParams]="{ mode: 'ai' }"
+      test-id="mobile-dashboard-create-ai"
+    >
+      <mosaik-cell>
+        <span
+          slot="start"
+          class="inline-grid h-6 w-6 flex-none place-items-center"
+          aria-hidden="true"
+        >
+          <mosaik-text [mosaikTypography]="'headline6'" [text]="'✦'" />
+        </span>
+        <mosaik-text
+          slot="label"
+          class="min-w-0 max-w-full"
+          [mosaikTypography]="'subtitle2'"
+          [text]="'Create with AI'"
+          [truncate]="true"
+        />
+        <mosaik-text
+          slot="subLabel"
+          class="min-w-0 max-w-full"
+          [mosaikTypography]="'body2'"
+          [text]="'Describe the work and review a complete draft'"
+          [wrap]="true"
+          [maxLines]="2"
+          [readonly]="true"
+        />
+        <span slot="end" class="self-center" aria-hidden="true">
+          <mosaik-text [mosaikTypography]="'headline5'" [text]="'›'" />
+        </span>
+      </mosaik-cell>
+    </a>
+  </mosaik-cell-group>
+</section>

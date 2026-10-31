@@ -1,0 +1,16 @@
+{
+  "name": "frontend-feature-team",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/features/team/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["scope:frontend-feature", "type:feature", "feature:team"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/features/team/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

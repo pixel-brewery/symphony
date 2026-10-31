@@ -1,0 +1,16 @@
+{
+  "name": "frontend-feature-platform",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/features/platform/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["scope:frontend-feature", "type:feature", "feature:platform"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/features/platform/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

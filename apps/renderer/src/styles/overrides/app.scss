@@ -1,0 +1,39 @@
+mosaik-app {
+  --app-border-style: none;
+  --app-line-thickness: 0px;
+
+  // The view runs edge to edge; its border and radius go with the gap they used to sit in.
+  --app-view-border-radius: 0px;
+  --app-view-border-style: none;
+  --app-view-border-width: 0px;
+
+  // The header is a band in the flow again, so the content needs no clearance under a floating
+  // strip. The property stays as the single seam between shell chrome and route content: the
+  // route scrollport and the rail still read it, and it is the one value to change if chrome is
+  // ever layered over the content again.
+  --presenter-chrome-inset-top: 0px;
+
+  // `[part='view']` is a `mosaik-drawer-content`, which insets itself with
+  // `margin: var(--drawer-content-inset-*)` seeded from the theme's layout space, while the app theme
+  // mirrors the right inset onto the left whenever the navigation drawer is closed. Those
+  // properties have to be set on the part itself: the component re-declares them on its own
+  // `:host`, which beats anything inherited from `mosaik-app`.
+  &::part(view) {
+    --drawer-content-inset-top: 0px;
+    --drawer-content-inset-right: 0px;
+    --drawer-content-inset-bottom: 0px;
+    --drawer-content-inset-left: 0px;
+
+    background-color: var(--mosaik-scheme-background);
+  }
+
+  [part='route-scroll'],
+  [part='rail'] {
+    padding-top: var(--presenter-chrome-inset-top);
+  }
+
+  :root[data-native-vibrancy='true'] & {
+    --app-background-color: transparent;
+    --drawer-background-color: transparent;
+  }
+}

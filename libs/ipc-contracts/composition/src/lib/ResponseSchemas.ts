@@ -1,0 +1,144 @@
+// #region Imports
+
+import { platformResponseSchemas } from '@symphony/ipc-contracts-platform';
+import { executionResponseSchemas } from '@symphony/ipc-contracts-execution';
+import { deliveryResponseSchemas } from '@symphony/ipc-contracts-delivery';
+import { workResponseSchemas } from '@symphony/ipc-contracts-work';
+import { workspaceResponseSchemas } from '@symphony/ipc-contracts-workspace';
+import { ciResponseSchemas } from '@symphony/ipc-contracts-ci';
+import { automationResponseSchemas } from '@symphony/ipc-contracts-automation';
+import { feedbackResponseSchemas } from '@symphony/ipc-contracts-feedback';
+import { aiResponseSchemas } from '@symphony/ipc-contracts-ai';
+import { skillResponseSchemas } from '@symphony/ipc-contracts-skills';
+import { workflowResponseSchemas } from '@symphony/ipc-contracts-workflow';
+import { mobileResponseSchemas } from '@symphony/ipc-contracts-mobile';
+import { z } from 'zod';
+import { applicationSettingsSchema } from '@symphony/configuration-composition';
+import { activeBackgroundOperationsSchema } from './ActiveBackgroundOperationsSchema';
+import { cancelledBackgroundOperationsSchema } from './CancelledBackgroundOperationsSchema';
+import { ciWorkflowSchema } from '@symphony/ipc-contracts-ci';
+import { connectionStatusSchema } from './ConnectionStatusSchema';
+import { snapshotSchema } from './SnapshotSchema';
+
+// #endregion
+
+export const responseSchemas = {
+  'health.get': platformResponseSchemas['health.get'],
+  'runtime-dependencies.install': platformResponseSchemas['runtime-dependencies.install'],
+  'snapshot.get': snapshotSchema,
+  'snapshot.refresh': snapshotSchema,
+  'external-services.incidents.get': platformResponseSchemas['external-services.incidents.get'],
+  'execution-state.get': executionResponseSchemas['execution-state.get'],
+  'analyzer.start': executionResponseSchemas['analyzer.start'],
+  'analysis.complete-manually': executionResponseSchemas['analysis.complete-manually'],
+  'solver.start': executionResponseSchemas['solver.start'],
+  'work-items.delegate': executionResponseSchemas['work-items.delegate'],
+  'goals.review': executionResponseSchemas['goals.review'],
+  'delivery-groups.assess': executionResponseSchemas['delivery-groups.assess'],
+  'delivery-groups.create-direct': executionResponseSchemas['delivery-groups.create-direct'],
+  'delivery-groups.confirm': executionResponseSchemas['delivery-groups.confirm'],
+  'delivery-groups.reject': executionResponseSchemas['delivery-groups.reject'],
+  'delivery-groups.dissolve': executionResponseSchemas['delivery-groups.dissolve'],
+  'delivery-groups.align': executionResponseSchemas['delivery-groups.align'],
+  'solution.complete-manually': executionResponseSchemas['solution.complete-manually'],
+  'execution-queue.remove': executionResponseSchemas['execution-queue.remove'],
+  'execution.cancel': executionResponseSchemas['execution.cancel'],
+  'execution.pause': executionResponseSchemas['execution.pause'],
+  'execution.resume': executionResponseSchemas['execution.resume'],
+  'pull-request.publish': deliveryResponseSchemas['pull-request.publish'],
+  'pull-request.branches': deliveryResponseSchemas['pull-request.branches'],
+  'pull-request.compare': deliveryResponseSchemas['pull-request.compare'],
+  'pull-request.create': deliveryResponseSchemas['pull-request.create'],
+  'pull-request.update-branch': deliveryResponseSchemas['pull-request.update-branch'],
+  'lifecycle.reconcile': z.object({ reactivated: z.number().int().nonnegative() }),
+  'lifecycle.active-operations.get': activeBackgroundOperationsSchema,
+  'lifecycle.active-operations.pause': z.object({
+    executionIds: z.array(z.string().min(1)).readonly(),
+  }),
+  'lifecycle.active-operations.cancel': cancelledBackgroundOperationsSchema,
+  'work-items.metadata': workResponseSchemas['work-items.metadata'],
+  'work-items.detail': workResponseSchemas['work-items.detail'],
+  'work-items.create': workResponseSchemas['work-items.create'],
+  'work-items.update': workResponseSchemas['work-items.update'],
+  'work-items.move': workResponseSchemas['work-items.move'],
+  'work-items.comment': workResponseSchemas['work-items.comment'],
+  'work-items.draft': workResponseSchemas['work-items.draft'],
+  'work-items.draft.cancel': workResponseSchemas['work-items.draft.cancel'],
+  'workspaces.clear': workspaceResponseSchemas['workspaces.clear'],
+  'workspaces.delete': workspaceResponseSchemas['workspaces.delete'],
+  'workspaces.export': workspaceResponseSchemas['workspaces.export'],
+  'workspaces.import': workspaceResponseSchemas['workspaces.import'],
+  'repositories.runtime.list': workspaceResponseSchemas['repositories.runtime.list'],
+  'repositories.prepare': workspaceResponseSchemas['repositories.prepare'],
+  'repositories.trust.grant-agent': workspaceResponseSchemas['repositories.trust.grant-agent'],
+  'repositories.trust.revoke': workspaceResponseSchemas['repositories.trust.revoke'],
+  'verification.plan': ciResponseSchemas['verification.plan'],
+  'verification.run': ciResponseSchemas['verification.run'],
+  'verification.cancel': ciResponseSchemas['verification.cancel'],
+  'ci.usage.get': ciResponseSchemas['ci.usage.get'],
+  'ci.runs.refresh': ciResponseSchemas['ci.runs.refresh'],
+  'ci.workflow.dispatch': ciResponseSchemas['ci.workflow.dispatch'],
+  'ci.workflow.local.run': ciResponseSchemas['ci.workflow.local.run'],
+  'delivery.refresh': deliveryResponseSchemas['delivery.refresh'],
+  'delivery.preview': deliveryResponseSchemas['delivery.preview'],
+  'delivery.start': deliveryResponseSchemas['delivery.start'],
+  'delivery.operations': deliveryResponseSchemas['delivery.operations'],
+  'delivery.reconcile': deliveryResponseSchemas['delivery.reconcile'],
+  'ci.approval.review': ciResponseSchemas['ci.approval.review'],
+  'ci.run.details': ciResponseSchemas['ci.run.details'],
+  'ci.run.log': ciResponseSchemas['ci.run.log'],
+  'ci.cancel': ciResponseSchemas['ci.cancel'],
+  'ci.rerun': ciResponseSchemas['ci.rerun'],
+  'ci.local.run': ciResponseSchemas['ci.local.run'],
+  'ci.local.cancel': ciResponseSchemas['ci.local.cancel'],
+  'local-ci.images.list': ciResponseSchemas['local-ci.images.list'],
+  'local-ci.image.select': ciResponseSchemas['local-ci.image.select'],
+  'local-ci.instances.list': ciResponseSchemas['local-ci.instances.list'],
+  'local-ci.instances.remove': ciResponseSchemas['local-ci.instances.remove'],
+  'ci.local.cleanup': ciResponseSchemas['ci.local.cleanup'],
+  'storage.status.get': platformResponseSchemas['storage.status.get'],
+  'settings.get': applicationSettingsSchema,
+  'settings.save': applicationSettingsSchema,
+  'github.projects.list': workResponseSchemas['github.projects.list'],
+  'setup.repository.inspect': z.object({
+    defaultBranch: z.string().min(1),
+    workflows: z.array(ciWorkflowSchema).readonly(),
+  }),
+  'work-item-sources.columns': workResponseSchemas['work-item-sources.columns'],
+  'autonomy.status.get': automationResponseSchemas['autonomy.status.get'],
+  'autonomy.set-enabled': automationResponseSchemas['autonomy.set-enabled'],
+  'feedback-intake.test': feedbackResponseSchemas['feedback-intake.test'],
+  'connections.get': connectionStatusSchema,
+  'codex.configuration.get': aiResponseSchemas['codex.configuration.get'],
+  'ai.models.get': aiResponseSchemas['ai.models.get'],
+  'ai.intelligence.get': aiResponseSchemas['ai.intelligence.get'],
+  'opencode.credentials.import': aiResponseSchemas['opencode.credentials.import'],
+  'azure-devops.login.start': platformResponseSchemas['azure-devops.login.start'],
+  'azure-devops.logout': platformResponseSchemas['azure-devops.logout'],
+  'github.login.start': platformResponseSchemas['github.login.start'],
+  'github.logout': platformResponseSchemas['github.logout'],
+  'codex.login.start': aiResponseSchemas['codex.login.start'],
+  'codex.logout': aiResponseSchemas['codex.logout'],
+  'claude.login.start': aiResponseSchemas['claude.login.start'],
+  'claude.login.complete': aiResponseSchemas['claude.login.complete'],
+  'claude.logout': aiResponseSchemas['claude.logout'],
+  'skills.list': skillResponseSchemas['skills.list'],
+  'workflow.get': workflowResponseSchemas['workflow.get'],
+  'workflow.decide': workflowResponseSchemas['workflow.decide'],
+  'workflow.answer': workflowResponseSchemas['workflow.answer'],
+  'skills.builtin.list': skillResponseSchemas['skills.builtin.list'],
+  'skills.builtin.customize': skillResponseSchemas['skills.builtin.customize'],
+  'skills.get': skillResponseSchemas['skills.get'],
+  'skills.save': skillResponseSchemas['skills.save'],
+  'skills.import': skillResponseSchemas['skills.import'],
+  'skills.export': skillResponseSchemas['skills.export'],
+  'skills.delete': skillResponseSchemas['skills.delete'],
+  'mobile-access.status.get': mobileResponseSchemas['mobile-access.status.get'],
+  'mobile-access.enable': mobileResponseSchemas['mobile-access.enable'],
+  'mobile-access.disable': mobileResponseSchemas['mobile-access.disable'],
+  'mobile-access.pairing.create': mobileResponseSchemas['mobile-access.pairing.create'],
+  'mobile-access.pairing.approve': mobileResponseSchemas['mobile-access.pairing.approve'],
+  'mobile-access.pairing.reject': mobileResponseSchemas['mobile-access.pairing.reject'],
+  'mobile-access.device.revoke': mobileResponseSchemas['mobile-access.device.revoke'],
+  'mobile-access.devices.revoke-all': mobileResponseSchemas['mobile-access.devices.revoke-all'],
+} as const;

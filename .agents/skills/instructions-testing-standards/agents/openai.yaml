@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Testing Standards'
+  short_description: 'Apply repository instructions guidance'
+  default_prompt: 'Use $instructions-testing-standards for the applicable repository guidance.'

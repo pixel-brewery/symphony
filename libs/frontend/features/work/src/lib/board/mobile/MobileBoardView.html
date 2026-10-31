@@ -1,0 +1,36 @@
+<mosaik-page class="block min-h-full min-w-0" test-id="mobile-board-view">
+  <mosaik-page-header
+    [inset]="'all'"
+    [text]="'Board'"
+    [subText]="(presenter.snapshot()?.tickets?.length ?? 0) + ' work items'"
+  >
+    <mosaik-button
+      slot="suffix"
+      [label]="'New'"
+      [variant]="'primary'"
+      [routerLink]="['/tickets/new']"
+      test-id="mobile-board-create"
+    />
+  </mosaik-page-header>
+  <mosaik-page-content [fullWidth]="true" [inset]="'none'">
+    <mosaik-expander-group class="block min-w-0" [mode]="'single'" [stacking]="'joined'">
+      @for (column of presenter.snapshot()?.boardColumns ?? []; track column.id) {
+      <mosaik-expander
+        class="block min-w-0"
+        [header]="column.label"
+        [isExpanded]="presenter.initiallyExpanded()(column)"
+        [attr.test-id]="'mobile-board-column-' + column.id"
+      >
+        <span slot="actions" class="min-w-6 px-2 py-1">{{ column.ticketCount }}</span>
+        <div class="grid min-w-0 gap-2 px-3 pb-3">
+          @for (ticket of column.tickets; track ticket.id) {
+          <symphony-mobile-ticket-card [ticket]="ticket" />
+          } @empty {
+          <p class="m-0">No work items</p>
+          }
+        </div>
+      </mosaik-expander>
+      }
+    </mosaik-expander-group>
+  </mosaik-page-content>
+</mosaik-page>

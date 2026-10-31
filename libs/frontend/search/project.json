@@ -1,0 +1,16 @@
+{
+  "name": "frontend-search",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/search/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["scope:frontend", "type:search"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/search/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

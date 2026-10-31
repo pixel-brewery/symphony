@@ -1,0 +1,1 @@
+export const NODE_ARCHIVE_MAX_BYTES = 192 * 1024 * 1024;

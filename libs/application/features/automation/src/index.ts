@@ -1,0 +1,11 @@
+export { AutomationService } from './lib/AutomationService';
+export type { IAutomationExecutionPort } from './lib/IAutomationExecutionPort';
+export type { IAutomationRepository } from './lib/IAutomationRepository';
+export type { IAutomationServiceDependencies } from './lib/IAutomationServiceDependencies';
+export type { IAutomationSynchronizationResult } from './lib/IAutomationSynchronizationResult';
+export type { IAutonomousCycleResult } from './lib/IAutonomousCycleResult';
+export type { IPullRequestQualification } from './lib/IPullRequestQualification';
+export type { IAutomationExecutionTrigger } from './lib/IAutomationExecutionTrigger';
+export type { IAutomationExecutionRepository } from './lib/IAutomationExecutionRepository';
+export type { IAutomationTrackingPort } from './lib/IAutomationTrackingPort';
+export type { IAutomationDeliveryPort } from './lib/IAutomationDeliveryPort';

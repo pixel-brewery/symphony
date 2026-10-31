@@ -1,0 +1,25 @@
+{
+  "name": "providers-ci",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/ci/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:ci"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/ci/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/ci/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/ci/vitest.config.ts"
+      }
+    }
+  }
+}

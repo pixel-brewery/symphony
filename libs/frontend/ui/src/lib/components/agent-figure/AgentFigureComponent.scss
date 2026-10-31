@@ -1,0 +1,82 @@
+:host {
+  display: inline-flex;
+  flex: none;
+  user-select: none;
+}
+
+[data-figure] {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 85%;
+}
+
+[data-figure-image] {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+[data-figure-sprite] {
+  display: block;
+  width: 92.3077%;
+  height: 100%;
+  margin-inline: auto;
+  background-repeat: no-repeat;
+  image-rendering: auto;
+}
+
+[data-activity='working']:has([data-figure-image]):not([data-static='true']) {
+  animation: symphony-figure-work 2s ease-in-out infinite;
+}
+
+[data-activity='needs-input']:has([data-figure-image]) {
+  transform: rotate(6deg);
+}
+
+[data-activity='completed']:has([data-figure-image]):not([data-static='true']) {
+  animation: symphony-figure-complete 600ms ease-out 1;
+  transform: rotate(-3deg);
+}
+
+[data-animation='waving']:has([data-figure-image]):not([data-static='true']) {
+  animation: symphony-figure-greet 700ms ease-in-out 3;
+}
+
+[data-motion='false'] {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-figure] {
+    animation: none;
+  }
+}
+
+@keyframes symphony-figure-work {
+  50% {
+    transform: translateY(-3%);
+  }
+}
+
+@keyframes symphony-figure-complete {
+  50% {
+    transform: translateY(-8%) scale(1.04);
+  }
+}
+
+@keyframes symphony-figure-greet {
+  25% {
+    transform: rotate(-5deg);
+  }
+
+  75% {
+    transform: rotate(5deg);
+  }
+}

@@ -1,0 +1,207 @@
+<mosaik-page
+  class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+  test-id="breakout-view"
+  [attr.data-screen]="screen()"
+  [attr.data-status]="status()"
+>
+  <mosaik-page-header [text]="'Breakout'" [inset]="'all'" test-id="breakout-header">
+    @if (screen() === 'game') {
+    <div
+      slot="subHeader"
+      id="breakout-controls"
+      test-id="breakout-legend"
+      [mosaikTypography]="'body2'"
+      class="flex flex-wrap items-center gap-x-4 gap-y-1"
+    >
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" /><span>Move paddle</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['Space']" /><span>Serve / catch</span>
+      </div>
+      @if (pairedTurn()) {
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['J']" /><mosaik-kbd [value]="['L']" /><mosaik-kbd
+          [value]="['K']"
+        /><span>Partner: move / serve</span>
+      </div>
+      }
+      <div class="flex items-center gap-2"><mosaik-kbd [value]="['P']" /><span>Pause</span></div>
+      <span>Mouse moves · click serves</span>
+    </div>
+    }
+    <mosaik-button
+      slot="prefix"
+      test-id="breakout-back-arcade"
+      [label]="'All games'"
+      [appearance]="'plain'"
+      [variant]="'neutral'"
+      [command]="{ click: backArcadeCommand }"
+    />
+    <div slot="suffix" class="flex flex-wrap items-center gap-2">
+      <mosaik-button
+        test-id="breakout-sound"
+        [label]="soundMuted() ? 'Sound off' : 'Sound on'"
+        [attr.aria-pressed]="!soundMuted()"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: toggleSoundCommand }"
+        (click)="enableAudio()"
+      />
+      @if (screen() === 'game') {
+      <mosaik-button
+        test-id="breakout-menu"
+        [label]="'Menu'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: menuCommand }"
+      />
+      @if (status() !== 'gameOver') {
+      <mosaik-button
+        test-id="breakout-pause"
+        [label]="status() === 'paused' ? 'Resume' : 'Pause'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: togglePauseCommand }"
+        (click)="focusScreen()"
+      />
+      <mosaik-button
+        test-id="breakout-reset"
+        [label]="'Restart'"
+        [appearance]="'outline'"
+        [variant]="'primary'"
+        [command]="{ click: rematchCommand }"
+        (click)="focusScreen()"
+      />
+      } }
+    </div>
+  </mosaik-page-header>
+  <mosaik-page-content
+    [inset]="'none'"
+    class="relative flex min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+    test-id="breakout-playfield"
+  >
+    <canvas
+      #playfieldCanvas
+      test-id="breakout-screen"
+      class="absolute inset-0 block h-full w-full"
+      [attr.tabindex]="screen() === 'game' ? 0 : -1"
+      role="img"
+      aria-label="Breakout playfield. Left and Right move the paddle, Space serves or catches, J and L move a partner paddle, K serves for the partner, and P pauses."
+      [attr.aria-describedby]="screen() === 'game' ? 'breakout-controls' : null"
+    ></canvas>
+    @if (!screenAvailable()) {
+    <div class="absolute inset-x-4 top-4" role="alert">
+      <mosaik-text
+        [text]="'The playfield could not be loaded. Return to Arcade and try again.'"
+        [wrap]="true"
+      />
+    </div>
+    } @if (screen() === 'game' && status() === 'paused') {
+    <div class="absolute inset-0 flex items-center justify-center overflow-y-auto p-4">
+      <mosaik-card class="w-full max-w-md" test-id="breakout-paused">
+        <mosaik-card-header
+          [text]="'Paused'"
+          [subText]="'Your ball and elapsed time are preserved.'"
+        />
+        <mosaik-card-actions>
+          <div class="flex flex-wrap gap-2">
+            <mosaik-button
+              test-id="breakout-resume"
+              [label]="'Resume'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: togglePauseCommand }"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="breakout-paused-menu"
+              [label]="'Menu'"
+              [appearance]="'plain'"
+              [variant]="'neutral'"
+              [command]="{ click: menuCommand }"
+            />
+          </div>
+        </mosaik-card-actions>
+      </mosaik-card>
+    </div>
+    } @else if (screen() === 'game' && status() === 'gameOver') {
+    <div class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+      <mosaik-card class="my-auto w-full max-w-xl shrink-0" test-id="breakout-result">
+        <mosaik-card-header
+          [text]="winner() === 'tie' ? 'A tie!' : teams().length === 1 ? 'Game over' : 'Match complete'"
+        />
+        <mosaik-card-content>
+          <div class="flex flex-col gap-5">
+            @if (teams().length > 1 && winner() !== 'tie' && winner() !== null) {
+            <span [mosaikTypography]="'h4'">Team {{ winner() === 0 ? 1 : 2 }} wins</span>
+            } @for (team of teams(); track team.index) {
+            <div
+              class="flex flex-col gap-2"
+              test-id="breakout-team-result"
+              [attr.data-team]="team.index"
+              [attr.data-score]="team.score"
+              [attr.data-walls]="team.wallsCleared"
+            >
+              <span [mosaikTypography]="'h5'"
+                >@if (teams().length > 1) { Team {{ team.index + 1 }} · }{{ team.score }}
+                points</span
+              >
+              <span [mosaikTypography]="'body2'"
+                >{{ team.wallsCleared }}/2 walls cleared · {{ team.ballsRemaining }} balls remaining
+                @if (timedMatch()) { · {{ team.elapsedSeconds | number:'1.1-1' }} seconds }</span
+              >
+            </div>
+            }
+          </div>
+        </mosaik-card-content>
+        <mosaik-card-actions>
+          <div class="flex flex-wrap gap-2">
+            <mosaik-button
+              test-id="breakout-rematch"
+              [label]="'Play again'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: rematchCommand }"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="breakout-change-game"
+              [label]="'Change game'"
+              [appearance]="'outline'"
+              [variant]="'neutral'"
+              [command]="{ click: menuCommand }"
+            />
+          </div>
+        </mosaik-card-actions>
+      </mosaik-card>
+    </div>
+    }
+    <span
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+      test-id="breakout-status"
+      [attr.data-status]="status()"
+      [attr.data-current-team]="currentTeamIndex()"
+      [attr.data-score]="currentTeam()?.score"
+      [attr.data-balls]="currentTeam()?.ballsRemaining"
+      [attr.data-variation]="matchOptions().variation"
+      [attr.data-players]="matchOptions().players"
+    >
+      @if (screen() !== 'game') {
+      <span>Breakout menu.</span>
+      } @else { @switch (status()) { @case ('ready') { @if (teams().length > 1) {
+      <span>Team {{ currentTeamIndex() + 1 }}.</span>
+      }
+      <span>Press Space or click to serve.</span>
+      } @case ('paused') {
+      <span>Paused.</span>
+      } @case ('gameOver') {
+      <span>Game over.</span>
+      } @case ('playing') {
+      <span>Playing.</span>
+      } } }
+    </span>
+  </mosaik-page-content>
+</mosaik-page>

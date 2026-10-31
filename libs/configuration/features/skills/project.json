@@ -1,0 +1,15 @@
+{
+  "name": "configuration-skills",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/configuration/features/skills/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:configuration", "feature:skills"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/configuration/features/skills/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

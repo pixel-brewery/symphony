@@ -1,0 +1,15 @@
+{
+  "name": "application-ai",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/application/features/ai/src",
+  "projectType": "library",
+  "tags": ["scope:application", "type:application", "feature:ai"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/application/features/ai/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

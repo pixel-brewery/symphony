@@ -1,0 +1,60 @@
+name: Merge verified Dependabot updates
+
+on:
+  workflow_run:
+    workflows: [Repository Quality]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  merge:
+    if: >-
+      ${{ github.repository_id == '1440122208' &&
+          github.event.workflow_run.event == 'pull_request' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.head_repository.id == github.event.repository.id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: dependabot-merge-${{ github.event.workflow_run.pull_requests[0].number || github.event.workflow_run.id }}
+      cancel-in-progress: false
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: read
+    steps:
+      # Run the default-branch helper without PR code, dependency installation or artifacts.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+
+      - name: Merge only the unchanged Dependabot head after every required job succeeds
+        id: merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: node tools/mergeDependabotPullRequest.mjs
+
+      # A GITHUB_TOKEN merge does not trigger the normal main-push release workflow.
+      - name: Request the next desktop release
+        if: steps.merge.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ steps.merge.outputs.default_branch }}
+        run: gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "$DEFAULT_BRANCH" -f specifier=patch
+
+      - name: Refresh the remaining Dependabot updates
+        if: always() && steps.merge.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ steps.merge.outputs.default_branch }}
+        run: gh workflow run rebase-dependabot.yml --repo "$GITHUB_REPOSITORY" --ref "$DEFAULT_BRANCH"

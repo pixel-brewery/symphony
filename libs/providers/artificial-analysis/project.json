@@ -1,0 +1,25 @@
+{
+  "name": "providers-artificial-analysis",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/artificial-analysis/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:artificial-analysis"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/artificial-analysis/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/artificial-analysis/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/artificial-analysis/vitest.config.ts"
+      }
+    }
+  }
+}

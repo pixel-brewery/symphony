@@ -1,0 +1,11 @@
+// Locally packaged Soho typography, shared by desktop and Mobile.
+@each $weight in 300, 400, 500, 600, 700 {
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: $weight;
+    font-display: swap;
+    src: url('../../../../../../resources/fonts/inter-latin-#{$weight}-normal.woff2')
+      format('woff2');
+  }
+}

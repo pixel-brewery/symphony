@@ -1,0 +1,15 @@
+{
+  "name": "configuration-work",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/configuration/features/work/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:configuration", "feature:work"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/configuration/features/work/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

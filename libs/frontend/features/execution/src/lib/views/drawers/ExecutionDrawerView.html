@@ -1,0 +1,229 @@
+<ng-template mosaikDrawerHeader>
+  <mosaik-drawer-header [text]="presenter.execution() | executionDrawerTitle: presenter.workItem()">
+    <div slot="subHeader" class="flex min-w-0 flex-col gap-1">
+      @if (presenter.workItem()?.title; as title) {
+      <span>{{ title }}</span>
+      } @if (presenter.execution()?.workspaceReference; as branch) { @if (presenter.branchUrl(); as
+      branchUrl) {
+      <mosaik-anchor
+        test-id="execution-open-workspace-reference"
+        [label]="branch"
+        [href]="branchUrl"
+        [target]="'_blank'"
+        [rel]="'noreferrer'"
+      />
+      } @else {
+      <span test-id="execution-workspace-reference">{{ branch }}</span>
+      } }
+    </div>
+    <mosaik-dismiss
+      slot="suffix"
+      test-id="execution-detail-close"
+      (click)="presenter.closeCommand.execute()"
+    />
+  </mosaik-drawer-header>
+</ng-template>
+
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="execution-detail-drawer"
+    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+  >
+    @if (presenter.employee(); as employee) {
+    <div class="flex items-center gap-3" test-id="execution-employee">
+      <symphony-agent-figure
+        [agentId]="employee.id"
+        [name]="employee.displayName"
+        [appearance]="employee.appearance"
+        [state]="presenter.employeeActivity()?.state ?? 'stale'"
+        [work]="presenter.employeeActivity()?.work ?? []"
+        [size]="88"
+      /><span
+        >{{ employee.displayName }} · {{ (presenter.employeeActivity()?.state ?? 'stale') |
+        agentStateLabel }}</span
+      >
+    </div>
+    } @if (presenter.isHydrating()) {
+    <!-- The loaded layout with its text as skeleton lines: the state and start time row, then the
+         run stream with its static heading and three stream entries in the real timeline. -->
+    <div
+      test-id="execution-detail-loading-skeleton"
+      class="grid gap-3 p-2"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading execution details"
+    >
+      <div class="flex flex-wrap gap-x-3 gap-y-2">
+        <div class="flex h-3 items-center">
+          <mosaik-skeleton [width]="'4.5rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+        <div class="flex h-3 items-center">
+          <mosaik-skeleton [width]="'10rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+      </div>
+      <section class="grid min-h-0 gap-2">
+        <header class="flex items-center justify-between gap-3">
+          <div class="grid gap-1">
+            <h3 class="m-0">Run stream</h3>
+            <div class="flex h-2.5 items-center">
+              <mosaik-skeleton [width]="'14rem'" [height]="'12px'" [shimmer]="true" />
+            </div>
+          </div>
+        </header>
+        <div class="box-border px-1 py-2">
+          <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+            @for (entry of [1, 2, 3]; track entry) {
+            <mosaik-timeline-item>
+              <mosaik-timeline-marker
+                [appearance]="'soft'"
+                [variant]="'neutral'"
+                [size]="'medium'"
+              />
+              <mosaik-timeline-content>
+                <mosaik-comment>
+                  <mosaik-skeleton
+                    slot="avatar"
+                    [shape]="'circle'"
+                    [width]="'20px'"
+                    [height]="'20px'"
+                    [shimmer]="true"
+                  />
+                  <mosaik-skeleton
+                    slot="author"
+                    [width]="'4.5rem'"
+                    [height]="'12px'"
+                    [shimmer]="true"
+                  />
+                  <mosaik-skeleton slot="at" [width]="'8rem'" [height]="'12px'" [shimmer]="true" />
+                  <div slot="content" class="flex w-full min-w-0 flex-col gap-1">
+                    <div class="flex h-2.5 items-center">
+                      <mosaik-skeleton [width]="'9rem'" [height]="'12px'" [shimmer]="true" />
+                    </div>
+                    <div class="flex h-2.5 items-center">
+                      <mosaik-skeleton
+                        [width]="entry === 2 ? '62%' : '84%'"
+                        [height]="'12px'"
+                        [shimmer]="true"
+                      />
+                    </div>
+                  </div>
+                </mosaik-comment>
+              </mosaik-timeline-content>
+            </mosaik-timeline-item>
+            }
+          </mosaik-timeline>
+        </div>
+      </section>
+    </div>
+    } @else if (presenter.execution(); as execution) {
+    <div class="grid gap-3 p-2">
+      <div class="flex flex-wrap gap-x-3 gap-y-2">
+        <span>{{ execution.state }}</span>
+        <time [attr.datetime]="execution.startedAt"
+          >{{ execution.startedAt | date: 'medium' }}</time
+        >
+      </div>
+
+      @if (execution.request; as request) {
+      <mosaik-card [appearance]="'outline'">
+        <mosaik-card-header [text]="'Requested changes'" />
+        <mosaik-card-content>
+          <symphony-markdown [text]="request" />
+        </mosaik-card-content>
+      </mosaik-card>
+      } @if (execution.summary; as summary) {
+      <mosaik-card [appearance]="'soft'">
+        <mosaik-card-header [text]="'Result'" />
+        <mosaik-card-content>
+          <symphony-markdown test-id="execution-detail-result" [text]="summary" />
+        </mosaik-card-content>
+      </mosaik-card>
+      } @if (execution.error; as error) {
+      <mosaik-card [appearance]="'soft'">
+        <mosaik-card-header [text]="'Failure'" />
+        <mosaik-card-content>
+          <symphony-markdown test-id="execution-detail-error" [text]="error" />
+        </mosaik-card-content>
+      </mosaik-card>
+      }
+
+      <section class="grid min-h-0 gap-2">
+        <header class="flex items-center justify-between gap-3">
+          <div class="grid gap-1">
+            <h3 class="m-0">Run stream</h3>
+            <mosaik-hint
+              [text]="
+                presenter.isRunning()
+                  ? 'Live updates from the running agent.'
+                  : 'Recorded updates from this run.'
+              "
+            />
+          </div>
+          @if (presenter.isRunning()) {
+          <mosaik-progress-ring
+            test-id="execution-stream-progress"
+            [attr.aria-label]="'Agent run in progress'"
+            [isIndeterminate]="true"
+            [variant]="'neutral'"
+            [radius]="8"
+            [thickness]="2"
+          />
+          }
+        </header>
+
+        <div test-id="execution-run-stream" class="box-border px-1 py-2">
+          @if (presenter.events().length) {
+          <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+            @for (event of presenter.events(); track event.id) { @let eventActor = event.origin ===
+            'agent' ? (event.actor ?? 'Agent') : 'Symphony';
+            <mosaik-timeline-item [attr.test-id]="'execution-stream-event-' + event.id">
+              <mosaik-timeline-marker
+                [iconName]="event | executionEventIcon"
+                [variant]="event | executionEventVariant"
+                [appearance]="'soft'"
+                [size]="'medium'"
+              />
+              <mosaik-timeline-content>
+                <mosaik-comment [attr.test-id]="'execution-stream-comment-' + event.id">
+                  <mosaik-avatar
+                    slot="avatar"
+                    [text]="eventActor | initials"
+                    [size]="'tiny'"
+                    [appearance]="'soft'"
+                  />
+                  <span slot="author">{{ eventActor }}</span>
+                  <time slot="at" [attr.datetime]="event.occurredAt"
+                    >{{ event.occurredAt | date: 'medium' }}</time
+                  >
+                  <div slot="content" class="flex w-full min-w-0 flex-col gap-1">
+                    <mosaik-text
+                      [text]="event | executionEventLabel"
+                      [readonly]="true"
+                      [wrap]="true"
+                    />
+                    <symphony-markdown [text]="event.message" [compact]="true" />
+                  </div>
+                </mosaik-comment>
+              </mosaik-timeline-content>
+            </mosaik-timeline-item>
+            }
+          </mosaik-timeline>
+          } @else {
+          <mosaik-empty-state
+            [iconName]="'executionOutline'"
+            [header]="'No stream events yet'"
+            [content]="'Updates will appear here as soon as the run starts.'"
+          />
+          }
+        </div>
+      </section>
+    </div>
+    } @else {
+    <mosaik-empty-state
+      [iconName]="'errorCircle'"
+      [header]="'Execution unavailable'"
+      [content]="'The selected execution no longer exists.'"
+    />
+    }
+  </div>
+</ng-template>

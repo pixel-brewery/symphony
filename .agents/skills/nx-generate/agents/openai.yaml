@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Generate Nx Code'
+  short_description: 'Scaffold workspace code through Nx generators'
+  default_prompt: 'Use $nx-generate before scaffolding an app or library in Symphony.'

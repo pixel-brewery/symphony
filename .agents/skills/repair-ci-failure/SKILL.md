@@ -1,0 +1,17 @@
+---
+name: repair-ci-failure
+description: Repair a diagnosed CI source or workflow failure in an existing Symphony-managed pull-request worktree. Use only after a completed CI diagnosis authorizes the failure class and the active agentic-delivery policy permits managed branch updates.
+---
+
+# Repair CI Failure
+
+Work only inside the supplied managed worktree and keep the existing pull-request branch.
+
+1. Read the completed diagnosis and independently confirm its evidence against the worktree.
+2. Stop without edits when the failure is infrastructure, transient, authorization-related, or unsupported by the available evidence.
+3. Make the smallest source, test, or workflow change that addresses the causal failure.
+4. Preserve unrelated user changes and existing repository conventions.
+5. Run the narrowest relevant repository verification, then expand verification only when the change risk requires it.
+6. Report changed files, verification evidence, residual risk, and whether a new CI run is required.
+
+Never change the default branch, create another worktree, force-push, merge, publish a release, open a replacement pull request, or bypass repository policy. Symphony owns commit, push, pull-request reconciliation, retry limits, and delivery recovery.

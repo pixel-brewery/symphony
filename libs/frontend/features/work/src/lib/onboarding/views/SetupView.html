@@ -1,0 +1,239 @@
+<mosaik-page test-id="setup-view">
+  <mosaik-page-header [inset]="'all'"
+    ><div class="flex items-center gap-3">
+      <mosaik-text [text]="'Build your project team'" /><mosaik-button
+        routerLink="/main/settings"
+        [label]="'Expert settings / accounts'"
+        [appearance]="'plain'"
+      /></div
+  ></mosaik-page-header>
+  <mosaik-page-content [inset]="'all'">
+    <div class="flex flex-col gap-4">
+      <mosaik-hint
+        [text]="'Connect a repository, a ticket source and one employee. Review the proposal, then Apply.'"
+      />
+      <mosaik-select
+        [label]="'Workspace'"
+        test-id="setup-workspace"
+        [ngModel]="presenter.workspaceId()"
+        (ngModelChange)="presenter.changeWorkspaceCommand.execute($event)"
+        >@for (workspace of presenter.workspaces(); track workspace.id) {<mosaik-select-item
+          [value]="workspace.id"
+          [label]="workspace.displayName"
+        />}</mosaik-select
+      >
+      <div
+        class="grid grid-cols-[repeat(auto-fit,minmax(17rem,1fr))] items-start gap-4"
+        test-id="setup-connections"
+      >
+        <mosaik-card
+          ><mosaik-card-content
+            ><div class="flex flex-col gap-3">
+              <mosaik-text [text]="'1 · Repository'" />
+              <mosaik-select
+                test-id="setup-repository"
+                [ngModel]="presenter.repositoryId()"
+                (ngModelChange)="presenter.repositoryId.set($event);presenter.changedCommand.execute()"
+                ><mosaik-select-item [value]="''" [label]="'Connect a GitHub repository'" />@for
+                (repository of presenter.repositories(); track repository.id) {<mosaik-select-item
+                  [value]="repository.id"
+                  [label]="repository.displayName"
+                />}</mosaik-select
+              >
+              @if (!presenter.repositoryId()) {<mosaik-textbox
+                test-id="setup-repository-name"
+                [placeholder]="'owner/repository'"
+                [ngModel]="presenter.repositoryName()"
+                (ngModelChange)="presenter.repositoryName.set($event);presenter.changedCommand.execute()"
+              /><mosaik-select
+                test-id="setup-github-account"
+                [ngModel]="presenter.githubAccountId()"
+                (ngModelChange)="presenter.githubAccountId.set($event);presenter.changedCommand.execute()"
+                >@for (account of presenter.githubAccounts(); track account.id) {<mosaik-select-item
+                  [value]="account.id"
+                  [label]="account.login+' · '+account.hostname"
+                />}</mosaik-select
+              >}
+              <mosaik-button
+                test-id="setup-detect"
+                [label]="'Detect project and workflows'"
+                [disabled]="presenter.busy()||!presenter.proposal()||presenter.applied()"
+                (click)="presenter.inspectCommand.execute()"
+              />
+              @if (!presenter.githubAccounts().length && !presenter.repositoryId()) {<mosaik-hint
+                [text]="'Sign in to GitHub to inspect this repository.'"
+              /><mosaik-button routerLink="/main/settings" [label]="'Connect GitHub account'" />}
+            </div></mosaik-card-content
+          ></mosaik-card
+        >
+        <mosaik-card
+          ><mosaik-card-content
+            ><div class="flex flex-col gap-3">
+              <mosaik-text [text]="'2 · Work source'" />
+              <mosaik-select
+                test-id="setup-source"
+                [ngModel]="presenter.sourceId()"
+                (ngModelChange)="presenter.sourceId.set($event);presenter.applied.set(false)"
+                ><mosaik-select-item [value]="''" [label]="'Use a discovered GitHub Project'" />@for
+                (source of presenter.sources(); track source.id) {<mosaik-select-item
+                  [value]="source.id"
+                  [label]="source.displayName"
+                />}</mosaik-select
+              >
+              @if (!presenter.sourceId()) {<mosaik-select
+                test-id="setup-project"
+                [ngModel]="presenter.projectId()"
+                (ngModelChange)="presenter.projectId.set($event);presenter.applied.set(false)"
+                >@for (project of presenter.projects(); track project.id) {<mosaik-select-item
+                  [value]="project.id"
+                  [label]="project.title"
+                />}</mosaik-select
+              >} @if (presenter.inspected()&&!presenter.project()&&!presenter.sourceId())
+              {<mosaik-hint
+                [text]="'No readable ticket source was found. Choose an existing source or connect one in expert settings.'"
+              /><mosaik-button routerLink="/main/settings" [label]="'Connect work source'" />}
+            </div></mosaik-card-content
+          ></mosaik-card
+        >
+        <mosaik-card
+          ><mosaik-card-content
+            ><div class="flex flex-col gap-3">
+              <mosaik-text [text]="'3 · Employee'" />
+              <mosaik-select
+                test-id="setup-cli-account"
+                [ngModel]="presenter.cliAccountId()"
+                (ngModelChange)="presenter.cliAccountId.set($event);presenter.applied.set(false)"
+                >@for (account of presenter.cliAccounts(); track account.id) {<mosaik-select-item
+                  [value]="account.id"
+                  [label]="account.displayName+' · '+account.kind"
+                />}</mosaik-select
+              >
+              @if (presenter.proposal(); as proposal) {@for (agent of proposal.agentProfiles; track
+              agent.id) {@if (agent.id.startsWith('setup-') &&
+              agent.workspaceId===presenter.workspaceId()) {<symphony-agent-figure
+                [agentId]="agent.id"
+                [name]="agent.displayName"
+                [appearance]="agent.appearance"
+                [size]="128"
+              /><span>{{ agent.displayName }}</span>}}}
+              <mosaik-hint
+                [text]="'One account can analyse, implement and review. Add specialists and fallback accounts later.'"
+              />
+              @if (!presenter.authenticatedAccounts().has(presenter.cliAccountId())) {<mosaik-hint
+                [text]="'Open account settings to check this account’s sign-in before analysis starts.'"
+              /><mosaik-button routerLink="/main/settings" [label]="'Sign in / install CLI'" />}
+            </div></mosaik-card-content
+          ></mosaik-card
+        >
+        <mosaik-card
+          ><mosaik-card-content
+            ><div class="flex flex-col gap-3">
+              <mosaik-text [text]="'4 · Delivery target (optional)'" />
+              <mosaik-textbox
+                test-id="setup-target"
+                [placeholder]="'Destination, e.g. staging or stable'"
+                [ngModel]="presenter.targetName()"
+                (ngModelChange)="presenter.targetName.set($event);presenter.applied.set(false)"
+              />
+              <mosaik-select
+                test-id="setup-workflow"
+                [ngModel]="presenter.targetWorkflowId()"
+                (ngModelChange)="presenter.targetWorkflowId.set($event);presenter.applied.set(false)"
+                ><mosaik-select-item [value]="''" [label]="'No deployment workflow'" />@for
+                (workflow of presenter.workflows(); track workflow.id) {@if
+                (workflow.supportsManualDispatch) {<mosaik-select-item
+                  [value]="workflow.id"
+                  [label]="workflow.name"
+                />}}</mosaik-select
+              >
+              @if (presenter.selectedWorkflow(); as workflow) {
+              <mosaik-select
+                [label]="'Exact version input'"
+                test-id="setup-version-input"
+                [ngModel]="presenter.versionInput()"
+                (ngModelChange)="presenter.versionInput.set($event);presenter.applied.set(false)"
+                >@for (input of workflow.inputs ?? []; track input.id) {<mosaik-select-item
+                  [value]="input.id"
+                  [label]="input.id"
+                />}</mosaik-select
+              >
+              <mosaik-select
+                [label]="'Environment input'"
+                test-id="setup-environment-input"
+                [ngModel]="presenter.environmentInput()"
+                (ngModelChange)="presenter.environmentInput.set($event);presenter.applied.set(false)"
+                ><mosaik-select-item
+                  [value]="''"
+                  [label]="'Workflow defines the environment'"
+                />@for (input of workflow.inputs ?? []; track input.id) {<mosaik-select-item
+                  [value]="input.id"
+                  [label]="input.id"
+                />}</mosaik-select
+              >
+              <mosaik-select
+                [label]="'Operation ID input'"
+                test-id="setup-operation-input"
+                [ngModel]="presenter.operationInput()"
+                (ngModelChange)="presenter.operationInput.set($event);presenter.applied.set(false)"
+                ><mosaik-select-item [value]="''" [label]="'No correlation input'" />@for (input of
+                workflow.inputs ?? []; track input.id) {<mosaik-select-item
+                  [value]="input.id"
+                  [label]="input.id"
+                />}</mosaik-select
+              >
+              <mosaik-hint
+                [text]="'The operation input must appear in the workflow run-name so an interrupted dispatch can be reconciled.'"
+              />
+              } @if (presenter.targetKind()==='release-channel') {<mosaik-hint
+                [text]="'Stable follows GitHub’s latest release. Other channels use .symphony/release-channels.json in the repository.'"
+              />} @if (presenter.targetKind()==='installation') {<mosaik-hint
+                [text]="'An installation needs a successful receipt with payload.symphony.kind=installation. Publishing a release is not a receipt.'"
+              />}
+              <mosaik-hint
+                [text]="'Delivery is optional for the first ticket analysis.'"
+              /></div></mosaik-card-content
+        ></mosaik-card>
+      </div>
+      @if (presenter.error()) {<mosaik-hint test-id="setup-error" [text]="presenter.error()" />}
+      <div class="flex items-center gap-3">
+        <mosaik-button
+          test-id="setup-apply"
+          [label]="'Apply proposal'"
+          [disabled]="presenter.busy()||!presenter.proposal()||presenter.applied()"
+          (click)="presenter.applyCommand.execute()"
+        /><mosaik-button routerLink="/main/orbit" [label]="'Leave draft'" [appearance]="'plain'" />
+      </div>
+      @if (presenter.applied()) {
+      <mosaik-card test-id="setup-first-analysis"
+        ><mosaik-card-content
+          ><div class="flex flex-col gap-3">
+            <mosaik-text [text]="'Start with a real ticket'" />
+            @if (!presenter.tickets().length) {
+            <mosaik-hint
+              [text]="'No ticket currently permits analysis. Open the board and use its workflow decisions to qualify a ticket first.'"
+            />
+            <mosaik-button routerLink="/main/board" [label]="'Open board'" />
+            }
+            <mosaik-select
+              test-id="setup-analysis-ticket"
+              [ngModel]="presenter.ticketId()"
+              (ngModelChange)="presenter.ticketId.set($event)"
+              >@for (ticket of presenter.tickets(); track ticket.id) {<mosaik-select-item
+                [value]="ticket.id"
+                [label]="ticket.externalId+' · '+ticket.title"
+              />}</mosaik-select
+            >
+            <mosaik-button
+              test-id="setup-analyse"
+              [label]="'Prepare repository and analyse ticket'"
+              [disabled]="presenter.busy()||!presenter.ticketId()||!presenter.canAnalyse()"
+              (click)="presenter.analyseCommand.execute()"
+            />
+            <mosaik-hint
+              [text]="'The analyser reads the selected ticket and the prepared repository. It does not change target source files.'"
+            /></div></mosaik-card-content
+      ></mosaik-card>
+      }
+    </div>
+  </mosaik-page-content>
+</mosaik-page>

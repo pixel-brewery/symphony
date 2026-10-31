@@ -1,0 +1,13 @@
+# Electron and mobile acceptance integration
+
+Read with common Browser E2E, [test integration](testing.md) and [Electron E2E writing guidelines](../../../../.github/instructions/testing-e2e-writing-guidelines.instructions.md).
+
+- `apps/renderer-e2e/playwright.config.ts` owns the actual suite: `testDir: './src'`, `testIdAttribute: 'test-id'`, one worker, serial journeys and configured trace/screenshot artifacts. Inspect current exclusions and resolved `renderer-e2e` targets; do not silently skip or weaken a failing journey.
+- Build the affected application artifacts before `yarn e2e`. Journeys launch the real built Electron application and exercise Renderer → Preload → Main → Utility Process. A dev-server page or a newly launched Chrome browser is not equivalent process evidence. The peer projects' existing-Chrome-session policy does not replace this Electron fixture.
+- Reuse the actual neighboring journey/fixture, runtime fixtures and test-owned application configuration/SQLite/workspace paths. Never use the user's live profile, credentials or workspace database as acceptance fixtures. Close Electron and owned child processes cleanly.
+- Locate application interactions through `getByTestId()` and stable domain-specific `test-id` values. Do not substitute translated text, labels, placeholders, CSS, XPath, layout indexes, implementation classes or component tags for missing automation IDs.
+- Use Playwright auto-waiting and web-first assertions; no fixed sleeps, blanket timeout inflation or fallback locators hiding a missing control. Assert material domain results, state, validation, persistence, process isolation and user-resolvable failures.
+- Preserve the suite's actual Page/Component Object and fixture ownership when present; do not create a speculative parallel harness. Mocks/synthetic CLIs may prove deterministic application behavior but do not establish a live provider login or remote integration.
+- For layout/shell/dialog/settings/board/responsive changes, inspect screenshots and re-audit exact FLAMOX365/Mosaik reference behavior after final edits. Record the tested route, fixture/context, viewport, actions, result and meaningful adaptations in the owning parity documentation.
+- Mobile checks use the repository's actual packaged assets and dedicated mobile contract/fixture. Preserve pairing, private-interface authorization, limits and Utility Process lifecycle instead of introducing a general preview server.
+- Report focused journey results separately from `yarn verify`, the complete `yarn e2e` suite and `yarn forge:package`. A focused pass does not establish a release candidate or a full Definition of Done.

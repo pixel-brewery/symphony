@@ -1,0 +1,755 @@
+{
+  "schema_version": 1,
+  "original_repository": "https://github.com/CopilotKit/OpenDots",
+  "original_revision": "625452e06cde74cb25b0ce319e2c1be0488f5a5f",
+  "toolkit": "installed work-pets create-pet",
+  "toolkit_version": "0.1.6",
+  "renderer_reference_revision": "2fc29a56e37449b4fbbfb1d7027249af652eb28f",
+  "sprite_version": 2,
+  "columns": 8,
+  "rows": 11,
+  "cell_width": 192,
+  "cell_height": 208,
+  "width": 1536,
+  "height": 2288,
+  "required_frames": 73,
+  "unused_cells": 15,
+  "state_frames": {
+    "idle": 6,
+    "running-right": 8,
+    "running-left": 8,
+    "waving": 4,
+    "jumping": 5,
+    "failed": 8,
+    "waiting": 6,
+    "running": 6,
+    "review": 6
+  },
+  "clockwise_look_degrees": [
+    0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 180.0, 202.5, 225.0, 247.5, 270.0, 292.5,
+    315.0, 337.5
+  ],
+  "characters": [
+    {
+      "identity": "blue",
+      "canonical_origin": "Unchanged OpenDots original",
+      "original": "blue.png",
+      "original_sha256": "bf8ef19c7b7d753c11ba05e411f15a0733bcb810541bc88fb34c38427c6a6040",
+      "atlas": "blue-v2.png",
+      "atlas_sha256": "c643b28cbc43692e4c88f8171fea0d284d79de7b2fb795788d64c7b7778ca820",
+      "atlas_bytes": 2259189,
+      "source_run": "output/imagegen/employee-blue-v2",
+      "quality_ok": true,
+      "blind_cardinals_ok": true,
+      "reviewed_warnings": [
+        "look direction 022.5 accepted with a reviewed warning",
+        "look direction 045 accepted with a reviewed warning",
+        "look direction 067.5 accepted with a reviewed warning",
+        "look direction 247.5 accepted with a reviewed warning",
+        "look direction 292.5 accepted with a reviewed warning",
+        "look direction 315 accepted with a reviewed warning",
+        "look direction 337.5 accepted with a reviewed warning",
+        "157.5->180 diff is a local outlier (762 pixels vs neighbor average 500)",
+        "337.5->000 diff is a local outlier (1008 pixels vs neighbor average 476)",
+        "vertical-3 A vertical axis is ambiguous",
+        "vertical-4 A vertical axis is ambiguous"
+      ],
+      "selected_sources": [
+        {
+          "id": "base",
+          "output_path": "decoded/base.png",
+          "selected_sha256": "bf8ef19c7b7d753c11ba05e411f15a0733bcb810541bc88fb34c38427c6a6040"
+        },
+        {
+          "id": "idle",
+          "output_path": "decoded/idle.png",
+          "selected_sha256": "6d36d5d676eeaa8d58c304fce6f2f5568fba5f3e761415d2c9d1c44fb6df175b",
+          "selected_actual_prompt": "decoded/idle.prompt.txt",
+          "selected_actual_prompt_sha256": "e6a0e4b91a90280464320524359c674f66ac5deed2f7570dffe37ed01a82ab0a"
+        },
+        {
+          "id": "running-right",
+          "output_path": "decoded/running-right.png",
+          "selected_sha256": "0f006684266f8e986a28122ad03eab778d1bdabc60ee27cbd52d398fe0829af4",
+          "selected_actual_prompt": "decoded/running-right.prompt.txt",
+          "selected_actual_prompt_sha256": "c3092823d78ecce8d52925b58287bcb4a20c983d0ed5948779dd343001e19af8",
+          "generated_source": "decoded/running-right-generated.png",
+          "generated_source_sha256": "f8c4695d5385a4bfd2d8aa7d90ed2fda2ef922e2409bc7a213e5adfa787bd15f",
+          "source_registration": "Extracted approved frames registered into exact slots without drawing or changing their pose."
+        },
+        {
+          "id": "running-left",
+          "output_path": "decoded/running-left.png",
+          "selected_sha256": "59cb734d9d41291079ce61546e5f208ae5863da9355e4f6f273bef649b42e910",
+          "derived_from": "running-right",
+          "mirror_decision": {
+            "approved": true,
+            "approved_at": "2026-10-09T06:35:23.650155+00:00",
+            "note": "Symmetric cream headphones, unmarked blue limbs and diffuse centred light; approved extracted frames first registered as exact slots to preserve frame order and geometry.",
+            "transform": "framewise-horizontal-mirror-preserving-order"
+          }
+        },
+        {
+          "id": "waving",
+          "output_path": "decoded/waving.png",
+          "selected_sha256": "636aa435ece1fd27ac8b3bce79c5185ba518a15299e04445c963f552ef48a9c6",
+          "selected_actual_prompt": "decoded/waving.prompt.txt",
+          "selected_actual_prompt_sha256": "55f86d09b2877d22505503aa2ecd469cded6f2b6b161e959f7bc6dc602f8d03b"
+        },
+        {
+          "id": "jumping",
+          "output_path": "decoded/jumping.png",
+          "selected_sha256": "cc241dbccd6a3711be814ea4ea30b15e284b0ff3cbdf4bd5e87d872c392fdc4e",
+          "selected_actual_prompt": "decoded/jumping.prompt.txt",
+          "selected_actual_prompt_sha256": "121753a4681950eb3b1a59d752d0a3fbbc56280d840394046c0ceb170dc55d15"
+        },
+        {
+          "id": "failed",
+          "output_path": "decoded/failed.png",
+          "selected_sha256": "8260d48e34dd54653e746dd114792285568acdb97475e285cd57644b11ea766e",
+          "selected_actual_prompt": "decoded/failed.prompt.txt",
+          "selected_actual_prompt_sha256": "42753d40ef7b0d8624b5cf3e03fd299997b981d8a01119ea8a2d4b96bde8bcb3"
+        },
+        {
+          "id": "waiting",
+          "output_path": "decoded/waiting.png",
+          "selected_sha256": "ea55d2820def490629f57b20b58a8597a0ce8eab24240d861badd6e6ccaccc6a",
+          "selected_actual_prompt": "decoded/waiting.prompt.txt",
+          "selected_actual_prompt_sha256": "8bbc697312f002e1a391617c81bde9fd3f466b53be069aec40fa2bc0535d774b"
+        },
+        {
+          "id": "running",
+          "output_path": "decoded/running.png",
+          "selected_sha256": "a8739ca5ff54e2db492f4cb1834821a95faad1180dc6ee9977ac370dd2b687c9",
+          "selected_actual_prompt": "decoded/running.prompt.txt",
+          "selected_actual_prompt_sha256": "dcd9ac73221492397f85cf7b81f16bfa9cedbfedb6d1369c392e59f6f5d615a8"
+        },
+        {
+          "id": "review",
+          "output_path": "decoded/review.png",
+          "selected_sha256": "586c004954dbbc1ed5aba0843ad9f84da9e5c50f1a52f496c65becf86a7dc499",
+          "selected_actual_prompt": "decoded/review.prompt.txt",
+          "selected_actual_prompt_sha256": "18b85d6430959822c6b01c9762ee9bf26abe3740597112693d26cb81c7ee817f"
+        },
+        {
+          "id": "look-cardinals",
+          "output_path": "decoded/look-cardinals.png",
+          "selected_sha256": "d993fa214e1899f73702cbb3c2850944e5514de10e9971031f538fc33294afec",
+          "selected_actual_prompt": "decoded/look-cardinals.prompt.txt",
+          "selected_actual_prompt_sha256": "857e0242468bd6dbc72ff20f5d8c1404334066e9c7fa6d6f94872ecd13fe22a2"
+        },
+        {
+          "id": "look-row-9",
+          "output_path": "decoded/look-row-9.png",
+          "selected_sha256": "f2ec38d7cdb6e44ac0a5b4b1d78bcc2ce22a682fdb1327b98f43ab4d4e97d1e7",
+          "selected_actual_prompt": "decoded/look-row-9.prompt.txt",
+          "selected_actual_prompt_sha256": "60b7ea4dab4a4c0409dc62d429b08e8d46c46566bb8adbb6e335e3d9ca97f59c"
+        },
+        {
+          "id": "look-row-10",
+          "output_path": "decoded/look-row-10.png",
+          "selected_sha256": "0df08bc39e6d205c34ce4c8e9ed53345577e05f7aea8f7a1a79644d6d8b3761d",
+          "selected_actual_prompt": "decoded/look-row-10.prompt.txt",
+          "selected_actual_prompt_sha256": "869573b66204b3ea623bb194bc8cf5f913c726b75d49100226c6b4aa64f90599"
+        }
+      ]
+    },
+    {
+      "identity": "mint",
+      "canonical_origin": "Unchanged OpenDots original",
+      "original": "mint.png",
+      "original_sha256": "aebbd4a27e346b7a2f41976bcdae4b144e42219cce77182053cfe4140bb6486f",
+      "atlas": "mint-v2.png",
+      "atlas_sha256": "3bf34c7465fe08273a3587a25150e5ea00d65efa351965fb17491135068c2cf3",
+      "atlas_bytes": 1877435,
+      "source_run": "output/imagegen/employee-mint-v2",
+      "quality_ok": true,
+      "blind_cardinals_ok": true,
+      "reviewed_warnings": [
+        "look direction 022.5 accepted with a reviewed warning",
+        "look direction 157.5 accepted with a reviewed warning",
+        "look direction 202.5 accepted with a reviewed warning",
+        "look direction 337.5 accepted with a reviewed warning",
+        "090->112.5 diff is a local outlier (728 pixels vs neighbor average 500)",
+        "337.5->000 diff is a local outlier (1483 pixels vs neighbor average 507)",
+        "horizontal-7 B horizontal axis is ambiguous"
+      ],
+      "selected_sources": [
+        {
+          "id": "base",
+          "output_path": "decoded/base.png",
+          "selected_sha256": "aebbd4a27e346b7a2f41976bcdae4b144e42219cce77182053cfe4140bb6486f"
+        },
+        {
+          "id": "idle",
+          "output_path": "decoded/idle.png",
+          "selected_sha256": "deddb6c785c2340a0b1fb903b4de7443ea01eba50d69e069329619152ec8b3d0",
+          "selected_actual_prompt": "decoded/idle.prompt.txt",
+          "selected_actual_prompt_sha256": "713bc212c44df3e22b1b6bb43c04d6e127a1c674c26e256a2c15a6482c3e21b3"
+        },
+        {
+          "id": "running-right",
+          "output_path": "decoded/running-right.png",
+          "selected_sha256": "9b543a5514d5a7db6e571a82291b2712f5c6804c84484b40f60cc507328e7840",
+          "selected_actual_prompt": "decoded/running-right.prompt.txt",
+          "selected_actual_prompt_sha256": "8caf1c27ef6a4bd6584901af3b3e589d022bbd521201509e7690f60a85c3f0a8"
+        },
+        {
+          "id": "running-left",
+          "output_path": "decoded/running-left.png",
+          "selected_sha256": "df90132f6239e2528999edefbc478ef844834524674d151c3741a9fe3ce37769",
+          "selected_actual_prompt": "decoded/running-left.prompt.txt",
+          "selected_actual_prompt_sha256": "504e0499f66ac3262dcda1b2eb83bd0bec8280a1faaf6d5fea1ef183518ff83e"
+        },
+        {
+          "id": "waving",
+          "output_path": "decoded/waving.png",
+          "selected_sha256": "efd13f2b9780c3dea42d6ad7a1b1c757bcd0721d64cf1d67e044a20125e64565",
+          "selected_actual_prompt": "decoded/waving.prompt.txt",
+          "selected_actual_prompt_sha256": "5234200fee98b5e48230c0e6dabcb0bef4973c98828213400c17f8b1e6afb75c"
+        },
+        {
+          "id": "jumping",
+          "output_path": "decoded/jumping.png",
+          "selected_sha256": "c588f30efb429b4361792bbb9d4e959da6ff030c394d576dbdaf9803a380a1a4",
+          "selected_actual_prompt": "decoded/jumping.prompt.txt",
+          "selected_actual_prompt_sha256": "76d18697348e3fd25d4443890aa2d86980cb83e23cde0accbfcf6347ed68c1b9"
+        },
+        {
+          "id": "failed",
+          "output_path": "decoded/failed.png",
+          "selected_sha256": "94ec1a78d79971acc11f7f3f66d47c0b67f4d718acfe8b0a42a17c273bfa7ae5",
+          "selected_actual_prompt": "decoded/failed.prompt.txt",
+          "selected_actual_prompt_sha256": "7af3a3fea42ade563d9a868fb9b082383cfd53a059e495ff06dcaeb3b6ff7f08"
+        },
+        {
+          "id": "waiting",
+          "output_path": "decoded/waiting.png",
+          "selected_sha256": "4f8a8c40313f69b1284034baeaf6b8a0c440dda446dd4a4c62951d8bc27c5883",
+          "selected_actual_prompt": "decoded/waiting.prompt.txt",
+          "selected_actual_prompt_sha256": "0b42a3aa1b1b4f1a565623e4f7fa56be743f3295c3df978570bab1b28b9495ab"
+        },
+        {
+          "id": "running",
+          "output_path": "decoded/running.png",
+          "selected_sha256": "b503bcd2ad3318f7b26db104cad1659ff11a776f8f85e3fdb3104bb89900b05b",
+          "selected_actual_prompt": "decoded/running.prompt.txt",
+          "selected_actual_prompt_sha256": "f13f698eda4d06e4f0e8c3417000355a648a9fbbc4edf495350199cad63ea4d0"
+        },
+        {
+          "id": "review",
+          "output_path": "decoded/review.png",
+          "selected_sha256": "33bc19f3128b0655d7ec786ca8cf8d71f364770f85653b2cf276bb8de49f9b4b",
+          "selected_actual_prompt": "decoded/review.prompt.txt",
+          "selected_actual_prompt_sha256": "b5b5b676c5bad6e771e04ba7d35d92e2e569a2243778f384985b44d7b4869d25"
+        },
+        {
+          "id": "look-cardinals",
+          "output_path": "decoded/look-cardinals.png",
+          "selected_sha256": "c03187dcee602d4d240515f8ca2769e061eee32f62609de0aedc820d76e7fc09",
+          "selected_actual_prompt": "decoded/look-cardinals.prompt.txt",
+          "selected_actual_prompt_sha256": "b88c6ffe0b9f8f8d9a40b21db5cf24982c357354a97178f2e0e47944de8d4560"
+        },
+        {
+          "id": "look-row-9",
+          "output_path": "decoded/look-row-9.png",
+          "selected_sha256": "6d5ad038838fb1f222cb8ab1f814b6fee6a1ef32b1d16a1df73ffdcfbaf557f1",
+          "selected_actual_prompt": "decoded/look-row-9.prompt.txt",
+          "selected_actual_prompt_sha256": "600146b3d370e55d3ff34b9fd2713fdfbb181f09cbf4e42e8a0da4abdf804ee4"
+        },
+        {
+          "id": "look-row-10",
+          "output_path": "decoded/look-row-10.png",
+          "selected_sha256": "d4fbc711d3f258c09a62aa21ff03548073ca825202ccc89bc55615d578577ac1",
+          "selected_actual_prompt": "decoded/look-row-10.prompt.txt",
+          "selected_actual_prompt_sha256": "a8f60ea949b95ff44a9f3589aff6b882f8b159dde3813d87a3938558f83398d1"
+        }
+      ]
+    },
+    {
+      "identity": "orange",
+      "canonical_origin": "Unchanged OpenDots original",
+      "original": "orange.png",
+      "original_sha256": "bf9a2f9f6859c2931b9a4062117deb7d06fba77b190b5ad52a90587f368b34a7",
+      "atlas": "orange-v2.png",
+      "atlas_sha256": "bebf976293b4f230999edf78b3a44889b0c2f6709eb754669df23a3f241989bc",
+      "atlas_bytes": 2120636,
+      "source_run": "output/imagegen/employee-orange-v2",
+      "quality_ok": true,
+      "blind_cardinals_ok": true,
+      "reviewed_warnings": [
+        "look direction 022.5 accepted with a reviewed warning",
+        "look direction 112.5 accepted with a reviewed warning",
+        "look direction 157.5 accepted with a reviewed warning",
+        "look direction 337.5 accepted with a reviewed warning",
+        "067.5->090 diff is a local outlier (701 pixels vs neighbor average 462)",
+        "157.5->180 diff is a local outlier (1340 pixels vs neighbor average 600)",
+        "337.5->000 diff is a local outlier (1306 pixels vs neighbor average 726)"
+      ],
+      "selected_sources": [
+        {
+          "id": "base",
+          "output_path": "decoded/base.png",
+          "selected_sha256": "bf9a2f9f6859c2931b9a4062117deb7d06fba77b190b5ad52a90587f368b34a7"
+        },
+        {
+          "id": "idle",
+          "output_path": "decoded/idle.png",
+          "selected_sha256": "80efbc25c3c6a0b5db6d925a954fef11ef2c54c9ae30f5fd0c2104a35c8aa6c6",
+          "selected_actual_prompt": "decoded/idle.prompt.txt",
+          "selected_actual_prompt_sha256": "d4cfa497cfddbad46d84cb97af0883f30f3e73ad4560180fcc61e08042ac2b03"
+        },
+        {
+          "id": "running-right",
+          "output_path": "decoded/running-right.png",
+          "selected_sha256": "f75276b3ef8c2e7da484a43131ce2e85a147b4294deedb3dda04af61b49f892c",
+          "selected_actual_prompt": "decoded/running-right.prompt.txt",
+          "selected_actual_prompt_sha256": "1b312d50eea219c397767f63bc70e3bb31ba749551bca23f6b1ee44706844d40"
+        },
+        {
+          "id": "running-left",
+          "output_path": "decoded/running-left.png",
+          "selected_sha256": "449d592b2f4aefd835cba1c369d6d557821345296a53cfdfe16ee76d9e6b2562",
+          "selected_actual_prompt": "decoded/running-left.prompt.txt",
+          "selected_actual_prompt_sha256": "127678826218dce6bfe94fb73de357fe6fa08fb511180c5edb44cbeece90455a"
+        },
+        {
+          "id": "waving",
+          "output_path": "decoded/waving.png",
+          "selected_sha256": "262411b1a154705517ca70dae0d587ec3d5b28e9cc26b07c2304c2b98197034b",
+          "selected_actual_prompt": "decoded/waving.prompt.txt",
+          "selected_actual_prompt_sha256": "8bc6239761560efdff3e2c44308c1c0b1d5cdc68855b07d308984cff3694b37e"
+        },
+        {
+          "id": "jumping",
+          "output_path": "decoded/jumping.png",
+          "selected_sha256": "f07fecbebc7acb8f871ba269d67391949dbe5fe12a902eafa876c881c89fc80f",
+          "selected_actual_prompt": "decoded/jumping.prompt.txt",
+          "selected_actual_prompt_sha256": "1c2ca67fd8dcfc6319e06ce95e04935522d12adbf8c64e98bbef414c02fd14cc"
+        },
+        {
+          "id": "failed",
+          "output_path": "decoded/failed.png",
+          "selected_sha256": "9ed2df27fe11a1aa47ae1479105b49ef3a474a38078d0bc77ffdf2a501ff8a2b",
+          "selected_actual_prompt": "decoded/failed.prompt.txt",
+          "selected_actual_prompt_sha256": "087341959e96b8cf53ce1c1308282e429becc987425df3a861dbaf172cf21d4a"
+        },
+        {
+          "id": "waiting",
+          "output_path": "decoded/waiting.png",
+          "selected_sha256": "9bacd00d895ab4e3983c154b12e74cab1a11f19b8156910b9be2396f58a43c50",
+          "selected_actual_prompt": "decoded/waiting.prompt.txt",
+          "selected_actual_prompt_sha256": "f028d99bb24bdf567f62e1e94420eeabfa4886abf61a09f21dadf5394c8c7bda"
+        },
+        {
+          "id": "running",
+          "output_path": "decoded/running.png",
+          "selected_sha256": "a63033c02cee1a874b5f14ef68a18b3779bd86830b1c380eac5d8086638fe589",
+          "selected_actual_prompt": "decoded/running.prompt.txt",
+          "selected_actual_prompt_sha256": "88f44bd8f74a93571897a41346b4718f0422d8a9a57fd530db20461e82de1492"
+        },
+        {
+          "id": "review",
+          "output_path": "decoded/review.png",
+          "selected_sha256": "a454fabb9f2fad398e5c912147c79dd8398d42e7f9cfa52aa1f2632d0e54a1b8",
+          "selected_actual_prompt": "decoded/review.prompt.txt",
+          "selected_actual_prompt_sha256": "71c74c25952592aabc18c470ac84885d0af98e9b12831e51b8e7b2f555604d59"
+        },
+        {
+          "id": "look-cardinals",
+          "output_path": "decoded/look-cardinals.png",
+          "selected_sha256": "0addf02079982d6eaed97609b5cc2094340b946a4602bdc309ffd968332f6b69",
+          "selected_actual_prompt": "decoded/look-cardinals.prompt.txt",
+          "selected_actual_prompt_sha256": "f224c1aae467ed7886ec7967511ca6368e2e3fe56ed61f07a77a24219e37264d"
+        },
+        {
+          "id": "look-row-9",
+          "output_path": "decoded/look-row-9.png",
+          "selected_sha256": "97d2a4b7b4e951b9dd3f77257cce4d181ae91760d271dfc17f0361847d378537",
+          "selected_actual_prompt": "decoded/look-row-9.prompt.txt",
+          "selected_actual_prompt_sha256": "b2273b75d4c03162851ac1b745038acc92449534c6b6f2a05bd68d6e4386df69"
+        },
+        {
+          "id": "look-row-10",
+          "output_path": "decoded/look-row-10.png",
+          "selected_sha256": "ac2c3df2a4a66451f802a587d317db33e286103a178735675953a9aef25dd994",
+          "selected_actual_prompt": "decoded/look-row-10.prompt.txt",
+          "selected_actual_prompt_sha256": "dfb764cdd7b3a3a6486edf123a53bfe6f0888c512c6a1a80c804ef21dd5d669b"
+        }
+      ]
+    },
+    {
+      "identity": "purple",
+      "canonical_origin": "Unchanged OpenDots original",
+      "original": "purple.png",
+      "original_sha256": "9fb3e53fc90b4fe881e1c1f8121dd32fbe9882dbc989156c40b0a8fadc348441",
+      "atlas": "purple-v2.png",
+      "atlas_sha256": "00a4007b9531605add1effbdb419a46c6c51f371ec2ef292edeb22d34da88e32",
+      "atlas_bytes": 2956067,
+      "source_run": "output/imagegen/employee-purple-v2",
+      "quality_ok": true,
+      "blind_cardinals_ok": true,
+      "reviewed_warnings": [
+        "look direction 247.5 accepted with a reviewed warning",
+        "look direction 337.5 accepted with a reviewed warning",
+        "337.5->000 diff is a local outlier (1181 pixels vs neighbor average 670)"
+      ],
+      "selected_sources": [
+        {
+          "id": "base",
+          "output_path": "decoded/base.png",
+          "selected_sha256": "9fb3e53fc90b4fe881e1c1f8121dd32fbe9882dbc989156c40b0a8fadc348441"
+        },
+        {
+          "id": "idle",
+          "output_path": "decoded/idle.png",
+          "selected_sha256": "c35143af0476094328c9006412347c8559b671e2dea0167abed5006a67e1788e",
+          "selected_actual_prompt": "decoded/idle.prompt.txt",
+          "selected_actual_prompt_sha256": "c53026ad5eada45bdb1e24149c77efe156640b5a7387542dd605c79543b9e84c"
+        },
+        {
+          "id": "running-right",
+          "output_path": "decoded/running-right.png",
+          "selected_sha256": "9737ca439af39bd1f12ad7bc818e0647167be522e0ef459cae4a35c86936deb3",
+          "selected_actual_prompt": "decoded/running-right.prompt.txt",
+          "selected_actual_prompt_sha256": "990a26ee16a0cba06c6ee16301d19264127440134d9fd915276910aa21602830"
+        },
+        {
+          "id": "running-left",
+          "output_path": "decoded/running-left.png",
+          "selected_sha256": "cb74caecd3fae8c8f049d13f1aefcb936b432a9b35385b31ee526a9b4688f5e8",
+          "selected_actual_prompt": "decoded/running-left.prompt.txt",
+          "selected_actual_prompt_sha256": "010019d369d24b05f2359ed77f15e8992c18ee11aa4c88e011c0e73ea41587d9"
+        },
+        {
+          "id": "waving",
+          "output_path": "decoded/waving.png",
+          "selected_sha256": "f556fad9c74c8656c52ada4be61da34925b0d4aac58cfc20869116a2528a0aa4",
+          "selected_actual_prompt": "decoded/waving.prompt.txt",
+          "selected_actual_prompt_sha256": "7001b459acb90ff2376d60b8aa9ee37c8f1605483f3c61d2f1dc3f3e639104d9"
+        },
+        {
+          "id": "jumping",
+          "output_path": "decoded/jumping.png",
+          "selected_sha256": "9d760fab582667e7f792545eae8d605f2c68704100a093afbe3188276edb841c",
+          "selected_actual_prompt": "decoded/jumping.prompt.txt",
+          "selected_actual_prompt_sha256": "c7de053c38350d3ccce1a7a4ef0a79e389d8adc37b50fb9fb3d37e20d0203edf"
+        },
+        {
+          "id": "failed",
+          "output_path": "decoded/failed.png",
+          "selected_sha256": "89caa4bf7edd0ac55120be355f0df4b96c4146735dd8b6edcb282e0e03e3d766",
+          "selected_actual_prompt": "decoded/failed.prompt.txt",
+          "selected_actual_prompt_sha256": "ab0172b1306277926d9109f69b8857aa566adf1d1f415a6b53e83fc9292ddab6"
+        },
+        {
+          "id": "waiting",
+          "output_path": "decoded/waiting.png",
+          "selected_sha256": "a8ae47cb7f555e6367a6ab056ace4c9244a504e5478791576dadf2a3733ee768",
+          "selected_actual_prompt": "decoded/waiting.prompt.txt",
+          "selected_actual_prompt_sha256": "f09ce15e474403d19680fbaafa7c5297e70e770edc1a57acde42a45192568716"
+        },
+        {
+          "id": "running",
+          "output_path": "decoded/running.png",
+          "selected_sha256": "3c22037b2f2fa0b22c360af6b7e90fd2e64c851b487e973a1f31bc3de3b70ca4",
+          "selected_actual_prompt": "decoded/running.prompt.txt",
+          "selected_actual_prompt_sha256": "d214bb1b609831870ba70da72a41589fbd7f9177932bc11612490c296e325cb0"
+        },
+        {
+          "id": "review",
+          "output_path": "decoded/review.png",
+          "selected_sha256": "c179eec4880c655333233911db1bfab37598fb0420e230178395eacd236ffa97",
+          "selected_actual_prompt": "decoded/review.prompt.txt",
+          "selected_actual_prompt_sha256": "f404f1c715dc7bb05cf74960405f2fa1a972296e865b1c888855cbffe3011502"
+        },
+        {
+          "id": "look-cardinals",
+          "output_path": "decoded/look-cardinals.png",
+          "selected_sha256": "d43287c71f256066f37f542916917485c24c62928da3952343e43787fbf1bcc6",
+          "selected_actual_prompt": "decoded/look-cardinals.prompt.txt",
+          "selected_actual_prompt_sha256": "304d3db8bd984f6efba78267a26434c99218874ba6114aebeca8212623239ddd"
+        },
+        {
+          "id": "look-row-9",
+          "output_path": "decoded/look-row-9.png",
+          "selected_sha256": "4b79b288f97cf6e0d1722b8d987c23472428722a9630a5ad2e547428834025a1",
+          "selected_actual_prompt": "decoded/look-row-9.prompt.txt",
+          "selected_actual_prompt_sha256": "05e8738b2002c87115df25cb4a5b06f7890c261d5812460aa9c579c083b6d920"
+        },
+        {
+          "id": "look-row-10",
+          "output_path": "decoded/look-row-10.png",
+          "selected_sha256": "29398cf04aafbec12c4c797773e2a3ca015c3f9727047593ce5103a08834ac6d",
+          "selected_actual_prompt": "decoded/look-row-10.prompt.txt",
+          "selected_actual_prompt_sha256": "5a6b63279ee303c50f4d0b34a0c7d1f6fe539c5c1ddbf7918f881c70a94b9c12"
+        }
+      ]
+    },
+    {
+      "identity": "gold",
+      "canonical_origin": "Symphony-authored imagegen character",
+      "original": "gold.png",
+      "original_sha256": "d9e003700b2aa54fcc1d89c926271566481ef70dc74fe279d15160b8349b8015",
+      "atlas": "gold-v2.png",
+      "atlas_sha256": "080acedc99bd928e93816e13523fd90a2bf1fc2db531007d5d4ee93ec4d7c27a",
+      "atlas_bytes": 2254226,
+      "source_run": "output/imagegen/employee-gold-v2",
+      "quality_ok": true,
+      "blind_cardinals_ok": true,
+      "reviewed_warnings": [
+        "look direction 022.5 accepted with a reviewed warning",
+        "look direction 202.5 accepted with a reviewed warning",
+        "look direction 292.5 accepted with a reviewed warning",
+        "look direction 315 accepted with a reviewed warning",
+        "look direction 337.5 accepted with a reviewed warning",
+        "045->067.5 diff is a local outlier (575 pixels vs neighbor average 348)",
+        "090->112.5 diff is a local outlier (627 pixels vs neighbor average 272)",
+        "157.5->180 diff is a local outlier (849 pixels vs neighbor average 320)",
+        "337.5->000 diff is a local outlier (913 pixels vs neighbor average 506)"
+      ],
+      "selected_sources": [
+        {
+          "id": "base",
+          "output_path": "decoded/base.png",
+          "selected_sha256": "d9e003700b2aa54fcc1d89c926271566481ef70dc74fe279d15160b8349b8015",
+          "selected_actual_prompt": "decoded/base-generated.prompt.txt",
+          "selected_actual_prompt_sha256": "cc5d4b73dc45e86c9fbb9d6d43ecb35ef7f892c0bee5119dd0c6dce031947db8",
+          "generated_source": "decoded/base-generated.png",
+          "generated_source_sha256": "1acbead2bed7811cb00e76fe976319bc15a012d400b1c119d4599fae6c9b37b1",
+          "source_registration": "qa/canonical-normalization.json"
+        },
+        {
+          "id": "idle",
+          "output_path": "decoded/idle.png",
+          "selected_sha256": "f5ec25fed42a09ad14d31d65b527a88fe2b5fcbe48c164f3aac21ce45eeefb77",
+          "selected_actual_prompt": "decoded/idle.prompt.txt",
+          "selected_actual_prompt_sha256": "f1e23f8fa0682dcfc97866316ad8b841ded33295f9a66c98890ea55676d35fc4"
+        },
+        {
+          "id": "running-right",
+          "output_path": "decoded/running-right.png",
+          "selected_sha256": "3cc58d468b728d3439ec3a9a3b80c7ebdea2449224acdea7024bbcb06b8161a2",
+          "selected_actual_prompt": "decoded/running-right.prompt.txt",
+          "selected_actual_prompt_sha256": "7c055fc79582622aec704ac405821eb9c51248e3942a705b02a145ec563ef4c7"
+        },
+        {
+          "id": "running-left",
+          "output_path": "decoded/running-left.png",
+          "selected_sha256": "2787655c7a6c5a67ad12368315b0f5356bcb9aa89bb42f060b14c51fa9d812b7",
+          "derived_from": "running-right",
+          "mirror_decision": {
+            "approved": true,
+            "approved_at": "2026-10-09T09:08:52.549353+00:00",
+            "note": "Parent inspected the complete rightward gait and extracted alternating support/passing poses. Spark has a symmetrical nut-like body and paired goggles, no handed prop or marking; soft diffuse studio light remains coherent. Complete poses fit within native slots. Mirror each frame in place to preserve temporal order.",
+            "transform": "framewise-horizontal-mirror-preserving-order"
+          }
+        },
+        {
+          "id": "waving",
+          "output_path": "decoded/waving.png",
+          "selected_sha256": "22baa19fa2a83961476601b88f317e35e13c3c7f35f8a90ba3407b7131ad4913",
+          "selected_actual_prompt": "decoded/waving.prompt.txt",
+          "selected_actual_prompt_sha256": "9863c5339c535f340b5b02440db640488a66e288c2266a0d21d9c9409ae07c74"
+        },
+        {
+          "id": "jumping",
+          "output_path": "decoded/jumping.png",
+          "selected_sha256": "819b2492e011252b004d8638b7e1aa0fc3af827c26119f6ed9b822d1bc7c9325",
+          "selected_actual_prompt": "decoded/jumping.prompt.txt",
+          "selected_actual_prompt_sha256": "dbcb43da259a1b4aa209b43d9d192d824486e577e87c9c8f7c8210f2679ac61f"
+        },
+        {
+          "id": "failed",
+          "output_path": "decoded/failed.png",
+          "selected_sha256": "ec8dcce70bcc4e16ad71c8f8034a4ae181117d96316349c45f79d4360aba8778",
+          "selected_actual_prompt": "decoded/failed.prompt.txt",
+          "selected_actual_prompt_sha256": "feb5c97ec955d238823830bf1a16eabfc75687c5eb5b4ab1cf4b4ef907de67fe"
+        },
+        {
+          "id": "waiting",
+          "output_path": "decoded/waiting.png",
+          "selected_sha256": "3af0ff51c0a58a60dd24c2f69d8c244a7e2e0dca8e31c87208230204fbd36208",
+          "selected_actual_prompt": "decoded/waiting.prompt.txt",
+          "selected_actual_prompt_sha256": "885570035d9f303dcdc2d57c2e3888593555e9f8a36d5a110f2aa27596c8b2f8"
+        },
+        {
+          "id": "running",
+          "output_path": "decoded/running.png",
+          "selected_sha256": "4eda79a586199961ac48490e5d057f978c36a65a70ca3436a348c4902f6dfd3a",
+          "selected_actual_prompt": "decoded/running.prompt.txt",
+          "selected_actual_prompt_sha256": "63c0a2ed2618dd4dc3d09a26a66cce97e1432f1e5a23ba167d2872a672a9b43f"
+        },
+        {
+          "id": "review",
+          "output_path": "decoded/review.png",
+          "selected_sha256": "97fe74497442a78626b73fe07e175284906feb58068137196c591a321e84712b",
+          "selected_actual_prompt": "decoded/review.prompt.txt",
+          "selected_actual_prompt_sha256": "e965c064b7ab0bb71533536f32f3790c4399d3611ddc2e335f3daca6df98477e"
+        },
+        {
+          "id": "look-cardinals",
+          "output_path": "decoded/look-cardinals.png",
+          "selected_sha256": "7e20728f5918e3b4584f015c8d61f0cb065ae6bf6a872a73b688aadcd083d38e",
+          "selected_actual_prompt": "decoded/look-cardinals.prompt.txt",
+          "selected_actual_prompt_sha256": "fe24c2735a5d748a29029b05ea6c912a218e06bf0824d655f9260bb543a62b1d"
+        },
+        {
+          "id": "look-row-9",
+          "output_path": "decoded/look-row-9.png",
+          "selected_sha256": "92af3130d8855830382218cce94072c80017f78fa5f897235bd180641519e7c3",
+          "selected_actual_prompt": "decoded/look-row-9.prompt.txt",
+          "selected_actual_prompt_sha256": "962228c0c647065fe651ad7c971a207ffd64dffabb48900cd9b6990a2e6b4784"
+        },
+        {
+          "id": "look-row-10",
+          "output_path": "decoded/look-row-10.png",
+          "selected_sha256": "3be04c3eba3c6debcd31633ba94d7c0389d52b89b87810d85d6569744b535749",
+          "selected_actual_prompt": "decoded/look-row-10.prompt.txt",
+          "selected_actual_prompt_sha256": "b73b7c842a2596ebba7daec1084686ffaad51f09dbc09cf3422d813115b4f36f"
+        }
+      ]
+    },
+    {
+      "identity": "rose",
+      "canonical_origin": "Symphony-authored imagegen character",
+      "original": "rose.png",
+      "original_sha256": "d6390a0a103ea7613b6180f4dc86714d300268129dccf25619edfabb2ec829f1",
+      "atlas": "rose-v2.png",
+      "atlas_sha256": "105c3df43ce2ed3153ae97e79fef39d4b2a55d02d965875a1954a9a6393500ca",
+      "atlas_bytes": 1913106,
+      "source_run": "output/imagegen/employee-rose-v2",
+      "quality_ok": true,
+      "blind_cardinals_ok": true,
+      "reviewed_warnings": [
+        "look direction 022.5 accepted with a reviewed warning",
+        "look direction 067.5 accepted with a reviewed warning",
+        "look direction 202.5 accepted with a reviewed warning",
+        "look direction 225 accepted with a reviewed warning",
+        "look direction 247.5 accepted with a reviewed warning",
+        "look direction 292.5 accepted with a reviewed warning",
+        "look direction 315 accepted with a reviewed warning",
+        "000 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "022.5 has transparent interior hole rows (y=72, y=73, y=74, y=75, +4 more)",
+        "045 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "067.5 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "090 has transparent interior hole rows (y=72, y=73, y=74, y=75, +4 more)",
+        "112.5 has transparent interior hole rows (y=72, y=73, y=74, y=75, +4 more)",
+        "135 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "157.5 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "180 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "202.5 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "225 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "247.5 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "270 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "292.5 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "315 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "337.5 has transparent interior hole rows (y=73, y=74, y=75, y=76, +4 more)",
+        "horizontal-7 B horizontal axis is ambiguous",
+        "vertical-7 A vertical axis is ambiguous",
+        "vertical-7 B vertical axis is ambiguous"
+      ],
+      "selected_sources": [
+        {
+          "id": "base",
+          "output_path": "decoded/base.png",
+          "selected_sha256": "d6390a0a103ea7613b6180f4dc86714d300268129dccf25619edfabb2ec829f1",
+          "selected_actual_prompt": "decoded/base-generated.prompt.txt",
+          "selected_actual_prompt_sha256": "b188ac0b6473e647a0daa2a0d50c4697feb80b42ef4d1f715858858e9f0654e8",
+          "generated_source": "decoded/base-generated.png",
+          "generated_source_sha256": "d0ba405e59476f1402d91d9726ebcf92e6f79fbca1915b62bcca1880b4392650",
+          "source_registration": "qa/canonical-normalization.json"
+        },
+        {
+          "id": "idle",
+          "output_path": "decoded/idle.png",
+          "selected_sha256": "2fd67debb05ce7ec0492c1f89b52818c6fc6b48f5e3bf7cceef4d848f5f46e0b",
+          "selected_actual_prompt": "decoded/idle.prompt.txt",
+          "selected_actual_prompt_sha256": "c192bcd2247c69155973576ef86e8228436bae38634670e89b8b7ba462480661"
+        },
+        {
+          "id": "running-right",
+          "output_path": "decoded/running-right.png",
+          "selected_sha256": "70f0c9e75723b8bfe0f405c298d69e5b7d080e7dfb31ed07fb31c5f5e57feab2",
+          "selected_actual_prompt": "decoded/running-right.prompt.txt",
+          "selected_actual_prompt_sha256": "551d73db47b064aa616f873045844c3feb39e454c5f4df62e47a6a920a7160e3"
+        },
+        {
+          "id": "running-left",
+          "output_path": "decoded/running-left.png",
+          "selected_sha256": "bad71da4b067740cf110d76fe652e4fbce15020b7f1798f2e6d57bc92e84d79e",
+          "derived_from": "running-right",
+          "mirror_decision": {
+            "approved": true,
+            "approved_at": "2026-10-09T09:04:25.562379+00:00",
+            "note": "Parent inspected eight complete rightward poses and their extracted frames: symmetrical cloud lobes and paired antennae, no handed prop or marking, diffuse frontal lighting. Native separated poses fit within each source slot. Framewise mirror preserves temporal order and whole-eye identity.",
+            "transform": "framewise-horizontal-mirror-preserving-order"
+          }
+        },
+        {
+          "id": "waving",
+          "output_path": "decoded/waving.png",
+          "selected_sha256": "992d50f5399bb7ad06a04618d0cfbb12fc7cabf7d176bc69a2f87cd5dc3f3854",
+          "selected_actual_prompt": "decoded/waving.prompt.txt",
+          "selected_actual_prompt_sha256": "43f879c6bf78e3ac0a0c45ae3f899d33e2e5a747eefe3adf5679dcf48b7634a9"
+        },
+        {
+          "id": "jumping",
+          "output_path": "decoded/jumping.png",
+          "selected_sha256": "002e3bca14e393b9a68f9e6161a4b920583c4e56b438a44743b43894f952a0ea",
+          "selected_actual_prompt": "decoded/jumping.prompt.txt",
+          "selected_actual_prompt_sha256": "83c7e37e62b725f057deacf53d3d4740a4d09321f751ceafb87dc3caa0b21576"
+        },
+        {
+          "id": "failed",
+          "output_path": "decoded/failed.png",
+          "selected_sha256": "700fa6410a97956bea3e07193aa27b4afbe70b71bfb0594902f6843d1203bddb",
+          "selected_actual_prompt": "decoded/failed.prompt.txt",
+          "selected_actual_prompt_sha256": "4d51f3b74f4bbc5f2a31201e0816e89dcc44747ab5e63223fc187c552b8b19bb"
+        },
+        {
+          "id": "waiting",
+          "output_path": "decoded/waiting.png",
+          "selected_sha256": "9ec38ec4b832a9f0c48b86743276841fb04ddcf6170bb3197a803790f135bfe6",
+          "selected_actual_prompt": "decoded/waiting.prompt.txt",
+          "selected_actual_prompt_sha256": "78512e8bd61545eb8673131d00734088acd1f9675ede3950d511c8e5278dbb44"
+        },
+        {
+          "id": "running",
+          "output_path": "decoded/running.png",
+          "selected_sha256": "0e18aa6c8a58e2d65b15b8b6e89aa0ed215adab089d5000558af9c930b36ae4a",
+          "selected_actual_prompt": "decoded/running.prompt.txt",
+          "selected_actual_prompt_sha256": "18ab9401b7caeb792b17e9b6831954a3103d85998aeafe79be36c1e65e3a9ac9"
+        },
+        {
+          "id": "review",
+          "output_path": "decoded/review.png",
+          "selected_sha256": "91ed797fa82b25a30d754e5c6d7efaee456661b4a55f84da6b3016a2613179fd",
+          "selected_actual_prompt": "decoded/review.prompt.txt",
+          "selected_actual_prompt_sha256": "ea46086742f500b66fb2fd2e97f8e30e9160f7103ef773ee7a1c25036e963476"
+        },
+        {
+          "id": "look-cardinals",
+          "output_path": "decoded/look-cardinals.png",
+          "selected_sha256": "abb387c6253ed716065fec9e961b4ea3a444a028ffc6f379e99becff32402163",
+          "selected_actual_prompt": "decoded/look-cardinals.prompt.txt",
+          "selected_actual_prompt_sha256": "de2d6e455fe5246fcf23583300f7f395f8668f384a2a586d39aed0b95f173fa3"
+        },
+        {
+          "id": "look-row-9",
+          "output_path": "decoded/look-row-9.png",
+          "selected_sha256": "83f7cacb8c902b7a40d239f3a30affb860d2936ee1ed167f12bb2590a2384b92",
+          "selected_actual_prompt": "decoded/look-row-9.prompt.txt",
+          "selected_actual_prompt_sha256": "4281ff2f93b822ab6ab7659290a89b8a48a0bd267a79ae43e1778b039a5558d5"
+        },
+        {
+          "id": "look-row-10",
+          "output_path": "decoded/look-row-10.png",
+          "selected_sha256": "29b9d7d87ccee5d0da0d10ba16dab3cf66a907cfb232a532b9e51184acff49af",
+          "selected_actual_prompt": "decoded/look-row-10.prompt.txt",
+          "selected_actual_prompt_sha256": "cd6243cf7a673988db4e38f1f082a290b0949a5512127beb22bbe9cfb285258b"
+        }
+      ]
+    }
+  ]
+}

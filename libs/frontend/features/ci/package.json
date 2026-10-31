@@ -1,0 +1,47 @@
+{
+  "name": "@symphony/frontend-feature-ci",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./presentation": {
+      "types": "./src/presentation.ts",
+      "import": "./src/presentation.ts",
+      "default": "./src/presentation.ts"
+    }
+  },
+  "dependencies": {
+    "@angular/common": "22.2.0",
+    "@angular/core": "22.2.0",
+    "@angular/forms": "22.2.0",
+    "@angular/router": "22.2.0",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.183",
+    "@symphony/domain-ci": "workspace:*",
+    "@symphony/domain-core": "workspace:*",
+    "@symphony/frontend-core": "workspace:*",
+    "@symphony/frontend-notification": "workspace:*",
+    "@symphony/frontend-search": "workspace:*",
+    "@symphony/frontend-setting": "workspace:*",
+    "@symphony/frontend-ui": "workspace:*",
+    "@symphony/frontend-widget": "workspace:*",
+    "@symphony/ipc-contracts-ci": "workspace:*",
+    "@symphony/ipc-contracts-composition": "workspace:*",
+    "@symphony/ipc-contracts-platform": "workspace:*"
+  },
+  "devDependencies": {
+    "@angular/compiler": "22.2.0",
+    "@angular/platform-browser": "22.2.0",
+    "@symphony/configuration-composition": "workspace:*",
+    "@symphony/domain-workflow": "workspace:*",
+    "rxjs": "7.8.2",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,10 @@
+export { DesktopUpdateStore } from './lib/state/DesktopUpdateStore';
+export { UpdateDetailsPipe } from './lib/pipes/UpdateDetailsPipe';
+export { UpdateStatusLabelPipe } from './lib/pipes/UpdateStatusLabelPipe';
+export { UpdateActionLabelPipe } from './lib/pipes/UpdateActionLabelPipe';
+export { UpdateActionsView } from './lib/views/UpdateActionsView';
+export { UpdateStatusView } from './lib/views/UpdateStatusView';
+export { UpdateSettingsCardView } from './lib/views/UpdateSettingsCardView';
+export { UpdateSettingsCardViewPresenter } from './lib/view-presenters/UpdateSettingsCardViewPresenter';
+export { provideUpdate } from './lib/provider/provideUpdate';
+export { withUpdateSettings } from './lib/provider/withUpdateSettings';

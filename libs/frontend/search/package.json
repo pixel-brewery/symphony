@@ -1,0 +1,25 @@
+{
+  "name": "@symphony/frontend-search",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@angular/core": "22.2.0",
+    "@angular/router": "22.2.0",
+    "@symphony/frontend-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@angular/platform-browser": "22.2.0",
+    "vitest": "4.1.11"
+  }
+}

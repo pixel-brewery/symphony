@@ -1,0 +1,440 @@
+<mosaik-page
+  class="flex h-full min-h-0 w-full flex-1 overflow-hidden"
+  test-id="actions-view"
+  [attr.aria-busy]="presenter.isHydrating()"
+>
+  <ng-template #workflowDispatchActions let-workflow let-actionsSlot="actionsSlot">
+    <div
+      class="flex w-full max-w-3xl min-w-0 justify-center"
+      [attr.slot]="actionsSlot ? 'actions' : null"
+      test-id="workflow-dispatch-available"
+    >
+      <div
+        class="flex min-w-0 flex-wrap items-center justify-center gap-2"
+        test-id="workflow-dispatch-actions"
+      >
+        <mosaik-button
+          [attr.test-id]="'workflow-dispatch-remote-' + workflow.id"
+          [label]="'Run on GitHub'"
+          [iconName]="'cloudArrowRight'"
+          [appearance]="'outline'"
+          [variant]="'primary'"
+          [isBusy]="presenter.dispatchingWorkflowId() === workflow.id"
+          [disabled]="!!presenter.dispatchingWorkflowId()"
+          (click)="presenter.dispatchWorkflowCommand.execute(workflow)"
+        />
+        <mosaik-button
+          [attr.test-id]="'workflow-dispatch-local-' + workflow.id"
+          [label]="'Run locally'"
+          [iconName]="'arrowRight'"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [isBusy]="presenter.localWorkflowDispatchBusy(workflow)"
+          [disabled]="!presenter.localCiEnabled()(workflow) || presenter.localRunnerBusy()"
+          [mosaikTooltip]="!presenter.localCiEnabled()(workflow) ? 'Enable local GitHub Actions for this workspace in its settings' : presenter.localRunnerBusy() && !presenter.localWorkflowDispatchBusy(workflow) ? 'Another local Action is using the single managed runner' : 'Run on the managed local Linux VM'"
+          (click)="presenter.dispatchWorkflowLocallyCommand.execute(workflow)"
+        />
+      </div>
+    </div>
+  </ng-template>
+
+  @if (presenter.dispatchProposal(); as workflow) {
+  <mosaik-page-pre-content [inset]="'all'"
+    ><section class="grid gap-3" test-id="workflow-dispatch-proposal">
+      <strong>{{ workflow.name }}</strong
+      ><span>Repository: {{ workflow.repositoryBindingId }}</span>
+      <mosaik-textbox
+        test-id="workflow-dispatch-ref"
+        [label]="'Revision or branch'"
+        [ngModel]="presenter.dispatchRef()"
+        (ngModelChange)="presenter.dispatchRef.set($event)"
+      />
+      @for (input of workflow.inputs ?? []; track input.id) { @if (input.type==='choice' ||
+      input.type==='boolean') {
+      <mosaik-select
+        [label]="input.description || input.id"
+        [ngModel]="presenter.dispatchInputs()[input.id] ?? input.defaultValue ?? ''"
+        (ngModelChange)="presenter.updateDispatchInputCommand.execute([input.id,$event])"
+        >@for (value of input.type==='boolean'?['true','false']:input.options; track value)
+        {<mosaik-select-item [value]="value" [label]="value" />}</mosaik-select
+      >
+      } @else {<mosaik-textbox
+        [attr.test-id]="'workflow-input-'+input.id"
+        [label]="input.description || input.id"
+        [required]="input.required"
+        [ngModel]="presenter.dispatchInputs()[input.id] ?? ''"
+        (ngModelChange)="presenter.updateDispatchInputCommand.execute([input.id,$event])"
+      />} }
+      <div class="flex items-center gap-2">
+        <mosaik-button
+          test-id="workflow-dispatch-confirm"
+          [label]="'Start workflow'"
+          [disabled]="!!presenter.dispatchingWorkflowId()"
+          (click)="presenter.confirmDispatchCommand.execute()"
+        /><mosaik-button
+          [label]="'Cancel'"
+          [appearance]="'plain'"
+          (click)="presenter.dispatchProposal.set(undefined)"
+        />
+      </div></section
+  ></mosaik-page-pre-content>
+  } @if (!presenter.isHydrating()) { @if (presenter.remoteData(); as remoteData) { @if
+  (remoteData.state !== 'current') {
+  <mosaik-page-pre-content [inset]="'horizontal'">
+    <mosaik-banner
+      test-id="actions-stale-data"
+      [isOpen]="true"
+      [appearance]="'soft'"
+      [variant]="'warning'"
+      [iconName]="'errorCircle'"
+      [iconSize]="'small'"
+    >
+      <mosaik-banner-header
+        [text]="remoteData.reason === 'rate-limited'
+              ? 'GitHub request limit reached'
+              : remoteData.state === 'stale'
+                ? 'Actions update paused'
+                : 'Actions are temporarily unavailable'"
+      />
+      <mosaik-banner-sub-header
+        [text]="remoteData.state === 'stale'
+          ? 'Actions were last updated ' + (remoteData.lastSuccessfulRefreshAt | date: 'medium') + '. ' +
+            (remoteData.reason === 'rate-limited'
+              ? remoteData.retryAt
+                ? 'Try again after ' + (remoteData.retryAt | date: 'medium') + '.'
+                : 'Use Refresh later to try again.'
+              : 'Use Refresh to try again.')
+          : remoteData.reason === 'rate-limited'
+            ? remoteData.retryAt
+              ? 'Try again after ' + (remoteData.retryAt | date: 'medium') + '.'
+              : 'Use Refresh later to try again.'
+            : 'GitHub could not refresh Actions. Use Refresh to try again.'"
+      />
+    </mosaik-banner>
+  </mosaik-page-pre-content>
+  } } }
+  <mosaik-page-header
+    slot="header"
+    [inset]="'all'"
+    test-id="actions-page-header"
+    [text]="'Actions'"
+  >
+    <!-- The title row is static, so it renders while the route loads; its actions stay disabled
+         until the workflows and their filters are known. -->
+    <symphony-page-toolbar test-id="actions-page-toolbar" [ariaLabel]="'Actions'">
+      <mosaik-dropdown-button
+        #filterMenu
+        slot="end"
+        test-id="actions-filter"
+        aria-label="Filter Actions"
+        [iconName]="'filter'"
+        [caretVisible]="false"
+        [disabled]="presenter.isHydrating()"
+        [appearance]="'outline'"
+        [dropDownPlacement]="'bottom-end'"
+        [dropDownMaxHeight]="'20rem'"
+        [mosaikTooltip]="'Filter Actions'"
+      >
+        <mosaik-menu>
+          @for (menu of presenter.filterMenus(); track menu.id) {
+          <mosaik-menu-item
+            [attr.test-id]="menu.testId ?? null"
+            [label]="menu.label"
+            [subLabel]="menu.subLabel"
+            menu-mode="popover"
+          >
+            <mosaik-menu slot="submenu">
+              @for (option of menu.options; track option.id) {
+              <mosaik-menu-item
+                force-close="true"
+                [attr.test-id]="option.testId ?? null"
+                [label]="option.label"
+                [isChecked]="option.checked"
+                (activated)="presenter.activateListMenuOptionCommand.execute({ menuId: menu.id, optionId: option.id }); filterMenu.invoke('close')"
+              />
+              }
+            </mosaik-menu>
+          </mosaik-menu-item>
+          }
+        </mosaik-menu>
+      </mosaik-dropdown-button>
+      <mosaik-button
+        slot="end"
+        test-id="refresh-actions"
+        [iconName]="'sync'"
+        [disabled]="presenter.isHydrating()"
+        [appearance]="'outline'"
+        [mosaikTooltip]="'Refresh workflows and runs'"
+        (click)="presenter.refreshCommand.execute()"
+      />
+    </symphony-page-toolbar>
+  </mosaik-page-header>
+
+  <mosaik-page-content class="flex min-h-0 flex-1 overflow-hidden" [inset]="'none'">
+    @if (presenter.isHydrating()) {
+    <!-- The loading browser is the browser itself: the workflow select in its own size and place
+         (its label is static, its value is not known yet) and the run list with skeleton rows in
+         the run row's grid. -->
+    <section
+      class="flex h-full min-h-0 w-full flex-col overflow-hidden"
+      test-id="actions-loading-skeleton"
+      role="status"
+      aria-label="Loading workflows"
+    >
+      <div class="flex w-full flex-none flex-col items-center gap-2 px-2 py-2">
+        <mosaik-select
+          class="block w-[40rem] max-w-full"
+          aria-hidden="true"
+          [label]="'Workflow'"
+          [appearance]="'soft'"
+          [textAlign]="'center'"
+          [disabled]="true"
+        />
+      </div>
+      <symphony-collection-list
+        [isLoading]="true"
+        [items]="[]"
+        [itemKey]="presenter.runKey"
+        [heading]="''"
+        [menus]="presenter.sortMenus()"
+        [listLabel]="'Loading workflow runs'"
+      >
+        <ng-template symphonyCollectionListLoadingItem let-row>
+          <li
+            class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto_auto] items-start gap-2 px-2 py-2 max-[60rem]:grid-cols-[auto_minmax(0,1fr)_auto]"
+          >
+            <div class="mt-1 flex h-3 w-3 items-center justify-center">
+              <mosaik-skeleton
+                [shape]="'circle'"
+                [width]="'20px'"
+                [height]="'20px'"
+                [shimmer]="true"
+              />
+            </div>
+            <div class="min-w-0">
+              <div class="flex h-2.5 items-center">
+                <mosaik-skeleton
+                  [width]="row % 2 ? '11rem' : '15rem'"
+                  [height]="'14px'"
+                  [shimmer]="true"
+                />
+              </div>
+              <div class="mt-1 flex h-3 items-center">
+                <mosaik-skeleton
+                  [width]="row % 3 ? '24rem' : '19rem'"
+                  [height]="'14px'"
+                  [shimmer]="true"
+                />
+              </div>
+              <div class="mt-1 flex h-3 items-center">
+                <mosaik-skeleton [width]="'3.5rem'" [height]="'14px'" [shimmer]="true" />
+              </div>
+            </div>
+            <div class="mt-1 flex h-3 items-center justify-self-end max-[60rem]:hidden">
+              <mosaik-skeleton [width]="'8.5rem'" [height]="'14px'" [shimmer]="true" />
+            </div>
+            <span class="h-3 w-3" aria-hidden="true"></span>
+          </li>
+        </ng-template>
+      </symphony-collection-list>
+    </section>
+    } @else if (presenter.workflows().length) {
+    <section
+      class="flex h-full min-h-0 w-full flex-col overflow-hidden"
+      test-id="actions-workflow-browser"
+    >
+      <div class="flex w-full flex-none flex-col items-center gap-2 px-2 py-2">
+        <mosaik-select
+          class="block w-[40rem] max-w-full"
+          test-id="actions-workflow-select"
+          [label]="'Workflow'"
+          [value]="presenter.selectedWorkflowId()"
+          [appearance]="'soft'"
+          [textAlign]="'center'"
+          [showFilter]="presenter.workflowOptions().length > 8"
+          [dropDownMaxHeight]="'24rem'"
+          (selectionChanged)="presenter.selectWorkflowCommand.execute($event)"
+        >
+          @for (workflow of presenter.workflowOptions(); track workflow.id) {
+          <mosaik-select-item
+            [attr.test-id]="'actions-workflow-' + workflow.id"
+            [label]="workflow.name"
+            [value]="workflow.id"
+            [isSelected]="presenter.selectedWorkflowId() === workflow.id"
+            (click)="presenter.selectWorkflowCommand.execute(workflow.id)"
+          >
+            @if (workflow.isManuallyRunnable) {
+            <mosaik-chip
+              slot="end"
+              [label]="'Manual run'"
+              [appearance]="'soft'"
+              [variant]="'highlight'"
+              [size]="'tiny'"
+            />
+            }
+          </mosaik-select-item>
+          }
+        </mosaik-select>
+        @if (presenter.selectedWorkflow(); as workflow) { @if (workflow.supportsManualDispatch &&
+        workflow.state === 'active' && presenter.selectedWorkflowHasRuns()) {
+        <ng-container
+          *ngTemplateOutlet="workflowDispatchActions; context: { $implicit: workflow, actionsSlot: false }"
+        />
+        } }
+      </div>
+
+      <symphony-collection-list
+        aria-label="Workflow run results"
+        [items]="presenter.visibleRuns()"
+        [itemKey]="presenter.runKey"
+        [heading]="presenter.visibleRuns().length + ' workflow runs'"
+        [listLabel]="'Workflow run results'"
+        [menus]="presenter.sortMenus()"
+        (menuOptionActivated)="presenter.activateListMenuOptionCommand.execute($event)"
+      >
+        <ng-template [symphonyCollectionListItem]="presenter.visibleRuns()" let-run>
+          <li
+            #runRow
+            class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto_auto] items-start gap-2 px-2 py-2 max-[60rem]:grid-cols-[auto_minmax(0,1fr)_auto]"
+            [attr.test-id]="'action-run-' + run.id"
+            (contextmenu)="presenter.openContextActionsCommand.execute([$event, runActions])"
+          >
+            @if (run.status === 'in-progress') {
+            <mosaik-progress-ring
+              class="mt-1"
+              [attr.aria-label]="run.status | ciRunStatusLabel"
+              [isIndeterminate]="true"
+              [variant]="'neutral'"
+              [radius]="8"
+              [thickness]="2"
+            />
+            } @else {
+            <mosaik-icon
+              class="mt-1"
+              role="img"
+              [attr.aria-label]="run.status | ciRunStatusLabel"
+              [icon]="run.status === 'succeeded' ? 'checkCircle' : run.status === 'cancelled' ? 'clear' : run.status === 'queued' ? 'executionOutline' : 'errorCircle'"
+              [appearance]="'plain'"
+              [variant]="run.status | ciRunStatusVariant"
+              [size]="'small'"
+            />
+            }
+            <div class="min-w-0">
+              <div class="flex min-w-0 items-center gap-2">
+                <mosaik-anchor
+                  class="min-w-0"
+                  [attr.test-id]="'action-run-link-' + run.id"
+                  [label]="run.title ?? run.name"
+                  [href]="run.externalUrl"
+                  [target]="'_blank'"
+                  [rel]="'noreferrer'"
+                  [underline]="'hover'"
+                />
+              </div>
+              <span class="mt-1 block overflow-hidden text-ellipsis whitespace-nowrap">
+                {{ run.name }} @if (run.runNumber) { #{{ run.runNumber }} } @if (run.event) { · {{
+                run.event }} } @if (run.actor) { by {{ run.actor }} }
+              </span>
+              @if (run.branch) {
+              <span
+                class="mt-1 block overflow-hidden text-ellipsis whitespace-nowrap"
+                [attr.test-id]="'action-run-branch-' + run.id"
+                >{{ run.branch }}</span
+              >
+              }
+            </div>
+            <span class="mt-1 justify-self-end whitespace-nowrap max-[60rem]:hidden">
+              @if (run.startedAt ?? run.finishedAt; as timestamp) { {{ timestamp | timeAgo }} } @if
+              (run | ciRunDuration; as duration) { · {{ duration }} }
+            </span>
+            <mosaik-dropdown-button
+              #runActions
+              class="self-center"
+              [attr.test-id]="'action-run-actions-' + run.id"
+              aria-label="More actions"
+              [caretVisible]="false"
+              [iconName]="'more-horizontal'"
+              [size]="'tiny'"
+              [iconSize]="'small'"
+              [appearance]="'plain'"
+              [dropDownPlacement]="'bottom-end'"
+              [symphonyHoverRevealFor]="runRow"
+            >
+              <mosaik-menu>
+                @if (run.externalUrl) {
+                <mosaik-menu-item
+                  [label]="'Open in GitHub'"
+                  [iconName]="'branch'"
+                  (activated)="presenter.openInGitHubCommand.execute(run); runActions.invoke('close')"
+                />
+                <mosaik-divider />
+                } @if (run.status === 'queued' || run.status === 'in-progress') {
+                <mosaik-menu-item
+                  [label]="'Cancel remote run'"
+                  [iconName]="'clear'"
+                  [variant]="'danger'"
+                  (activated)="presenter.cancelRemoteRunCommand.execute(run); runActions.invoke('close')"
+                />
+                } @else {
+                <mosaik-menu-item
+                  [label]="'Rerun on GitHub'"
+                  [iconName]="'cloudArrowRight'"
+                  [variant]="'highlight'"
+                  (activated)="presenter.rerunCommand.execute(run); runActions.invoke('close')"
+                />
+                } @if (presenter.localCiEnabled()(run)) { @if (presenter.isRunningLocally()(run)) {
+                <mosaik-menu-item
+                  [label]="'Stop local runner'"
+                  [iconName]="'clear'"
+                  [variant]="'danger'"
+                  (activated)="presenter.stopLocalRunCommand.execute(run); runActions.invoke('close')"
+                />
+                } @else {
+                <mosaik-menu-item
+                  [label]="'Run locally'"
+                  [iconName]="'arrowRight'"
+                  [disabled]="presenter.localRunnerBusy()"
+                  (activated)="presenter.runLocallyCommand.execute(run); runActions.invoke('close')"
+                />
+                } }
+              </mosaik-menu>
+            </mosaik-dropdown-button>
+          </li>
+        </ng-template>
+        <ng-template symphonyCollectionListEmpty>
+          @if (presenter.selectedWorkflow(); as workflow) { @if (workflow.supportsManualDispatch &&
+          workflow.state === 'active' && !presenter.selectedWorkflowHasRuns()) {
+          <mosaik-empty-state
+            [iconName]="'executionOutline'"
+            [header]="'No workflow runs'"
+            [content]="'Run this workflow on GitHub or with the managed local runner to create its first run.'"
+          >
+            <ng-container
+              *ngTemplateOutlet="workflowDispatchActions; context: { $implicit: workflow, actionsSlot: true }"
+            />
+          </mosaik-empty-state>
+          } @else {
+          <mosaik-empty-state
+            [iconName]="'executionOutline'"
+            [header]="'No workflow runs'"
+            [content]="'Runs for the selected workflow will appear here.'"
+          />
+          } } @else {
+          <mosaik-empty-state
+            [iconName]="'executionOutline'"
+            [header]="'No workflow runs'"
+            [content]="'Workflow runs will appear here.'"
+          />
+          }
+        </ng-template>
+      </symphony-collection-list>
+    </section>
+    } @else {
+    <mosaik-empty-state
+      [iconName]="'executionOutline'"
+      [header]="'No Actions workflows'"
+      [content]="'Workflows from the selected GitHub repositories will appear here.'"
+    />
+    }
+  </mosaik-page-content>
+</mosaik-page>

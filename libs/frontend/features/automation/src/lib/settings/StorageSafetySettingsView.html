@@ -1,0 +1,75 @@
+@let globalStorage = presenter.globalStorage(); @let filesystem = presenter.filesystemStorage();
+<mosaik-card test-id="storage-safety-card">
+  <mosaik-card-header
+    [text]="'Storage safety'"
+    [subText]="'Physical allocation, hard write limits, and the Mac free-space reserve.'"
+  />
+  <mosaik-card-content>
+    <div class="flex min-w-0 flex-col gap-4">
+      <section class="flex min-w-0 flex-col gap-2" test-id="global-storage-overview">
+        <symphony-headline
+          header="All managed Symphony data"
+          description="Includes application state, managed workspaces, Local GitHub Actions, and the bounded browser cache. Sparse virtual capacity is not counted as physical usage."
+        />
+        <symphony-storage-breakdown
+          [usage]="globalStorage"
+          [measured]="presenter.storageMeasured()"
+          [limitGiB]="presenter.runtime().managedStorageLimitGiB"
+          [sizeTestId]="'global-storage-size'"
+          [barTestId]="'global-storage-progress'"
+        />
+        <div class="flex min-w-0 flex-wrap justify-between gap-2">
+          <span test-id="filesystem-free-space">
+            Mac free: {{ filesystem?.availableBytes | storageSize }}
+          </span>
+          <span> Protected reserve: {{ presenter.runtime().minimumFreeDiskGiB }} GB </span>
+        </div>
+        <div class="grid min-w-0 grid-cols-2 gap-4 max-[640px]:grid-cols-1">
+          <mosaik-numberbox
+            test-id="managed-storage-limit"
+            [label]="'Maximum managed storage (GB)'"
+            [min]="5"
+            [max]="2048"
+            [value]="presenter.runtime().managedStorageLimitGiB"
+            (input)="presenter.updateRuntimeNumberCommand.execute(['managedStorageLimitGiB', $event])"
+          />
+          <mosaik-numberbox
+            test-id="minimum-free-disk"
+            [label]="'Minimum Mac free space (GB)'"
+            [min]="5"
+            [max]="512"
+            [value]="presenter.runtime().minimumFreeDiskGiB"
+            (input)="presenter.updateRuntimeNumberCommand.execute(['minimumFreeDiskGiB', $event])"
+          />
+        </div>
+        @if (!presenter.store.storageStatus()?.writable) {
+        <mosaik-banner
+          test-id="global-storage-blocked"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'danger'"
+          [iconName]="'errorCircle'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'Alarm: new disk-writing work is blocked'" />
+          <mosaik-banner-sub-header
+            [text]="'Symphony stopped new AI tasks, worktrees, verification, and Local GitHub Actions. Clear managed data before continuing.'"
+          />
+        </mosaik-banner>
+        }
+      </section>
+    </div>
+  </mosaik-card-content>
+  <mosaik-card-footer>
+    <div class="flex w-full flex-wrap justify-end gap-2">
+      <mosaik-button
+        test-id="save-storage-settings"
+        [label]="'Save limits'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [disabled]="presenter.store.configurationBusy()"
+        (click)="presenter.saveRuntimeCommand.execute()"
+      />
+    </div>
+  </mosaik-card-footer>
+</mosaik-card>

@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Product Naming'
+  short_description: 'Apply repository rules guidance'
+  default_prompt: 'Use $rules-product-naming for the applicable repository guidance.'

@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a capability or a change in behavior
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Symphony has strict process and module boundaries. Proposals that need a new
+        runtime, a general HTTP server, or another UI framework are out of scope — see
+        [AGENTS.md](https://github.com/pixel-brewery/symphony/blob/main/AGENTS.md).
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do today, and where does Symphony get in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the behavior you want, from the user's point of view.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Board and work items
+        - Delivery, pull requests, and actions
+        - Agent execution
+        - Settings
+        - Updates and installation
+        - Workspaces and Git
+        - Mobile companion
+        - Other or unknown
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Optional. Including "what I do instead today" is useful.

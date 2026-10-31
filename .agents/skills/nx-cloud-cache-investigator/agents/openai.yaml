@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Nx Cloud Cache Investigator'
+  short_description: 'Investigate a specific Nx Cloud cache miss'
+  default_prompt: 'Use $nx-cloud-cache-investigator to investigate the requested Nx Cloud cache failure.'

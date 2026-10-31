@@ -1,0 +1,67 @@
+<div
+  class="flex min-h-13 flex-none min-w-0 items-center justify-between gap-2 px-2 py-2 max-[44rem]:h-auto max-[44rem]:flex-col max-[44rem]:items-start"
+>
+  <div class="flex min-w-0 items-center gap-2">
+    @if (headingIcon(); as icon) {
+    <mosaik-icon
+      [icon]="icon"
+      [appearance]="'plain'"
+      [variant]="headingIconVariant()"
+      [size]="'small'"
+    />
+    } @if (isLoading()) {
+    <div class="flex h-3 items-center">
+      <mosaik-skeleton [width]="'8rem'" [height]="'16px'" [shimmer]="true" />
+    </div>
+    } @else {
+    <strong>{{ heading() }}</strong>
+    }
+  </div>
+  @if (menus().length) {
+  <div class="flex min-w-0 items-center gap-2 max-[44rem]:w-full max-[44rem]:justify-end">
+    @for (menu of menus(); track menu.id) {
+    <mosaik-dropdown-button
+      #menuButton
+      [attr.test-id]="menu.testId ?? null"
+      [label]="menu.label"
+      [appearance]="'plain'"
+      [dropDownPlacement]="'bottom-end'"
+    >
+      <mosaik-menu>
+        @for (option of menu.options; track option.id) {
+        <mosaik-menu-item
+          [attr.test-id]="option.testId ?? null"
+          [label]="option.label"
+          [isChecked]="option.checked"
+          (activated)="menuOptionActivated.emit({ menuId: menu.id, optionId: option.id }); menuButton.invoke('close')"
+        />
+        }
+      </mosaik-menu>
+    </mosaik-dropdown-button>
+    }
+  </div>
+  }
+</div>
+<ng-content />
+@if (isLoading()) { @if (loadingItemTemplate(); as loadingTemplate) {
+<ul
+  class="m-0 min-h-0 flex-1 list-none overflow-hidden p-0"
+  role="status"
+  [attr.aria-label]="listLabel()"
+>
+  @for (row of loadingRows(); track row) {
+  <ng-container *ngTemplateOutlet="loadingTemplate; context: { $implicit: row }" />
+  }
+</ul>
+} } @else if (itemTemplate(); as rowTemplate) { @if (items().length || !emptyTemplate()) {
+<ul
+  class="m-0 min-h-0 flex-1 list-none overflow-x-hidden overflow-y-auto overscroll-contain p-0"
+  [attr.aria-label]="listLabel()"
+>
+  @for (item of items(); track itemKey()(item)) {
+  <ng-container *ngTemplateOutlet="rowTemplate; context: { $implicit: item, index: $index }" />
+  }
+</ul>
+} @else {
+<ng-container *ngTemplateOutlet="emptyTemplate() ?? null" />
+} }

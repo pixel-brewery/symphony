@@ -1,0 +1,76 @@
+<section test-id="workspace-directory" class="flex min-w-0 flex-col gap-4">
+  <symphony-headline
+    header="Workspaces"
+    description="Open one workspace to manage its organization, accounts, repositories and storage in isolation."
+  />
+  <div
+    test-id="workspace-directory-list"
+    class="grid min-w-0 grid-cols-3 gap-4 max-[1000px]:grid-cols-2 max-[560px]:grid-cols-1"
+  >
+    <mosaik-button
+      test-id="add-workspace"
+      class="min-h-32 min-w-0"
+      [fit]="'both'"
+      [orientation]="'vertical'"
+      [horizontalContentAlignment]="'center'"
+      [verticalContentAlignment]="'center'"
+      [appearance]="'soft'"
+      [variant]="'primary'"
+      [iconName]="'add'"
+      [label]="'Add workspace'"
+      (click)="presenter.openWorkspaceCommand.execute()"
+    />
+
+    <mosaik-button
+      test-id="import-workspace"
+      class="min-h-32 min-w-0"
+      [fit]="'both'"
+      [orientation]="'vertical'"
+      [horizontalContentAlignment]="'center'"
+      [verticalContentAlignment]="'center'"
+      [appearance]="'soft'"
+      [variant]="'primary'"
+      [iconName]="'folderOpen'"
+      [label]="
+                  presenter.store.workspaceTransferBusy() === 'import'
+                    ? 'Importing workspace…'
+                    : 'Import workspace'
+                "
+      [disabled]="!!presenter.store.workspaceTransferBusy()"
+      (click)="presenter.chooseWorkspaceImportCommand.execute()"
+    />
+
+    @for (workspace of presenter.workspaces(); track workspace.id) {
+    <mosaik-card
+      [attr.test-id]="'workspace-directory-item-' + workspace.id"
+      class="block min-w-0"
+      [appearance]="'outline'"
+    >
+      <mosaik-card-header
+        [text]="workspace.displayName"
+        [subText]="workspace.enabled ? 'Available' : 'Disabled'"
+      >
+        <mosaik-avatar
+          slot="prefix"
+          [size]="'medium'"
+          [appearance]="'soft'"
+          [text]="workspace.shortCode"
+        />
+      </mosaik-card-header>
+      <mosaik-card-footer>
+        <div class="flex w-full min-w-0 items-center justify-end gap-2">
+          <mosaik-button
+            [attr.test-id]="'open-workspace-settings-' + workspace.id"
+            [label]="'Open'"
+            [iconName]="'open'"
+            [iconPosition]="'after'"
+            [appearance]="'solid'"
+            [variant]="'primary'"
+            (click)="presenter.openSettingsWorkspaceCommand.execute(workspace.id)"
+          />
+        </div>
+      </mosaik-card-footer>
+    </mosaik-card>
+    }
+  </div>
+</section>

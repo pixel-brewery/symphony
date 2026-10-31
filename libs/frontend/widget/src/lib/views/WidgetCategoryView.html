@@ -1,0 +1,148 @@
+@if (presenter.category(); as category) {
+<section class="flex shrink-0 flex-col" [attr.test-id]="category.testId">
+  <header class="flex min-h-14 items-center gap-3">
+    <mosaik-text [mosaikTypography]="'headline2'" [text]="category.label" [readonly]="true" />
+    @if (category.action; as action) { @if (presenter.hasSnapshot()) {
+    <mosaik-button
+      [attr.test-id]="action.testId"
+      [attr.aria-label]="action.label"
+      [iconName]="'add'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [disabled]="action.disabled"
+      [mosaikTooltip]="action.tooltip"
+      (click)="presenter.create(action.route)"
+    />
+    } @else {
+    <mosaik-skeleton class="flex-none" [width]="'36px'" [height]="'36px'" [shimmer]="true" />
+    } }
+  </header>
+
+  <div
+    class="relative grid gap-1 [grid-template-columns:repeat(6,9rem)] [grid-template-rows:repeat(4,9rem)]"
+    [attr.test-id]="category.tilesTestId"
+  >
+    @for (slot of category.slots; track slot.animationKey) {
+    <div
+      class="min-h-0 min-w-0"
+      [style.grid-column]="slot.column + ' / span ' + slot.columns"
+      [style.grid-row]="slot.row + ' / span ' + slot.rows"
+    >
+      @if (!presenter.hasSnapshot()) { @if (slot.showsEmptyFrame) {
+      <!-- Only the slots that always show a surface - a tile or its empty frame - load as
+           a tile: the same card, with the count and the label as skeleton lines. -->
+      <mosaik-card
+        class="flex h-full min-w-0 flex-col"
+        [attr.test-id]="category.testId + '-slot-' + slot.index + '-skeleton'"
+        [inset]="'none'"
+        [elevation]="'semilight'"
+      >
+        <mosaik-card-content>
+          <div class="box-border flex h-full min-w-0 flex-col justify-between gap-2 p-2">
+            <div class="grid min-w-0 gap-1">
+              <div class="flex items-center" [class]="slot.rows === 2 ? 'h-5' : 'h-4'">
+                <mosaik-skeleton
+                  [width]="slot.rows === 2 ? '3rem' : '2rem'"
+                  [height]="slot.rows === 2 ? '32px' : '22px'"
+                  [shimmer]="true"
+                />
+              </div>
+              <div class="flex h-2.5 items-center">
+                <mosaik-skeleton [width]="'4.5rem'" [height]="'12px'" [shimmer]="true" />
+              </div>
+            </div>
+          </div>
+        </mosaik-card-content>
+      </mosaik-card>
+      } } @else if (slot.tile; as tile) {
+      <a
+        symphonyPseudoLink
+        class="block h-full min-w-0"
+        [attr.test-id]="tile.testId"
+        [routerLink]="tile.route"
+        [queryParams]="tile.queryParams"
+        [attr.aria-label]="tile.ariaLabel"
+        [attr.data-home-tile-animation]="slot.isExiting ? 'exit' : 'enter'"
+        [mosaikAnimate]="slot.animation"
+        (mouseenter)="presenter.hoveredTileSlot.set(category.id + ':' + slot.index)"
+        (mouseleave)="presenter.hoveredTileSlot.set(undefined)"
+        (focusin)="presenter.focusedTileSlot.set(category.id + ':' + slot.index)"
+        (focusout)="presenter.focusedTileSlot.set(undefined)"
+      >
+        <mosaik-card
+          class="flex h-full min-w-0 flex-col"
+          [inset]="'none'"
+          [elevation]="'semilight'"
+        >
+          <mosaik-card-content>
+            <div class="box-border flex h-full min-w-0 flex-col justify-between gap-2 p-2">
+              @if (tile.live || tile.liveLabel) {
+              <div class="flex min-w-0 items-center gap-2">
+                @if (tile.live) {
+                <mosaik-progress-ring
+                  [attr.test-id]="tile.testId + '-progress'"
+                  [attr.aria-label]="'Work in progress'"
+                  [isIndeterminate]="true"
+                  [radius]="8"
+                  [thickness]="2"
+                  [variant]="'neutral'"
+                />
+                } @if (tile.liveLabel) {
+                <mosaik-hint
+                  class="min-w-0"
+                  [attr.test-id]="tile.testId + '-progress-count'"
+                  [text]="tile.liveLabel"
+                  [textOverflow]="'wrap'"
+                />
+                }
+              </div>
+              }
+              <div class="grid min-w-0 gap-1">
+                <div class="flex min-w-0 items-center gap-2">
+                  @if (tile.attention) {
+                  <mosaik-icon
+                    aria-hidden="true"
+                    [icon]="'errorCircle'"
+                    [appearance]="'plain'"
+                    [variant]="'danger'"
+                    [size]="'small'"
+                  />
+                  }
+                  <strong [mosaikTypography]="slot.rows === 2 ? 'headline2' : 'headline4'">
+                    {{ tile.count }}
+                  </strong>
+                </div>
+                <mosaik-text
+                  [mosaikTypography]="'body2'"
+                  [attr.test-id]="tile.testId + '-label'"
+                  [text]="tile.label"
+                  [readonly]="true"
+                  [wrap]="true"
+                />
+              </div>
+            </div>
+          </mosaik-card-content>
+        </mosaik-card>
+      </a>
+      } @else if (slot.showsEmptyFrame) {
+      <mosaik-card
+        aria-hidden="true"
+        class="flex h-full min-w-0 flex-col"
+        [attr.test-id]="category.testId + '-slot-' + slot.index + '-empty'"
+        [appearance]="'outline'"
+        [elevation]="'none'"
+      />
+      }
+    </div>
+    } @if (presenter.hasSnapshot() && category.isEmpty) {
+    <div class="col-span-2 col-start-5 row-span-2 row-start-1 flex min-h-0 items-start p-3">
+      <mosaik-hint
+        [attr.test-id]="category.testId + '-empty'"
+        [text]="category.empty"
+        [textOverflow]="'wrap'"
+      />
+    </div>
+    }
+  </div>
+</section>
+}

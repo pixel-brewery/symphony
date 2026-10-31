@@ -1,0 +1,28 @@
+{
+  "servers": {
+    "nx": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["nx", "mcp"]
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "${workspaceFolder}"]
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "angular": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@angular/cli", "mcp"]
+    },
+    "mosaik": {
+      "type": "http",
+      "url": "https://beta.api.mosaik.breadstone.de/api/mcp"
+    }
+  }
+}

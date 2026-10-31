@@ -1,0 +1,25 @@
+{
+  "name": "mobile-contracts",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/mobile-contracts/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:contracts"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/mobile-contracts/tsconfig.lib.json --noEmit",
+          "tsc -p libs/mobile-contracts/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/mobile-contracts/vitest.config.ts"
+      }
+    }
+  }
+}

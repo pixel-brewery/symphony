@@ -1,0 +1,53 @@
+<mosaik-card test-id="update-settings-card">
+  <mosaik-card-header
+    [text]="'Updates'"
+    [subText]="'Check for new releases and download the installer when one is available.'"
+  />
+  <mosaik-card-content>
+    <div class="flex min-w-0 flex-col gap-4">
+      <mosaik-banner
+        test-id="update-channel-guide"
+        is-open
+        appearance="soft"
+        variant="info"
+        iconName="info"
+        iconSize="small"
+      >
+        <mosaik-banner-header text="Choose stability or early access" />
+        <mosaik-banner-sub-header
+          text="Stable receives tested releases. Canary receives every successful main build and may change more frequently."
+        />
+      </mosaik-banner>
+      <section class="flex min-w-0 flex-col gap-2" test-id="update-release-settings-group">
+        <symphony-headline
+          header="Release channel"
+          description="Review the installed version and choose which future releases Symphony should receive."
+        />
+        <symphony-update-status />
+        <mosaik-select
+          test-id="update-channel"
+          [label]="'Release channel'"
+          [value]="presenter.updates.state()?.channel ?? 'stable'"
+          [disabled]="presenter.updates.state()?.kind === 'downloading' || presenter.updates.state()?.kind === 'checking'"
+          (selectionChanged)="presenter.updateChannelCommand.execute($event)"
+        >
+          <mosaik-select-item
+            test-id="update-channel-stable"
+            [label]="'Stable'"
+            [value]="'stable'"
+            (click)="presenter.updateChannelCommand.execute('stable')"
+          />
+          <mosaik-select-item
+            test-id="update-channel-canary"
+            [label]="'Canary - every successful main build'"
+            [value]="'canary'"
+            (click)="presenter.updateChannelCommand.execute('canary')"
+          />
+        </mosaik-select>
+      </section>
+    </div>
+  </mosaik-card-content>
+  <mosaik-card-footer>
+    <symphony-update-actions />
+  </mosaik-card-footer>
+</mosaik-card>

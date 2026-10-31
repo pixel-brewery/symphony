@@ -1,0 +1,238 @@
+<ng-template mosaikDrawerHeader>
+  <mosaik-drawer-header
+    [text]="presenter.data.mode === 'create' ? 'New skill' : 'Skill details'"
+    [subText]="presenter.data.mode === 'create' ? 'Create a portable Symphony skill package.' : 'Review or edit the installed skill package.'"
+  >
+    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+  </mosaik-drawer-header>
+</ng-template>
+
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="skill-editor-drawer"
+    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+    [attr.aria-busy]="presenter.isHydrating()"
+  >
+    <!-- The editor renders while the skill loads: its sections, headings and field labels are static,
+         and the fields stay disabled until the skill's own text is in them. -->
+    <section class="flex flex-col gap-2 p-3">
+      <div
+        class="flex items-center justify-between gap-2 max-[700px]:flex-col max-[700px]:items-stretch"
+      >
+        <div>
+          <h3>SKILL.md</h3>
+          <p>Portable frontmatter and instructions loaded progressively by ChatGPT and Codex.</p>
+        </div>
+        <mosaik-badge [label]="'Required'" [appearance]="'soft'" [variant]="'highlight'" />
+      </div>
+      <div
+        class="grid grid-cols-[minmax(180px,0.45fr)_minmax(0,1fr)] gap-2 max-[700px]:grid-cols-1"
+      >
+        <mosaik-textbox
+          test-id="skill-name"
+          [label]="'Name'"
+          [variant]="'primary'"
+          [readonly]="!presenter.canEdit()"
+          [disabled]="presenter.isHydrating()"
+          [value]="presenter.draft.name"
+          (input)="presenter.draft.name = presenter.eventText()($event)"
+        />
+        <mosaik-textbox
+          test-id="skill-description"
+          [label]="'Description and trigger conditions'"
+          [variant]="'primary'"
+          [readonly]="!presenter.canEdit()"
+          [disabled]="presenter.isHydrating()"
+          [value]="presenter.draft.description"
+          (input)="presenter.draft.description = presenter.eventText()($event)"
+        />
+      </div>
+      <mosaik-textbox
+        test-id="skill-instructions"
+        [label]="'Markdown instructions'"
+        [variant]="'primary'"
+        [multiline]="true"
+        [multilineRows]="14"
+        [resize]="'vertical'"
+        [readonly]="!presenter.canEdit()"
+        [disabled]="presenter.isHydrating()"
+        [value]="presenter.draft.instructions"
+        (input)="presenter.draft.instructions = presenter.eventText()($event)"
+      />
+    </section>
+
+    <section class="flex flex-col gap-2 p-3">
+      <div
+        class="flex items-center justify-between gap-2 max-[700px]:flex-col max-[700px]:items-stretch"
+      >
+        <div>
+          <h3>agents/openai.yaml</h3>
+          <p>UI metadata and invocation policy.</p>
+        </div>
+        <mosaik-badge [label]="'Recommended'" [appearance]="'soft'" />
+      </div>
+      <mosaik-textbox
+        test-id="skill-openai-yaml"
+        [label]="'OpenAI metadata YAML'"
+        [variant]="'primary'"
+        [multiline]="true"
+        [multilineRows]="9"
+        [resize]="'vertical'"
+        [readonly]="!presenter.canEdit()"
+        [disabled]="presenter.isHydrating()"
+        [value]="presenter.draft.openaiYaml"
+        (input)="presenter.draft.openaiYaml = presenter.eventText()($event)"
+      />
+    </section>
+
+    <section class="flex flex-col gap-2 p-3">
+      <div
+        class="flex items-center justify-between gap-2 max-[700px]:flex-col max-[700px]:items-stretch"
+      >
+        <div>
+          <h3>Resources</h3>
+          <p>Scripts, references and assets included in the package.</p>
+        </div>
+        @if (presenter.canEdit()) {
+        <mosaik-button
+          test-id="add-skill-resource"
+          [label]="'Add text resource'"
+          [appearance]="'outline'"
+          (click)="presenter.addResourceCommand.execute()"
+        />
+        }
+      </div>
+      @for (file of presenter.draft.files; track $index; let index = $index) {
+      <article class="flex flex-col gap-2 p-2" [attr.test-id]="'skill-resource-' + index">
+        <div class="grid grid-cols-[minmax(0,1fr)_160px_auto] gap-2 max-[700px]:grid-cols-1">
+          <mosaik-textbox
+            [label]="'Package path'"
+            [variant]="'primary'"
+            [readonly]="!presenter.canEdit()"
+            [disabled]="presenter.isHydrating()"
+            [value]="file.path"
+            (input)="file.path = presenter.eventText()($event)"
+          />
+          <mosaik-select
+            [label]="'Kind'"
+            [variant]="'primary'"
+            [disabled]="!presenter.canEdit()"
+            [value]="file.kind"
+            (selectionChanged)="file.kind = $any(presenter.eventText()($event))"
+          >
+            <mosaik-select-item [label]="'Script'" [value]="'script'" />
+            <mosaik-select-item [label]="'Reference'" [value]="'reference'" />
+            <mosaik-select-item [label]="'Asset'" [value]="'asset'" />
+          </mosaik-select>
+          @if (presenter.canEdit()) {
+          <mosaik-button
+            [iconName]="'delete'"
+            [appearance]="'plain'"
+            [variant]="'danger'"
+            [attr.aria-label]="'Remove resource'"
+            (click)="presenter.removeResourceCommand.execute(index)"
+          />
+          }
+        </div>
+        @if (file.encoding === 'utf8') {
+        <mosaik-textbox
+          [label]="'Resource content'"
+          [variant]="'primary'"
+          [multiline]="true"
+          [multilineRows]="7"
+          [resize]="'vertical'"
+          [readonly]="!presenter.canEdit()"
+          [disabled]="presenter.isHydrating()"
+          [value]="file.content"
+          (input)="file.content = presenter.eventText()($event)"
+        />
+        } @else {
+        <p>Binary asset preserved as base64 ({{ file.size }} bytes).</p>
+        }
+      </article>
+      } @empty {
+      <p>This skill has no additional resources.</p>
+      }
+    </section>
+
+    @if (presenter.selected?.source === 'user') {
+    <section class="flex flex-col gap-2 p-3">
+      <div
+        class="flex items-center justify-between gap-2 max-[700px]:flex-col max-[700px]:items-stretch"
+      >
+        <div>
+          <h3>Portable package</h3>
+          <p>Export or remove this Symphony skill.</p>
+        </div>
+      </div>
+      <div
+        class="flex items-center justify-between gap-2 max-[700px]:flex-col max-[700px]:items-stretch"
+      >
+        <mosaik-filebox
+          test-id="skill-export-path"
+          [label]="'Destination root'"
+          [variant]="'primary'"
+          [value]="presenter.exportPath()"
+          [directory]="true"
+          [readonly]="true"
+          [isClearable]="true"
+          (cleared)="presenter.exportPath.set('')"
+        >
+          <mosaik-button
+            slot="suffix"
+            test-id="choose-skill-export-path"
+            [appearance]="'plain'"
+            [iconName]="'folder'"
+            [attr.aria-label]="'Choose skill export destination'"
+            (click)="presenter.chooseExportDirectoryCommand.execute()"
+          />
+        </mosaik-filebox>
+        <mosaik-button
+          test-id="export-skill"
+          [label]="'Export folder'"
+          [appearance]="'outline'"
+          [disabled]="presenter.store.skillsBusy() || !presenter.exportPath().trim()"
+          (click)="presenter.exportSkillCommand.execute()"
+        />
+        <mosaik-button
+          test-id="delete-skill"
+          [label]="'Move to trash'"
+          [appearance]="'plain'"
+          [variant]="'danger'"
+          [disabled]="presenter.store.skillsBusy()"
+          (click)="presenter.deleteSkillCommand.execute()"
+        />
+      </div>
+    </section>
+    }
+  </div>
+</ng-template>
+
+<ng-template mosaikDrawerFooter>
+  <div class="flex w-full items-center justify-end gap-2">
+    <mosaik-button
+      test-id="cancel-skill-editor"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      (click)="presenter.closeCommand.execute()"
+    />
+    @if (!presenter.canEdit() && presenter.selected) {
+    <mosaik-button
+      test-id="install-open-skill"
+      [label]="'Install shared copy'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      (click)="presenter.installSharedCommand.execute()"
+    />
+    } @else {
+    <mosaik-button
+      test-id="save-skill"
+      [label]="'Save skill'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [disabled]="presenter.isHydrating() || presenter.store.skillsBusy()"
+      (click)="presenter.saveCommand.execute()"
+    />
+    }
+  </div>
+</ng-template>

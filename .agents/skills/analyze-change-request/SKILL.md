@@ -1,0 +1,49 @@
+---
+name: analyze-change-request
+description: Analyze a Symphony issue or change request into an evidence-backed implementation handoff without changing product code. Use when asked to analyze, plan, refine, prepare, or determine the implementation path for repository work.
+---
+
+# Analyze a change request
+
+1. Read the complete request, attachments, repository instructions, and applicable guidance.
+2. Invoke `$reuse-existing-patterns` and identify the owning end-to-end path.
+3. Inspect executable configuration before prose and verify every proposed API, package, target, and file path locally.
+4. Map the change across domain, application, provider, orchestrator, IPC, renderer, persistence, documentation, and tests as applicable.
+5. Preserve the Renderer/Main/Utility Process boundary, provider neutrality, worktree safety, and Analyzer source immutability.
+6. Define meaningful observable tests and the exact quality gates. Do not propose tests for labels, styling, or incidental implementation details.
+7. Produce an ordered plan with affected files, risks, dependencies, migration impact, acceptance proof, and unresolved decisions.
+8. Do not edit product code, create a branch, commit, push, or open a pull request.
+
+## Report the analysis inline
+
+Symphony stores your final message as the analysis, shows it to the reviewer, and hands it to the implementation step. The managed workspace is discarded after the run.
+
+1. Report the complete analysis inline in the final message. Never write the plan to a file, and never end with a pointer to a file, path, plan document, branch, artifact, link, or attachment.
+2. Use Markdown with exactly these level-two sections, in this order: `Problem and evidence`, `Ownership and existing patterns`, `Acceptance criteria`, `Change surface`, `Implementation path`, `Verification plan`, `Scope and risks`, `Open decisions`, `Definition of ready`.
+3. Write `Acceptance criteria` as a flat bullet list of observable, testable criteria with no sub-headings and no nested lists. Symphony copies those bullets verbatim into the implementation contract the solver is bound to.
+4. Write `Change surface` as a table of `Path`, `Operation`, and `What changes`, one row per file, closed by `Collision risk:`.
+5. Name concrete paths and symbols as evidence, separate verified facts from labeled hypotheses, and write `Not verified` instead of guessing.
+6. Set `Open decisions` to `None` only when nothing genuinely needs a human answer.
+7. Close with `Definition of ready`: exactly one fenced ```json block summarizing the sections above machine-readably - `feasible` (boolean), `ready_for_solve` (boolean; `false` while an open decision remains), `unresolved_questions` (string array mirroring `Open decisions`), `test_strategy` (non-empty string array from `Verification plan`), `acceptance_mapping` (one object per acceptance criterion: `criterion` verbatim, `implementation_step` number, `verification`), and `risk` (`class` of `low`/`medium`/`high`/`critical` plus `reasons`). Symphony's stage guards decide from this block whether the work item may advance; an analysis without a valid block cannot advance.
+
+## Make the implementation path reviewable
+
+The implementation path is what a human reads to decide whether to intervene before any code is written.
+
+1. Number the steps in execution order and start every step with the repository-relative path or paths it touches. A step without a path is not a step.
+2. Name the operation and what changes inside the file concretely: the function, class, schema key, contract entry, route, column, token, or block. `Update the presenter` and `adjust the tests accordingly` are rejected; name the symbol.
+3. Name the acceptance criterion each step serves, so every criterion is reachable through at least one step.
+4. Add a `Judgement:` line whenever you chose between materially different viable options, naming the option you picked, the one you rejected, and why.
+5. Add a `Risk:` line to a step that changes a contract, a schema, a migration, a security or tenancy boundary, published behavior, or a shared path.
+6. Never write `and related files` or `where needed`. Every touched file appears in `Change surface`, and every path in that table appears in at least one step.
+
+## Keep the Markdown readable
+
+The result is rendered as GitHub-flavored Markdown in Symphony and in the work tracker.
+
+1. Start with the first required section heading. No document title, no preamble, no closing summary.
+2. Use `##` for the required sections and at most `###` below them; deeper levels render identically and only add noise.
+3. Never emit raw HTML. It is escaped and reaches the reader as literal text.
+4. Put every path, symbol, command, branch, identifier, and configuration key in backticks, and use fenced code blocks with a language tag for commands, diffs, and payloads.
+5. Use a table only where this skill asks for one and keep each cell to a single line; use bullets otherwise, one idea per bullet.
+6. Use bold only for the fixed verdict labels. No emoji, no decorative rules, no ASCII art.

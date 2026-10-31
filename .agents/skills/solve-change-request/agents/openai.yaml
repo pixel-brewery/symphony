@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Solve Change Request'
+  short_description: 'Implement approved repository change requests'
+  default_prompt: 'Use $solve-change-request to implement and verify an approved Symphony issue.'

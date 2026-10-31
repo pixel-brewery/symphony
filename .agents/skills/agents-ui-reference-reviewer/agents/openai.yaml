@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Ui Reference Reviewer'
+  short_description: 'Apply repository agents guidance'
+  default_prompt: 'Use $agents-ui-reference-reviewer for the applicable repository guidance.'

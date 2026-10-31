@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Analyze Change Request'
+  short_description: 'Analyze issues without modifying product code'
+  default_prompt: 'Use $analyze-change-request to produce an evidence-backed implementation plan.'

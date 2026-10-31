@@ -1,0 +1,25 @@
+{
+  "name": "providers-ai",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/ai/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:ai"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/ai/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/ai/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/ai/vitest.config.ts"
+      }
+    }
+  }
+}

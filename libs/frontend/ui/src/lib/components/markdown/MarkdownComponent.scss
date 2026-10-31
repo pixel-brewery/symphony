@@ -1,0 +1,574 @@
+/* This component styles markup generated at runtime by `marked`, so Tailwind utilities cannot
+   reach it. Every value still comes from a Mosaik token. */
+
+:host {
+  // ----------------------------------------
+  // CSS Variable Definitions
+  // ----------------------------------------
+
+  // Spacing
+  --markdown-spacing: calc(var(--mosaik-layout-space) * 2);
+  --markdown-gap: var(--markdown-spacing);
+  --markdown-gap-small: calc(var(--markdown-spacing) / 2);
+  --markdown-gap-large: calc(var(--markdown-spacing) * 3);
+  --markdown-padding: var(--markdown-spacing);
+  --markdown-padding-sm: var(--markdown-gap-small);
+  --markdown-padding-md: var(--mosaik-spacing-md);
+  --markdown-padding-lg: var(--mosaik-spacing-lg);
+
+  // Radius and borders
+  --markdown-thickness: var(--mosaik-layout-thickness);
+  --markdown-radius: var(--mosaik-layout-radius);
+
+  // Typography
+  --markdown-font-body: var(--mosaik-typography-body1);
+  --markdown-font-mono: var(--mosaik-font-family-monospace, monospace);
+  --markdown-font-table: var(--mosaik-typography-body2-font-size);
+
+  --markdown-font-heading-1: var(--mosaik-typography-headline1);
+  --markdown-font-heading-2: var(--mosaik-typography-headline2);
+  --markdown-font-heading-3: var(--mosaik-typography-headline3);
+  --markdown-font-heading-4: var(--mosaik-typography-headline4);
+  --markdown-font-heading-5: var(--mosaik-typography-headline5);
+  --markdown-font-heading-6: var(--mosaik-typography-headline6);
+
+  // Colors
+  --markdown-color-text: var(--mosaik-scheme-foreground);
+  --markdown-color-link: var(--mosaik-color-primary-500);
+  --markdown-color-link-hover: var(--mosaik-color-primary-700);
+  --markdown-color-border: var(--mosaik-color-neutral-300);
+  --markdown-color-divider: var(--mosaik-scheme-middlelight);
+  --markdown-color-blockquote-bg: var(--mosaik-scheme-highlight);
+  --markdown-color-blockquote-border: var(--mosaik-color-primary-300);
+  --markdown-color-code-bg: var(--mosaik-scheme-highlight);
+  --markdown-color-marker: var(--mosaik-scheme-middlelight);
+
+  // ----------------------------------------
+  // Reset
+  // ----------------------------------------
+
+  &:not(.plain) {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    ul,
+    ol,
+    li,
+    blockquote,
+    pre,
+    code,
+    table,
+    th,
+    td,
+    img,
+    iframe {
+      all: unset;
+      display: revert;
+      box-sizing: border-box;
+    }
+  }
+
+  ul,
+  ol {
+    list-style-position: inside;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  // ----------------------------------------
+  // Base Layout
+  // ----------------------------------------
+
+  display: block;
+  width: 100%;
+  // The comment and drawer hosts size their flex items by content, so wide code and tables must
+  // scroll inside this component instead of widening the surface that contains it.
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font: var(--markdown-font-body);
+  color: var(--markdown-color-text);
+
+  .markdown {
+    min-width: 0;
+  }
+
+  // ----------------------------------------
+  // Headings
+  // ----------------------------------------
+
+  .heading-1,
+  h1 {
+    font: var(--markdown-font-heading-1);
+  }
+  .heading-2,
+  h2 {
+    font: var(--markdown-font-heading-2);
+  }
+  .heading-3,
+  h3 {
+    font: var(--markdown-font-heading-3);
+  }
+  .heading-4,
+  h4 {
+    font: var(--markdown-font-heading-4);
+  }
+  .heading-5,
+  h5 {
+    font: var(--markdown-font-heading-5);
+  }
+  .heading-6,
+  h6 {
+    font: var(--markdown-font-heading-6);
+  }
+
+  .heading {
+    display: block;
+    margin-block: var(--markdown-gap-small);
+  }
+
+  .heading:first-child {
+    margin-block-start: 0;
+  }
+
+  .heading ~ .paragraph,
+  .heading ~ .code,
+  .paragraph ~ .code,
+  .code ~ .paragraph,
+  .paragraph ~ .heading {
+    margin-block-start: var(--markdown-gap);
+  }
+
+  // ----------------------------------------
+  // Paragraph
+  // ----------------------------------------
+
+  .paragraph,
+  p {
+    display: block;
+    font: var(--markdown-font-body);
+    margin-block: var(--markdown-gap-small);
+  }
+
+  .paragraph:first-child {
+    margin-block-start: 0;
+  }
+
+  .paragraph:last-child {
+    margin-block-end: 0;
+  }
+
+  .strong {
+    display: inline;
+    font-weight: var(--mosaik-typography-button-font-weight);
+  }
+
+  .emphasis {
+    display: inline;
+  }
+
+  .br {
+    display: block;
+    height: calc(var(--mosaik-layout-space) * 2);
+    content: '';
+  }
+
+  // ----------------------------------------
+  // Links
+  // ----------------------------------------
+
+  .link,
+  a {
+    color: var(--markdown-color-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color var(--mosaik-duration-short) ease;
+
+    &:hover {
+      color: var(--markdown-color-link-hover);
+    }
+  }
+
+  mosaik-anchor {
+    display: inline-block;
+  }
+
+  // ----------------------------------------
+  // Images & Embeds
+  // ----------------------------------------
+
+  .image,
+  img {
+    display: block;
+    max-width: 100%;
+    margin-block: var(--markdown-gap);
+    border-radius: var(--markdown-radius);
+  }
+
+  iframe {
+    width: 100%;
+  }
+
+  // ----------------------------------------
+  // Blockquote
+  // ----------------------------------------
+
+  .blockquote,
+  div:has(> blockquote) {
+    margin: var(--markdown-gap-small) auto;
+    padding: var(--markdown-padding);
+    border-radius: var(--markdown-radius);
+    border-inline-start: calc(var(--mosaik-layout-thickness) * 4) solid
+      var(--markdown-color-blockquote-border);
+    background-color: var(--markdown-color-blockquote-bg);
+    color: var(--markdown-color-text);
+  }
+
+  // ----------------------------------------
+  // Code
+  // ----------------------------------------
+
+  // The Mosaik code element is styled for inline snippets and truncates with an ellipsis. A fence
+  // must keep every character, so the block variant restores wrapping and scrolling from outside
+  // the element - public CSS on the element itself, no part or internal token is touched.
+  .code {
+    display: block;
+    margin-block: var(--markdown-gap-small);
+    padding: var(--markdown-padding-md);
+    border-radius: var(--markdown-radius);
+    background: var(--markdown-color-code-bg);
+    font-family: var(--markdown-font-mono);
+    font-size: var(--mosaik-typography-body2-font-size);
+    white-space: pre;
+    text-wrap: nowrap;
+    text-overflow: clip;
+    overflow: auto;
+  }
+
+  .codespan {
+    display: inline;
+    padding: 0.2em 0.4em;
+    border-radius: calc(var(--markdown-radius) / 2);
+    background: var(--markdown-color-code-bg);
+    font-family: var(--markdown-font-mono);
+    font-size: var(--mosaik-typography-body2-font-size);
+    white-space: normal;
+    text-overflow: clip;
+    overflow: visible;
+  }
+
+  // ----------------------------------------
+  // Divider
+  // ----------------------------------------
+
+  .divider,
+  mosaik-divider {
+    margin-block: var(--markdown-gap-large);
+  }
+
+  .divider {
+    display: flex;
+    justify-content: center;
+    gap: var(--markdown-gap-small);
+
+    span {
+      display: inline-block;
+      width: calc(var(--mosaik-layout-thickness) * 3);
+      height: calc(var(--mosaik-layout-thickness) * 3);
+      border-radius: var(--mosaik-layout-radius);
+      background-color: var(--markdown-color-divider);
+    }
+  }
+
+  // ----------------------------------------
+  // Checkbox
+  // ----------------------------------------
+
+  .checkbox {
+    margin-right: var(--markdown-gap-small);
+    vertical-align: middle;
+  }
+
+  // ----------------------------------------
+  // Table
+  // ----------------------------------------
+
+  .table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin-block: var(--markdown-gap);
+    font-size: var(--markdown-font-table);
+    overflow-x: auto;
+  }
+
+  .table-row {
+    border-bottom: var(--mosaik-layout-thickness) solid var(--markdown-color-border);
+  }
+
+  .table-cell {
+    padding: var(--markdown-padding-sm) var(--markdown-padding);
+    text-align: left;
+  }
+
+  // ----------------------------------------
+  // Lists
+  // ----------------------------------------
+
+  .list {
+    display: block;
+    margin-block: var(--markdown-gap-small);
+    padding-inline-start: var(--markdown-padding-lg);
+  }
+
+  .list-item {
+    margin-bottom: var(--markdown-gap-small);
+    line-height: var(--mosaik-typography-body1-line-height);
+
+    &::marker {
+      color: var(--markdown-color-marker);
+    }
+  }
+
+  ul,
+  ol {
+    padding-left: var(--markdown-padding-lg);
+    margin-block: var(--markdown-gap-small);
+
+    li {
+      margin-bottom: var(--markdown-gap-small);
+      line-height: var(--mosaik-typography-body1-line-height);
+      padding-left: var(--markdown-padding-sm);
+
+      &::marker {
+        color: var(--markdown-color-marker);
+      }
+    }
+
+    ul li {
+      list-style-type: circle;
+    }
+
+    ol li {
+      list-style-type: lower-alpha;
+    }
+  }
+
+  ul li {
+    list-style-type: disc;
+  }
+
+  ol li {
+    list-style-type: decimal;
+  }
+}
+
+// ----------------------------------------
+// Plain
+// ----------------------------------------
+
+// Dense previews keep the plain HTML treatment this component had before it learned to emit
+// Mosaik elements, so a board card or timeline entry stays a few calm lines of text.
+:host(.plain) {
+  --markdown-gap: calc(var(--mosaik-layout-space) * 2);
+  --markdown-gap-small: var(--mosaik-layout-space);
+  --markdown-padding: calc(var(--mosaik-layout-space) * 2);
+
+  .markdown {
+    font: var(--mosaik-typography-body1);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  ul,
+  ol,
+  blockquote,
+  pre,
+  table {
+    margin-block: var(--markdown-gap-small);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--mosaik-scheme-foreground);
+    letter-spacing: -0.01em;
+  }
+
+  h1 {
+    font: var(--mosaik-typography-headline4);
+  }
+
+  h2 {
+    font: var(--mosaik-typography-headline5);
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    font: var(--mosaik-typography-subtitle1);
+  }
+
+  p:first-child,
+  h1:first-child,
+  h2:first-child,
+  h3:first-child,
+  h4:first-child,
+  h5:first-child,
+  h6:first-child {
+    margin-block-start: 0;
+  }
+
+  p:last-child,
+  ul:last-child,
+  ol:last-child,
+  pre:last-child,
+  table:last-child {
+    margin-block-end: 0;
+  }
+
+  a {
+    color: var(--mosaik-color-primary-500);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  ul,
+  ol {
+    padding-inline-start: calc(var(--markdown-padding) * 1.5);
+  }
+
+  li + li {
+    margin-block-start: calc(var(--markdown-gap-small) / 2);
+  }
+
+  blockquote {
+    padding: var(--markdown-padding);
+    border-inline-start: calc(var(--mosaik-layout-thickness) * 4) solid
+      var(--mosaik-color-primary-300);
+    border-radius: var(--mosaik-layout-radius);
+    background: var(--mosaik-scheme-highlight);
+  }
+
+  code {
+    padding: 0.15em 0.35em;
+    border-radius: calc(var(--mosaik-layout-radius) / 2);
+    background: var(--mosaik-scheme-highlight);
+    font-family: var(--mosaik-font-family-monospace, monospace);
+    font-size: 0.92em;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: var(--markdown-padding);
+    border-radius: var(--mosaik-layout-radius);
+    background: var(--mosaik-scheme-highlight);
+  }
+
+  pre code {
+    padding: 0;
+    background: transparent;
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-spacing: 0;
+    border-collapse: collapse;
+    font-size: var(--mosaik-typography-body2-font-size);
+  }
+
+  th,
+  td {
+    min-width: 120px;
+    padding: var(--markdown-gap-small) var(--markdown-padding);
+    border: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  th {
+    background: var(--mosaik-scheme-highlight);
+    font-weight: var(--mosaik-typography-button-font-weight);
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--mosaik-layout-radius);
+  }
+
+  hr {
+    margin-block: var(--markdown-gap);
+    border: 0;
+    border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
+  }
+}
+
+:host(.plain.compact) {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font: inherit;
+    font-weight: var(--mosaik-typography-button-font-weight);
+  }
+
+  p,
+  ul,
+  ol,
+  blockquote,
+  pre,
+  table {
+    margin-block: 0;
+  }
+}
+
+// ----------------------------------------
+// Compact
+// ----------------------------------------
+
+:host(.compact) {
+  --markdown-font-body: var(--mosaik-typography-caption);
+
+  .markdown {
+    font-size: 11px;
+    line-height: 16px;
+  }
+
+  .heading,
+  .paragraph,
+  .list,
+  .blockquote,
+  .code,
+  .table {
+    margin-block: 0;
+  }
+
+  .heading {
+    font: inherit;
+    font-weight: var(--mosaik-typography-button-font-weight);
+  }
+}

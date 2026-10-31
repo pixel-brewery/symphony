@@ -1,0 +1,1 @@
+export const MAX_CHECK_DETAIL_CHARACTERS = 700;

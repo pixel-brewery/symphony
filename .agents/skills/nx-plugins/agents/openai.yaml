@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Manage Nx plugins'
+  short_description: 'Find and add the correct Nx workspace plugin'
+  default_prompt: 'Use $nx-plugins to find and add the appropriate Nx plugin for this workspace.'

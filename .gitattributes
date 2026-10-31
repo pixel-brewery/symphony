@@ -1,0 +1,3 @@
+# Keep formatted source and portable skill bytes identical on every checkout platform.
+* text=auto eol=lf
+.agents/packages/*.skill binary

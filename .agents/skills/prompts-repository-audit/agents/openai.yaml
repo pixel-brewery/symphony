@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Repository Audit'
+  short_description: 'Apply repository prompts guidance'
+  default_prompt: 'Use $prompts-repository-audit for the applicable repository guidance.'

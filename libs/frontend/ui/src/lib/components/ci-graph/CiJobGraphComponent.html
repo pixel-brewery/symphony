@@ -1,0 +1,101 @@
+<section test-id="ci-job-graph" aria-label="Workflow job graph" class="flex min-w-0 flex-col gap-3">
+  <mosaik-hint [text]="graph().path + ' · revision ' + graph().revision" [textOverflow]="'wrap'" />
+  @for (reason of graph().unresolved; track reason) {
+  <mosaik-hint [text]="reason" [textOverflow]="'wrap'" />
+  }
+  <mosaik-flow
+    test-id="ci-job-flow"
+    class="block h-[24rem] w-full"
+    [label]="'Workflow jobs'"
+    [fitOnLoad]="graph().jobs.length <= 24"
+    [selectedKey]="selectedKey()"
+    (flowSelectionChanged)="onSelectionChanged($event)"
+    (flowLayoutCompleted)="onLayoutCompleted($event)"
+  >
+    @for (job of nodes(); track job.definition.id) {
+    <mosaik-flow-node
+      [nodeKey]="'job:' + job.definition.id"
+      [label]="job.definition.name + ' · ' + (job.status ? (job.status | ciLogStatusLabel) : 'Waiting for pending jobs')"
+      [variant]="job.unresolved ? 'warning' : job.status ? (job.status | ciLogStatusVariant) : 'neutral'"
+      [attr.test-id]="'ci-graph-job-' + job.definition.id"
+    >
+      <div class="flex min-w-0 flex-col gap-2">
+        <div class="flex min-w-0 items-center gap-2">
+          <mosaik-icon
+            [icon]="job.status ? (job.status | ciLogStatusIcon) : 'executionOutline'"
+            [size]="'small'"
+          />
+          @if (!job.definition.matrix && job.executions.length === 1) {
+          <mosaik-button
+            class="min-w-0 flex-1"
+            [attr.test-id]="'ci-open-job-' + job.definition.id"
+            [label]="job.definition.name"
+            [appearance]="'plain'"
+            [size]="'small'"
+            (click)="openExecution(job.definition.id)"
+          />
+          } @else {
+          <mosaik-text
+            class="min-w-0 flex-1"
+            [text]="job.definition.matrix ? 'Matrix: ' + job.definition.id : job.definition.name"
+            [truncate]="true"
+          />
+          } @if (!job.definition.matrix && job.executions[0]; as run) { @if (run | ciRunDuration; as
+          duration) { <mosaik-hint [text]="duration" /> } }
+        </div>
+        @if (job.definition.matrix && job.status; as status) {
+        <mosaik-hint [text]="status | ciLogStatusLabel" />
+        } @else if (!job.status) {
+        <mosaik-hint [text]="'Waiting for pending jobs'" />
+        } @if (job.definition.matrix || job.executions.length > 1) {
+        <mosaik-disclosure
+          [attr.test-id]="'ci-matrix-' + job.definition.id"
+          [summary]="(job.definition.matrix ? 'Matrix executions (' : 'Executions (') + job.executions.length + ')'"
+        >
+          <div class="flex flex-col gap-1">
+            @for (run of job.executions; track run.id) {
+            <mosaik-button
+              [attr.test-id]="'ci-matrix-run-' + run.id"
+              [label]="run.name + ' · ' + (run.status | ciLogStatusLabel)"
+              [iconName]="run.status | ciLogStatusIcon"
+              [variant]="run.status | ciLogStatusVariant"
+              [appearance]="'plain'"
+              [size]="'small'"
+              (click)="selected.emit(run.id)"
+            />
+            }
+          </div>
+        </mosaik-disclosure>
+        }
+      </div>
+    </mosaik-flow-node>
+    } @for (edge of edges(); track edge.key) {
+    <mosaik-flow-edge
+      [edgeKey]="'dependency:' + edge.key"
+      [source]="edge.source"
+      [target]="edge.target"
+      [attr.test-id]="'ci-graph-dependency-' + edge.key"
+    />
+    }
+    <mosaik-flow-minimap slot="minimap" test-id="ci-job-minimap" />
+    <mosaik-flow-controls slot="controls" test-id="ci-job-controls" />
+  </mosaik-flow>
+  @if (inspected(); as job) { @if (job.unresolved || job.definition.condition ||
+  job.definition.environment) {
+  <div test-id="ci-job-inspection" class="flex min-w-0 flex-col gap-2">
+    <mosaik-text [text]="job.definition.name" [wrap]="true" />
+    @if (job.unresolved) { <mosaik-hint [text]="'Dependency unresolved'" /> } @if
+    (job.definition.environment) {
+    <mosaik-text [text]="'Target: ' + job.definition.environment" [wrap]="true" /> } @if
+    (job.definition.condition) {
+    <mosaik-text [text]="'Condition: ' + job.definition.condition" [wrap]="true" /> }
+  </div>
+  } } @for (job of unmatched(); track job.id) {
+  <mosaik-button
+    [attr.test-id]="'ci-unmatched-run-' + job.id"
+    [label]="job.name + ' · definition association unresolved'"
+    [appearance]="'plain'"
+    (click)="selected.emit(job.id)"
+  />
+  }
+</section>
