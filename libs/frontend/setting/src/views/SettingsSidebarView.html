@@ -49,10 +49,12 @@
       />
       <mosaik-avatar
         part="workspace-tile"
+        [attr.test-id]="'workspace-settings-avatar-' + workspace.id"
         class="pointer-events-none absolute top-1/2 left-1 -translate-y-1/2"
         aria-hidden="true"
         [size]="'tiny'"
         [text]="workspace.shortCode"
+        [src]="(workspace | workspaceAvatarSource | async) ?? undefined"
         [textAccessor]="shortCodeAccessor"
         [appearance]="'solid'"
         [variant]="'neutral'"

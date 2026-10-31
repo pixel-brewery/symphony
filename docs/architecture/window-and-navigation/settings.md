@@ -213,7 +213,7 @@ Karten setzen sich aus drei gemeinsamen Bausteinen zusammen:
 `SettingsSidebarView` (`test-id="settings-sidebar"`, `role="navigation"`, `aria-label="Settings sections"`) füllt den Ersatzcontainer unter der Kopfzeile der Fensterseitenleiste und übernimmt deren Breite:
 
 1. `Search settings` (`mosaik-searchbox`, `test-id="settings-search"`), fest oben.
-2. Darunter eine eigene Scrollfläche (`test-id="settings-navigation"`) mit `Workspaces`, jedem Workspace (Kürzel-Kachel `part="workspace-tile"`, Name; `aria-expanded` am aufgeklappten) und unter dem konfigurierten – sonst dem im Hauptfenster aktiven, sonst dem ersten – Workspace dessen Workspace-Bereiche als eingerückte Zeilen, danach die Überschrift `Symphony` mit den übrigen globalen Bereichen in Katalogreihenfolge.
+2. Darunter eine eigene Scrollfläche (`test-id="settings-navigation"`) mit `Workspaces`, jedem Workspace ([gemeinsame farbige Workspace-Kachel](../workspaces/README.md#workspace-symbol-und-farbe) über `Avatar.src`, `part="workspace-tile"`, Name; `aria-expanded` am aufgeklappten) und unter dem konfigurierten – sonst dem im Hauptfenster aktiven, sonst dem ersten – Workspace dessen Workspace-Bereiche als eingerückte Zeilen, danach die Überschrift `Symphony` mit den übrigen globalen Bereichen in Katalogreihenfolge.
 
 Zeilen sind Mosaik-Schaltflächen; der gewählte Bereich ist `soft` und trägt `aria-current="page"`, außer während einer Suche. Einen Workspace anklicken öffnet ihn auf `team`.
 

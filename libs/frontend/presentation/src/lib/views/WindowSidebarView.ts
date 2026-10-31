@@ -1,6 +1,6 @@
 // #region Imports
 
-import { NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
@@ -17,6 +17,7 @@ import {
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { WindowSidebar } from '@symphony/frontend-core';
+import { WorkspaceAvatarSourcePipe } from '@symphony/frontend-ui';
 import { PresenterViewPresenter } from '../view-presenters/PresenterViewPresenter';
 import { RunPanelView } from './RunPanelView';
 
@@ -32,6 +33,7 @@ import { RunPanelView } from './RunPanelView';
   selector: 'symphony-window-sidebar',
   host: { class: 'block' },
   imports: [
+    AsyncPipe,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
@@ -47,6 +49,7 @@ import { RunPanelView } from './RunPanelView';
     TextComponent,
     TooltipDirective,
     TypographyDirective,
+    WorkspaceAvatarSourcePipe,
   ],
   templateUrl: './WindowSidebarView.html',
   styleUrl: './WindowSidebarView.scss',

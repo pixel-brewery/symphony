@@ -60,10 +60,7 @@
     </symphony-settings-row>
   </symphony-settings-group>
   <symphony-settings-group [heading]="'Workspace'" [attr.test-id]="'workspace-actions-' + item.id">
-    <symphony-settings-row
-      [label]="'Edit workspace'"
-      [description]="'Security and ownership boundary'"
-    >
+    <symphony-settings-row [label]="'Edit workspace'" [description]="'Name, icon, and color.'">
       <mosaik-button
         [attr.test-id]="'edit-workspace-' + item.id"
         [label]="'Edit workspace'"

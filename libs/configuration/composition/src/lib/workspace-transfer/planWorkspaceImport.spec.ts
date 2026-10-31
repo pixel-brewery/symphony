@@ -13,6 +13,43 @@ import { WorkspaceTransferTestFixtures } from './WorkspaceTransferTestFixtures';
 const { configuredWorkspace, fixedDate, sharedSkill } = WorkspaceTransferTestFixtures;
 
 describe('planWorkspaceImport', () => {
+  it.each([
+    { kind: 'icon', value: 'compass-northwest' },
+    { kind: 'emoji', value: '👩🏽‍💻' },
+    { kind: 'monogram', value: 'Ä9' },
+  ])('round trips a portable workspace $kind and its existing color', (avatar) => {
+    // arrange
+    const source = configuredWorkspace();
+    const configured = applicationSettingsSchema.parse({
+      ...source,
+      workspaces: source.workspaces.map((workspace) => ({
+        ...workspace,
+        avatar,
+        color: '#ff6900',
+      })),
+    });
+    const bundle = createWorkspaceBundle(configured, 'personal', [sharedSkill()], fixedDate());
+    const serialized: unknown = JSON.parse(JSON.stringify(bundle));
+    const target = createDefaultApplicationSettings('/target/operator');
+
+    // act
+    const plan = planWorkspaceImport(
+      target,
+      workspaceBundleSchema.parse(serialized),
+      (id) => `/target/repositories/${id}`,
+    );
+
+    // assert
+    expect(bundle.version).toBe(2);
+    expect(plan.settings.version).toBe(6);
+    expect(plan.settings.workspaces.find((workspace) => workspace.id === 'personal')).toMatchObject(
+      {
+        avatar,
+        color: '#ff6900',
+      },
+    );
+  });
+
   it('imports one workspace without changing machine and user settings', () => {
     // arrange
     const bundle = createWorkspaceBundle(
@@ -33,6 +70,10 @@ describe('planWorkspaceImport', () => {
 
     // assert
     expect(plan.replaced).toBe(true);
+    expect(bundle.workspace).not.toHaveProperty('avatar');
+    expect(
+      plan.settings.workspaces.find((workspace) => workspace.id === 'personal'),
+    ).not.toHaveProperty('avatar');
     expect(plan.settings.user).toEqual(target.user);
     expect(plan.settings.feedbackIntakeSources).toContainEqual(
       expect.objectContaining({ id: 'teams-feedback', enabled: false }),

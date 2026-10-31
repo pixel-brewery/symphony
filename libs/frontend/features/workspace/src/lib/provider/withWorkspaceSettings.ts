@@ -152,9 +152,9 @@ export function withWorkspaceSettings(): readonly IFeature<SettingsFeatureKind>[
             {
               id: 'edit-workspace',
               label: 'Edit workspace',
-              description: 'Security and ownership boundary',
+              description: 'Name, icon, and color.',
               group: 'Workspace',
-              keywords: ['rename', 'isolation'],
+              keywords: ['rename', 'icon', 'emoji', 'monogram', 'color', 'appearance'],
             },
             {
               id: 'use-only-this-workspace',

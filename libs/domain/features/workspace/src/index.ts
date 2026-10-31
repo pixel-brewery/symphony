@@ -6,6 +6,8 @@ export type { IRepositoryTrustGrant } from './lib/IRepositoryTrustGrant';
 export type { ISavedWorkspaceView } from './lib/ISavedWorkspaceView';
 export type { IWorkspaceCleanupResult } from './lib/IWorkspaceCleanupResult';
 export type { IWorkspaceDefinition } from './lib/IWorkspaceDefinition';
+export type { WorkspaceAvatar } from './lib/WorkspaceAvatar';
+export { WorkspaceAvatarValidator } from './lib/WorkspaceAvatarValidator';
 export type { IWorkspaceViewScope } from './lib/IWorkspaceViewScope';
 export { repositoryExecutionCapabilities } from './lib/RepositoryExecutionCapabilities';
 export type { RepositoryExecutionCapability } from './lib/RepositoryExecutionCapability';

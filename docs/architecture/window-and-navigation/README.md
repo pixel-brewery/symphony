@@ -103,8 +103,8 @@ Die Region `workspace-menu` existiert weiterhin in der Registrierung (Beitrag `s
 ### Workspace-Umschalter
 
 - Sichtbar nur, wenn ein aktiver Workspace existiert.
-- Zeigt das Kürzel als Avatar (die ersten zwei Zeichen, in Großbuchstaben), den Anzeigenamen und `owner/name` der ersten aktivierten Repository-Bindung dieses Workspace; ohne solche Bindung entfällt die Zeile.
-- Das Menü listet alle aktivierten Workspaces (Name, Kürzel als Unterzeile, aktiver markiert), sofern das Workspace-Feature den Umfang ändern darf (`workspaceScopeAvailable`), gefolgt von einem Trenner und **Manage workspaces…**.
+- Zeigt die [Workspace-Darstellung](../workspaces/README.md#workspace-symbol-und-farbe) aus `avatar` und `color`, den Anzeigenamen und `owner/name` der ersten aktivierten Repository-Bindung dieses Workspace; ohne solche Bindung entfällt die Repository-Zeile. Ohne `avatar` erscheinen die ersten zwei Kürzelzeichen in Großschreibung in der gespeicherten Farbe.
+- Das Menü listet alle aktivierten Workspaces (derselbe Avatar im öffentlichen `icon`-Slot, Name, Kürzel als Unterzeile, aktiver markiert), sofern das Workspace-Feature den Umfang ändern darf (`workspaceScopeAvailable`), gefolgt von einem Trenner und **Manage workspaces…**.
 - Die Auswahl schließt das Menü und ruft `selectWorkspaceScope(workspaceId)` des Workspace-Features auf. Dieses ignoriert unbekannte, deaktivierte und bereits aktive Workspaces und speichert sonst über den einzigen Einstellungsschreiber `activeViewScope.workspaceIds = [workspaceId]`; eine gespeicherte Ansicht wird verworfen, eine Board-Auswahl bleibt nur, wenn sie zum neuen Workspace gehört. Der Rahmen wählt damit immer genau einen Workspace.
 - **Manage workspaces…** navigiert wie **Settings** nach `/main/settings`.
 

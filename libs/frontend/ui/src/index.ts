@@ -63,3 +63,4 @@ export type { IDeliveryFlowStep } from './lib/delivery-flow/IDeliveryFlowStep';
 export { deliveryFlowSteps } from './lib/delivery-flow/DeliveryFlowSteps';
 export { deliveryFlowStepOf } from './lib/delivery-flow/deliveryFlowStepOf';
 export { DeliveryFlowStepPipe } from './lib/delivery-flow/DeliveryFlowStepPipe';
+export { WorkspaceAvatarSourcePipe } from './lib/workspace-avatar/WorkspaceAvatarSourcePipe';
