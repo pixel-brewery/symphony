@@ -1,0 +1,13 @@
+diff --git a/bin/design-md.mjs b/bin/design-md.mjs
+index b6d57a56269ebc951011682896b28ba04041ce08..49eb3f7e171effcddf2d9b8329df419373dd9958 100644
+--- a/bin/design-md.mjs
++++ b/bin/design-md.mjs
+@@ -2115,7 +2115,7 @@ async function loadConfiguration(configPath) {
+     return {
+         root,
+         at,
+-        where: (path) => relative(root, path),
++        where: (path) => relative(root, path).replaceAll('\\', '/'),
+         name: config.name,
+         description: config.description,
+         version: config.version ?? 'alpha',

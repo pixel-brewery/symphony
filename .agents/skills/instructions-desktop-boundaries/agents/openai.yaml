@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Desktop Boundaries'
+  short_description: 'Apply repository instructions guidance'
+  default_prompt: 'Use $instructions-desktop-boundaries for the applicable repository guidance.'

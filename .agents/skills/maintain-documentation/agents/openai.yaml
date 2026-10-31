@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Maintain Documentation'
+  short_description: 'Synchronize architecture and product documentation'
+  default_prompt: 'Use $maintain-documentation to update Symphony documentation from verified behavior.'

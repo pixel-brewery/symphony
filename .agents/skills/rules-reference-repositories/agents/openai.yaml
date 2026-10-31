@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Reference Repositories'
+  short_description: 'Apply repository rules guidance'
+  default_prompt: 'Use $rules-reference-repositories for the applicable repository guidance.'

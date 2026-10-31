@@ -1,0 +1,75 @@
+// #region Imports
+
+import { rmSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { expect, test, type Page } from '@playwright/test';
+import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import { enableArcade } from './enableArcade';
+import { launchArcadeApp } from './launchArcadeApp';
+import { prepareMainWindow } from './prepareMainWindow';
+
+// #endregion
+
+async function arcadeEnabled(page: Page): Promise<boolean> {
+  return page.evaluate(async () => {
+    const api = (window as Window & { orchestration?: IOrchestrationApi }).orchestration;
+    if (!api) throw new Error('The typed desktop API is unavailable.');
+    return (await api.request('settings.get', {})).user.arcadeEnabled;
+  });
+}
+
+test('persists a feature contributed through Settings and Navigation across desktop restart', async () => {
+  // arrange
+  const first = await launchArcadeApp('modular-settings');
+  let passed = false;
+  try {
+    try {
+      const page = await prepareMainWindow(first.app);
+      await expect(page.getByTestId('navigation-arcade')).toHaveCount(0);
+
+      // act
+      await enableArcade(page);
+
+      // assert
+      await expect(page.getByTestId('arcade-settings-card')).toBeVisible();
+      await expect.poll(() => arcadeEnabled(page)).toBe(true);
+      await page.screenshot({
+        animations: 'disabled',
+        path: resolve(first.outputDirectory, 'modular-settings-appearance.png'),
+      });
+    } finally {
+      await first.app.close();
+    }
+
+    // act
+    const restarted = await launchArcadeApp('modular-settings', false);
+    try {
+      const page = await prepareMainWindow(restarted.app);
+
+      // assert
+      await expect(page.getByTestId('navigation-arcade')).toBeVisible();
+      await expect.poll(() => arcadeEnabled(page)).toBe(true);
+      await page.getByTestId('navigation-arcade').click();
+      await expect(page.getByTestId('arcade-view')).toBeVisible();
+      await page.screenshot({
+        animations: 'disabled',
+        path: resolve(restarted.outputDirectory, 'modular-feature-navigation.png'),
+      });
+
+      // act
+      await page.getByTestId('global-workspace-filter').click();
+      await page.getByTestId('workspace-menu-settings').click();
+      await page.getByTestId('global-settings-section-appearance').click();
+      await page.getByTestId('arcade-enabled-toggle').click();
+
+      // assert
+      await expect(page.getByTestId('navigation-arcade')).toHaveCount(0);
+      await expect.poll(() => arcadeEnabled(page)).toBe(false);
+      passed = true;
+    } finally {
+      await restarted.app.close();
+    }
+  } finally {
+    if (passed) rmSync(first.configurationRoot, { recursive: true, force: true });
+  }
+});

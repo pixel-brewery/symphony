@@ -1,0 +1,11 @@
+@if (sanitize()) {
+<mosaik-text
+  class="markdown"
+  [mosaikTypography]="'body1'"
+  [text]="safeMarkdownText()"
+  [formatter]="'markdown'"
+  [wrap]="true"
+/>
+} @else {
+<div class="markdown" [innerHTML]="renderedHtml()"></div>
+}

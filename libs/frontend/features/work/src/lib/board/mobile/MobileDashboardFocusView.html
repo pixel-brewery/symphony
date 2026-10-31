@@ -1,0 +1,37 @@
+@let item = focus();
+<a
+  symphonyPseudoLink
+  class="block min-w-0"
+  [routerLink]="item.route"
+  [queryParams]="item.queryParams"
+  [attr.aria-label]="item.ariaLabel"
+  test-id="mobile-dashboard-focus"
+>
+  <mosaik-card class="min-h-[12.5rem] overflow-hidden" [appearance]="'solid'">
+    <div slot="cover" class="relative flex min-h-[12.5rem] items-end overflow-hidden p-4">
+      <div class="relative grid w-full gap-1">
+        <mosaik-text [mosaikTypography]="'overline'" [text]="item.eyebrow" />
+        <mosaik-text
+          class="max-w-[20ch]"
+          role="heading"
+          aria-level="2"
+          [mosaikTypography]="'headline6'"
+          [text]="item.title"
+          [wrap]="true"
+          [maxLines]="3"
+        />
+        <mosaik-text
+          class="max-w-[32ch]"
+          [mosaikTypography]="'body2'"
+          [text]="item.context"
+          [truncate]="true"
+        />
+        <mosaik-text
+          class="mt-1 justify-self-end"
+          [mosaikTypography]="'button'"
+          [text]="item.actionLabel"
+        />
+      </div>
+    </div>
+  </mosaik-card>
+</a>

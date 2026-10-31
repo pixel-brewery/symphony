@@ -1,0 +1,16 @@
+export { GitHubProjectTracker } from './lib/github-project-tracker/GitHubProjectTracker';
+export type { IGitHubProjectTrackerOptions } from './lib/github-project-tracker/IGitHubProjectTrackerOptions';
+export { GitHubRateLimitError } from './lib/github-request-governor/GitHubRateLimitError';
+export { GitHubRequestGovernor } from './lib/github-request-governor/GitHubRequestGovernor';
+export type { IGitHubRateLimitSnapshot } from './lib/github-request-governor/IGitHubRateLimitSnapshot';
+export { GitHubServiceStatusProvider } from './lib/github-service-status/GitHubServiceStatusProvider';
+export { GitHubCloudProvider } from './lib/github-cloud-provider/GitHubCloudProvider';
+export type { IGitHubCloudProviderOptions } from './lib/github-cloud-provider/IGitHubCloudProviderOptions';
+export { forgetGitHubToken } from './lib/provider-connections/forgetGitHubToken';
+export { isGitHubAuthenticationFailure } from './lib/provider-connections/isGitHubAuthenticationFailure';
+export { loginGitHubWithToken } from './lib/provider-connections/loginGitHubWithToken';
+export { logoutGitHub } from './lib/provider-connections/logoutGitHub';
+export { readGitHubToken } from './lib/provider-connections/readGitHubToken';
+export { resolveGitHubAccountLogin } from './lib/provider-connections/resolveGitHubAccountLogin';
+export { startGitHubBrowserLogin } from './lib/provider-connections/startGitHubBrowserLogin';
+export { inspectGitHubConnections } from './lib/provider-connections/inspectGitHubConnections';

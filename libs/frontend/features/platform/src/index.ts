@@ -1,0 +1,10 @@
+export { PlatformStore } from './lib/state/PlatformStore';
+export { AppearanceSettingsStore } from './lib/state/AppearanceSettingsStore';
+export { providePlatformFeature } from './lib/provider/providePlatformFeature';
+export { withPlatformSettings } from './lib/provider/withPlatformSettings';
+export type { IPlatformClient } from './lib/ports/IPlatformClient';
+export type { IPlatformHealthProjection } from './lib/ports/IPlatformHealthProjection';
+export type { IPlatformSettingsContext } from './lib/ports/IPlatformSettingsContext';
+export { PLATFORM_CLIENT } from './lib/ports/PlatformClientToken';
+export { PLATFORM_HEALTH_PROJECTION } from './lib/ports/PlatformHealthProjectionToken';
+export { PLATFORM_SETTINGS_CONTEXT } from './lib/ports/PlatformSettingsContextToken';

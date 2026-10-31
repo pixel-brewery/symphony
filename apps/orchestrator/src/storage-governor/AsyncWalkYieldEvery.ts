@@ -1,0 +1,1 @@
+export const ASYNC_WALK_YIELD_EVERY = 500;

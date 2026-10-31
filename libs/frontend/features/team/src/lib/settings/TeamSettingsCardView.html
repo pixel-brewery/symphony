@@ -1,0 +1,230 @@
+@if(presenter.workspace(); as item) {
+<mosaik-card class="w-full" [attr.test-id]="'workspace-card-' + item.id">
+  <mosaik-card-header
+    [text]="item.displayName"
+    [subText]="item.shortCode + ' · AI team and responsibilities'"
+  />
+  <mosaik-card-content
+    ><div class="flex min-w-0 flex-col gap-4">
+      @let organization = presenter.workspaceOrganization()(item.id);
+      <section
+        class="flex min-w-0 flex-col gap-2"
+        [attr.test-id]="'workspace-organization-' + item.id"
+      >
+        <symphony-headline
+          header="AI team"
+          description="Configure the AI agents in this workspace, their positions, responsibilities, and skills."
+        />
+        <mosaik-cell-group [attr.test-id]="'workspace-agents-' + item.id">
+          @for (agent of organization.agents; track agent.id) {
+          <mosaik-cell class="w-full min-w-0" [attr.test-id]="'workspace-agent-' + agent.id">
+            <div slot="start" class="flex items-center gap-2">
+              <mosaik-avatar
+                [attr.test-id]="'agent-avatar-' + agent.id"
+                [attr.aria-label]="agent.displayName"
+                [size]="'medium'"
+                [appearance]="'soft'"
+                [src]="agent.id | agentAvatarSource: agent.appearance"
+                [text]="agent.displayName"
+                [iconName]="'bot'"
+                [mosaikTooltip]="agent.displayName"
+              />
+              @if (agent.accountKind || agent.fallbacks.length) {
+              <mosaik-avatar-group [size]="'small'">
+                @if (agent.accountKind) {
+                <mosaik-avatar
+                  [attr.test-id]="'agent-provider-' + agent.id"
+                  [attr.aria-label]="agent.accountKind | connectionProviderLabel"
+                  [size]="'small'"
+                  [appearance]="'soft'"
+                  [variant]="'highlight'"
+                  [iconName]="agent.accountKind | connectionIcon"
+                  [disabled]="!!agent.accountId && presenter.accountExhausted()(agent.accountId)"
+                  [mosaikTooltip]="presenter.agentProviderSummary()(agent)"
+                />
+                } @for (fallback of agent.fallbacks; track fallback.accountId) {
+                <mosaik-avatar
+                  [attr.test-id]="'agent-fallback-provider-' + agent.id + '-' + fallback.accountId"
+                  [attr.aria-label]="
+                  'Backup: ' + (fallback.accountKind | connectionProviderLabel)
+                "
+                  [size]="'small'"
+                  [appearance]="'outline'"
+                  [iconName]="fallback.accountKind | connectionIcon"
+                  [disabled]="presenter.accountExhausted()(fallback.accountId)"
+                  [mosaikTooltip]="presenter.agentFallbackSummary()(fallback)"
+                />
+                }
+              </mosaik-avatar-group>
+              }
+            </div>
+            <mosaik-text slot="label" class="min-w-0" [text]="agent.displayName" [wrap]="true" />
+            <mosaik-text
+              slot="subLabel"
+              class="min-w-0"
+              [text]="presenter.agentSummary()(agent)"
+              [wrap]="true"
+              [readonly]="true"
+            />
+            <mosaik-button
+              slot="end"
+              [attr.test-id]="'edit-agent-account-' + agent.id"
+              [disabled]="!presenter.store.aiAvailable"
+              [label]="'Edit'"
+              [iconName]="'edit'"
+              [appearance]="'plain'"
+              (click)="presenter.openAgentAccountCommand.execute([item.id, agent.id])"
+            />
+            <mosaik-button
+              slot="end"
+              [attr.test-id]="'remove-agent-' + agent.id"
+              [iconName]="'delete'"
+              [appearance]="'plain'"
+              [variant]="'danger'"
+              [disabled]="presenter.store.configurationBusy()"
+              [mosaikTooltip]="'Remove agent'"
+              (click)="presenter.confirmRemoveAgentCommand.execute(agent)"
+            >
+              <span slot="label" class="sr-only">Remove agent: {{ agent.displayName }}</span>
+            </mosaik-button>
+          </mosaik-cell>
+          }
+          <mosaik-cell class="w-full min-w-0" [attr.test-id]="'ai-accounts-' + item.id">
+            <mosaik-avatar slot="start" [size]="'small'" [appearance]="'soft'" [iconName]="'add'" />
+            <mosaik-text slot="label" class="min-w-0" [text]="'Add an AI agent'" [wrap]="true" />
+            <mosaik-button
+              slot="end"
+              [attr.test-id]="'add-ai-account-' + item.id"
+              [disabled]="!presenter.store.aiAvailable"
+              [iconName]="'add'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              (click)="presenter.openAiConnectionCommand.execute([item.id])"
+            >
+              <span slot="label" class="sr-only">Add agent</span>
+            </mosaik-button>
+          </mosaik-cell>
+        </mosaik-cell-group>
+        @let teamIntelligence = presenter.teamIntelligence()(organization.agents); @if
+        (teamIntelligence !== undefined) {
+        <span [attr.test-id]="'workspace-team-intelligence-' + item.id">
+          Combined intelligence {{ teamIntelligence }} · agent scores added up · intelligence index
+          by Artificial Analysis
+        </span>
+        } @let intelligenceIssue = presenter.modelIntelligenceIssue(); @if (teamIntelligence ===
+        undefined && intelligenceIssue) {
+        <span [attr.test-id]="'workspace-team-intelligence-issue-' + item.id">
+          {{ intelligenceIssue }}
+        </span>
+        }
+
+        <section class="flex min-w-0 flex-col gap-4" [attr.test-id]="'workspace-teams-' + item.id">
+          <h3>Who does what</h3>
+          @for (team of organization.teams; track team.id) {
+          <div class="flex min-w-0 flex-col gap-4" [attr.test-id]="'workspace-team-' + team.id">
+            <div class="flex min-w-0 flex-col gap-1">
+              <strong>{{ team.displayName }}</strong>
+              <span>{{ team.description }}</span>
+            </div>
+            <mosaik-cell-group>
+              @for (assignment of team.assignments; track assignment.role) {
+              <mosaik-cell
+                [attr.test-id]="'workspace-team-assignment-' + assignment.role"
+                [label]="assignment.role | skillFlowRoleLabel"
+                [subLabel]="assignment.primaryAgentDisplayName + (assignment.fallbackAgentDisplayNames.length ? ' · Backup: ' + assignment.fallbackAgentDisplayNames.join(', ') : '')"
+              />
+              }
+            </mosaik-cell-group>
+          </div>
+          }
+        </section>
+
+        <mosaik-expander
+          [attr.test-id]="'workspace-ai-technical-' + item.id"
+          [header]="'Technical AI setup'"
+          [subHeader]="'Positions, providers, models, and automatic backup routes'"
+        >
+          <div class="flex min-w-0 flex-col gap-6 pt-4">
+            <section
+              class="flex min-w-0 flex-col gap-4"
+              [attr.test-id]="'workspace-positions-' + item.id"
+            >
+              <h3>Positions and permissions</h3>
+              <mosaik-cell-group>
+                @for (position of organization.positions; track position.id) {
+                <mosaik-cell
+                  [attr.test-id]="'workspace-position-' + position.id"
+                  [label]="position.displayName"
+                >
+                  <span slot="subLabel">
+                    {{ position.authority | positionAuthorityLabel }} · @for (role of
+                    position.allowedRoles; track role; let last = $last) { {{ role |
+                    skillFlowRoleLabel }}{{ last ? '' : ', ' }} } @if
+                    (position.responsibilities.length) { · {{ position.responsibilities.join(' · ')
+                    }} }
+                  </span>
+                </mosaik-cell>
+                }
+              </mosaik-cell-group>
+            </section>
+            <section
+              class="flex min-w-0 flex-col gap-4"
+              [attr.test-id]="'workspace-providers-' + item.id"
+            >
+              <h3>Available AI services</h3>
+              <mosaik-cell-group [attr.test-id]="'workspace-providers-list-' + item.id">
+                @for (provider of organization.providers; track provider.id) {
+                <mosaik-cell
+                  [attr.test-id]="'workspace-provider-' + provider.id"
+                  [label]="provider.displayName"
+                  [subLabel]="provider.providerId + ' · ' + provider.runtime + ' · ' + provider.protocol + ' · ' + (provider.modelDiscovery === 'runtime' ? 'Models from the connected account' : 'Configured models') + ' · ' + provider.capabilities.join(', ')"
+                />
+                }
+              </mosaik-cell-group>
+            </section>
+            <section
+              class="flex min-w-0 flex-col gap-4"
+              [attr.test-id]="'workspace-routes-' + item.id"
+            >
+              <h3>Backup order</h3>
+              @for (route of organization.routes; track route.id) {
+              <div
+                class="flex min-w-0 flex-col gap-4"
+                [attr.test-id]="'workspace-route-' + route.id"
+              >
+                <div class="flex min-w-0 flex-col gap-1">
+                  <strong>{{ route.displayName }}</strong>
+                  <span>
+                    {{ (route.strategy | routeStrategyLabel) + ' · ' + (route.costPolicy |
+                    routeCostPolicyLabel) + ' · ' + (route.sessionAffinity ? 'Keep session affinity'
+                    : 'Start independent sessions') + ' · ' + route.maxParallelExecutions + '
+                    parallel' }}
+                  </span>
+                </div>
+                <mosaik-cell-group>
+                  @for (candidate of route.candidates; track candidate.id) {
+                  <mosaik-cell
+                    [attr.test-id]="'workspace-route-candidate-' + candidate.id"
+                    [label]="(candidate.priority + 1) + '. ' + candidate.displayName"
+                  >
+                    <span slot="subLabel">
+                      @if (candidate.accountProvider) { {{ candidate.accountProvider |
+                      connectionProviderLabel }} · } Provider: {{ candidate.providerId }} · {{
+                      candidate.model ?? 'Provider default model' }} @if (candidate.reasoningEffort)
+                      { · Reasoning: {{ candidate.reasoningEffort }} } · Quality: {{
+                      candidate.qualityScore }}/100 · {{ candidate.costClass | routeCostClassLabel
+                      }} · {{ candidate.enabled ? 'Available' : 'Disabled' }}
+                    </span>
+                  </mosaik-cell>
+                  }
+                </mosaik-cell-group>
+              </div>
+              }
+            </section>
+          </div>
+        </mosaik-expander>
+      </section>
+    </div></mosaik-card-content
+  >
+</mosaik-card>
+}

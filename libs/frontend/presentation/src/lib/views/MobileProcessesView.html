@@ -1,0 +1,91 @@
+<mosaik-page class="block min-h-full min-w-0" test-id="mobile-processes-view">
+  <mosaik-page-header
+    [inset]="'all'"
+    [text]="'Processes'"
+    [subText]="presenter.activeExecutions().length + ' active'"
+  />
+  <mosaik-page-content [inset]="'all'">
+    <section>
+      <h2 class="mb-2">Running now</h2>
+      <div class="grid min-w-0 gap-2">
+        @for (execution of presenter.activeExecutions(); track execution.id) {
+        <mosaik-card [appearance]="'soft'" [attr.test-id]="'mobile-process-' + execution.id">
+          <mosaik-card-header
+            [text]="execution.ticketTitle"
+            [subText]="execution.kind + ' · ' + execution.state"
+          >
+            <mosaik-progress-ring
+              slot="prefix"
+              [radius]="16"
+              [thickness]="3"
+              [isIndeterminate]="true"
+              [variant]="'neutral'"
+            />
+          </mosaik-card-header>
+          <mosaik-card-content>
+            @if (execution.latestProgress) {
+            <p class="mb-2 min-w-0">{{ execution.latestProgress }}</p>
+            }
+            <mosaik-button
+              [appearance]="'outline'"
+              [label]="'Cancel process'"
+              [disabled]="presenter.loading()"
+              (click)="presenter.cancelCommand.execute(execution)"
+            />
+          </mosaik-card-content>
+        </mosaik-card>
+        } @empty {
+        <mosaik-empty-state [header]="'No process is running.'" />
+        }
+      </div>
+    </section>
+
+    <section class="mt-4">
+      <h2 class="mb-2">Waiting for a slot</h2>
+      <div class="grid min-w-0 gap-2">
+        @for (entry of presenter.queuedProcesses(); track entry.id) {
+        <mosaik-card [appearance]="'soft'" [attr.test-id]="'mobile-queued-process-' + entry.id">
+          <mosaik-card-header
+            [text]="entry.ticketTitle"
+            [subText]="entry.kind + ' · position ' + entry.position"
+          />
+          <mosaik-card-content>
+            <p class="mb-2 min-w-0">
+              {{ entry.lastError ?? 'Starts as soon as an execution slot frees up.' }}
+            </p>
+            <mosaik-button
+              [appearance]="'outline'"
+              [label]="'Remove from queue'"
+              [disabled]="presenter.loading()"
+              (click)="presenter.removeFromQueueCommand.execute(entry)"
+            />
+          </mosaik-card-content>
+        </mosaik-card>
+        } @empty {
+        <mosaik-empty-state [header]="'Nothing is waiting for a slot.'" />
+        }
+      </div>
+    </section>
+
+    <section class="mt-4">
+      <h2 class="mb-2">Recent</h2>
+      <div class="grid min-w-0 gap-2">
+        @for (execution of presenter.recentExecutions(); track execution.id) {
+        <mosaik-card [appearance]="'outline'">
+          <mosaik-card-header
+            [text]="execution.ticketTitle"
+            [subText]="execution.kind + ' · ' + execution.state"
+          />
+          @if (execution.summary || execution.error) {
+          <mosaik-card-content>
+            <p class="min-w-0">{{ execution.error ?? execution.summary }}</p>
+          </mosaik-card-content>
+          }
+        </mosaik-card>
+        } @empty {
+        <mosaik-empty-state [header]="'No recent processes.'" />
+        }
+      </div>
+    </section>
+  </mosaik-page-content>
+</mosaik-page>

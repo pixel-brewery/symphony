@@ -1,0 +1,3 @@
+# .nxignore
+# Generated OpenCode runtime tree (plugin package.json would otherwise be picked up as an Nx project).
+.opencode/

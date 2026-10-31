@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Maintain Internationalization'
+  short_description: 'Keep visible copy and locale resources consistent'
+  default_prompt: 'Use $maintain-i18n when changing user-visible Symphony copy.'

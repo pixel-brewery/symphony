@@ -1,0 +1,16 @@
+{
+  "name": "frontend-feature-automation",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/features/automation/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["scope:frontend-feature", "type:feature", "feature:automation"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/features/automation/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

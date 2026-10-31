@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "renderer",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["nx", "serve", "renderer"],
+      "port": 4200,
+      "url": "http://127.0.0.1:4200"
+    }
+  ]
+}

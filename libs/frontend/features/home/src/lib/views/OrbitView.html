@@ -1,0 +1,464 @@
+<mosaik-page class="flex h-full min-h-0 flex-1 flex-col overflow-hidden" test-id="orbit-view">
+  <mosaik-page-header [inset]="'horizontal'">
+    <div class="flex flex-wrap items-center gap-1 py-2">
+      @if (presenter.store.scopedRepositories().length>1) {
+      <mosaik-select
+        class="w-[12rem]"
+        test-id="orbit-repository"
+        aria-label="Project"
+        [ngModel]="presenter.selectedRepository()?.id ?? ''"
+        (ngModelChange)="presenter.repositoryId.set($event)"
+      >
+        @for (repository of presenter.store.scopedRepositories(); track repository.id) {
+        <mosaik-select-item
+          [attr.test-id]="'orbit-repository-' + repository.id"
+          [value]="repository.id"
+          [label]="repository.displayName"
+        />
+        }
+      </mosaik-select>
+      } @if (presenter.landscape; as landscape) {
+      <mosaik-textbox
+        test-id="landscape-search"
+        class="min-w-[10rem] flex-1 max-w-[20rem]"
+        [placeholder]="'Find a ticket'"
+        [ngModel]="landscape.query()"
+        (ngModelChange)="presenter.searchCommand.execute($event)"
+        (keydown.enter)="presenter.focusSearchCommand.execute()"
+      />
+      <mosaik-select
+        class="w-[11rem]"
+        test-id="landscape-stage-filter"
+        aria-label="Work stage"
+        [ngModel]="landscape.stageId() ?? ''"
+        (ngModelChange)="landscape.setStageId($event || undefined); presenter.finderPage.set(0)"
+      >
+        <mosaik-select-item [value]="''" [label]="'All stages'" />
+        @for (stage of presenter.store.snapshot()?.workflow?.stages ?? []; track stage.id) {
+        <mosaik-select-item [value]="stage.id" [label]="stage.label" />
+        }
+      </mosaik-select>
+      @if (landscape.query() || landscape.stageId() || landscape.label() || landscape.columnId()) {
+      <mosaik-button
+        [size]="'small'"
+        test-id="landscape-clear"
+        [label]="'Clear filters'"
+        [appearance]="'plain'"
+        (click)="presenter.clearFiltersCommand.execute()"
+      />
+      } }
+      <mosaik-button
+        [size]="'small'"
+        test-id="landscape-zoom-out"
+        [label]="'−'"
+        aria-label="Zoom out"
+        (click)="zoomBy(.8)"
+      />
+      <mosaik-button
+        [size]="'small'"
+        test-id="landscape-zoom-in"
+        [label]="'+'"
+        aria-label="Zoom in"
+        (click)="zoomBy(1.2)"
+      />
+      <mosaik-button [size]="'small'" test-id="landscape-fit" [label]="'Fit'" (click)="fit()" />
+      <mosaik-button
+        [size]="'small'"
+        test-id="orbit-explorer-toggle"
+        [label]="'Explore'"
+        [appearance]="presenter.finderOpen()?'outline':'plain'"
+        [attr.aria-expanded]="presenter.finderOpen()"
+        aria-controls="orbit-explorer"
+        (click)="presenter.toggleFinderCommand.execute()"
+      />
+      @if (presenter.deliveryAvailable) {
+      <mosaik-button
+        [size]="'small'"
+        test-id="orbit-refresh"
+        [label]="'Refresh evidence'"
+        [appearance]="'plain'"
+        [disabled]="presenter.deliveryBusy()"
+        (click)="presenter.refreshDeliveryCommand.execute()"
+      />
+      }
+    </div>
+  </mosaik-page-header>
+  <mosaik-page-content
+    [inset]="'none'"
+    class="box-border flex min-h-0 flex-1 flex-col overflow-hidden"
+  >
+    @if (presenter.deliveryError()) {
+    <mosaik-hint
+      [textOverflow]="'wrap'"
+      class="shrink-0 px-3"
+      test-id="orbit-delivery-error"
+      [text]="presenter.deliveryError()"
+    />
+    } @for (error of presenter.selectedDelivery().errors; track error.targetId) {
+    <mosaik-hint [textOverflow]="'wrap'" class="shrink-0 px-3" [text]="error.message" />
+    }
+    <div class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <symphony-orbit-canvas
+        class="block min-h-0 w-full flex-1"
+        [scene]="presenter.orbitScene()"
+        [crew]="presenter.orbitCrew()"
+        [selectedId]="presenter.selectedSceneId()"
+        [focusId]="presenter.focusId()"
+        [focusRevision]="presenter.focusRevision()"
+        [camera]="presenter.camera()"
+        [scopeKey]="presenter.scopeKey()"
+        (selected)="presenter.selectCommand.execute($event)"
+        (cameraChanged)="presenter.cameraChangedCommand.execute($event)"
+      />
+      @if (presenter.filteredTickets().length===0) {
+      <mosaik-card class="absolute bottom-4 left-4 right-4 max-w-[26rem]" test-id="orbit-empty">
+        <mosaik-card-content>
+          @if (presenter.repositoryTickets().length===0) {
+          <mosaik-text [wrap]="true" [text]="'No tickets are available for this project yet.'" />
+          } @else {
+          <mosaik-text [wrap]="true" [text]="'No tickets match these filters.'" />
+          <mosaik-button
+            [size]="'small'"
+            [label]="'Clear filters'"
+            (click)="presenter.clearFiltersCommand.execute()"
+          />
+          }
+        </mosaik-card-content>
+      </mosaik-card>
+      } @if (presenter.finderOpen()) {
+      <mosaik-card
+        id="orbit-explorer"
+        test-id="orbit-explorer"
+        class="absolute bottom-3 left-3 top-3 z-10 flex w-[24rem] max-w-[calc(100%_-_1.5rem)] flex-col overflow-hidden"
+        [appearance]="'solid'"
+      >
+        <mosaik-card-content class="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+          <div class="flex shrink-0 items-center justify-between gap-2">
+            <mosaik-select
+              class="min-w-0 flex-1"
+              test-id="orbit-explorer-kind"
+              aria-label="Objects to explore"
+              [ngModel]="presenter.finderKind()"
+              (ngModelChange)="presenter.changeFinderKindCommand.execute($event)"
+            >
+              <mosaik-select-item
+                test-id="orbit-explorer-kind-tickets"
+                [value]="'tickets'"
+                [label]="'Tickets'"
+              />
+              <mosaik-select-item
+                test-id="orbit-explorer-kind-targets"
+                [value]="'targets'"
+                [label]="'Destinations'"
+              />
+            </mosaik-select>
+            <mosaik-button
+              [size]="'small'"
+              [appearance]="'plain'"
+              [label]="'Close'"
+              test-id="orbit-explorer-close"
+              (click)="presenter.toggleFinderCommand.execute()"
+            />
+          </div>
+          <div
+            class="flex min-h-0 flex-1 flex-col gap-1 overflow-auto"
+            role="group"
+            [attr.aria-label]="presenter.finderKind()==='tickets'?'Tickets in the orbit':'Delivery destinations'"
+          >
+            @switch (presenter.finderKind()) { @case ('tickets') { @for (ticket of
+            presenter.finderPageItems(); track ticket.id) {
+            <mosaik-button
+              [size]="'small'"
+              [appearance]="'plain'"
+              [attr.test-id]="'orbit-explorer-ticket-'+ticket.id"
+              (click)="presenter.selectTicketCommand.execute(ticket.id)"
+            >
+              <span slot="label" class="flex min-w-0 flex-col items-start gap-1"
+                ><span>{{ ticket.externalId }}</span
+                ><mosaik-text [text]="ticket.title" [wrap]="true"
+              /></span>
+            </mosaik-button>
+            } @empty {
+            <mosaik-hint [textOverflow]="'wrap'" [text]="'No tickets match these filters.'" /> } }
+            @case ('targets') { @for (target of presenter.finderTargets(); track target.id) {
+            <mosaik-button
+              [size]="'small'"
+              [appearance]="'plain'"
+              [attr.test-id]="'orbit-explorer-target-'+target.id"
+              (click)="presenter.selectTargetCommand.execute(target.id)"
+            >
+              <mosaik-text slot="label" [text]="target.displayName" [wrap]="true" />
+            </mosaik-button>
+            } @empty {
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'No delivery destinations are configured for this project.'"
+            />
+            } } }
+          </div>
+          <div class="flex shrink-0 items-center justify-between gap-2">
+            <mosaik-button
+              [size]="'small'"
+              test-id="orbit-explorer-previous"
+              [label]="'Previous'"
+              [disabled]="presenter.finderPage()===0"
+              (click)="presenter.finderPage.set(presenter.finderPage()-1)"
+            />
+            <span
+              >{{ presenter.finderPage()+1 }} / {{ presenter.finderPageCount() }} · {{
+              presenter.finderCount() }}</span
+            >
+            <mosaik-button
+              [size]="'small'"
+              test-id="orbit-explorer-next"
+              [label]="'Next'"
+              [disabled]="(presenter.finderPage()+1)*40>=presenter.finderCount()"
+              (click)="presenter.finderPage.set(presenter.finderPage()+1)"
+            />
+          </div>
+        </mosaik-card-content>
+      </mosaik-card>
+      } @if (!presenter.finderOpen() && (presenter.selectedTarget() || presenter.selectedOrbitNode()
+      || presenter.selectedTicket())) {
+      <mosaik-card
+        test-id="orbit-details"
+        role="complementary"
+        aria-label="Orbit details"
+        class="absolute bottom-3 right-3 top-3 z-10 flex w-[24rem] max-w-[calc(100%_-_1.5rem)] flex-col overflow-hidden"
+        [appearance]="'solid'"
+      >
+        <mosaik-card-content class="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+          <div class="flex shrink-0 items-center justify-between gap-2">
+            <mosaik-text
+              [text]="presenter.selectedTarget()?.displayName ?? presenter.selectedOrbitNode()?.label ?? presenter.selectedTicket()?.externalId ?? ''"
+              [wrap]="true"
+            />
+            <mosaik-button
+              [size]="'small'"
+              [appearance]="'plain'"
+              [label]="'Close'"
+              [attr.test-id]="presenter.selectedTarget() ? 'orbit-close-delivery-target-details' : presenter.selectedOrbitNode() ? 'orbit-close-object' : 'orbit-close-landscape-ticket-details'"
+              (click)="presenter.closeDetailsCommand.execute()"
+            />
+          </div>
+          <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden">
+            @if (presenter.selectedTarget() || presenter.selectedOrbitNode()?.kind === 'production')
+            { @if (presenter.selectedRepository(); as repository) {
+            <mosaik-text
+              test-id="orbit-destination-project"
+              [text]="repository.displayName"
+              [wrap]="true"
+            />
+            } } @if (presenter.selectedTarget(); as target) {
+            <div class="flex min-w-0 flex-col gap-3" test-id="delivery-target-details">
+              <span
+                >@switch (target.kind) { @case ('environment') { Environment } @case
+                ('release-channel') { Release channel } @case ('installation') { Installation }
+                }</span
+              >
+              <span test-id="orbit-destination-environment"
+                >Destination: {{ target.environment }}</span
+              >
+              @if (target.production) { <span>Production destination</span> } @if
+              (target.workflowId) { <span>Workflow: {{ target.workflowId }}</span> } @if
+              (presenter.targetCurrent(); as current) {
+              <span test-id="delivery-target-confirmed"
+                >@if (presenter.targetStale()) { Last confirmed version: } @else { Confirmed
+                version: } {{ current.version }}</span
+              ><span>Revision: {{ current.revision }}</span
+              ><span>{{ current.observedAt | date:'medium' }}</span> } @else {
+              <mosaik-hint
+                [textOverflow]="'wrap'"
+                test-id="delivery-target-unconfirmed"
+                [text]="'No current delivery is confirmed.'"
+              />
+              } @if (presenter.targetStale()) {
+              <mosaik-hint
+                [textOverflow]="'wrap'"
+                test-id="delivery-target-stale"
+                [text]="'This delivery status could not be verified. Refresh the evidence before relying on it.'"
+              />
+              } @if (presenter.deliveryAvailable && target.workflowId) {
+              <mosaik-textbox
+                test-id="delivery-ref"
+                [placeholder]="'Commit, tag or branch to resolve'"
+                [ngModel]="presenter.launchRef()"
+                (ngModelChange)="presenter.changeLaunchRefCommand.execute($event)"
+              />
+              <mosaik-button
+                [size]="'small'"
+                test-id="delivery-prepare"
+                [label]="'Prepare delivery'"
+                [disabled]="presenter.launchBusy() || !presenter.launchRef()"
+                (click)="presenter.previewLaunchCommand.execute()"
+              />
+              @if (presenter.launchPlan(); as plan) {
+              <span>Target: {{ plan.targetName }}</span
+              ><span>Exact version: {{ plan.revision }}</span
+              ><span>Workflow: {{ plan.workflowPath }}</span>
+              <mosaik-button
+                [size]="'small'"
+                test-id="delivery-start"
+                [label]="'Start this version'"
+                [disabled]="presenter.launchBusy()"
+                (click)="presenter.startLaunchCommand.execute()"
+              />
+              } } @for (operation of presenter.targetOperations(); track operation.id) {
+              <mosaik-card
+                ><mosaik-card-content
+                  ><span>{{ operation.plan.revision }} · {{ operation.state }}</span> @if
+                  (operation.message) {
+                  <p>{{ operation.message }}</p>
+                  } @if (operation.run) {
+                  <mosaik-button
+                    [size]="'small'"
+                    [routerLink]="'/main/actions'"
+                    [queryParams]="{run:operation.run.id}"
+                    [label]="'Open deployment run'"
+                  />
+                  } @if (presenter.deliveryAvailable && (operation.state==='uncertain' ||
+                  operation.state==='submitting')) {
+                  <p>The dispatch outcome is unconfirmed. Reconcile before starting again.</p>
+                  <mosaik-button
+                    [size]="'small'"
+                    [attr.test-id]="'delivery-reconcile-'+operation.id"
+                    [label]="'Reconcile'"
+                    [disabled]="presenter.launchBusy()"
+                    (click)="presenter.reconcileCommand.execute(operation.id)"
+                  />
+                  }
+                </mosaik-card-content></mosaik-card
+              >
+              } @for (evidence of presenter.targetEvidence(); track evidence.id) {
+              <mosaik-card
+                ><mosaik-card-content
+                  ><span>{{ evidence.kind }} · {{ evidence.state }}</span>
+                  <p>{{ evidence.version }}</p>
+                  <p>{{ evidence.observedAt | date:'medium' }}</p>
+                  @for (id of evidence.workItemIds; track id) {
+                  <mosaik-button
+                    [size]="'small'"
+                    [label]="id"
+                    [appearance]="'plain'"
+                    (click)="presenter.selectTicketCommand.execute(id)"
+                  />
+                  } @if (evidence.externalUrl) {
+                  <mosaik-button
+                    [size]="'small'"
+                    [label]="'View evidence'"
+                    [href]="evidence.externalUrl"
+                    [target]="'_blank'"
+                  />
+                  }
+                </mosaik-card-content></mosaik-card
+              >
+              }
+            </div>
+            } @else if (presenter.selectedOrbitNode(); as node) {
+            <div class="flex min-w-0 flex-col gap-3" test-id="orbit-object-details">
+              @if (node.kind==='production') { @if (node.deliveryState==='unassigned') {
+              <mosaik-hint
+                [textOverflow]="'wrap'"
+                test-id="orbit-production-unassigned"
+                [text]="'No production destination is configured for this project.'"
+              />
+              <mosaik-text
+                [wrap]="true"
+                [text]="'Choose the environment, release channel or installation that represents Production in Workspace settings → Delivery destinations.'"
+              />
+              } @else if (node.deliveryState==='stale') {
+              <mosaik-hint
+                [textOverflow]="'wrap'"
+                test-id="orbit-production-stale"
+                [text]="'The last delivery status could not be verified. Refresh the evidence before relying on it.'"
+              />
+              } @else if (node.deliveryState==='unconfirmed') {
+              <mosaik-hint
+                [textOverflow]="'wrap'"
+                test-id="orbit-production-unconfirmed"
+                [text]="'A production destination is configured, but its current version is not confirmed.'"
+              />
+              } @else {
+              <span>Confirmed destinations: {{ node.count }}</span>
+              } @for (target of presenter.targets(); track target.id) { @if (target.production) {
+              <mosaik-button
+                [size]="'small'"
+                [appearance]="'outline'"
+                [attr.test-id]="'orbit-production-target-'+target.id"
+                [label]="target.displayName"
+                (click)="presenter.selectCommand.execute('target:'+target.id)"
+              />
+              } } } @else {
+              <span>{{ node.count }} tickets in this part of the orbit</span>
+              <mosaik-button
+                [size]="'small'"
+                [label]="'Explore tickets'"
+                (click)="presenter.toggleFinderCommand.execute()"
+              />
+              }
+            </div>
+            } @else if (presenter.selectedTicket(); as ticket) {
+            <div class="flex min-w-0 flex-col gap-3" test-id="landscape-ticket-details">
+              <mosaik-text [text]="ticket.title" [wrap]="true" />
+              <span
+                >Work stage: {{ presenter.stageById().get(ticket.stageId ?? '')?.label ?? 'Unmapped'
+                }}</span
+              >
+              <mosaik-button
+                [size]="'small'"
+                test-id="landscape-open-workflow"
+                [label]="'Review / answer / next stage'"
+                (click)="presenter.openDetailsCommand.execute([ticket.id,true])"
+              />
+              <mosaik-button
+                [size]="'small'"
+                test-id="landscape-open-ticket"
+                [label]="'Open ticket details'"
+                (click)="presenter.openDetailsCommand.execute([ticket.id])"
+              />
+              @for (entry of presenter.confirmedTicketEvidence(); track entry.target.id) {
+              <span
+                >{{ entry.target.displayName }} · {{ entry.evidence.version }} · {{
+                entry.evidence.kind }}</span
+              >
+              } @empty {
+              <mosaik-hint
+                [textOverflow]="'wrap'"
+                [text]="'No delivery of this ticket is currently confirmed.'"
+              />
+              } @for (pr of presenter.ticketPullRequests(); track pr.externalUrl) {
+              <mosaik-button
+                [size]="'small'"
+                [label]="'Pull request #'+pr.number"
+                [href]="pr.externalUrl"
+                [target]="'_blank'"
+              />
+              } @for (run of presenter.ticketRuns(); track run.id) {
+              <mosaik-button
+                [size]="'small'"
+                [routerLink]="'/main/actions'"
+                [queryParams]="{run:run.id}"
+                [label]="run.name"
+              />
+              }
+            </div>
+            }
+          </div>
+          @if (presenter.deliveryAvailable && (presenter.selectedTarget() ||
+          presenter.selectedOrbitNode()?.kind === 'production')) {
+          <mosaik-button
+            class="shrink-0"
+            test-id="orbit-configure-destination"
+            [label]="presenter.selectedTarget() ? 'Configure destination' : 'Configure production'"
+            [appearance]="'solid'"
+            [variant]="'primary'"
+            [disabled]="!presenter.store.selectedWorkspaceIds().length"
+            (click)="presenter.configureDeliveryCommand.execute()"
+          />
+          }
+        </mosaik-card-content>
+      </mosaik-card>
+      }
+    </div>
+  </mosaik-page-content>
+</mosaik-page>

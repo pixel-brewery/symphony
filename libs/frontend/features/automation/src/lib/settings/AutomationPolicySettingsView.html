@@ -1,0 +1,421 @@
+<mosaik-card test-id="runtime-settings-card">
+  <mosaik-card-header
+    [text]="'Execution and automation'"
+    [subText]="'Control managed workspaces, scheduling, and execution capacity.'"
+  />
+  <mosaik-card-content>
+    <div class="flex min-w-0 flex-col gap-4">
+      <section class="flex min-w-0 flex-col gap-2" test-id="managed-workspaces-settings-group">
+        <symphony-headline
+          header="Managed workspaces"
+          description="Choose where executable worktrees live and how long failed work remains available for inspection."
+        />
+        <mosaik-filebox
+          test-id="workspace-root"
+          [label]="'Managed root'"
+          [value]="presenter.runtime().workspaceRoot"
+          [directory]="true"
+          [readonly]="true"
+        >
+          <mosaik-button
+            slot="suffix"
+            [iconName]="'folder'"
+            [appearance]="'plain'"
+            (click)="presenter.chooseWorkspaceRootCommand.execute()"
+          />
+        </mosaik-filebox>
+        <mosaik-numberbox
+          test-id="board-refresh-interval"
+          [label]="'Board refresh interval (minutes)'"
+          [min]="1"
+          [max]="1440"
+          [value]="presenter.runtime().boardRefreshIntervalMinutes"
+          (input)="presenter.updateRuntimeNumberCommand.execute(['boardRefreshIntervalMinutes', $event])"
+        />
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="retain-failed-workspaces"
+          [isChecked]="presenter.runtime().retainFailedWorkspaces"
+          (checked)="presenter.runtime.update(value => ({ ...value, retainFailedWorkspaces: true }))"
+          (unchecked)="presenter.runtime.update(value => ({ ...value, retainFailedWorkspaces: false }))"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Retain failed execution workspaces'" [wrap]="true" />
+            <mosaik-hint
+              [text]="'Keep failed worktrees for diagnosis instead of removing them after completion.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-numberbox
+          test-id="maximum-verification-repair-attempts"
+          [label]="'Verification repair attempts per run'"
+          [min]="0"
+          [max]="10"
+          [value]="presenter.runtime().maximumVerificationRepairAttempts"
+          (input)="presenter.updateRuntimeNumberCommand.execute(['maximumVerificationRepairAttempts', $event])"
+        />
+        <mosaik-hint
+          [text]="'How often a run hands failing repository checks back to the agent before the run fails. Zero lets the first red check end the run.'"
+        />
+      </section>
+
+      <mosaik-divider />
+
+      <section class="flex min-w-0 flex-col gap-2" test-id="github-automation-settings-group">
+        <symphony-headline
+          header="GitHub issue control"
+          description="Decide whether authorized issue comments may start Symphony tasks."
+        />
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="automatic-github-execution"
+          [isChecked]="presenter.runtime().automaticExecutionEnabled"
+          (checked)="presenter.runtime.update(value => ({ ...value, automaticExecutionEnabled: true }))"
+          (unchecked)="presenter.runtime.update(value => ({ ...value, automaticExecutionEnabled: false }))"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Allow GitHub commands'" [wrap]="true" />
+            <mosaik-hint
+              [text]="'Run authorized @symphony comments and deliver successful implementation branches and pull requests.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-banner
+          test-id="remote-github-commands-guide"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'info'"
+          [iconName]="'github'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'Control Symphony from GitHub'" />
+          <mosaik-banner-sub-header
+            [text]="'After enabling, comment @symphony your instruction, /symphony analyze, /symphony fix, /symphony retry or /symphony rerun-ci in a configured GitHub issue. Successful fixes update the implementation branch and pull request.'"
+          />
+        </mosaik-banner>
+      </section>
+
+      <mosaik-divider />
+
+      <section class="flex min-w-0 flex-col gap-2" test-id="autonomy-settings-group">
+        <symphony-headline
+          header="Autonomous work"
+          description="Schedule unattended analysis, implementation, retry, and pull-request synchronization."
+        />
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="autonomous-execution"
+          [isChecked]="presenter.runtime().autonomousExecutionEnabled"
+          (checked)="presenter.runtime.update(value => ({ ...value, autonomousExecutionEnabled: true }))"
+          (unchecked)="presenter.runtime.update(value => ({ ...value, autonomousExecutionEnabled: false }))"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Run autonomous work'" [wrap]="true" />
+            <mosaik-hint
+              [text]="'Analyze backlog items, implement Ready items, retry failed work, and synchronize pull-request status.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <div class="grid min-w-0 grid-cols-2 gap-4 max-[640px]:grid-cols-1">
+          <mosaik-numberbox
+            test-id="autonomous-work-interval"
+            [label]="'Work interval (minutes)'"
+            [min]="1"
+            [max]="1440"
+            [value]="presenter.runtime().autonomousWorkIntervalMinutes"
+            (input)="presenter.updateRuntimeNumberCommand.execute(['autonomousWorkIntervalMinutes', $event])"
+          />
+          <mosaik-numberbox
+            test-id="max-parallel-executions"
+            [label]="'Maximum parallel tasks'"
+            [min]="1"
+            [max]="32"
+            [value]="presenter.runtime().maxParallelExecutions"
+            (input)="presenter.updateRuntimeNumberCommand.execute(['maxParallelExecutions', $event])"
+          />
+        </div>
+        @if (presenter.automationUnpreparedRepositories().length) {
+        <mosaik-banner
+          test-id="automatic-execution-repository-preparation-required"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [iconName]="'errorCircle'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'Automatic AI work is waiting for local preparation'" />
+          <mosaik-banner-sub-header
+            [text]="(presenter.automationUnpreparedRepositories() | displayNames) + ': prepare the repository under Repositories before unattended work can start.'"
+          />
+        </mosaik-banner>
+        }
+        <mosaik-banner
+          test-id="autonomy-capacity-guide"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'info'"
+          [iconName]="'info'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'The parallel limit applies application-wide'" />
+          <mosaik-banner-sub-header
+            [text]="'Manual and autonomous analysis, implementation, and retry tasks share the same capacity. A new interval starts only work that fits the remaining slots.'"
+          />
+        </mosaik-banner>
+      </section>
+
+      <mosaik-divider />
+
+      <section class="flex min-w-0 flex-col gap-2" test-id="agentic-delivery-settings-group">
+        <symphony-headline
+          header="Agentic pull requests and actions"
+          description="When a CI run fails on a pull request created by Symphony, Symphony can find the cause and fix it on its own. Each switch below allows one step of that process."
+        />
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-delivery-enabled"
+          [isChecked]="presenter.runtime().agenticDelivery.enabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('enabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('enabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Enable agentic delivery'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Turn the feature on as a whole. Nothing below has an effect while this is off, and each repository must also allow agentic delivery in its own settings.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-observe-failures"
+          [isChecked]="presenter.runtime().agenticDelivery.observeFailures"
+          (checked)="presenter.updateAgenticDeliveryFlag('observeFailures', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('observeFailures', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Observe failed actions'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Watch CI runs on pull requests created by Symphony and record why they fail. Every other step builds on this; by itself it never changes any code.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-ai-diagnosis"
+          [isChecked]="presenter.runtime().agenticDelivery.aiDiagnosisEnabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('aiDiagnosisEnabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('aiDiagnosisEnabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Use AI for diagnosis'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Let an AI skill read the recorded failure and determine its cause. Spends tokens within the budgets below. When off, failures are only recorded and classified.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-source-repair"
+          [isChecked]="presenter.runtime().agenticDelivery.sourceRepairEnabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('sourceRepairEnabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('sourceRepairEnabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Repair source failures'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Let AI fix code or tests when the diagnosis locates the problem in the source. A managed branch that conflicts with its base also starts a budgeted agent revision on the retained branch. Works only together with “Update managed pull-request branches”.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-workflow-repair"
+          [isChecked]="presenter.runtime().agenticDelivery.workflowRepairEnabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('workflowRepairEnabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('workflowRepairEnabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Repair workflow failures'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Let AI fix the CI workflow configuration when the diagnosis locates the problem there. Works only together with “Update managed pull-request branches”.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-review-feedback"
+          [isChecked]="presenter.runtime().agenticDelivery.reviewFeedbackEnabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('reviewFeedbackEnabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('reviewFeedbackEnabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Listen for pull-request review feedback'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Allow assigned review-feedback skills to act on reviewer comments on pull requests created by Symphony.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-managed-branch-updates"
+          [isChecked]="presenter.runtime().agenticDelivery.managedBranchUpdatesEnabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('managedBranchUpdatesEnabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('managedBranchUpdatesEnabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Update managed pull-request branches'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Allow Symphony to push fixes to the pull-request branch and, when it falls behind, ask GitHub to merge the base into it — never a rebase or force-push. Only branches created by Symphony are ever touched. Both repair switches need this to take effect.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-ci-rerun"
+          [isChecked]="presenter.runtime().agenticDelivery.ciRerunEnabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('ciRerunEnabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('ciRerunEnabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Rerun transient and infrastructure failures'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'When a failure is classified as temporary or caused by CI infrastructure, request a single rerun instead of a repair — never more than one per failure.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-replacement-pr"
+          [isChecked]="presenter.runtime().agenticDelivery.replacementPullRequestEnabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('replacementPullRequestEnabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('replacementPullRequestEnabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Allow replacement pull requests'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Open a new pull request only when the original one was closed and its branch can no longer be updated. When off, the repair stops instead.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="agentic-conflict-serialization"
+          [isChecked]="presenter.runtime().agenticDelivery.conflictSerializationEnabled"
+          (checked)="presenter.updateAgenticDeliveryFlag('conflictSerializationEnabled', true)"
+          (unchecked)="presenter.updateAgenticDeliveryFlag('conflictSerializationEnabled', false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Serialize overlapping deliveries'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Hold back a solution whose predicted change surface overlaps a pull request still in flight until that delivery merges. Takes effect when Autonomous work starts solutions.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-banner
+          test-id="agentic-delivery-policy-guide"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'info'"
+          [iconName]="'info'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'The switches build on each other'" />
+          <mosaik-banner-sub-header
+            [text]="'“Enable agentic delivery” and “Observe failed actions” must both be on before anything runs, and each repository must opt in. Diagnosis, repairs, and reruns build on the recorded failures, and branch updates need the same pair; the two repair switches also need “Update managed pull-request branches”. None of this depends on Autonomous work — only “Serialize overlapping deliveries” acts there, pacing the solutions it starts.'"
+          />
+        </mosaik-banner>
+        <div class="grid min-w-0 grid-cols-2 gap-4 max-[640px]:grid-cols-1">
+          <mosaik-numberbox
+            test-id="agentic-diagnosis-token-budget"
+            [label]="'Diagnosis token budget'"
+            [min]="1000"
+            [max]="1000000"
+            [value]="presenter.runtime().agenticDelivery.diagnosisTokenBudget"
+            (input)="presenter.updateAgenticDeliveryNumberCommand.execute(['diagnosisTokenBudget', $event])"
+          />
+          <mosaik-numberbox
+            test-id="agentic-repair-token-budget"
+            [label]="'Repair token budget'"
+            [min]="1000"
+            [max]="2000000"
+            [value]="presenter.runtime().agenticDelivery.repairTokenBudget"
+            (input)="presenter.updateAgenticDeliveryNumberCommand.execute(['repairTokenBudget', $event])"
+          />
+          <mosaik-numberbox
+            test-id="agentic-daily-token-budget"
+            [label]="'Daily token budget'"
+            [min]="1000"
+            [max]="10000000"
+            [value]="presenter.runtime().agenticDelivery.dailyTokenBudget"
+            (input)="presenter.updateAgenticDeliveryNumberCommand.execute(['dailyTokenBudget', $event])"
+          />
+          <mosaik-numberbox
+            test-id="agentic-max-attempts"
+            [label]="'Maximum attempts per branch'"
+            [min]="1"
+            [max]="10"
+            [value]="presenter.runtime().agenticDelivery.maxAttempts"
+            (input)="presenter.updateAgenticDeliveryNumberCommand.execute(['maxAttempts', $event])"
+          />
+          <mosaik-numberbox
+            test-id="agentic-max-parallel-repairs"
+            [label]="'Maximum parallel repairs'"
+            [min]="1"
+            [max]="16"
+            [value]="presenter.runtime().agenticDelivery.maxParallelRepairs"
+            (input)="presenter.updateAgenticDeliveryNumberCommand.execute(['maxParallelRepairs', $event])"
+          />
+          <mosaik-numberbox
+            test-id="agentic-cooldown"
+            [label]="'Cooldown (minutes)'"
+            [min]="1"
+            [max]="1440"
+            [value]="presenter.runtime().agenticDelivery.cooldownMinutes"
+            (input)="presenter.updateAgenticDeliveryNumberCommand.execute(['cooldownMinutes', $event])"
+          />
+        </div>
+      </section>
+
+      @if (presenter.workspaceCleanupAvailable) {
+      <mosaik-divider />
+
+      <section class="flex min-w-0 flex-col gap-2" test-id="workspace-cleanup-settings-group">
+        <symphony-headline
+          header="Workspace cleanup"
+          description="Remove inactive managed worktrees when their local files are no longer needed."
+        />
+        <div class="flex min-w-0 flex-wrap gap-2">
+          <mosaik-button
+            test-id="clear-workspaces"
+            [label]="'Clear inactive workspaces'"
+            [appearance]="'plain'"
+            [variant]="'danger'"
+            (click)="presenter.confirmClearWorkspacesCommand.execute()"
+          />
+        </div>
+      </section>
+      }
+    </div>
+  </mosaik-card-content>
+  <mosaik-card-footer>
+    <div class="flex w-full flex-wrap justify-end gap-2">
+      <mosaik-button
+        test-id="save-runtime-settings"
+        [label]="'Save'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        (click)="presenter.saveRuntimeCommand.execute()"
+      />
+    </div>
+  </mosaik-card-footer>
+</mosaik-card>

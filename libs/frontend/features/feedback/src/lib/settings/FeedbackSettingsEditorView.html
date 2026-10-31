@@ -1,0 +1,190 @@
+<ng-template mosaikDrawerHeader>
+  <mosaik-drawer-header
+    [text]="presenter.data.sourceId ? 'Edit Microsoft Teams feedback intake' : 'Add Microsoft Teams feedback intake'"
+    [subText]="'FLAMOX365 feedback to GitHub work items'"
+  >
+    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+  </mosaik-drawer-header>
+</ng-template>
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="settings-editor-drawer"
+    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+  >
+    @if (presenter.isHydrating()) {
+    <section
+      test-id="settings-editor-loading-skeleton"
+      class="flex min-w-0 flex-col gap-4"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading settings"
+    >
+      <div class="flex min-w-0 flex-col">
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
+        </div>
+      </div>
+      <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+        @for (field of [1, 2, 3, 4]; track field) {
+        <div class="flex min-w-0 flex-col gap-0.75">
+          <div class="flex h-2.5 items-center">
+            <mosaik-skeleton [width]="'5rem'" [height]="'14px'" [shimmer]="true" />
+          </div>
+          <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+        </div>
+        }
+      </div>
+    </section>
+    }
+    <div class="min-w-0" [hidden]="presenter.isHydrating()">
+      <section class="flex min-w-0 flex-col gap-4" test-id="teams-feedback-intake-editor">
+        <mosaik-banner
+          test-id="teams-feedback-setup-guide"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'info'"
+          [iconName]="'info'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'Read FLAMOX365 feedback from Microsoft Teams'" />
+          <mosaik-banner-sub-header
+            [text]="'Register a Microsoft Entra application, grant the Teams app ChannelMessage.Read.Group for the target team, and store its client secret in an environment variable. Symphony reads only the configured channel every 15 minutes and creates a GitHub work item when @Symphony is mentioned on a FLAMOX365 feedback card.'"
+          />
+        </mosaik-banner>
+        <symphony-headline
+          header="Microsoft Teams channel"
+          description="Connect one channel to an existing GitHub Project and repository in this workspace."
+        />
+        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+          <mosaik-textbox
+            test-id="teams-feedback-display-name"
+            [label]="'Display name'"
+            [value]="presenter.teams.displayName"
+            (input)="presenter.teams.displayName = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="teams-feedback-tenant-id"
+            [label]="'Microsoft Entra tenant ID'"
+            [value]="presenter.teams.tenantId"
+            (input)="presenter.teams.tenantId = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="teams-feedback-client-id"
+            [label]="'Application / client ID'"
+            [value]="presenter.teams.clientId"
+            (input)="presenter.teams.clientId = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="teams-feedback-credential-ref"
+            [label]="'Client secret credential reference'"
+            [placeholder]="'env:TEAMS_FEEDBACK_CLIENT_SECRET'"
+            [value]="presenter.teams.credentialRef"
+            (input)="presenter.teams.credentialRef = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="teams-feedback-team-id"
+            [label]="'Team ID'"
+            [value]="presenter.teams.teamId"
+            (input)="presenter.teams.teamId = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="teams-feedback-channel-id"
+            [label]="'Channel ID'"
+            [value]="presenter.teams.channelId"
+            (input)="presenter.teams.channelId = presenter.eventText()($event)"
+          />
+          <mosaik-select
+            test-id="teams-feedback-project-source"
+            [label]="'Target GitHub Project'"
+            [value]="presenter.teams.targetWorkItemSourceId"
+            (selectionChanged)="presenter.updateTeamsTargetSourceCommand.execute($event)"
+          >
+            @for (source of presenter.teamsTargetSources(); track source.id) {
+            <mosaik-select-item
+              [attr.test-id]="'teams-feedback-project-source-' + source.id"
+              [label]="source.displayName"
+              [value]="source.id"
+              (click)="presenter.updateTeamsTargetSourceCommand.execute(source.id)"
+            />
+            }
+          </mosaik-select>
+          <mosaik-select
+            test-id="teams-feedback-repository"
+            [label]="'Target GitHub repository'"
+            [value]="presenter.teams.targetRepositoryBindingId"
+            (selectionChanged)="presenter.updateTeamsTargetRepositoryCommand.execute($event)"
+          >
+            @for (repository of presenter.teamsTargetRepositories(); track repository.id) {
+            <mosaik-select-item
+              [attr.test-id]="'teams-feedback-repository-' + repository.id"
+              [label]="repository.owner + '/' + repository.name"
+              [value]="repository.id"
+              (click)="presenter.updateTeamsTargetRepositoryCommand.execute(repository.id)"
+            />
+            }
+          </mosaik-select>
+        </div>
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="teams-feedback-enabled"
+          [isChecked]="presenter.teams.enabled"
+          (checked)="presenter.teams.enabled = true"
+          (unchecked)="presenter.teams.enabled = false"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text
+              [text]="'Create work items from @Symphony feedback requests'"
+              [wrap]="true"
+            />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Existing messages become the initial baseline and are never imported retroactively.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        <mosaik-button
+          test-id="test-teams-feedback-connection"
+          [label]="'Test connection'"
+          [iconName]="'sync'"
+          [appearance]="'outline'"
+          [variant]="'primary'"
+          [isBusy]="presenter.feedbackIntakeTestBusy()"
+          [disabled]="!presenter.canTestTeamsFeedback() || presenter.feedbackIntakeTestBusy()"
+          (click)="presenter.testTeamsFeedbackCommand.execute()"
+        />
+      </section>
+    </div>
+  </div>
+</ng-template>
+<ng-template mosaikDrawerFooter>
+  <div class="flex w-full min-w-0 flex-wrap justify-end gap-2">
+    @if (presenter.hasExistingTeamsFeedback()) {
+    <mosaik-button
+      test-id="remove-teams-feedback-intake"
+      [label]="'Remove intake'"
+      [appearance]="'plain'"
+      [variant]="'danger'"
+      [disabled]="presenter.busy() || presenter.configurationBusy()"
+      (click)="presenter.removeTeamsFeedbackCommand.execute()"
+    />
+    }
+    <mosaik-button
+      test-id="cancel-settings-editor"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      (click)="presenter.closeCommand.execute()"
+    />
+    <mosaik-button
+      test-id="save-settings-editor"
+      [label]="'Save'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.busy()"
+      [disabled]="!presenter.canSave() || presenter.busy() || presenter.editorBusy()"
+      (click)="presenter.saveCommand.execute()"
+    />
+  </div>
+</ng-template>

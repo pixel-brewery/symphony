@@ -1,0 +1,334 @@
+<mosaik-card test-id="virtual-machines-card">
+  <mosaik-card-header
+    [text]="'Virtual machines'"
+    [subText]="'How the disposable Linux machines on this Mac are built, how much of it they may use, and which ones exist right now.'"
+  />
+  <mosaik-card-content>
+    <div class="flex min-w-0 flex-col gap-4">
+      <section class="flex min-w-0 flex-col gap-2" test-id="local-ci-lifecycle-settings-group">
+        <symphony-headline
+          header="Machine lifecycle"
+          description="Whether a provisioned machine survives between runs. Which workspace may run locally is decided in that workspace's own settings."
+        />
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="local-ci-reuse-vm"
+          [isChecked]="presenter.localCi().reuseVirtualMachine"
+          [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+          (checked)="presenter.updateLocalCiReuseCommand.execute(true)"
+          (unchecked)="presenter.updateLocalCiReuseCommand.execute(false)"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Keep the virtual machine warm'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="
+              'Reuses a provisioned machine instead of recreating it. Every kept machine holds its full disk until you remove it. Before every run Symphony resets the workspace, containers, processes, and test artifacts, and recreates the machine whenever the image or setup script changes.'
+              "
+            />
+          </div>
+        </mosaik-toggle-switch>
+      </section>
+
+      <section class="flex min-w-0 flex-col gap-2" test-id="local-ci-resources-settings-group">
+        <symphony-headline
+          header="Runner resources"
+          description="Choose a profile calculated from this Mac's detected capacity, the free-space reserve, and the Local GitHub Actions storage limit."
+        />
+        @let capacity = presenter.localCiCapacity();
+        <mosaik-cell
+          test-id="local-ci-host-capacity"
+          [label]="'Detected host capacity'"
+          [subLabel]="capacity ? capacity.logicalCpus + ' logical CPUs · ' + (capacity.totalMemoryBytes | storageSize) + ' memory · ' + (capacity.availableStorageBytes | storageSize) + ' available after the protected reserve' : 'Measuring this Mac…'"
+        >
+          <mosaik-avatar
+            slot="start"
+            [size]="'small'"
+            [appearance]="'soft'"
+            [iconName]="'executionOutline'"
+          />
+        </mosaik-cell>
+        <mosaik-select
+          test-id="local-ci-resource-preset"
+          [label]="'Resource preset'"
+          [value]="presenter.localCi().resourcePreset"
+          [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+          (selectionChanged)="presenter.updateLocalCiResourcePresetCommand.execute($event)"
+        >
+          <mosaik-select-item
+            test-id="local-ci-resource-compact"
+            [label]="'compact' | localCiPresetOptionLabel: presenter.localCiPreset()('compact')"
+            [value]="'compact'"
+            [disabled]="!presenter.localCiPresetSupported()('compact')"
+            (click)="presenter.updateLocalCiResourcePresetCommand.execute('compact')"
+          />
+          <mosaik-select-item
+            test-id="local-ci-resource-balanced"
+            [label]="'balanced' | localCiPresetOptionLabel: presenter.localCiPreset()('balanced')"
+            [value]="'balanced'"
+            [disabled]="!presenter.localCiPresetSupported()('balanced')"
+            (click)="presenter.updateLocalCiResourcePresetCommand.execute('balanced')"
+          />
+          <mosaik-select-item
+            test-id="local-ci-resource-performance"
+            [label]="'performance' | localCiPresetOptionLabel: presenter.localCiPreset()('performance')"
+            [value]="'performance'"
+            [disabled]="!presenter.localCiPresetSupported()('performance')"
+            (click)="presenter.updateLocalCiResourcePresetCommand.execute('performance')"
+          />
+          <mosaik-select-item
+            test-id="local-ci-resource-custom"
+            [label]="'custom' | localCiPresetOptionLabel: presenter.localCiPreset()('custom')"
+            [value]="'custom'"
+            [disabled]="!presenter.localCiPresetSupported()('custom')"
+            (click)="presenter.updateLocalCiResourcePresetCommand.execute('custom')"
+          />
+        </mosaik-select>
+        @if (presenter.localCi().resourcePreset === 'custom') {
+        <div
+          class="grid min-w-0 grid-cols-2 gap-4 max-[720px]:grid-cols-1"
+          test-id="local-ci-custom-resources"
+        >
+          <div class="flex min-w-0 flex-col gap-2">
+            <div class="flex min-w-0 justify-between gap-2">
+              <mosaik-text [text]="'CPUs'" />
+              <mosaik-text [text]="presenter.localCiCustomResources().cpus + ' CPUs'" />
+            </div>
+            <mosaik-slider
+              test-id="local-ci-resource-cpus"
+              [min]="2"
+              [max]="presenter.localCiCustomResourceMaximum()('cpus')"
+              [step]="1"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [value]="presenter.localCiCustomResources().cpus"
+              [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+              (input)="presenter.updateLocalCiCustomResourceCommand.execute(['cpus', $event])"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-2">
+            <div class="flex min-w-0 justify-between gap-2">
+              <mosaik-text [text]="'Memory'" />
+              <mosaik-text [text]="presenter.localCiCustomResources().memoryGiB + ' GB'" />
+            </div>
+            <mosaik-slider
+              test-id="local-ci-resource-memory"
+              [min]="8"
+              [max]="presenter.localCiCustomResourceMaximum()('memoryGiB')"
+              [step]="1"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [value]="presenter.localCiCustomResources().memoryGiB"
+              [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+              (input)="presenter.updateLocalCiCustomResourceCommand.execute(['memoryGiB', $event])"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-2">
+            <div class="flex min-w-0 justify-between gap-2">
+              <mosaik-text [text]="'Virtual disk'" />
+              <mosaik-text [text]="presenter.localCiCustomResources().diskGiB + ' GB'" />
+            </div>
+            <mosaik-slider
+              test-id="local-ci-resource-disk"
+              [min]="8"
+              [max]="presenter.localCiCustomResourceMaximum()('diskGiB')"
+              [step]="1"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [value]="presenter.localCiCustomResources().diskGiB"
+              [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+              (input)="presenter.updateLocalCiCustomResourceCommand.execute(['diskGiB', $event])"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-2">
+            <div class="flex min-w-0 justify-between gap-2">
+              <mosaik-text [text]="'Shared cache'" />
+              <mosaik-text [text]="presenter.localCiCustomResources().cacheGiB + ' GB'" />
+            </div>
+            <mosaik-slider
+              test-id="local-ci-resource-cache"
+              [min]="1"
+              [max]="presenter.localCiCustomResourceMaximum()('cacheGiB')"
+              [step]="1"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [value]="presenter.localCiCustomResources().cacheGiB"
+              [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+              (input)="presenter.updateLocalCiCustomResourceCommand.execute(['cacheGiB', $event])"
+            />
+          </div>
+        </div>
+        }
+        <mosaik-cell
+          test-id="local-ci-resource-summary"
+          [label]="presenter.localCi().resourcePreset | localCiPresetLabel"
+          [subLabel]="
+            presenter.localCiPreset()(presenter.localCi().resourcePreset) | localCiPresetDetails
+          "
+        >
+          <mosaik-avatar
+            slot="start"
+            [size]="'small'"
+            [appearance]="'soft'"
+            [iconName]="'executionOutline'"
+          />
+        </mosaik-cell>
+      </section>
+
+      <section class="flex min-w-0 flex-col gap-2" test-id="local-ci-storage-settings-group">
+        <symphony-headline
+          header="Storage and cleanup"
+          description="Runner tools, the reusable base image, and a bounded repository cache stay inside the managed workspace root. A machine disk is removed after its run unless the machine is kept warm."
+        />
+        <mosaik-filebox
+          test-id="local-ci-runtime-root"
+          [label]="'Runner data'"
+          [value]="presenter.localCiRuntimeRoot()"
+          [directory]="true"
+          [readonly]="true"
+        />
+        @let storage = presenter.localCiStorage();
+        <symphony-storage-breakdown
+          [usage]="storage"
+          [measured]="presenter.storageMeasured()"
+          [limitGiB]="presenter.localCi().storageLimitGiB"
+          [sizeTestId]="'local-ci-storage-size'"
+          [barTestId]="'local-ci-storage-progress'"
+        />
+        <mosaik-numberbox
+          test-id="local-ci-storage-limit"
+          [label]="'Maximum Local GitHub Actions storage (GB)'"
+          [min]="8"
+          [max]="256"
+          [value]="presenter.localCi().storageLimitGiB"
+          [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+          (input)="presenter.updateLocalCiStorageLimitCommand.execute($event)"
+        />
+        @if (storage?.pressure === 'critical') {
+        <mosaik-banner
+          test-id="local-ci-storage-blocked"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'danger'"
+          [iconName]="'errorCircle'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'Local runner writes are blocked'" />
+          <mosaik-banner-sub-header
+            [text]="'Clear runner data before starting another local run.'"
+          />
+        </mosaik-banner>
+        }
+        <mosaik-banner
+          test-id="local-ci-cleanup-guide"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'info'"
+          [iconName]="'info'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'What survives a run'" />
+          <mosaik-banner-sub-header
+            [text]="'Symphony removes the machine after success, failure, or cancellation, unless warm reuse keeps it. actions/cache entries remain repository-isolated for later local runs until they expire, exceed the selected cache budget, or you clear runner data.'"
+          />
+        </mosaik-banner>
+      </section>
+
+      <section class="flex min-w-0 flex-col gap-2" test-id="local-ci-machines-group">
+        <symphony-headline
+          header="Virtual machines"
+          description="Every machine that currently occupies disk. Cleanup runs before every local run and on startup; a machine listed as removable here is one it could not clear."
+        />
+        @let instances = presenter.localCiInstances(); @if (presenter.abandonedLocalCiInstances();
+        as abandoned) { @if (abandoned.length) {
+        <mosaik-banner
+          test-id="local-ci-abandoned-machines"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [iconName]="'warning'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header
+            [text]="
+              abandoned.length === 1
+                ? '1 machine is still using disk'
+                : abandoned.length + ' machines are still using disk'
+            "
+          />
+          <mosaik-banner-sub-header
+            [text]="'Automatic cleanup did not remove them. Remove them here to free the space.'"
+          />
+        </mosaik-banner>
+        } } @for (instance of instances; track instance.name) {
+        <mosaik-cell
+          [attr.test-id]="'local-ci-machine-' + instance.name"
+          [label]="instance | localCiInstanceLabel"
+          [subLabel]="instance | localCiInstanceDetails"
+        >
+          <mosaik-avatar
+            slot="start"
+            [size]="'small'"
+            [appearance]="'soft'"
+            [iconName]="'executionOutline'"
+          />
+          <mosaik-button
+            slot="end"
+            [attr.test-id]="'remove-local-ci-machine-' + instance.name"
+            [label]="'Remove'"
+            [appearance]="'plain'"
+            [variant]="'danger'"
+            [isBusy]="presenter.store.localCiInstanceRemoving() === instance.name"
+            [disabled]="
+              instance.busy ||
+              !!presenter.store.localCiInstanceRemoving() ||
+              presenter.store.localCiCleanupBusy()
+            "
+            (click)="presenter.confirmRemoveLocalCiInstanceCommand.execute(instance.name)"
+          />
+        </mosaik-cell>
+        } @empty {
+        <mosaik-text
+          test-id="local-ci-machines-empty"
+          [text]="'No machine exists right now. The next local run provisions one.'"
+          [wrap]="true"
+        />
+        }
+        <div class="flex justify-end">
+          <mosaik-button
+            test-id="refresh-local-ci-machines"
+            [label]="'Refresh machines'"
+            [appearance]="'plain'"
+            [variant]="'primary'"
+            [isBusy]="presenter.store.localCiInstancesBusy()"
+            [disabled]="presenter.store.localCiInstancesBusy()"
+            (click)="presenter.refreshLocalCiInstancesCommand.execute()"
+          />
+        </div>
+      </section>
+    </div>
+  </mosaik-card-content>
+  <mosaik-card-footer>
+    <div class="flex w-full flex-wrap justify-end gap-2">
+      <mosaik-button
+        class="mr-auto"
+        test-id="clear-local-ci-data"
+        [label]="'Clear runner data'"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        [isBusy]="presenter.store.localCiCleanupBusy()"
+        [disabled]="presenter.store.localCiCleanupBusy() || !!presenter.store.localCiRunningRunId()"
+        (click)="presenter.confirmClearLocalCiDataCommand.execute()"
+      />
+      <mosaik-button
+        test-id="save-local-ci-settings"
+        [label]="'Save'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.configurationBusy()"
+        [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+        (click)="presenter.saveLocalCiCommand.execute()"
+      />
+    </div>
+  </mosaik-card-footer>
+</mosaik-card>

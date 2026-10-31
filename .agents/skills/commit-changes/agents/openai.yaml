@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Commit Changes'
+  short_description: 'Create focused repository-compliant commits'
+  default_prompt: 'Use $commit-changes to prepare focused commits for the current worktree.'

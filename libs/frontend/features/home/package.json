@@ -1,0 +1,43 @@
+{
+  "name": "@symphony/frontend-feature-home",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@angular/common": "22.2.0",
+    "@angular/core": "22.2.0",
+    "@angular/forms": "22.2.0",
+    "@angular/router": "22.2.0",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.183",
+    "@symphony/domain-delivery": "workspace:*",
+    "@symphony/domain-platform": "workspace:*",
+    "@symphony/domain-work": "workspace:*",
+    "@symphony/domain-workflow": "workspace:*",
+    "@symphony/domain-workspace": "workspace:*",
+    "@symphony/frontend-core": "workspace:*",
+    "@symphony/frontend-notification": "workspace:*",
+    "@symphony/frontend-search": "workspace:*",
+    "@symphony/frontend-ui": "workspace:*",
+    "@symphony/frontend-widget": "workspace:*",
+    "@symphony/ipc-contracts-composition": "workspace:*"
+  },
+  "devDependencies": {
+    "@angular/compiler": "22.2.0",
+    "@angular/platform-browser": "22.2.0",
+    "@symphony/configuration-composition": "workspace:*",
+    "@symphony/frontend-feature-delivery": "workspace:*",
+    "@symphony/frontend-feature-work": "workspace:*",
+    "rxjs": "7.8.2",
+    "vitest": "4.1.11"
+  }
+}

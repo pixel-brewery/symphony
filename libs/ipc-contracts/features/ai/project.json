@@ -1,0 +1,15 @@
+{
+  "name": "ipc-contracts-ai",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ipc-contracts/features/ai/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:ipc", "feature:ai"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/ipc-contracts/features/ai/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

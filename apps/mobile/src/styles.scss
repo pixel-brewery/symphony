@@ -1,0 +1,58 @@
+@use '../../../libs/frontend/ui/src/lib/theme/fonts';
+
+html,
+body,
+symphony-mobile-root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  color: var(--mosaik-scheme-foreground);
+  background: var(--mosaik-scheme-background);
+  font-family: var(--mosaik-font-family, system-ui, sans-serif);
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  color-scheme: light dark;
+  overflow: hidden;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior-y: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+a,
+input {
+  touch-action: manipulation;
+}
+
+mosaik-page {
+  min-width: 0;
+  color: var(--mosaik-scheme-foreground);
+  background: var(--mosaik-scheme-background);
+}
+
+mosaik-page::part(scroll-panel-header) {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  padding-top: env(safe-area-inset-top);
+  background: var(--mosaik-scheme-background);
+  box-shadow: 0 1px 0 var(--mosaik-scheme-highlight);
+}
+
+mosaik-page-content,
+mosaik-card,
+mosaik-card-content,
+mosaik-card-header {
+  min-width: 0;
+  max-width: 100%;
+}

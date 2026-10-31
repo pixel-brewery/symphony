@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Portable Skills'
+  short_description: 'Apply repository instructions guidance'
+  default_prompt: 'Use $instructions-portable-skills for the applicable repository guidance.'

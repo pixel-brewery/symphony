@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Explore Nx Workspace'
+  short_description: 'Inspect projects, targets, and dependencies'
+  default_prompt: 'Use $nx-workspace to inspect the Symphony Nx workspace.'

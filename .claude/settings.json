@@ -1,0 +1,30 @@
+{
+  "outputStyle": "Codex-like",
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "api.github.com",
+        "github.com",
+        "registry.npmjs.org",
+        "beta.api.mosaik.breadstone.de",
+        "www.google-analytics.com"
+      ],
+      "allowUnixSockets": ["/tmp/.nx", "~/.nx"]
+    },
+    "filesystem": {
+      "allowRead": ["/tmp/.nx", "~/.nx"],
+      "allowWrite": ["/tmp/.nx", "~/.nx"]
+    }
+  },
+  "extraKnownMarketplaces": {
+    "nx-claude-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "nrwl/nx-ai-agents-config"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "nx@nx-claude-plugins": true
+  }
+}

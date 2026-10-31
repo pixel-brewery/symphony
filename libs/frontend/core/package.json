@@ -1,0 +1,162 @@
+{
+  "name": "@symphony/frontend-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./delivery": {
+      "types": "./src/delivery.ts",
+      "import": "./src/delivery.ts",
+      "default": "./src/delivery.ts"
+    },
+    "./mobile": {
+      "types": "./src/mobile.ts",
+      "import": "./src/mobile.ts",
+      "default": "./src/mobile.ts"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "types": "./src/testing.ts",
+      "import": "./src/testing.ts",
+      "default": "./src/testing.ts"
+    },
+    "./testing/orchestration": {
+      "types": "./src/testing-orchestration.ts",
+      "import": "./src/testing-orchestration.ts",
+      "default": "./src/testing-orchestration.ts"
+    },
+    "./navigation": {
+      "types": "./src/navigation.ts",
+      "import": "./src/navigation.ts",
+      "default": "./src/navigation.ts"
+    },
+    "./work": {
+      "types": "./src/work.ts",
+      "import": "./src/work.ts",
+      "default": "./src/work.ts"
+    },
+    "./workspace": {
+      "types": "./src/workspace.ts",
+      "import": "./src/workspace.ts",
+      "default": "./src/workspace.ts"
+    },
+    "./execution": {
+      "types": "./src/execution.ts",
+      "import": "./src/execution.ts",
+      "default": "./src/execution.ts"
+    },
+    "./workflow": {
+      "types": "./src/workflow.ts",
+      "import": "./src/workflow.ts",
+      "default": "./src/workflow.ts"
+    },
+    "./desktop": {
+      "types": "./src/desktop.ts",
+      "import": "./src/desktop.ts",
+      "default": "./src/desktop.ts"
+    },
+    "./ai": {
+      "types": "./src/ai.ts",
+      "import": "./src/ai.ts",
+      "default": "./src/ai.ts"
+    },
+    "./mobile-access": {
+      "types": "./src/mobile-access.ts",
+      "import": "./src/mobile-access.ts",
+      "default": "./src/mobile-access.ts"
+    },
+    "./feedback": {
+      "types": "./src/feedback.ts",
+      "import": "./src/feedback.ts",
+      "default": "./src/feedback.ts"
+    },
+    "./team": {
+      "types": "./src/team.ts",
+      "import": "./src/team.ts",
+      "default": "./src/team.ts"
+    },
+    "./automation": {
+      "types": "./src/automation.ts",
+      "import": "./src/automation.ts",
+      "default": "./src/automation.ts"
+    },
+    "./platform": {
+      "types": "./src/platform.ts",
+      "import": "./src/platform.ts",
+      "default": "./src/platform.ts"
+    },
+    "./configuration": {
+      "types": "./src/configuration.ts",
+      "import": "./src/configuration.ts",
+      "default": "./src/configuration.ts"
+    },
+    "./bootstrap": {
+      "types": "./src/bootstrap.ts",
+      "import": "./src/bootstrap.ts",
+      "default": "./src/bootstrap.ts"
+    },
+    "./projection": {
+      "types": "./src/projection.ts",
+      "import": "./src/projection.ts",
+      "default": "./src/projection.ts"
+    },
+    "./ci": {
+      "types": "./src/ci.ts",
+      "import": "./src/ci.ts",
+      "default": "./src/ci.ts"
+    },
+    "./delivery-operations": {
+      "types": "./src/delivery-operations.ts",
+      "import": "./src/delivery-operations.ts",
+      "default": "./src/delivery-operations.ts"
+    },
+    "./snapshot": {
+      "types": "./src/snapshot.ts",
+      "import": "./src/snapshot.ts",
+      "default": "./src/snapshot.ts"
+    },
+    "./synchronization": {
+      "types": "./src/synchronization.ts",
+      "import": "./src/synchronization.ts",
+      "default": "./src/synchronization.ts"
+    }
+  },
+  "dependencies": {
+    "@angular/common": "22.2.0",
+    "@angular/core": "22.2.0",
+    "@angular/router": "22.2.0",
+    "@pixel-brewery/mosaik-themes": "0.1.183",
+    "@symphony/domain-ci": "workspace:*",
+    "@symphony/domain-core": "workspace:*",
+    "@symphony/domain-delivery": "workspace:*",
+    "@symphony/domain-execution": "workspace:*",
+    "@symphony/domain-platform": "workspace:*",
+    "@symphony/domain-skills": "workspace:*",
+    "@symphony/domain-work": "workspace:*",
+    "@symphony/domain-workflow": "workspace:*",
+    "@symphony/frontend-notification": "workspace:*",
+    "@symphony/ipc-contracts-ci": "workspace:*",
+    "@symphony/ipc-contracts-composition": "workspace:*",
+    "@symphony/ipc-contracts-delivery": "workspace:*",
+    "@symphony/ipc-contracts-desktop": "workspace:*",
+    "@symphony/ipc-contracts-platform": "workspace:*",
+    "@symphony/ipc-contracts-skills": "workspace:*",
+    "@symphony/ipc-contracts-work": "workspace:*",
+    "@symphony/ipc-contracts-workflow": "workspace:*",
+    "@symphony/mobile-contracts": "workspace:*",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@angular/compiler": "22.2.0",
+    "@angular/platform-browser": "22.2.0",
+    "@symphony/configuration-composition": "workspace:*",
+    "vitest": "4.1.11"
+  }
+}

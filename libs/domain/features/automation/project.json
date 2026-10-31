@@ -1,0 +1,15 @@
+{
+  "name": "domain-automation",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/features/automation/src",
+  "projectType": "library",
+  "tags": ["scope:domain", "type:domain", "feature:automation"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/domain/features/automation/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

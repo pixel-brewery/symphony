@@ -1,0 +1,78 @@
+name: Bug report
+description: Something in Symphony behaves incorrectly
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security vulnerabilities here. Follow [SECURITY.md](https://github.com/pixel-brewery/symphony/blob/main/SECURITY.md) instead.
+
+        Redact repository names, tokens, and file paths you do not want to be public from any log you attach.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: Describe the incorrect behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: The exact steps that produce the problem, starting from a known state.
+      placeholder: |
+        1. Open Settings
+        2. ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Symphony version
+      description: Settings shows the installed version. For a source build, give the commit SHA.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating system
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it
+      options:
+        - Downloaded release
+        - Built from source (yarn start)
+        - Development build (yarn dev)
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Best guess is fine.
+      options:
+        - Board and work items
+        - Delivery, pull requests, and actions
+        - Agent execution
+        - Settings
+        - Updates and installation
+        - Workspaces and Git
+        - Mobile companion
+        - Other or unknown
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Optional. Attach the relevant excerpt rather than a full log.
+      render: text

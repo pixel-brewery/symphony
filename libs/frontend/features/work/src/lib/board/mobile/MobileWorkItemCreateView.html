@@ -1,0 +1,335 @@
+<mosaik-page
+  class="block min-h-full min-w-0"
+  [breakpoint]="'sm'"
+  test-id="mobile-work-item-create-view"
+>
+  <mosaik-page-header
+    [inset]="'all'"
+    [text]="'New work item'"
+    [subText]="presenter.context()?.workspaceName ?? 'Selected workspace'"
+  >
+    <mosaik-button
+      slot="prefix"
+      [appearance]="'plain'"
+      [icon]="'back'"
+      [attr.aria-label]="'Back'"
+      (click)="presenter.backCommand.execute()"
+      test-id="mobile-work-item-create-back"
+    />
+  </mosaik-page-header>
+
+  <mosaik-page-content [inset]="'all'">
+    @if (presenter.isHydrating()) {
+    <div class="py-5" role="status">Loading work-item fields…</div>
+    } @else if (presenter.context(); as context) {
+    <div class="grid min-w-0 gap-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <section class="grid min-w-0 gap-3" aria-labelledby="mobile-create-mode-heading">
+        <div>
+          <p class="m-0">CREATE</p>
+          <h1 id="mobile-create-mode-heading">How should this work item start?</h1>
+        </div>
+        <mosaik-segment [appearance]="'soft'" test-id="mobile-work-item-create-mode">
+          <mosaik-segment-item
+            [label]="'Manual'"
+            [isChecked]="presenter.inputMode() === 'manual'"
+            (checked)="presenter.selectInputModeCommand.execute('manual')"
+            test-id="mobile-work-item-create-mode-manual"
+          />
+          <mosaik-segment-item
+            [label]="'With AI'"
+            [variant]="'highlight'"
+            [isChecked]="presenter.inputMode() === 'ai'"
+            (checked)="presenter.selectInputModeCommand.execute('ai')"
+            test-id="mobile-work-item-create-mode-ai"
+          />
+        </mosaik-segment>
+      </section>
+
+      @if (presenter.inputMode() === 'ai' && presenter.creatorStage() === 'prompt') {
+      <mosaik-card
+        class="w-full min-w-0"
+        aiEnhanced
+        [appearance]="'outline'"
+        test-id="mobile-work-item-ai-creator"
+      >
+        <mosaik-card-content class="grid min-w-0 gap-3">
+          <div class="flex min-w-0 items-start justify-between gap-2">
+            <div>
+              <p class="m-0">WITH AI</p>
+              <h2>Create a complete draft</h2>
+            </div>
+            <mosaik-badge aiEnhanced [label]="'AI'" [appearance]="'soft'" [variant]="'highlight'" />
+          </div>
+          <mosaik-hint
+            [text]="
+              presenter.hasIssueCreator()
+                ? (presenter.context()?.issueCreatorSkill?.name ?? 'Work Item Creator') +
+                  ' writes and classifies the work item. You review it before anything is created.'
+                : 'Activate a Work Item Creator skill in Symphony Desktop first.'
+            "
+          />
+          <mosaik-select
+            [label]="'Repository'"
+            [value]="presenter.repository()"
+            [required]="true"
+            [disabled]="presenter.isDrafting()"
+            (selectionChanged)="presenter.repositoryChangedCommand.execute($event)"
+            test-id="mobile-work-item-repository-ai"
+          >
+            @for (repository of context.repositories; track repository) {
+            <mosaik-select-item [value]="repository" [label]="repository" />
+            }
+          </mosaik-select>
+          <mosaik-prompt-box
+            aiEnhanced
+            [label]="'Describe the work item'"
+            [placeholder]="'Describe the problem, expected result, context and constraints…'"
+            [value]="presenter.draftPrompt()"
+            [minRows]="7"
+            [maxRows]="14"
+            [minlength]="10"
+            [maxlength]="50000"
+            [required]="true"
+            [showSubmitButton]="true"
+            [submitOnEnter]="false"
+            [disabled]="!presenter.hasIssueCreator() || presenter.isDrafting()"
+            (input)="presenter.updateDraftPromptCommand.execute($event)"
+            (promptSubmitted)="presenter.draftWithAiCommand.execute($event)"
+            test-id="mobile-work-item-ai-prompt"
+          />
+          @if (presenter.isDrafting()) {
+          <mosaik-button
+            [label]="'Cancel draft'"
+            [appearance]="'plain'"
+            [variant]="'danger'"
+            (click)="presenter.cancelDraftCommand.execute()"
+            test-id="mobile-work-item-ai-cancel"
+          />
+          } @else {
+          <mosaik-button
+            class="w-full min-w-0"
+            [label]="'Generate draft'"
+            [variant]="'highlight'"
+            [disabled]="!presenter.canDraft()"
+            (click)="presenter.draftWithAiCommand.execute()"
+            test-id="mobile-work-item-ai-generate"
+          />
+          }
+        </mosaik-card-content>
+      </mosaik-card>
+      } @else {
+      <section class="grid min-w-0 gap-3 py-1" test-id="mobile-work-item-editor">
+        <div class="flex min-w-0 items-start justify-between gap-2">
+          <div>
+            <p class="m-0">{{ presenter.isAiDraft() ? 'REVIEW' : 'DETAILS' }}</p>
+            <h2>{{ presenter.isAiDraft() ? 'Review the AI draft' : 'Work-item details' }}</h2>
+          </div>
+          @if (presenter.isAiDraft()) {
+          <mosaik-badge
+            aiEnhanced
+            [label]="'AI draft'"
+            [appearance]="'soft'"
+            [variant]="'highlight'"
+          />
+          }
+        </div>
+        <mosaik-hint
+          [text]="presenter.isAiDraft() ? 'Correct anything that needs changing, then create the work item.' : 'Enter the details yourself. No AI is used for this step.'"
+        />
+
+        <mosaik-textbox
+          aiEnhanced
+          [aiEnabled]="presenter.isAiDraft()"
+          [label]="'Title'"
+          [value]="presenter.title()"
+          [required]="true"
+          [maxlength]="256"
+          [isClearable]="true"
+          (input)="presenter.updateTitleCommand.execute($event)"
+          test-id="mobile-work-item-title"
+        />
+        <mosaik-textbox
+          aiEnhanced
+          [aiEnabled]="presenter.isAiDraft()"
+          [label]="'Description'"
+          [value]="presenter.body()"
+          [multiline]="true"
+          [multilineRows]="7"
+          [multilineMaxRows]="18"
+          [maxlength]="1000000"
+          (input)="presenter.updateBodyCommand.execute($event)"
+          test-id="mobile-work-item-body"
+        />
+        <mosaik-select
+          aiEnhanced
+          [aiEnabled]="presenter.isAiDraft()"
+          [label]="'Repository'"
+          [value]="presenter.repository()"
+          [required]="true"
+          (selectionChanged)="presenter.repositoryChangedCommand.execute($event)"
+          test-id="mobile-work-item-repository"
+        >
+          @for (repository of context.repositories; track repository) {
+          <mosaik-select-item [value]="repository" [label]="repository" />
+          }
+        </mosaik-select>
+
+        @if (presenter.projectFields().length) {
+        <section class="grid min-w-0 gap-2 pt-1" test-id="mobile-work-item-project-fields">
+          <div>
+            <h3>Project fields</h3>
+            <p>Fields and options come from the configured work-item source.</p>
+          </div>
+          <div class="grid min-w-0 gap-2">
+            @for (field of presenter.projectFields(); track field.id) { @switch (field.type) { @case
+            ('text') {
+            <mosaik-textbox
+              aiEnhanced
+              [aiEnabled]="presenter.isAiDraft()"
+              [label]="field.name"
+              [value]="presenter.projectFieldText()(field.id)"
+              [maxlength]="10000"
+              [isClearable]="true"
+              (input)="presenter.updateProjectFieldCommand.execute([field, $event])"
+              (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+            />
+            } @case ('number') {
+            <mosaik-numberbox
+              [label]="field.name"
+              [value]="presenter.projectFieldNumber()(field.id)"
+              [isClearable]="true"
+              (change)="presenter.updateProjectFieldCommand.execute([field, $event])"
+              (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+            />
+            } @case ('date') {
+            <mosaik-datebox
+              [label]="field.name"
+              [value]="presenter.projectFieldDate()(field.id)"
+              [isClearable]="true"
+              (change)="presenter.updateProjectFieldCommand.execute([field, $event])"
+              (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+            />
+            } @case ('single-select') {
+            <mosaik-select
+              aiEnhanced
+              [aiEnabled]="presenter.isAiDraft()"
+              [label]="field.name"
+              [value]="presenter.projectFieldSelection()(field.id)"
+              [isClearable]="field.role !== 'workflow-state'"
+              (selectionChanged)="presenter.updateProjectFieldCommand.execute([field, $event])"
+              (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+            >
+              @for (option of field.options; track option.id) {
+              <mosaik-select-item [value]="option.id" [label]="option.label" />
+              }
+            </mosaik-select>
+            } @case ('iteration') {
+            <mosaik-select
+              aiEnhanced
+              [aiEnabled]="presenter.isAiDraft()"
+              [label]="field.name"
+              [value]="presenter.projectFieldSelection()(field.id)"
+              [isClearable]="true"
+              (selectionChanged)="presenter.updateProjectFieldCommand.execute([field, $event])"
+              (cleared)="presenter.clearProjectFieldCommand.execute(field)"
+            >
+              @for (option of field.options; track option.id) {
+              <mosaik-select-item
+                [value]="option.id"
+                [label]="option.startDate ? option.label + ' · ' + option.startDate : option.label"
+              />
+              }
+            </mosaik-select>
+            } @case ('multi-select') {
+            <div class="grid min-w-0 gap-2">
+              <h4>{{ field.name }}</h4>
+              @for (option of field.options; track option.id) {
+              <mosaik-checkbox
+                aiEnhanced
+                [aiEnabled]="presenter.isAiDraft() && presenter.isProjectFieldOptionSelected()(field.id, option.id)"
+                [label]="option.label"
+                [isChecked]="presenter.isProjectFieldOptionSelected()(field.id, option.id)"
+                (click)="presenter.toggleProjectFieldOptionCommand.execute([field.id, option.id])"
+              />
+              }
+            </div>
+            } } }
+          </div>
+        </section>
+        } @if (context.labels.length) {
+        <section class="grid min-w-0 gap-2 pt-1" test-id="mobile-work-item-labels">
+          <h3>Labels</h3>
+          <div class="grid min-w-0 gap-2">
+            @for (label of context.labels; track label.name) {
+            <div class="flex min-w-0 items-center gap-2">
+              <mosaik-checkbox
+                aiEnhanced
+                [aiEnabled]="presenter.isAiDraft() && presenter.isLabelSelected()(label.name)"
+                [label]="label.name"
+                [isChecked]="presenter.isLabelSelected()(label.name)"
+                (click)="presenter.toggleLabelCommand.execute(label.name)"
+              />
+            </div>
+            }
+          </div>
+        </section>
+        } @if (context.assignees.length) {
+        <section class="grid min-w-0 gap-2 pt-1" test-id="mobile-work-item-assignees">
+          <h3>Assignees</h3>
+          <div class="grid min-w-0 gap-2">
+            @for (assignee of context.assignees; track assignee.login) {
+            <div class="flex min-w-0 items-center gap-2">
+              <mosaik-avatar
+                [text]="assignee.displayName ?? assignee.login"
+                [src]="assignee.avatarUrl ?? ''"
+                [size]="'tiny'"
+              />
+              <mosaik-checkbox
+                aiEnhanced
+                [aiEnabled]="presenter.isAiDraft() && presenter.isAssigneeSelected()(assignee.login)"
+                [label]="assignee.displayName ?? assignee.login"
+                [isChecked]="presenter.isAssigneeSelected()(assignee.login)"
+                (click)="presenter.toggleAssigneeCommand.execute(assignee.login)"
+              />
+            </div>
+            }
+          </div>
+        </section>
+        }
+
+        <div class="flex flex-wrap gap-2 pt-1">
+          @if (presenter.isAiDraft()) {
+          <mosaik-button
+            [label]="'Start over'"
+            [appearance]="'plain'"
+            (click)="presenter.startOverCommand.execute()"
+            test-id="mobile-work-item-ai-start-over"
+          />
+          }
+          <mosaik-button
+            class="w-full min-w-0"
+            [label]="'Create work item'"
+            [variant]="'primary'"
+            [disabled]="!presenter.canCreate()"
+            (click)="presenter.createWorkItemCommand.execute()"
+            test-id="mobile-work-item-create-submit"
+          />
+        </div>
+      </section>
+      }
+    </div>
+    } @else {
+    <mosaik-banner
+      [isOpen]="true"
+      [appearance]="'soft'"
+      [variant]="'warning'"
+      [orientation]="'vertical'"
+    >
+      <mosaik-banner-header [text]="'Work-item creation is unavailable'" />
+      <mosaik-banner-sub-header
+        [text]="'Select exactly one workspace in Symphony Desktop, then try again.'"
+      />
+    </mosaik-banner>
+    }
+  </mosaik-page-content>
+</mosaik-page>

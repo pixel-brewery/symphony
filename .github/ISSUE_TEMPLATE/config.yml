@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/pixel-brewery/symphony/security/advisories/new
+    about: Report privately through GitHub Security Advisories. Never in a public issue.
+  - name: Question or idea
+    url: https://github.com/pixel-brewery/symphony/discussions
+    about: Ask about usage, architecture, or an idea that is not yet a concrete proposal.

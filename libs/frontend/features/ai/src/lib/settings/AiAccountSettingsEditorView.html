@@ -1,0 +1,390 @@
+<ng-template mosaikDrawerHeader>
+  <mosaik-drawer-header
+    [text]="presenter.data.connectionId ? 'Edit AI account' : 'Connect AI account'"
+    [subText]="'Connected service'"
+  >
+    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+  </mosaik-drawer-header>
+</ng-template>
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="settings-editor-drawer"
+    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+  >
+    @if(presenter.isHydrating()) {
+    <section
+      test-id="settings-editor-loading-skeleton"
+      class="flex min-w-0 flex-col gap-4"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading settings"
+    >
+      <div class="flex min-w-0 flex-col">
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
+        </div>
+      </div>
+      <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+        @for (field of [1, 2, 3, 4]; track field) {
+        <div class="flex min-w-0 flex-col gap-0.75">
+          <div class="flex h-2.5 items-center">
+            <mosaik-skeleton [width]="'5rem'" [height]="'14px'" [shimmer]="true" />
+          </div>
+          <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+        </div>
+        }
+      </div>
+    </section>
+    }
+    <div class="min-w-0" [hidden]="presenter.isHydrating()">
+      <section class="flex min-w-0 flex-col gap-4" test-id="ai-account-editor">
+        <symphony-headline
+          header="AI account"
+          description="Connect Codex, Claude Code, or OpenCode once. Every agent in this workspace can then run on it."
+        />
+        <div class="flex min-w-0 flex-col gap-2">
+          <mosaik-text [text]="'AI provider'" [mosaikTypography]="'subtitle2'" [wrap]="true" />
+          <mosaik-choice-group
+            test-id="ai-runtime-choice"
+            class="choice-cards w-full min-w-0"
+            [name]="'ai-runtime'"
+            [orientation]="'horizontal'"
+            [appearance]="'outline'"
+            [variant]="'primary'"
+            [disabled]="presenter.hasExistingAiAccount()"
+            [value]="presenter.aiAccount.kind"
+            (choiceChanged)="presenter.updateAiAccountProviderCommand.execute($event)"
+          >
+            @for (runtime of presenter.aiRuntimes; track runtime) {
+            <mosaik-choice
+              class="choice-card"
+              [attr.test-id]="'ai-provider-' + runtime"
+              [value]="runtime"
+              [appearance]="'outline'"
+              [variant]="'primary'"
+              [disabled]="presenter.hasExistingAiAccount() || !presenter.aiRuntimeAvailable()(runtime)"
+              [iconName]="runtime | connectionIcon"
+              [label]="presenter.aiRuntimeLabel()(runtime)"
+              [additional]="presenter.store.runtimeHealth()?.agents?.[runtime] | aiRuntimeStatus"
+              (click)="presenter.updateAiAccountProviderCommand.execute(runtime)"
+            />
+            }
+          </mosaik-choice-group>
+          @if (!presenter.aiRuntimeAvailable()('codex') || !presenter.aiRuntimeAvailable()('claude')
+          || !presenter.aiRuntimeAvailable()('opencode')) {
+          <mosaik-cell-group test-id="missing-ai-runtimes">
+            @for (runtime of presenter.aiRuntimes; track runtime) { @if
+            (!presenter.aiRuntimeAvailable()(runtime)) {
+            <mosaik-cell
+              [attr.test-id]="'missing-ai-runtime-' + runtime"
+              [label]="presenter.aiRuntimeLabel()(runtime)"
+              [subLabel]="'Install the ' + presenter.aiRuntimeLabel()(runtime) + ' CLI before connecting an account.'"
+            >
+              <mosaik-button
+                slot="end"
+                [attr.test-id]="'install-ai-runtime-' + runtime"
+                [label]="'Install with Homebrew'"
+                [appearance]="'solid'"
+                [variant]="'primary'"
+                [isBusy]="presenter.store.runtimeDependencyInstallBusy() === runtime"
+                [disabled]="!presenter.store.nativeInstallAvailable || !presenter.store.runtimeHealth()?.homebrew?.available || !!presenter.store.runtimeDependencyInstallBusy()"
+                (click)="presenter.confirmInstallAiRuntimeCommand.execute([runtime, presenter.aiRuntimeLabel()(runtime)])"
+              />
+            </mosaik-cell>
+            } }
+          </mosaik-cell-group>
+          @if (!presenter.store.runtimeHealth()?.homebrew?.available) {
+          <mosaik-banner
+            test-id="agent-runtime-homebrew-required"
+            [isOpen]="true"
+            [appearance]="'soft'"
+            [variant]="'warning'"
+            [iconName]="'errorCircle'"
+            [iconSize]="'small'"
+          >
+            <mosaik-banner-header [text]="'Homebrew is required for one-click installation'" />
+            <mosaik-banner-sub-header
+              [text]="'Install Homebrew on this Mac, then reopen or refresh this editor.'"
+            />
+          </mosaik-banner>
+          } }
+        </div>
+
+        <mosaik-textbox
+          test-id="ai-account-name"
+          [label]="'Account name'"
+          [placeholder]="'FLAMOX365 ' + presenter.aiRuntimeLabel()(presenter.aiAccount.kind) + ' account'"
+          [value]="presenter.aiAccount.displayName"
+          (input)="presenter.aiAccount.displayName = presenter.eventText()($event)"
+        />
+
+        <div class="flex min-w-0 flex-col gap-2">
+          <mosaik-text [text]="'Sign-in'" [mosaikTypography]="'subtitle2'" [wrap]="true" />
+          @switch (presenter.aiAccount.kind) { @case ('codex') {
+          <mosaik-cell-group test-id="ai-account-status">
+            <mosaik-cell
+              [label]="'Sign-in status'"
+              [subLabel]="presenter.aiAccountId() | aiAccountStatus: 'codex': presenter.store.connections()"
+            >
+              @if (presenter.hasExistingAiAccount()) {
+              <mosaik-button
+                slot="end"
+                test-id="refresh-ai-account-status"
+                [label]="'Refresh'"
+                [appearance]="'plain'"
+                [disabled]="presenter.store.configurationBusy()"
+                (click)="presenter.refreshAiAccountStatusCommand.execute()"
+              />
+              } @if (presenter.aiAccountAuthenticated()) {
+              <mosaik-button
+                slot="end"
+                test-id="disconnect-ai-account"
+                [label]="'Disconnect'"
+                [appearance]="'plain'"
+                [variant]="'danger'"
+                [disabled]="presenter.store.configurationBusy()"
+                (click)="presenter.disconnectAiAccountCommand.execute()"
+              />
+              }
+            </mosaik-cell>
+          </mosaik-cell-group>
+          @if (!presenter.aiAccountAuthenticated()) {
+          <mosaik-select
+            test-id="ai-login-method"
+            [label]="'Sign in with'"
+            [value]="presenter.aiAccount.loginMethod"
+            (selectionChanged)="presenter.updateAiAccountLoginMethodCommand.execute($event)"
+          >
+            <mosaik-select-item
+              test-id="ai-login-method-chatgpt"
+              [label]="'ChatGPT subscription (browser)'"
+              [value]="'chatgpt'"
+              (click)="presenter.updateAiAccountLoginMethodCommand.execute('chatgpt')"
+            />
+            <mosaik-select-item
+              test-id="ai-login-method-api-key"
+              [label]="'OpenAI API key'"
+              [value]="'api-key'"
+              (click)="presenter.updateAiAccountLoginMethodCommand.execute('api-key')"
+            />
+          </mosaik-select>
+          @if (presenter.aiAccount.loginMethod === 'api-key') {
+          <mosaik-passwordbox
+            test-id="ai-api-key"
+            [label]="'OpenAI API key'"
+            [placeholder]="'sk-…'"
+            [revealable]="true"
+            [value]="presenter.aiAccount.apiKey"
+            (input)="presenter.aiAccount.apiKey = presenter.eventText()($event)"
+          />
+          <mosaik-hint
+            [textOverflow]="'wrap'"
+            [text]="'The key is handed to the Codex CLI once and never stored by Symphony.'"
+          />
+          }
+          <div class="flex min-w-0 flex-wrap justify-end gap-2">
+            <mosaik-button
+              test-id="connect-ai-account"
+              [label]="presenter.aiAccount.loginMethod === 'api-key' ? 'Sign in with API key' : 'Sign in with ChatGPT'"
+              [iconName]="'person'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [isBusy]="presenter.busy()"
+              [disabled]="!presenter.canConnectAiAccount() || presenter.busy() || presenter.store.configurationBusy()"
+              (click)="presenter.connectAiAccountCommand.execute()"
+            />
+          </div>
+          <mosaik-hint
+            [textOverflow]="'wrap'"
+            [text]="'Symphony saves the account, then opens the ChatGPT sign-in in your browser. Come back and refresh the status once it is done.'"
+          />
+          } } @case ('claude') {
+          <mosaik-cell-group test-id="ai-account-status">
+            <mosaik-cell
+              [label]="'Sign-in status'"
+              [subLabel]="presenter.aiAccountId() | aiAccountStatus: 'claude': presenter.store.connections()"
+            >
+              @if (presenter.hasExistingAiAccount()) {
+              <mosaik-button
+                slot="end"
+                test-id="refresh-ai-account-status"
+                [label]="'Refresh'"
+                [appearance]="'plain'"
+                [disabled]="presenter.store.configurationBusy()"
+                (click)="presenter.refreshAiAccountStatusCommand.execute()"
+              />
+              } @if (presenter.aiAccountAuthenticated()) {
+              <mosaik-button
+                slot="end"
+                test-id="disconnect-ai-account"
+                [label]="'Disconnect'"
+                [appearance]="'plain'"
+                [variant]="'danger'"
+                [disabled]="presenter.store.configurationBusy()"
+                (click)="presenter.disconnectAiAccountCommand.execute()"
+              />
+              }
+            </mosaik-cell>
+          </mosaik-cell-group>
+          @if (!presenter.aiAccountAuthenticated()) { @if (presenter.claudeLoginPending()) {
+          <mosaik-textbox
+            test-id="ai-authorization-code"
+            [label]="'Authorization code from Claude'"
+            [placeholder]="'Paste the code shown after signing in'"
+            [value]="presenter.aiAccount.authorizationCode"
+            (input)="presenter.aiAccount.authorizationCode = presenter.eventText()($event)"
+          />
+          <div class="flex min-w-0 flex-wrap justify-end gap-2">
+            <mosaik-button
+              test-id="complete-claude-login"
+              [label]="'Finish sign-in'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [disabled]="!presenter.aiAccount.authorizationCode.trim() || presenter.store.configurationBusy()"
+              (click)="presenter.completeClaudeLoginCommand.execute()"
+            />
+          </div>
+          <mosaik-hint
+            [textOverflow]="'wrap'"
+            [text]="'The browser shows a one-time code after you approve Symphony. Paste it here; it is passed straight to the Claude CLI.'"
+          />
+          } @else {
+          <div class="flex min-w-0 flex-wrap justify-end gap-2">
+            <mosaik-button
+              test-id="connect-ai-account"
+              [label]="'Sign in with Claude'"
+              [iconName]="'person'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [isBusy]="presenter.busy()"
+              [disabled]="!presenter.canConnectAiAccount() || presenter.busy() || presenter.store.configurationBusy()"
+              (click)="presenter.connectAiAccountCommand.execute()"
+            />
+          </div>
+          <mosaik-hint
+            [textOverflow]="'wrap'"
+            [text]="'Symphony saves the account, then opens the Claude sign-in in your browser. Sign-in uses this workspace only; other workspaces and the Claude desktop app are not touched.'"
+          />
+          } } } @case ('opencode') {
+          <mosaik-cell-group test-id="ai-account-status">
+            <mosaik-cell
+              [label]="'Provider sign-ins'"
+              [subLabel]="presenter.aiAccountConnected() ? 'Imported into this account' : 'Not needed for free models'"
+            >
+              <mosaik-button
+                slot="end"
+                test-id="import-opencode-credentials"
+                [label]="'Import sign-ins'"
+                [iconName]="'person'"
+                [appearance]="'outline'"
+                [variant]="'primary'"
+                [isBusy]="presenter.busy()"
+                [disabled]="presenter.busy() || presenter.store.configurationBusy()"
+                (click)="presenter.confirmImportOpenCodeCredentialsCommand.execute()"
+              />
+            </mosaik-cell>
+          </mosaik-cell-group>
+          <mosaik-hint
+            [textOverflow]="'wrap'"
+            [text]="'Save the account to use it: the free OpenCode models need no sign-in. Import the sign-ins stored by OpenCode on this Mac only to use providers that require an account, or add an API key or company gateway under Expert settings.'"
+          />
+          } }
+        </div>
+
+        <mosaik-expander
+          test-id="ai-account-advanced-settings"
+          [header]="'Expert settings'"
+          [subHeader]="'Credential reference and gateway address'"
+        >
+          <div class="flex min-w-0 flex-col gap-4 pt-4">
+            <mosaik-textbox
+              test-id="ai-credential-ref"
+              [label]="'Credential reference (optional)'"
+              [placeholder]="'env:AI_PROVIDER_API_KEY'"
+              [value]="presenter.aiAccount.credentialRef"
+              (input)="presenter.aiAccount.credentialRef = presenter.eventText()($event)"
+            />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Name of an environment variable holding an API key. Only the named value is passed to the CLI; Symphony never stores the secret.'"
+            />
+            @if (presenter.aiAccount.kind === 'opencode') {
+            <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+              <mosaik-textbox
+                test-id="ai-gateway-provider-id"
+                [label]="'Gateway ID'"
+                [value]="presenter.aiAccount.gatewayProviderId"
+                [placeholder]="'company-ai'"
+                (input)="presenter.aiAccount.gatewayProviderId = presenter.eventText()($event)"
+              />
+              <mosaik-textbox
+                test-id="ai-gateway-name"
+                [label]="'Gateway name'"
+                [value]="presenter.aiAccount.gatewayDisplayName"
+                [placeholder]="'Company AI gateway'"
+                (input)="presenter.aiAccount.gatewayDisplayName = presenter.eventText()($event)"
+              />
+              <mosaik-textbox
+                test-id="ai-gateway-url"
+                [label]="'Gateway URL'"
+                [value]="presenter.aiAccount.gatewayBaseUrl"
+                [placeholder]="'https://ai.example.com/v1'"
+                (input)="presenter.aiAccount.gatewayBaseUrl = presenter.eventText()($event)"
+              />
+            </div>
+            }
+          </div>
+        </mosaik-expander>
+        @if (presenter.aiAccountValidationIssues().length) {
+        <mosaik-banner
+          test-id="ai-account-validation-summary"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [iconName]="'errorCircle'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'Finish these details before saving'" />
+          <mosaik-banner-sub-header
+            [text]="presenter.aiAccountValidationIssues() | aiValidationIssuesLabel"
+          />
+        </mosaik-banner>
+        }
+      </section>
+    </div>
+  </div>
+</ng-template>
+<ng-template mosaikDrawerFooter>
+  <div class="flex w-full min-w-0 flex-wrap justify-end gap-2">
+    @if(presenter.hasExistingAiAccount()) {
+    <mosaik-button
+      test-id="remove-ai-account"
+      [label]="'Remove account'"
+      [appearance]="'plain'"
+      [variant]="'danger'"
+      [disabled]="presenter.busy() || presenter.store.configurationBusy()"
+      (click)="presenter.confirmRemoveAiAccountCommand.execute()"
+    />
+    }
+    <mosaik-button
+      test-id="cancel-settings-editor"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      (click)="presenter.closeCommand.execute()"
+    />
+    @if(presenter.savesAiAccountDirectly()) {
+    <mosaik-button
+      test-id="save-settings-editor"
+      [label]="'Save'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.busy()"
+      [disabled]="!presenter.canSave() || presenter.busy() || presenter.store.editorBusy()"
+      (click)="presenter.saveCommand.execute()"
+    />
+    }
+  </div>
+</ng-template>

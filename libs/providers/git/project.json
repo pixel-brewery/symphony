@@ -1,0 +1,25 @@
+{
+  "name": "providers-git",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/git/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:git"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/git/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/git/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/git/vitest.config.ts"
+      }
+    }
+  }
+}

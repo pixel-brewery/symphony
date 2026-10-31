@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Run Nx Tasks'
+  short_description: 'Run repository tasks through Nx and Yarn'
+  default_prompt: 'Use $nx-run-tasks to execute Symphony build, lint, test, or typecheck targets.'

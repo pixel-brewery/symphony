@@ -1,0 +1,1 @@
+export const COMMAND_TIMEOUT_MILLISECONDS = 30 * 60 * 1_000;

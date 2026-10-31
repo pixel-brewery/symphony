@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Import into Nx'
+  short_description: 'Import repositories while preserving history'
+  default_prompt: 'Use $nx-import to bring this repository or project into the current Nx workspace safely.'

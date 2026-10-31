@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Monitor CI'
+  short_description: 'Monitor Nx Cloud CI and self-healing fixes'
+  default_prompt: 'Use $monitor-ci to watch CI for the current branch and handle supported self-healing fixes.'

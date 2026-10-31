@@ -1,0 +1,269 @@
+<mosaik-page
+  class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+  test-id="pitfall-ii-view"
+  [attr.data-screen]="screen()"
+>
+  <mosaik-page-header
+    [text]="'Pitfall II: Lost Caverns'"
+    [inset]="'all'"
+    test-id="pitfall-ii-header"
+  >
+    @if (screen() === 'game' && status() !== 'won') {
+    <div
+      slot="subHeader"
+      id="pitfall-ii-controls"
+      class="flex flex-wrap items-center gap-x-4 gap-y-1"
+      [mosaikTypography]="'body2'"
+    >
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" /><span>Move / swim</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['Space']" /><span>Jump / catch balloon</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <mosaik-kbd [value]="['↑']" /><mosaik-kbd [value]="['↓']" /><span
+          >Climb / balloon speed</span
+        >
+      </div>
+      <div class="flex items-center gap-2"><mosaik-kbd [value]="['P']" /><span>Pause</span></div>
+    </div>
+    }
+    <mosaik-button
+      slot="prefix"
+      test-id="pitfall-ii-back-arcade"
+      [label]="'All games'"
+      [appearance]="'plain'"
+      [variant]="'neutral'"
+      [command]="{ click: backArcadeCommand }"
+    />
+    <div slot="suffix" class="flex flex-wrap items-center gap-2">
+      <mosaik-button
+        test-id="pitfall-ii-sound"
+        [label]="soundMuted() ? 'Sound off' : 'Sound on'"
+        [attr.aria-pressed]="!soundMuted()"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: toggleSoundCommand }"
+        (click)="enableAudio()"
+      />
+      @if (screen() === 'game') {
+      <mosaik-button
+        test-id="pitfall-ii-menu"
+        [label]="'Menu'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: menuCommand }"
+      />
+      @if (status() !== 'won') {
+      <mosaik-button
+        test-id="pitfall-ii-pause"
+        [label]="status() === 'paused' ? 'Resume' : 'Pause'"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: togglePauseCommand }"
+        (click)="focusScreen()"
+      />
+      }
+      <mosaik-button
+        test-id="pitfall-ii-reset"
+        [label]="'New game'"
+        [iconName]="'play'"
+        [appearance]="'outline'"
+        [variant]="'primary'"
+        [command]="{ click: newGameCommand }"
+        (click)="focusScreen()"
+      />
+      }
+    </div>
+  </mosaik-page-header>
+  <mosaik-page-content
+    [inset]="'none'"
+    class="relative flex min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+    test-id="pitfall-ii-playfield"
+  >
+    <canvas
+      #playfieldCanvas
+      test-id="pitfall-ii-screen"
+      class="absolute inset-0 block h-full w-full"
+      [attr.tabindex]="screen() === 'game' ? 0 : -1"
+      role="img"
+      aria-label="Pitfall II cavern playfield. Arrow keys move, swim and climb; Space jumps or catches a balloon; P pauses."
+      [attr.aria-describedby]="screen() === 'game' && status() !== 'won' ? 'pitfall-ii-controls' : null"
+      (click)="focusScreen()"
+    ></canvas>
+    <span
+      class="sr-only"
+      test-id="pitfall-ii-status"
+      [attr.data-status]="status()"
+      [attr.data-score]="score()"
+      [attr.data-gold]="goldCollected()"
+      [attr.data-chamber]="room()"
+      [attr.data-level]="level()"
+      [attr.data-rhonda]="objectives().rhonda"
+      [attr.data-quickclaw]="objectives().quickclaw"
+      [attr.data-diamond]="objectives().diamond"
+      >Score {{ score() | number }}, {{ goldCollected() }} of 28 gold bars.</span
+    >
+    @if (!screenAvailable()) {
+    <div class="absolute inset-x-4 top-4" role="alert">
+      <mosaik-text
+        [text]="'The playfield could not be loaded. Return to Arcade and try again.'"
+        [wrap]="true"
+      />
+    </div>
+    } @if (screen() !== 'game') {
+    <div class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+      <mosaik-card class="my-auto w-full max-w-2xl shrink-0">
+        @switch (screen()) { @case ('intro') {
+        <mosaik-card-header
+          [text]="'Pitfall II: Lost Caverns'"
+          [subText]="'An adventure by David Crane · 1984'"
+        />
+        <mosaik-card-content>
+          <div class="flex flex-col gap-5">
+            <mosaik-text
+              [text]="'Find Rhonda, Quickclaw and the Raj diamond.'"
+              [wrap]="true"
+              [mosaikTypography]="'h4'"
+            />
+            <mosaik-text
+              [text]="'Descend into the lost caverns, swim the underground rivers and ride a balloon through the bat-filled shaft. Recover 28 gold bars and approach the cave rat from behind for a perfect 199,000 points.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <mosaik-text
+              [text]="'There is no time limit and no final life. Touch the crosses to set your return point; every setback costs points.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+          </div>
+        </mosaik-card-content>
+        <mosaik-card-actions
+          ><div class="flex flex-wrap gap-2">
+            @if (canContinue()) {
+            <mosaik-button
+              test-id="pitfall-ii-resume"
+              [label]="'Continue'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: resumeCommand }"
+              (click)="focusScreen()"
+            />
+            }
+            <mosaik-button
+              test-id="pitfall-ii-start"
+              [label]="canContinue() ? 'New expedition' : 'Play'"
+              [iconName]="'play'"
+              [appearance]="canContinue() ? 'outline' : 'solid'"
+              [variant]="'primary'"
+              [command]="{ click: newGameCommand }"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="pitfall-ii-instructions"
+              [label]="'How to play'"
+              [appearance]="'plain'"
+              [variant]="'neutral'"
+              [command]="{ click: instructionsCommand }"
+            /></div
+        ></mosaik-card-actions>
+        } @case ('instructions') {
+        <mosaik-card-header
+          [text]="'How to play'"
+          [subText]="'The expedition ends as soon as all three main objectives are found.'"
+        />
+        <mosaik-card-content
+          ><div class="flex flex-col gap-4">
+            <div class="grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-3">
+              <div class="flex gap-1">
+                <mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" />
+              </div>
+              <span>Run or swim. A and D also work.</span> <mosaik-kbd [value]="['Space']" /><span
+                >Jump. Hold while crossing a shaft. Jump into a balloon to grab it.</span
+              >
+              <div class="flex gap-1">
+                <mosaik-kbd [value]="['↑']" /><mosaik-kbd [value]="['↓']" />
+              </div>
+              <span
+                >Climb ladders; press Down before reaching a ladder opening. W and S also work.
+                While floating, Up speeds the balloon up and Down slows it.</span
+              >
+              <mosaik-kbd [value]="['P']" /><span>Pause or resume. Escape also works.</span>
+            </div>
+            <mosaik-text
+              [text]="'Only a bat can pop your balloon. Steer the balloon above the ledge you want, and let the bat hit the balloon rather than Harry.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <mosaik-text
+              [text]="'Avoid frogs, condors, bats, scorpions and electric eels. A collision carries you back to the last cross and drains points along the way. An accidental fall costs 100 points. Water itself is safe.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <mosaik-text
+              [text]="'Start with 4,000 points. Gold bars add 5,000 each; the cave rat 15,000; the diamond 20,000; Rhonda and Quickclaw 10,000 each. Catch the rat from behind.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            />
+            <mosaik-text
+              [text]="'Collect the optional gold and rat before finding the last main objective. A perfect expedition scores 199,000. Your completed expedition appears in the Arcade leaderboard.'"
+              [wrap]="true"
+              [mosaikTypography]="'body2'"
+            /></div
+        ></mosaik-card-content>
+        <mosaik-card-actions
+          ><mosaik-button
+            test-id="pitfall-ii-back-title"
+            [label]="'Back'"
+            [appearance]="'outline'"
+            [variant]="'neutral'"
+            [command]="{ click: menuCommand }"
+        /></mosaik-card-actions>
+        } }
+      </mosaik-card>
+    </div>
+    } @else if (status() === 'won') {
+    <div
+      class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+      role="status"
+    >
+      <mosaik-card class="my-auto w-full max-w-lg shrink-0" test-id="pitfall-ii-results">
+        <mosaik-card-header
+          [text]="'Expedition complete'"
+          [subText]="'Rhonda, Quickclaw and the Raj diamond are safe.'"
+        />
+        <mosaik-card-content
+          ><div class="flex flex-col gap-3">
+            <span [mosaikTypography]="'h3'">{{ score() | number }} points</span>
+            <span
+              >{{ goldCollected() }} of 28 gold bars · Cave rat {{ objectives().rat ? 'found' : 'not
+              found' }}</span
+            >
+            @if (score() === 199000) {
+            <mosaik-text [text]="'A perfect expedition!'" [wrap]="true" /> }
+          </div></mosaik-card-content
+        >
+        <mosaik-card-actions
+          ><div class="flex flex-wrap gap-2">
+            <mosaik-button
+              test-id="pitfall-ii-replay"
+              [label]="'Play again'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: newGameCommand }"
+              (click)="focusScreen()"
+            />
+            <mosaik-button
+              test-id="pitfall-ii-results-arcade"
+              [label]="'All games'"
+              [appearance]="'plain'"
+              [variant]="'neutral'"
+              [command]="{ click: backArcadeCommand }"
+            /></div
+        ></mosaik-card-actions>
+      </mosaik-card>
+    </div>
+    }
+  </mosaik-page-content>
+</mosaik-page>

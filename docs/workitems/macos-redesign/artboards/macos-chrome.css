@@ -1,0 +1,86 @@
+/*
+ * macOS window chrome density for Symphony on Mosaik Soho.
+ * Sidebar rows and toolbar controls use the compact 32px macOS control height;
+ * content keeps the Soho defaults. Only public component custom properties are set.
+ */
+.mac-sidebar mosaik-button,
+.mac-toolbar mosaik-button {
+  --button-height: 32px;
+  --button-min-height: 32px;
+  --button-icon-min-width: 32px;
+  --button-icon-min-height: 32px;
+  --button-padding-top: 6px;
+  --button-padding-bottom: 6px;
+  --button-padding-left: 8px;
+  --button-padding-right: 8px;
+}
+
+.mac-toolbar mosaik-searchbox {
+  --searchbox-height: 32px;
+}
+
+/* Settings window toolbar: icon above label, the macOS preferences tab pattern. */
+.mac-settings-tabs mosaik-button {
+  --button-height: 54px;
+  --button-min-height: 54px;
+  --button-padding-top: 6px;
+  --button-padding-bottom: 6px;
+  --button-padding-left: 10px;
+  --button-padding-right: 10px;
+  --button-gap: 2px;
+  --button-font-size: 12px;
+  --button-font-line-height: 16px;
+}
+
+/* The selected source-list row and settings tab sit one neutral step darker than the chrome fill. */
+.mac-sidebar mosaik-button[appearance="soft"],
+.mac-settings-tabs mosaik-button[appearance="soft"] {
+  --button-background-color: var(--mosaik-color-neutral-200);
+}
+
+/* Status bar: a 28px band across the bottom of every main view for small notices
+   (sync state, version, the update button); its controls are 24px. */
+.mac-statusbar mosaik-button {
+  --button-height: 24px;
+  --button-min-height: 24px;
+  --button-icon-min-width: 24px;
+  --button-icon-min-height: 24px;
+  --button-padding-top: 4px;
+  --button-padding-bottom: 4px;
+  --button-padding-left: 4px;
+  --button-padding-right: 4px;
+  --button-font-size: 12px;
+  --button-font-line-height: 16px;
+}
+
+.mac-statusbar mosaik-button[appearance="soft"] {
+  --button-background-color: var(--mosaik-color-neutral-200);
+  --button-padding-left: 8px;
+  --button-padding-right: 8px;
+}
+
+/* Agents | Actions switch above the sidebar's run panel: 24px segments on a neutral track. */
+.mac-sidebar .mac-runswitch mosaik-button {
+  --button-height: 24px;
+  --button-min-height: 24px;
+  --button-padding-top: 2px;
+  --button-padding-bottom: 2px;
+  --button-font-size: 12px;
+  --button-font-line-height: 16px;
+}
+
+.mac-sidebar .mac-runswitch mosaik-button[appearance="soft"] {
+  --button-background-color: var(--mosaik-scheme-surface);
+  --button-shadow: var(--mosaik-elevation-light);
+}
+
+/* Choice groups whose options are cards: at most three per row in equal columns, as the app's
+   choice-cards utility. */
+.choice-cards mosaik-choice-group::part(root) {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+}
+
+.choice-cards mosaik-choice {
+  min-width: 0;
+}

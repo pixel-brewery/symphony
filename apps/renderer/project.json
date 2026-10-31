@@ -1,0 +1,121 @@
+{
+  "name": "renderer",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/renderer/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/resources/icons/**/*",
+        "{workspaceRoot}/resources/arcade/**/*",
+        "{workspaceRoot}/resources/figures/**/*",
+        "{workspaceRoot}/resources/orbit/**/*",
+        "{workspaceRoot}/resources/fonts/**/*"
+      ],
+      "options": {
+        "outputPath": "dist/apps/renderer",
+        "index": "apps/renderer/src/index.html",
+        "browser": "apps/renderer/src/main.ts",
+        "polyfills": [],
+        "tsConfig": "apps/renderer/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "styles": ["apps/renderer/src/tailwind.css", "apps/renderer/src/styles.scss"],
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "resources/orbit",
+            "output": "orbit"
+          },
+          {
+            "glob": "*.svg",
+            "input": "resources/icons",
+            "output": "icons"
+          },
+          {
+            "glob": "*.png",
+            "input": "resources/icons/png/app",
+            "output": "icons/png"
+          },
+          {
+            "glob": "*.webp",
+            "input": "resources/arcade",
+            "output": "arcade"
+          },
+          {
+            "glob": "*.png",
+            "input": "resources/figures",
+            "output": "figures"
+          },
+          {
+            "glob": "LICENSE",
+            "input": "resources/figures",
+            "output": "figures"
+          },
+          {
+            "glob": "*.woff2",
+            "input": "resources/fonts",
+            "output": "fonts"
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "outputHashing": "all",
+          "optimization": {
+            "scripts": true,
+            "styles": {
+              "minify": true,
+              "inlineCritical": false
+            },
+            "fonts": true
+          }
+        },
+        "development": {
+          "optimization": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "development": {
+          "buildTarget": "renderer:build:development"
+        },
+        "production": {
+          "buildTarget": "renderer:build:production"
+        }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "host": "127.0.0.1",
+        "port": 4200
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p apps/renderer/tsconfig.app.json --noEmit"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint apps/renderer libs/frontend"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": ["default", "^default"],
+      "options": {
+        "command": "vitest run --config apps/renderer/vitest.config.ts"
+      }
+    }
+  },
+  "tags": ["scope:renderer", "type:application"]
+}

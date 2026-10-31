@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Orchestrator Architecture'
+  short_description: 'Apply repository instructions guidance'
+  default_prompt: 'Use $instructions-orchestrator-architecture for the applicable repository guidance.'

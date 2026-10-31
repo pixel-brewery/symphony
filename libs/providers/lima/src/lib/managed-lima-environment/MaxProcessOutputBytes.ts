@@ -1,0 +1,1 @@
+export const MAX_PROCESS_OUTPUT_BYTES = 256 * 1024;

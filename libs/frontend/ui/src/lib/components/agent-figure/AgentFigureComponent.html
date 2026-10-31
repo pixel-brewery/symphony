@@ -1,0 +1,27 @@
+<span
+  data-figure
+  [attr.data-activity]="state()"
+  [attr.data-motion]="visible()"
+  [attr.data-agent-id]="agentId()"
+  [attr.data-state]="state()"
+  [attr.data-animation]="pose()"
+  [attr.data-static]="stationary()"
+  [attr.data-unavailable]="unavailable()"
+  (pointerenter)="greet()"
+>
+  @if (sprite(); as atlas) {
+  <span
+    data-figure-sprite
+    [attr.aria-label]="name()"
+    [attr.data-row]="frame().rowIndex"
+    [attr.data-column]="frame().columnIndex"
+    [attr.data-look]="look() !== null"
+    [style.background-image]="'url(' + atlas + ')'"
+    [style.background-position]="backgroundPosition()"
+    [style.background-size]="backgroundSize"
+    role="img"
+  ></span>
+  } @else {
+  <img data-figure-image [src]="source()" [alt]="name()" draggable="false" />
+  }
+</span>

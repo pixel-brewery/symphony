@@ -1,0 +1,1 @@
+export const VM_START_TIMEOUT_MILLISECONDS = 15 * 60 * 1_000;

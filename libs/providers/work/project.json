@@ -1,0 +1,25 @@
+{
+  "name": "providers-work",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/providers/work/src",
+  "projectType": "library",
+  "tags": ["scope:infrastructure", "type:provider", "provider:work"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/providers/work/tsconfig.lib.json --noEmit",
+          "tsc -p libs/providers/work/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/providers/work/vitest.config.ts"
+      }
+    }
+  }
+}

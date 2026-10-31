@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Verify Release'
+  short_description: 'Apply repository prompts guidance'
+  default_prompt: 'Use $prompts-verify-release for the applicable repository guidance.'

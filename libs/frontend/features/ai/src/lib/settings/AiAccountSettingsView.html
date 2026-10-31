@@ -1,0 +1,30 @@
+@if(presenter.account(); as account){
+<mosaik-cell [attr.test-id]="'configured-account-' + account.id" [label]="account.displayName">
+  <mosaik-avatar
+    slot="start"
+    [size]="'small'"
+    [appearance]="'soft'"
+    [iconName]="account.kind | connectionIcon"
+  />
+  <mosaik-text slot="subLabel" [text]="presenter.aiAccountSummary()(account)" [readonly]="true" />
+  <mosaik-button
+    slot="end"
+    [attr.test-id]="'edit-account-' + account.id"
+    [label]="'Edit'"
+    [appearance]="'plain'"
+    (click)="presenter.openAccountCommand.execute(account)"
+  />
+
+  <mosaik-button
+    slot="end"
+    [attr.test-id]="'remove-account-' + account.id"
+    [iconName]="'delete'"
+    [appearance]="'plain'"
+    [variant]="'danger'"
+    [disabled]="presenter.store.configurationBusy()"
+    (click)="presenter.confirmRemoveAiAccountCommand.execute(account)"
+  >
+    <span slot="label" class="sr-only">Remove account: {{ account.displayName }}</span>
+  </mosaik-button>
+</mosaik-cell>
+}

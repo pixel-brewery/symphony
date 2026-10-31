@@ -1,0 +1,507 @@
+<ng-template mosaikDrawerHeader>
+  @switch (presenter.data.kind) { @case ('azure-devops') {
+  <mosaik-drawer-header
+    [text]="presenter.data.sourceId ? 'Edit Azure DevOps source' : 'Add Azure DevOps source'"
+    [subText]="'Work item tracking'"
+  >
+    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+  </mosaik-drawer-header>
+  } @case ('github-projects') {
+  <mosaik-drawer-header
+    [text]="presenter.data.sourceId ? 'Edit GitHub Projects board' : 'Add GitHub Projects board'"
+    [subText]="'Work item tracking'"
+  >
+    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+  </mosaik-drawer-header>
+  } }
+</ng-template>
+
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="settings-editor-drawer"
+    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+  >
+    @if (presenter.isHydrating()) {
+    <!-- Every editor opens with the same anatomy: a section headline above a two-column field
+         grid. The skeleton keeps that anatomy - headline lines and labelled fields - in place. -->
+    <section
+      test-id="settings-editor-loading-skeleton"
+      class="flex min-w-0 flex-col gap-4"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading settings"
+    >
+      <div class="flex min-w-0 flex-col">
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
+        </div>
+      </div>
+      <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+        @for (field of [1, 2, 3, 4]; track field) {
+        <div class="flex min-w-0 flex-col gap-0.75">
+          <div class="flex h-2.5 items-center">
+            <mosaik-skeleton [width]="'5rem'" [height]="'14px'" [shimmer]="true" />
+          </div>
+          <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+        </div>
+        }
+      </div>
+    </section>
+    }
+    <div class="min-w-0" [hidden]="presenter.isHydrating()">
+      @switch (presenter.kind) { @case ('azure-devops') {
+      <section class="flex min-w-0 flex-col gap-4">
+        <symphony-headline
+          header="Azure DevOps Work Items"
+          description="Bind one project query to this workspace. Secrets remain outside portable settings."
+        />
+        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+          <mosaik-textbox
+            test-id="ado-display-name"
+            [label]="'Display name'"
+            [value]="presenter.azure.displayName"
+            (input)="presenter.azure.displayName = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="ado-organization"
+            [label]="'Organization'"
+            [value]="presenter.azure.organization"
+            (input)="presenter.azure.organization = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="ado-project"
+            [label]="'Project'"
+            [value]="presenter.azure.project"
+            (input)="presenter.azure.project = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="ado-team"
+            [label]="'Team (optional)'"
+            [value]="presenter.azure.team"
+            (input)="presenter.azure.team = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="ado-query-id"
+            [label]="'Saved query ID (optional)'"
+            [value]="presenter.azure.queryId"
+            (input)="presenter.azure.queryId = presenter.eventText()($event)"
+          />
+        </div>
+        <mosaik-cell-group test-id="ado-authentication-status">
+          <mosaik-cell
+            [label]="'Authentication'"
+            [subLabel]="presenter.azureDevOpsAuthenticationLabel()"
+          >
+            @if (presenter.azureDevOpsAuthenticated()) {
+            <mosaik-button
+              slot="end"
+              test-id="disconnect-ado"
+              [label]="'Disconnect'"
+              [appearance]="'plain'"
+              [variant]="'danger'"
+              [disabled]="presenter.busy() || presenter.store.configurationBusy()"
+              (click)="presenter.disconnectAzureDevOps()"
+            />
+            }
+          </mosaik-cell>
+        </mosaik-cell-group>
+        <mosaik-passwordbox
+          test-id="ado-pat"
+          [label]="presenter.azureDevOpsAuthenticated() ? 'Replace personal access token' : 'Personal access token'"
+          [placeholder]="'Paste the PAT from Azure DevOps'"
+          [revealable]="true"
+          [value]="presenter.azure.pat"
+          (input)="presenter.azure.pat = presenter.eventText()($event)"
+        />
+        <div class="flex min-w-0 flex-wrap justify-end gap-2">
+          <mosaik-button
+            test-id="connect-ado"
+            [label]="presenter.azureDevOpsAuthenticated() ? 'Verify and replace PAT' : 'Save and connect'"
+            [iconName]="'azureDevOps'"
+            [appearance]="'solid'"
+            [variant]="'primary'"
+            [isBusy]="presenter.busy()"
+            [disabled]="!presenter.canConnectAzureDevOps() || presenter.busy() || presenter.store.configurationBusy()"
+            (click)="presenter.connectAzureDevOps()"
+          />
+        </div>
+        <mosaik-hint
+          [textOverflow]="'wrap'"
+          [text]="'Create the PAT in Azure DevOps under User settings → Personal access tokens with Work Items read and write access. Paste it once; Symphony stores it with this computer\'s operating-system keychain and never writes it to settings.'"
+        />
+        <mosaik-textbox
+          test-id="ado-wiql"
+          [label]="'WIQL (used when no query ID is set)'"
+          [value]="presenter.azure.wiql"
+          (input)="presenter.azure.wiql = presenter.eventText()($event)"
+        />
+        <mosaik-textbox
+          test-id="ado-board-id"
+          [label]="'Kanban board ID (optional, needs a team)'"
+          [placeholder]="'Leave empty to use work-item states as columns'"
+          [value]="presenter.azure.boardId"
+          (input)="presenter.azure.boardId = presenter.eventText()($event)"
+        />
+        <ng-container *ngTemplateOutlet="boardColumnMappings" />
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          [isChecked]="presenter.azure.enabled"
+          (checked)="presenter.azure.enabled = true"
+          (unchecked)="presenter.azure.enabled = false"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Source enabled'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Include this Azure DevOps source when Symphony refreshes work items.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+      </section>
+      } @case ('github-projects') {
+      <section class="flex min-w-0 flex-col gap-4" test-id="github-projects-editor">
+        <symphony-headline
+          header="GitHub Projects board"
+          description="Choose one GitHub Project (v2) as a board. Its status columns are read from GitHub, and each column can be mapped to a Symphony workflow state."
+        />
+        @if (!presenter.githubConnections().length) {
+        <mosaik-banner
+          test-id="github-projects-no-connection"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [iconName]="'errorCircle'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'No GitHub account in this workspace'" />
+          <mosaik-banner-sub-header
+            [text]="'Add a repository first. Its GitHub account is used to read the project.'"
+          />
+        </mosaik-banner>
+        } @else {
+        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+          <mosaik-textbox
+            test-id="github-project-display-name"
+            [label]="'Board name'"
+            [placeholder]="'Delivery board'"
+            [value]="presenter.githubProject.displayName"
+            (input)="presenter.updateGitHubProjectDisplayNameCommand.execute($event)"
+          />
+          <mosaik-select
+            test-id="github-project-connection"
+            [label]="'GitHub account'"
+            [value]="presenter.githubProject.connectionId"
+            (selectionChanged)="presenter.updateGitHubConnectionCommand.execute($event)"
+          >
+            @for (connection of presenter.githubConnections(); track connection.id) {
+            <mosaik-select-item
+              [attr.test-id]="'github-project-connection-' + connection.id"
+              [label]="presenter.githubConnectionLabel()(connection)"
+              [value]="connection.id"
+              (click)="presenter.updateGitHubConnectionCommand.execute(connection.id)"
+            />
+            }
+          </mosaik-select>
+        </div>
+        <div class="flex min-w-0 flex-col gap-2">
+          <div class="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <mosaik-text [text]="'Choose project'" [mosaikTypography]="'subtitle2'" />
+            <mosaik-button
+              test-id="github-projects-reload"
+              [label]="'Reload'"
+              [iconName]="'sync'"
+              [appearance]="'plain'"
+              [isBusy]="presenter.githubProjectsBusy()"
+              [disabled]="presenter.githubProjectsBusy()"
+              (click)="presenter.refreshGitHubProjectsCommand.execute()"
+            />
+          </div>
+          <mosaik-hint
+            [textOverflow]="'wrap'"
+            [text]="'Projects owned by the signed-in account and projects linked to the workspace repositories. Organization and user projects are both supported.'"
+          />
+          <mosaik-textbox
+            test-id="github-projects-search"
+            [label]="'Search projects'"
+            [placeholder]="'Title, owner or number'"
+            [value]="presenter.githubProjectSearch()"
+            (input)="presenter.searchGitHubProjectsCommand.execute($event)"
+          />
+          @if (presenter.githubProjectsBusy() && !presenter.githubProjects().length) {
+          <mosaik-cell-group role="status" aria-label="Loading projects">
+            @for (row of [1, 2, 3]; track row) {
+            <mosaik-cell>
+              <mosaik-skeleton
+                slot="start"
+                [shape]="'circle'"
+                [width]="'24px'"
+                [height]="'24px'"
+                [shimmer]="true"
+              />
+              <div slot="label" class="flex h-3 items-center">
+                <mosaik-skeleton [width]="'10rem'" [height]="'14px'" [shimmer]="true" />
+              </div>
+              <div slot="subLabel" class="flex h-2.5 items-center">
+                <mosaik-skeleton [width]="'16rem'" [height]="'12px'" [shimmer]="true" />
+              </div>
+            </mosaik-cell>
+            }
+          </mosaik-cell-group>
+          } @else if (presenter.filteredGitHubProjects().length) {
+          <mosaik-cell-group test-id="github-projects-list">
+            @for (project of presenter.filteredGitHubProjects(); track project.id) {
+            <mosaik-cell
+              [attr.test-id]="'github-project-' + project.ownerType + '-' + project.owner + '-' + project.projectNumber"
+              [label]="project.title + (project.closed ? ' (closed)' : '')"
+              [subLabel]="(project.ownerType === 'organization' ? 'Organization ' : 'User ') + project.owner + ' · #' + project.projectNumber + (project.origin === 'repository' ? ' · linked to a workspace repository' : '')"
+            >
+              <mosaik-avatar
+                slot="start"
+                [size]="'small'"
+                [appearance]="'soft'"
+                [iconName]="'github'"
+              />
+              <mosaik-button
+                slot="end"
+                [attr.test-id]="'select-github-project-' + project.ownerType + '-' + project.owner + '-' + project.projectNumber"
+                [label]="presenter.isGitHubProjectSelected()(project) ? 'Selected' : 'Use'"
+                [appearance]="presenter.isGitHubProjectSelected()(project) | selectionAppearance"
+                [variant]="'primary'"
+                (click)="presenter.selectGitHubProjectCommand.execute(project)"
+              />
+            </mosaik-cell>
+            }
+          </mosaik-cell-group>
+          } @else if (presenter.githubProjectsError()) {
+          <mosaik-banner
+            test-id="github-projects-error"
+            [isOpen]="true"
+            [appearance]="'soft'"
+            [variant]="'warning'"
+            [iconName]="'errorCircle'"
+            [iconSize]="'small'"
+          >
+            <mosaik-banner-header [text]="'Projects could not be loaded'" />
+            <mosaik-banner-sub-header [text]="presenter.githubProjectsError()!" />
+          </mosaik-banner>
+          } @else {
+          <mosaik-hint
+            [textOverflow]="'wrap'"
+            test-id="github-projects-empty"
+            [text]="'No projects found for this account. Enter the project manually below.'"
+          />
+          }
+        </div>
+        <mosaik-expander
+          test-id="github-project-manual"
+          [header]="'Enter project manually'"
+          [subHeader]="'Owner type, owner login and project number from the project URL'"
+          [isExpanded]="!presenter.githubProjects().length && !!presenter.githubProject.owner"
+        >
+          <div class="grid min-w-0 grid-cols-3 gap-4 pt-4 max-[700px]:grid-cols-1">
+            <mosaik-select
+              test-id="github-project-owner-type"
+              [label]="'Owner type'"
+              [value]="presenter.githubProject.ownerType"
+            >
+              <mosaik-select-item
+                test-id="github-project-owner-type-user"
+                [label]="'User'"
+                [value]="'user'"
+                (click)="presenter.updateGitHubProjectOwnerTypeCommand.execute('user')"
+              />
+              <mosaik-select-item
+                test-id="github-project-owner-type-organization"
+                [label]="'Organization'"
+                [value]="'organization'"
+                (click)="presenter.updateGitHubProjectOwnerTypeCommand.execute('organization')"
+              />
+            </mosaik-select>
+            <mosaik-textbox
+              test-id="github-project-owner"
+              [label]="'Owner login'"
+              [placeholder]="'octo-org'"
+              [value]="presenter.githubProject.owner"
+              (input)="presenter.updateGitHubProjectOwnerCommand.execute($event)"
+            />
+            <mosaik-textbox
+              test-id="github-project-number"
+              [label]="'Project number'"
+              [placeholder]="'3'"
+              [value]="presenter.githubProject.projectNumber ? '' + presenter.githubProject.projectNumber : ''"
+              (input)="presenter.updateGitHubProjectNumberCommand.execute($event)"
+            />
+          </div>
+          <div class="flex justify-end pt-2">
+            <mosaik-button
+              test-id="github-project-columns-load"
+              [label]="'Read columns'"
+              [appearance]="'outline'"
+              [variant]="'primary'"
+              [disabled]="!presenter.canReadBoardColumns() || presenter.boardColumnsBusy()"
+              (click)="presenter.refreshBoardColumnsCommand.execute()"
+            />
+          </div>
+        </mosaik-expander>
+        <ng-container *ngTemplateOutlet="boardColumnMappings" />
+        <mosaik-toggle-switch
+          test-id="github-project-enabled"
+          [variant]="'primary'"
+          [isChecked]="presenter.githubProject.enabled"
+          (checked)="presenter.githubProject.enabled = true"
+          (unchecked)="presenter.githubProject.enabled = false"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Board enabled'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Include this board when Symphony refreshes work items and offer it on the board view.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        }
+      </section>
+      } }
+    </div>
+  </div>
+</ng-template>
+
+<ng-template mosaikDrawerFooter>
+  <div class="flex w-full min-w-0 flex-wrap justify-end gap-2">
+    @if (presenter.hasExistingGitHubProject()) {
+    <mosaik-button
+      test-id="remove-github-project"
+      [label]="'Remove board'"
+      [appearance]="'plain'"
+      [variant]="'danger'"
+      [disabled]="presenter.busy() || presenter.store.configurationBusy()"
+      (click)="presenter.removeGitHubProjectCommand.execute()"
+    />
+    }
+    <mosaik-button
+      test-id="cancel-settings-editor"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      (click)="presenter.closeCommand.execute()"
+    />
+
+    <mosaik-button
+      test-id="save-settings-editor"
+      [label]="'Save'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.busy()"
+      [disabled]="!presenter.canSave() || presenter.busy() || presenter.store.editorBusy()"
+      (click)="presenter.saveCommand.execute()"
+    />
+  </div>
+</ng-template>
+
+<ng-template #boardColumnMappings>
+  <div class="flex min-w-0 flex-col gap-2" test-id="board-columns">
+    <div class="flex min-w-0 flex-wrap items-center justify-between gap-2">
+      <mosaik-text [text]="'Columns'" [mosaikTypography]="'subtitle2'" />
+      <mosaik-button
+        test-id="board-columns-reload"
+        [label]="'Reload columns'"
+        [iconName]="'sync'"
+        [appearance]="'plain'"
+        [isBusy]="presenter.boardColumnsBusy()"
+        [disabled]="!presenter.canReadBoardColumns() || presenter.boardColumnsBusy()"
+        (click)="presenter.refreshBoardColumnsCommand.execute()"
+      />
+    </div>
+    <mosaik-hint
+      [textOverflow]="'wrap'"
+      [text]="'Every provider column becomes a board column. The workflow state tells Symphony which column means ready, executing or done; nothing is guessed at runtime. Renamed columns keep their mapping.'"
+    />
+    @if (presenter.boardColumnsBusy() && !presenter.boardColumns().length) {
+    <mosaik-cell-group role="status" aria-label="Loading columns">
+      @for (row of [1, 2, 3, 4]; track row) {
+      <mosaik-cell>
+        <div slot="label" class="flex h-3 items-center">
+          <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+        <mosaik-skeleton
+          slot="end"
+          class="w-48"
+          [width]="'100%'"
+          [height]="'36px'"
+          [shimmer]="true"
+        />
+      </mosaik-cell>
+      }
+    </mosaik-cell-group>
+    } @else if (presenter.boardColumns().length) {
+    <mosaik-cell-group>
+      @for (column of presenter.boardColumns(); track column.id) {
+      <mosaik-cell
+        [attr.test-id]="'board-column-' + column.id"
+        [label]="column.label"
+        [subLabel]="presenter.columnMapping()(column.id) ? '' : 'Not mapped · items stay visible, automation skips this column'"
+      >
+        <mosaik-select
+          slot="end"
+          class="w-48"
+          [attr.test-id]="'board-column-mapping-' + column.id"
+          [label]="'Workflow stage'"
+          [value]="presenter.columnMapping()(column.id)"
+          (selectionChanged)="presenter.updateColumnMappingCommand.execute([column.id, $event])"
+        >
+          <mosaik-select-item
+            [label]="'Not mapped'"
+            [value]="''"
+            (click)="presenter.updateColumnMappingCommand.execute([column.id, ''])"
+          />
+          @for (stage of presenter.stageOptions(); track stage.id) {
+          <mosaik-select-item
+            [attr.test-id]="'board-column-mapping-' + column.id + '-' + stage.id"
+            [label]="stage.label"
+            [value]="stage.id"
+            (click)="presenter.updateColumnMappingCommand.execute([column.id, stage.id])"
+          />
+          }
+        </mosaik-select>
+      </mosaik-cell>
+      }
+    </mosaik-cell-group>
+    @if (presenter.unmappedAutomatedStages().length) {
+    <mosaik-banner
+      test-id="board-columns-warning"
+      [isOpen]="true"
+      [appearance]="'soft'"
+      [variant]="'info'"
+      [iconName]="'info'"
+      [iconSize]="'small'"
+    >
+      <mosaik-banner-header
+        [text]="'No column is mapped to ' + presenter.unmappedAutomatedStages().join(', ')"
+      />
+      <mosaik-banner-sub-header
+        [text]="'Automated stages need a board column so Symphony can move items there and pick work up.'"
+      />
+    </mosaik-banner>
+    } } @else if (presenter.boardColumnsError()) {
+    <mosaik-banner
+      test-id="board-columns-error"
+      [isOpen]="true"
+      [appearance]="'soft'"
+      [variant]="'warning'"
+      [iconName]="'errorCircle'"
+      [iconSize]="'small'"
+    >
+      <mosaik-banner-header [text]="'Columns could not be read'" />
+      <mosaik-banner-sub-header [text]="presenter.boardColumnsError()!" />
+    </mosaik-banner>
+    } @else {
+    <mosaik-hint
+      [textOverflow]="'wrap'"
+      test-id="board-columns-empty"
+      [text]="presenter.kind === 'azure-devops' && !presenter.canReadBoardColumns() ? 'Save the source first, then reopen it to read and map its columns.' : 'Choose a project to read its columns.'"
+    />
+    }
+  </div>
+</ng-template>

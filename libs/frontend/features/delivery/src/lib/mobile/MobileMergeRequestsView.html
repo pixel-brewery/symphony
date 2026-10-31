@@ -1,0 +1,57 @@
+<mosaik-page class="block min-h-full min-w-0" test-id="mobile-pull-requests-view">
+  <mosaik-page-header
+    [inset]="'all'"
+    [text]="'Pull Requests'"
+    [subText]="presenter.allMergeRequests().length + ' available'"
+  />
+  <mosaik-page-pre-content [inset]="'horizontal'">
+    <mosaik-searchbox
+      class="flex w-full min-w-0"
+      [value]="presenter.query()"
+      [placeholder]="'Title, branch, author or number'"
+      [isClearable]="true"
+      [mode]="'delay'"
+      [delay]="150"
+      (searched)="presenter.updateQueryCommand.execute($event)"
+      (cleared)="presenter.clearQueryCommand.execute()"
+      test-id="mobile-merge-request-search"
+    />
+  </mosaik-page-pre-content>
+  <mosaik-page-content [inset]="'all'">
+    <div class="grid min-w-0 gap-2">
+      @for (mergeRequest of presenter.mergeRequests(); track mergeRequest.id) {
+      <a
+        symphonyPseudoLink
+        class="block min-w-0"
+        [href]="mergeRequest.externalUrl"
+        target="_blank"
+        rel="noreferrer"
+        [attr.test-id]="'mobile-merge-request-' + mergeRequest.id"
+      >
+        <mosaik-card [appearance]="'soft'">
+          <mosaik-card-header
+            [text]="mergeRequest.title"
+            [subText]="'#' + mergeRequest.number + (mergeRequest.author ? ' · ' + mergeRequest.author : '')"
+          />
+          <mosaik-card-content>
+            <div class="flex min-w-0 items-center gap-2">
+              <mosaik-badge
+                [label]="mergeRequest.draft ? 'Draft' : mergeRequest.state"
+                [appearance]="'soft'"
+                [variant]="mergeRequest | mergeRequestStateVariant"
+                [size]="'small'"
+              />
+              <span>{{ mergeRequest.sourceBranch }} → {{ mergeRequest.targetBranch }}</span>
+            </div>
+          </mosaik-card-content>
+        </mosaik-card>
+      </a>
+      } @empty {
+      <mosaik-empty-state
+        [header]="presenter.query() ? 'No matching pull requests' : 'No pull requests'"
+        [content]="presenter.query() ? 'Try a different search.' : 'Pull requests from the desktop workspace will appear here.'"
+      />
+      }
+    </div>
+  </mosaik-page-content>
+</mosaik-page>

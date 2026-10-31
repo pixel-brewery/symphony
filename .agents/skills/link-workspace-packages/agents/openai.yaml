@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Link workspace packages'
+  short_description: 'Add correct monorepo workspace dependencies'
+  default_prompt: "Use $link-workspace-packages to link the imported sibling package through this repository's package manager."

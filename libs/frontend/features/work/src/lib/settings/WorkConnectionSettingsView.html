@@ -1,0 +1,31 @@
+@if(presenter.account(); as account){
+<mosaik-cell [attr.test-id]="'configured-account-' + account.id" [label]="account.displayName">
+  <mosaik-avatar
+    slot="start"
+    [size]="'small'"
+    [appearance]="'soft'"
+    [iconName]="account.kind | connectionIcon"
+  />
+  @switch (account.kind) { @case ('azure-devops') {
+  <mosaik-text
+    slot="subLabel"
+    [text]="'Azure DevOps · ' + account.organization"
+    [readonly]="true"
+  />
+  } @case ('github') {
+  <mosaik-text
+    slot="subLabel"
+    [text]="'GitHub · ' + account.hostname + (account.accountLogin ? ' · @' + account.accountLogin : '')"
+    [readonly]="true"
+  />
+  } }
+  <mosaik-button
+    slot="end"
+    [attr.test-id]="'edit-account-' + account.id"
+    [label]="'Edit'"
+    [disabled]="!presenter.canEditAccount()"
+    [appearance]="'plain'"
+    (click)="presenter.openAccountCommand.execute(account)"
+  />
+</mosaik-cell>
+}

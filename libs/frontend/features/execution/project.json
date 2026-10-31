@@ -1,0 +1,16 @@
+{
+  "name": "frontend-feature-execution",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/features/execution/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["scope:frontend-feature", "type:feature", "feature:execution"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/features/execution/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}

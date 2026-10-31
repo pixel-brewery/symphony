@@ -1,0 +1,25 @@
+{
+  "name": "ipc-contracts-skills",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ipc-contracts/features/skills/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:contract", "feature:skills"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p libs/ipc-contracts/features/skills/tsconfig.lib.json --noEmit",
+          "tsc -p libs/ipc-contracts/features/skills/tsconfig.spec.json --noEmit"
+        ],
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/ipc-contracts/features/skills/vitest.config.ts"
+      }
+    }
+  }
+}

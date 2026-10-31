@@ -1,0 +1,490 @@
+<ng-template mosaikDrawerHeader>
+  @switch (presenter.data.kind) { @case ('delivery-target') {
+  <mosaik-drawer-header
+    [text]="presenter.data.targetId ? 'Edit delivery destination' : 'Add delivery destination'"
+    [subText]="presenter.deliveryRepository()?.displayName ?? ''"
+  >
+    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+  </mosaik-drawer-header>
+  } @case ('repository') {
+  <mosaik-drawer-header
+    [text]="presenter.data.repositoryBindingId ? 'Edit repository' : 'Add repository'"
+    [subText]="'GitHub source control and Actions'"
+  >
+    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+  </mosaik-drawer-header>
+  } }
+</ng-template>
+
+<ng-template mosaikDrawerContent>
+  <div
+    test-id="settings-editor-drawer"
+    class="flex h-full min-h-0 w-full flex-col gap-6 overflow-y-auto px-2 py-2"
+  >
+    @if (presenter.isHydrating()) {
+    <!-- Every editor opens with the same anatomy: a section headline above a two-column field
+         grid. The skeleton keeps that anatomy - headline lines and labelled fields - in place. -->
+    <section
+      test-id="settings-editor-loading-skeleton"
+      class="flex min-w-0 flex-col gap-4"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading settings"
+    >
+      <div class="flex min-w-0 flex-col">
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
+        </div>
+        <div class="flex h-2.5 items-center">
+          <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
+        </div>
+      </div>
+      <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+        @for (field of [1, 2, 3, 4]; track field) {
+        <div class="flex min-w-0 flex-col gap-0.75">
+          <div class="flex h-2.5 items-center">
+            <mosaik-skeleton [width]="'5rem'" [height]="'14px'" [shimmer]="true" />
+          </div>
+          <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+        </div>
+        }
+      </div>
+    </section>
+    }
+    <div class="min-w-0" [hidden]="presenter.isHydrating()">
+      @switch (presenter.kind) { @case ('delivery-target') {
+      <section class="flex min-w-0 flex-col gap-4" test-id="delivery-target-editor">
+        <symphony-headline
+          header="Destination"
+          description="Use the exact destination name recorded by your delivery provider. Configuration alone does not confirm a deployed version."
+        />
+        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+          <mosaik-textbox
+            test-id="delivery-target-name"
+            [label]="'Display name'"
+            [value]="presenter.deliveryTarget.displayName"
+            (input)="presenter.deliveryTarget.displayName = presenter.eventText()($event)"
+          />
+          <mosaik-select
+            test-id="delivery-target-kind"
+            [label]="'Destination type'"
+            [value]="presenter.deliveryTarget.kind"
+            (selectionChanged)="presenter.selectDeliveryTargetKindCommand.execute($event)"
+          >
+            <mosaik-select-item [value]="'environment'" [label]="'Environment'" />
+            <mosaik-select-item [value]="'release-channel'" [label]="'Release channel'" />
+            <mosaik-select-item [value]="'installation'" [label]="'Installation'" />
+          </mosaik-select>
+          <mosaik-textbox
+            test-id="delivery-target-environment"
+            [label]="presenter.deliveryTarget.kind === 'release-channel' ? 'Release channel name' : presenter.deliveryTarget.kind === 'installation' ? 'Installation destination name' : 'Environment name'"
+            [value]="presenter.deliveryTarget.environment"
+            (input)="presenter.deliveryTarget.environment = presenter.eventText()($event)"
+          />
+        </div>
+        <mosaik-toggle-switch
+          test-id="delivery-target-production"
+          [variant]="'primary'"
+          [isChecked]="presenter.deliveryTarget.production"
+          (checked)="presenter.deliveryTarget.production = true"
+          (unchecked)="presenter.deliveryTarget.production = false"
+        >
+          <mosaik-text
+            slot="label"
+            [text]="'Represents Production at the centre of the orbit'"
+            [wrap]="true"
+          />
+        </mosaik-toggle-switch>
+        @if (presenter.deliveryTarget.production) {
+        <mosaik-choice-group
+          test-id="delivery-target-celestial-body"
+          class="w-full min-w-0"
+          aria-labelledby="delivery-target-celestial-body-label"
+          [name]="'delivery-celestial-body'"
+          [orientation]="'vertical'"
+          [appearance]="'outline'"
+          [variant]="'primary'"
+          [value]="presenter.deliveryTarget.celestialBody"
+          (choiceChanged)="presenter.selectDeliveryCelestialBodyCommand.execute($event)"
+        >
+          <mosaik-text
+            slot="header"
+            id="delivery-target-celestial-body-label"
+            [text]="'Body at the centre of the orbit'"
+            [mosaikTypography]="'subtitle2'"
+            [wrap]="true"
+          />
+          @for (body of [ { value: 'sun', label: 'Sun' }, { value: 'mercury', label: 'Mercury' }, {
+          value: 'venus', label: 'Venus' }, { value: 'earth', label: 'Earth' }, { value: 'mars',
+          label: 'Mars' }, { value: 'jupiter', label: 'Jupiter' }, { value: 'saturn', label:
+          'Saturn' }, { value: 'uranus', label: 'Uranus' }, { value: 'neptune', label: 'Neptune' }
+          ]; track body.value) {
+          <mosaik-choice
+            class="w-full min-w-0"
+            [attr.test-id]="'delivery-body-' + body.value"
+            [value]="body.value"
+            [label]="body.label"
+            [appearance]="'outline'"
+            [variant]="'primary'"
+          >
+            <div slot="label" class="flex min-w-0 items-center gap-3">
+              <img
+                class="h-[64px] w-[96px] shrink-0"
+                [attr.test-id]="'delivery-body-preview-' + body.value"
+                [src]="'orbit/previews/' + body.value + '.png'"
+                width="96"
+                height="64"
+                alt=""
+              />
+              <mosaik-text [text]="body.label" [wrap]="true" />
+            </div>
+          </mosaik-choice>
+          }
+        </mosaik-choice-group>
+        <mosaik-button
+          class="self-start"
+          [label]="'Planet textures: Solar System Scope · CC BY 4.0'"
+          [href]="'https://www.solarsystemscope.com/textures/'"
+          [target]="'_blank'"
+          [appearance]="'plain'"
+          [size]="'small'"
+        />
+        } @if (presenter.duplicateDeliveryTarget()) {
+        <mosaik-hint
+          test-id="delivery-target-duplicate"
+          [textOverflow]="'wrap'"
+          [text]="'This destination is already configured for this project. Edit the existing destination instead.'"
+        />
+        } @if (presenter.deliveryTarget.kind === 'release-channel') {
+        <mosaik-hint
+          [textOverflow]="'wrap'"
+          [text]="'Stable follows GitHub’s latest release. Other channels use .symphony/release-channels.json in the repository.'"
+        />
+        } @else if (presenter.deliveryTarget.kind === 'installation') {
+        <mosaik-hint
+          [textOverflow]="'wrap'"
+          [text]="'An installation needs an explicit installation receipt; a published release is not proof of installation.'"
+        />
+        }
+        <mosaik-expander
+          test-id="delivery-target-workflow-settings"
+          [header]="'Deployment workflow (optional)'"
+          [subHeader]="'Enable starting an exact version from the orbit'"
+        >
+          <div class="flex min-w-0 flex-col gap-4 pt-4">
+            <mosaik-button
+              test-id="delivery-target-load-workflows"
+              [label]="'Load project workflows'"
+              [appearance]="'outline'"
+              [isBusy]="presenter.deliveryWorkflowsBusy()"
+              [disabled]="presenter.deliveryWorkflowsBusy()"
+              (click)="presenter.refreshDeliveryWorkflowsCommand.execute()"
+            />
+            @if (presenter.deliveryWorkflowsError()) {
+            <mosaik-hint
+              test-id="delivery-target-workflows-error"
+              [textOverflow]="'wrap'"
+              [text]="'Workflows could not be loaded. Check this project’s GitHub account under Repositories and retry.'"
+            />
+            }
+            <mosaik-select
+              test-id="delivery-target-workflow"
+              [label]="'Workflow'"
+              [value]="presenter.deliveryTarget.workflowId"
+              (selectionChanged)="presenter.selectDeliveryWorkflowCommand.execute($event)"
+            >
+              <mosaik-select-item [value]="''" [label]="'No deployment workflow'" />
+              @if (presenter.deliveryTarget.workflowId && !presenter.deliveryWorkflowKnown()) {
+              <mosaik-select-item
+                [value]="presenter.deliveryTarget.workflowId"
+                [label]="'Configured workflow (reload to verify)'"
+              />
+              } @for (workflow of presenter.deliveryWorkflows(); track workflow.id) {
+              <mosaik-select-item [value]="workflow.id" [label]="workflow.name" />
+              }
+            </mosaik-select>
+            @if (presenter.deliveryTarget.workflowId) {
+            <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+              <mosaik-textbox
+                test-id="delivery-target-version-input"
+                [label]="'Exact version input (required)'"
+                [value]="presenter.deliveryTarget.versionInput"
+                (input)="presenter.deliveryTarget.versionInput = presenter.eventText()($event)"
+              />
+              <mosaik-textbox
+                test-id="delivery-target-environment-input"
+                [label]="'Destination input (optional)'"
+                [value]="presenter.deliveryTarget.environmentInput"
+                (input)="presenter.deliveryTarget.environmentInput = presenter.eventText()($event)"
+              />
+              <mosaik-textbox
+                test-id="delivery-target-operation-input"
+                [label]="'Operation ID input (optional)'"
+                [value]="presenter.deliveryTarget.operationInput"
+                (input)="presenter.deliveryTarget.operationInput = presenter.eventText()($event)"
+              />
+            </div>
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Enter workflow input names. The operation ID must appear in the workflow run-name so an interrupted start can be reconciled.'"
+            />
+            }
+          </div>
+        </mosaik-expander>
+      </section>
+      } @case ('repository') {
+      <section class="flex min-w-0 flex-col gap-4">
+        <symphony-headline
+          header="GitHub repository"
+          description="Source control identity and GitHub Actions remain explicit and workspace-scoped."
+        />
+        <div class="grid min-w-0 grid-cols-2 gap-4 max-[700px]:grid-cols-1">
+          <mosaik-textbox
+            test-id="repository-display-name"
+            [label]="'Display name'"
+            [value]="presenter.repository.displayName"
+            (input)="presenter.repository.displayName = presenter.eventText()($event)"
+          />
+          <mosaik-filebox
+            test-id="repository-local-path"
+            [label]="'Local checkout'"
+            [value]="presenter.repository.localPath"
+            [directory]="true"
+            [readonly]="true"
+          >
+            <mosaik-button
+              slot="suffix"
+              test-id="choose-repository-local-path"
+              [iconName]="'folder'"
+              [appearance]="'plain'"
+              (click)="presenter.chooseRepositoryDirectoryCommand.execute()"
+            />
+          </mosaik-filebox>
+          <mosaik-textbox
+            test-id="repository-host"
+            [label]="'GitHub hostname'"
+            [value]="presenter.repository.host"
+            (input)="presenter.repository.host = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="repository-account"
+            [label]="'GitHub account login'"
+            [value]="presenter.repository.accountLogin"
+            (input)="presenter.repository.accountLogin = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="repository-owner"
+            [label]="'Owner'"
+            [value]="presenter.repository.owner"
+            (input)="presenter.repository.owner = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="repository-name"
+            [label]="'Repository'"
+            [value]="presenter.repository.name"
+            (input)="presenter.repository.name = presenter.eventText()($event)"
+          />
+          <mosaik-textbox
+            test-id="repository-default-branch"
+            [label]="'Default branch'"
+            [value]="presenter.repository.defaultBranch"
+            (input)="presenter.repository.defaultBranch = presenter.eventText()($event)"
+          />
+          <mosaik-select
+            test-id="repository-git-protocol"
+            [label]="'Git protocol'"
+            [value]="presenter.repository.gitProtocol"
+            (selectionChanged)="presenter.updateRepositoryGitProtocolCommand.execute($event)"
+          >
+            <mosaik-select-item
+              test-id="repository-git-protocol-https"
+              [label]="'HTTPS'"
+              [value]="'https'"
+              (click)="presenter.updateRepositoryGitProtocolCommand.execute('https')"
+            />
+            <mosaik-select-item
+              test-id="repository-git-protocol-ssh"
+              [label]="'SSH'"
+              [value]="'ssh'"
+              (click)="presenter.updateRepositoryGitProtocolCommand.execute('ssh')"
+            />
+          </mosaik-select>
+        </div>
+        @if (presenter.hasCiOperations) {
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          [isChecked]="presenter.repository.ciEnabled"
+          (checked)="presenter.repository.ciEnabled = true"
+          (unchecked)="presenter.repository.ciEnabled = false"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Show GitHub Actions runs'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Include workflow runs from this repository in delivery status.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        @if (presenter.repository.ciEnabled) {
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          test-id="repository-agentic-delivery"
+          [isChecked]="presenter.repository.agenticDeliveryEnabled"
+          (checked)="presenter.repository.agenticDeliveryEnabled = true"
+          (unchecked)="presenter.repository.agenticDeliveryEnabled = false"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Allow agentic delivery for this repository'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Opt this repository into the globally enabled diagnosis, repair, and rerun policy.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        } } @if (presenter.sourceConnectionsAvailable) {
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          [isChecked]="presenter.repository.authenticate"
+          (checked)="presenter.repository.authenticate = true"
+          (unchecked)="presenter.repository.authenticate = false"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Sign in after saving'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Open GitHub browser authentication for this account after the repository is saved.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        }
+        <mosaik-toggle-switch
+          [variant]="'primary'"
+          [isChecked]="presenter.repository.enabled"
+          (checked)="presenter.repository.enabled = true"
+          (unchecked)="presenter.repository.enabled = false"
+        >
+          <div slot="label" class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'Repository enabled'" [wrap]="true" />
+            <mosaik-hint
+              [textOverflow]="'wrap'"
+              [text]="'Allow this repository to receive implementation branches and pull requests.'"
+            />
+          </div>
+        </mosaik-toggle-switch>
+        @if (presenter.hasCiOperations && presenter.hasExistingRepository()) {
+        <mosaik-divider />
+        <div class="flex min-w-0 items-start justify-between gap-2">
+          <div class="flex min-w-0 flex-col gap-1">
+            <mosaik-text [text]="'GitHub Actions usage'" [wrap]="true" [readonly]="true" />
+            <mosaik-text
+              [text]="presenter.githubActionsUsage()?.account | githubActionsAccountLabel"
+              [wrap]="true"
+              [readonly]="true"
+            />
+          </div>
+          <mosaik-button
+            test-id="refresh-github-actions-usage"
+            [iconName]="'sync'"
+            [appearance]="'plain'"
+            [variant]="'primary'"
+            [isBusy]="presenter.continuousIntegrationUsageBusy()"
+            [disabled]="presenter.continuousIntegrationUsageBusy()"
+            [attr.aria-label]="'Refresh GitHub Actions usage'"
+            (click)="presenter.refreshGitHubActionsUsageCommand.execute()"
+          />
+        </div>
+        @if (presenter.continuousIntegrationUsageBusy()) {
+        <mosaik-progress-bar
+          test-id="github-actions-usage-loading"
+          [isIndeterminate]="true"
+          [variant]="'highlight'"
+        />
+        } @else if (presenter.githubActionsUsage()?.error; as usageError) {
+        <mosaik-banner
+          test-id="github-actions-usage-error"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [iconName]="'errorCircle'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header [text]="'GitHub Actions usage unavailable'" />
+          <mosaik-banner-sub-header [text]="usageError" />
+        </mosaik-banner>
+        } @else if (presenter.githubActionsUsage()?.minutes; as minutes) {
+        <div class="flex min-w-0 flex-col gap-2" test-id="github-actions-usage">
+          <div class="flex min-w-0 justify-between gap-2">
+            <mosaik-text [text]="'Monthly usage'" [wrap]="true" [readonly]="true" />
+            <mosaik-text
+              [text]="
+                minutes.remaining !== undefined
+                  ? (minutes.remaining | number) + ' minutes remaining'
+                  : (minutes.used | number) + ' minutes used'
+              "
+              [wrap]="true"
+              [readonly]="true"
+            />
+          </div>
+          @if (minutes.remainingPercent !== undefined) {
+          <mosaik-progress-bar
+            test-id="github-actions-usage-progress"
+            [min]="0"
+            [max]="100"
+            [value]="minutes.remainingPercent"
+            [variant]="(minutes.remaining === 0) | booleanVariant: 'danger' : 'highlight'"
+          />
+          }
+          <mosaik-cell-group test-id="github-actions-usage-details">
+            <mosaik-cell
+              [label]="'Used minutes'"
+              [subLabel]="minutes.used === undefined ? 'Unavailable' : ((minutes.used | number) ?? 'Unavailable')"
+            />
+            <mosaik-cell
+              [label]="'Included minutes'"
+              [subLabel]="minutes.included === undefined ? 'Unavailable' : ((minutes.included | number) ?? 'Unavailable')"
+            />
+            <mosaik-cell
+              [label]="'Remaining minutes'"
+              [subLabel]="minutes.remaining === undefined ? 'Unavailable' : ((minutes.remaining | number) ?? 'Unavailable')"
+            />
+          </mosaik-cell-group>
+          @if (presenter.githubActionsUsage()?.period?.resetsAt; as resetsAt) {
+          <mosaik-text
+            [text]="'Resets ' + (resetsAt | date: 'medium')"
+            [wrap]="true"
+            [readonly]="true"
+          />
+          } @if (minutes.included === undefined) {
+          <mosaik-hint
+            [textOverflow]="'wrap'"
+            [text]="'GitHub reported usage, but the included allowance is not available for this plan.'"
+          />
+          }
+        </div>
+        } }
+      </section>
+      } }
+    </div>
+  </div>
+</ng-template>
+
+<ng-template mosaikDrawerFooter>
+  <div class="flex w-full min-w-0 flex-wrap justify-end gap-2">
+    <mosaik-button
+      test-id="cancel-settings-editor"
+      [label]="'Cancel'"
+      [appearance]="'plain'"
+      (click)="presenter.closeCommand.execute()"
+    />
+
+    <mosaik-button
+      test-id="save-settings-editor"
+      [label]="'Save'"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [isBusy]="presenter.busy()"
+      [disabled]="!presenter.canSave() || presenter.busy() || presenter.editorBusy()"
+      (click)="presenter.saveCommand.execute()"
+    />
+  </div>
+</ng-template>

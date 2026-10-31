@@ -1,0 +1,15 @@
+{
+  "name": "configuration-feedback",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/configuration/features/feedback/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:configuration", "feature:feedback"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/configuration/features/feedback/tsconfig.lib.json --noEmit"
+      }
+    }
+  }
+}
