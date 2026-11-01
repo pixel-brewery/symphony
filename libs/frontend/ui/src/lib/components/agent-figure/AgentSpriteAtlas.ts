@@ -1,4 +1,4 @@
-/** FLAMOX365 / Codex v2 sprite geometry; no application state lives here. @public */
+/** private upstream application / Codex v2 sprite geometry; no application state lives here. @public */
 export const AGENT_SPRITE_ATLAS = {
   columns: 8,
   rows: 11,

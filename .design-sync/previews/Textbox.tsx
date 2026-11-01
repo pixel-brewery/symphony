@@ -17,7 +17,7 @@ export const MultilineInstructions = () => (
       value={
         'Always run yarn agents:check before handoff.\n' +
         'Never commit on inferred approval — ask per step.\n' +
-        'Treat ../flamox and ../mosaik as read-only references.'
+        'Treat $SYMPHONY_REFERENCE_ROOT and ../mosaik as read-only references.'
       }
     />
     <Hint text="Appended below the built-in instructions of the role." />

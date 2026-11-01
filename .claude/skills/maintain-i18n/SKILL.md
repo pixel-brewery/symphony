@@ -13,5 +13,5 @@ Source: [.agents/skills/maintain-i18n/SKILL.md](../../../.agents/skills/maintain
 2. Keep technical identifiers, logs, and developer diagnostics in English.
 3. Use concise task language. Do not add decorative implementation claims, generic health copy, or duplicate explanations.
 4. Preserve placeholders, interpolation variables, plural behavior, and accessibility meaning across locales.
-5. Use `FLAMOX365` and `Edge Connector` exactly where those external product names appear.
+5. Use public product names only. Describe private references generically and use fictional workspace/repository examples; never publish their names, identities or paths.
 6. Run the relevant typecheck, unit tests, and visible UI verification.

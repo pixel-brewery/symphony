@@ -83,7 +83,7 @@ describe('projectPullRequestStates', () => {
     const pullRequests = [
       pullRequest('1', { requestedReviewers: ['RueDeRennes'] }),
       pullRequest('2', { requestedReviewers: ['someone-else', 'ruederennes'] }),
-      pullRequest('3', { requestedReviewers: ['someone-else'], requestedTeams: ['flamox/core'] }),
+      pullRequest('3', { requestedReviewers: ['someone-else'], requestedTeams: ['example/core'] }),
       pullRequest('4', { requestedReviewers: ['RueDeRennes'], state: 'closed' }),
       pullRequest('5'),
     ];

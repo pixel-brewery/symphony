@@ -6,7 +6,7 @@ Use [AGENTS.md](AGENTS.md) as the authoritative repository guide.
 - Read scoped guidance under `.github/instructions/` and `.github/rules/` before changing an owning area.
 - Use `yarn nx` and repository scripts rather than global tooling.
 - Run `yarn agents:check` before handoff.
-- Treat `../flamox` and `../mosaik` as read-only references.
+- Treat `$SYMPHONY_REFERENCE_ROOT` and `../mosaik` as read-only references.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

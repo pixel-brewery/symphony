@@ -46,7 +46,7 @@
     "lint": "nx run-many -t lint",
     "typecheck": "nx run-many -t typecheck",
     "test": "nx run-many -t test",
-    "verify": "yarn agents:check && yarn instruction:check && yarn ui:check && yarn design:md-check && yarn format:check && yarn lint && yarn typecheck && yarn test && yarn build",
+    "verify": "yarn verify:public-content && yarn test:public-content && yarn agents:check && yarn instruction:check && yarn ui:check && yarn design:md-check && yarn format:check && yarn lint && yarn typecheck && yarn test && yarn build",
     "test:e2e": "nx e2e renderer-e2e",
     "e2e": "yarn test:e2e",
     "e2e:visible": "cross-env SYMPHONY_E2E_WINDOW_MODE=visible yarn test:e2e",
@@ -65,7 +65,9 @@
     "release:prepare": "node tools/prepare-update-publication.mjs",
     "update": "GITHUB_TOKEN=\"${GITHUB_TOKEN:-${YARN_NPM_AUTH_TOKEN:-$(gh auth token)}}\" yarn upgrade-interactive",
     "spell": "yarn run cspell-cli --gitignore .",
-    "instruction:check": "node tools/instruction-compliance.mjs --strict"
+    "instruction:check": "node tools/instruction-compliance.mjs --strict",
+    "verify:public-content": "node tools/verify-public-content.mjs",
+    "test:public-content": "node --test tools/verify-public-content.spec.mjs"
   },
   "dependencies": {
     "@angular/cdk": "22.2.4",

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/symphony-hero.png" alt="Symphony posthorn beside an Inbox view with delivery decisions and agent assignments" width="1200" />
+  <img src="resources/icons/symphony.svg" alt="Symphony posthorn" width="160" />
 </p>
 
 # Symphony
@@ -183,7 +183,7 @@ owner, public-visibility and feed activation steps.
 
 ## Repository assistants and portable skills
 
-Repository guidance follows the same synchronized architecture used by the FLAMOX365
+Repository guidance follows the same synchronized architecture used by the private upstream application
 reference, adapted to Symphony's Electron and orchestration boundaries. Editable portable
 skills live in `.agents/skills/`; deterministic ChatGPT-compatible `.skill` archives live
 in `.agents/packages/`. Agent descriptions and scoped rules live under `.github/`, while

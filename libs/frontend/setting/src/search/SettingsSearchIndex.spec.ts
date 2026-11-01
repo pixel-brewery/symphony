@@ -32,7 +32,7 @@ function arrange() {
   const settings = signal({
     ...defaults,
     workspaces: [
-      { ...workspace, id: 'flamox', displayName: 'FLAMOX365' },
+      { ...workspace, id: 'example', displayName: 'Example Workspace' },
       { ...workspace, id: 'personal', displayName: 'Personal' },
     ],
   });
@@ -161,7 +161,7 @@ describe('SettingsSearchIndex', () => {
     expect(breadcrumbs).toContain('Automation');
     expect(breadcrumbs).toContain('Automation › Fix failed checks › Budgets');
     expect(breadcrumbs).toContain('Mobile access › Paired');
-    expect(breadcrumbs).toContain('FLAMOX365 › Connected services');
+    expect(breadcrumbs).toContain('Example Workspace › Connected services');
     expect(breadcrumbs).toContain('Personal › Connected services');
   });
 
@@ -174,7 +174,7 @@ describe('SettingsSearchIndex', () => {
     const intake = index.search('intake').flatMap((group) => group.results);
 
     // assert
-    expect(tokens.map((entry) => entry.workspaceId)).toEqual(['flamox', 'personal']);
+    expect(tokens.map((entry) => entry.workspaceId)).toEqual(['example', 'personal']);
     expect(intake.map((entry) => entry.workspaceId)).toEqual(['personal']);
   });
 

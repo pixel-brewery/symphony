@@ -55,7 +55,7 @@ function cleanUrl(href: string): string | null {
 
 /**
  * Creates the `marked` renderer that emits Mosaik elements instead of bare HTML, mirroring
- * FLAMOX365's `createMarkedRenderer` element for element. Inline content is resolved by `marked`
+ * private upstream application's `createMarkedRenderer` element for element. Inline content is resolved by `marked`
  * and slotted into those elements rather than handed back to Mosaik's own Markdown formatter,
  * because Symphony renders tracker and agent output that nobody in this repository authored.
  */

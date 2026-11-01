@@ -27,7 +27,7 @@ const workspaceRail = (
       <Text text="3 worktrees · 8.2 GB" variant="neutral" wrap />
     </ListItem>
     <ListItem ripple={false}>
-      <Text text="flamox365" wrap />
+      <Text text="example-workspace" wrap />
       <Text text="1 worktree · 2.4 GB" variant="neutral" wrap />
     </ListItem>
     <ListItem ripple={false}>

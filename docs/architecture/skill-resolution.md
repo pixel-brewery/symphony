@@ -14,6 +14,6 @@ The action and orchestrator choose the phase; a skill never infers or declares i
 
 The renderer reflects the same resolution contract instead of guessing from skill names. Manual is always the initial segment and uses the primary presentation. `With AI` is a separate highlighted segment; an assigned role names the selected package, while an unassigned role disables only that AI execution and offers `Open Skills`, which opens Settings › Skills, as the corrective action. AI-originated results display the package recorded on their immutable execution; manual results are labeled as manually recorded.
 
-No locally inspected FLAMOX365 skill body is copied. Existing skills inform responsibility boundaries and can be imported intact through the standard package architecture.
+No locally inspected private upstream application skill body is copied. Existing skills inform responsibility boundaries and can be imported intact through the standard package architecture.
 
 Symphony's repository-local assistant skills live at `.agents/skills` and are therefore discovered when this repository is the active source. Generated wrapper skills make scoped repository agents, instructions, prompts, and rules discoverable without duplicating their bodies. See [repository AI configuration](repository-ai-configuration/README.md) for source ownership and synchronization.

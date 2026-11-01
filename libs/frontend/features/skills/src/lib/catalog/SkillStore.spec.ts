@@ -57,7 +57,7 @@ function createFixture() {
     ],
   });
   const teams = [
-    { workspaceName: 'FLAMOX365', team },
+    { workspaceName: 'Example Workspace', team },
     { workspaceName: 'Personal', team: otherTeam },
   ];
   const workspaceTeams = computed(() =>

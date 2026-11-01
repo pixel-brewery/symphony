@@ -28,7 +28,7 @@ import { escapeMarkdownText } from './escapeMarkdownText';
 
 /**
  * The authored Markdown dialect that `@pixel-brewery/markdowner-core` adds on top of
- * GitHub-flavored Markdown, rendered with the same Mosaik compositions FLAMOX365 uses:
+ * GitHub-flavored Markdown, rendered with the same Mosaik compositions private upstream application uses:
  * `::: splits`, `::: callout`, `> [!TYPE]`, fenced code, `::: tabs`, `::: steps`,
  * `::: details`, `::: button` and `::: card`.
  *
@@ -86,7 +86,7 @@ export function createMarkdownExtensions(
         if (language === 'mermaid') {
           return `<div class="code diagram mermaid">${escapeMarkdownAttribute(code.text)}</div>`;
         }
-        // FLAMOX365 emits `mosaik-code-editor` here; no Mosaik release defines that element, so
+        // private upstream application emits `mosaik-code-editor` here; no Mosaik release defines that element, so
         // the fence would render empty. `mosaik-code` is the Mosaik element that actually shows
         // the code, and the block styling lives in the component stylesheet.
         const fileName = code.meta?.fileName;

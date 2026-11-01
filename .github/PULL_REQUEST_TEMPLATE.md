@@ -22,8 +22,8 @@
 
 <!-- Renderer changes only. Delete this section otherwise. -->
 
-<!-- Which FLAMOX365 or Mosaik reference did you inspect, and was the decision
-     Adopt, Adapt, or Differ? Record it in docs/architecture/frontend-reference-flamox.md.
+<!-- Which private upstream application or Mosaik reference did you inspect, and was the decision
+     Adopt, Adapt, or Differ? Record it in docs/architecture/frontend-reference/README.md.
      If you do not have access to the reference checkouts, say so here. -->
 
 ## Screenshots

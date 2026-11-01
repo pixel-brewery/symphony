@@ -49,7 +49,7 @@ export const FailureEntry = () => (
         <Stack orientation="vertical" gap="small">
           <Text text="Analysis failed before the worktree was created" wrap />
           <Code text="ENAMETOOLONG: unix socket path exceeds 104 characters" variant="danger" />
-          <Text text="Symphony · 09:14 · workspace flamox365" variant="neutral" wrap />
+          <Text text="Symphony · 09:14 · workspace example-workspace" variant="neutral" wrap />
         </Stack>
       </TimelineContent>
     </TimelineItem>

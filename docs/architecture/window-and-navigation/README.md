@@ -305,4 +305,4 @@ Die Dichte wird ausschließlich über öffentliche Custom Properties der Mosaik-
 - [Einstellungen im Hauptfenster](settings.md)
 - [Größenveränderbare Bereiche und Scroll-Eingrenzung](resizable-panes.md)
 - [Anwendungsupdates](../application-updates/README.md)
-- [FLAMOX365-Referenzabgleich](../frontend-reference-flamox.md#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download) und [Einstellungen im Hauptfenster, größenveränderbare Bereiche](../frontend-reference-flamox.md#2026-10-31-settings-in-the-main-window-and-resizable-panes)
+- [private upstream application-Referenzabgleich](../frontend-reference/README.md#2026-10-31-macos-window-chrome-settings-window-and-in-app-update-download) und [Einstellungen im Hauptfenster, größenveränderbare Bereiche](../frontend-reference/README.md#2026-10-31-settings-in-the-main-window-and-resizable-panes)

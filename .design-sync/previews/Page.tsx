@@ -35,7 +35,7 @@ export const BoardPage = () => (
 
 export const PageWithPreContent = () => (
   <Page>
-    <PageHeader text="Deliveries" subText="flamox365 / symphony" inset="all" />
+    <PageHeader text="Deliveries" subText="example-workspace / symphony" inset="all" />
     <PagePreContent inset="horizontal">
       <Banner
         isOpen
@@ -68,7 +68,7 @@ export const PageWithFooter = () => (
       <Stack orientation="vertical" gap="small">
         <Text text="symphony · 8.2 GB" wrap />
         <Text text="mosaik · 6.1 GB" wrap />
-        <Text text="flamox · 4.1 GB" wrap />
+        <Text text="example · 4.1 GB" wrap />
       </Stack>
     </PageContent>
     <Stack slot="footer" orientation="horizontal" gap="small" horizontalAlignment="right">

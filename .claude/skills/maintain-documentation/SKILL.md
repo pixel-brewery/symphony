@@ -15,5 +15,5 @@ Apply [symphony-docs](../symphony-docs/SKILL.md) for functional documentation un
 2. Update the existing owning document instead of creating a competing overview.
 3. Keep the platform generic and distinguish implemented behavior, simulated adapters, planned work, and unverified external integrations.
 4. Update diagrams, paths, commands, invariants, and acceptance notes together.
-5. Use `FLAMOX365` exactly for the reference product and `Edge Connector` exactly for that product; do not combine the names.
+5. Use public product names only. Describe private references generically and use fictional workspace/repository examples; never publish their names, identities or paths.
 6. Remove stale claims and placeholders. Keep documentation concise enough to remain maintainable.

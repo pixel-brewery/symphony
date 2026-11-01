@@ -15,10 +15,10 @@ const workItem: IWorkItem = {
   sourceId: 'source-1',
   workspaceId: 'personal',
   provider: 'github-projects',
-  repository: 'ruederennes/flamox',
+  repository: 'example/project',
   title: 'CR-0010',
   state: 'qualified',
-  url: 'https://github.com/ruederennes/flamox/issues/24',
+  url: 'https://github.com/example/project/issues/24',
 } as unknown as IWorkItem;
 
 describe('WorkTrackerRouter', () => {
@@ -171,7 +171,7 @@ function routerFor(
             workspaceId: 'personal',
             connectionId: 'connection-1',
             provider: 'github-projects',
-            displayName: 'FLAMOX365',
+            displayName: 'Example Workspace',
             ownerType: 'user',
             owner: 'ruederennes',
             projectNumber: 1,

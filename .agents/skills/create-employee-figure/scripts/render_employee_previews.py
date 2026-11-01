@@ -13,7 +13,7 @@ import sys
 from PIL import Image, ImageDraw, ImageFont
 
 ROWS = {
-    # FLAMOX/Symphony slows the breathing row by six; preserve runtime timing.
+    # private upstream application/Symphony slows the breathing row by six; preserve runtime timing.
     "idle": [duration * 6 for duration in (280, 110, 110, 140, 140, 320)],
     "running-right": [120] * 7 + [220],
     "running-left": [120] * 7 + [220],

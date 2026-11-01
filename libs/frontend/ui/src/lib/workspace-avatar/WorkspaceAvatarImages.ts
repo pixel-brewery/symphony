@@ -8,7 +8,7 @@ import type { WorkspaceAvatarSource } from './WorkspaceAvatarSource';
 
 // #endregion
 
-/** Composes the FLAMOX icon, emoji and monogram preview for workspace identities. @public */
+/** Composes the private upstream application icon, emoji and monogram preview for workspace identities. @public */
 @Injectable({ providedIn: 'root' })
 export class WorkspaceAvatarImages {
   // #region Fields

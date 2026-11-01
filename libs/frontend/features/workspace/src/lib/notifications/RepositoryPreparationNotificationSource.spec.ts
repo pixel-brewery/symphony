@@ -45,8 +45,8 @@ function arrange(automatic: readonly string[] = []) {
   const settings = {
     ...defaults,
     repositoryBindings: [
-      repository('flamox'),
-      repository('flamox-mobile'),
+      repository('example'),
+      repository('example-mobile'),
       repository('archived', false),
     ],
   } as unknown as ApplicationSettingsDto;
@@ -59,8 +59,8 @@ function arrange(automatic: readonly string[] = []) {
   };
   const client = {
     request: vi.fn(async () => [
-      status('flamox', true),
-      status('flamox-mobile', false),
+      status('example', true),
+      status('example-mobile', false),
       status('archived', false),
     ]),
   };
@@ -89,7 +89,7 @@ describe('RepositoryPreparationNotificationSource', () => {
 
   it('reports enabled repositories confirmed as unprepared once their state is read', async () => {
     // arrange
-    const { source, client } = arrange(['flamox-mobile']);
+    const { source, client } = arrange(['example-mobile']);
     // act
     const before = source.items();
     await source.refresh();
@@ -98,9 +98,9 @@ describe('RepositoryPreparationNotificationSource', () => {
     expect(client.request).toHaveBeenCalledWith('repositories.runtime.list', {});
     expect(source.items()).toEqual([
       {
-        id: 'repository-preparation:flamox-mobile',
+        id: 'repository-preparation:example-mobile',
         severity: 'warning',
-        title: 'flamox-mobile is not prepared locally',
+        title: 'example-mobile is not prepared locally',
         location: ['Personal', 'Repositories'],
         detail: 'automatic AI work waits for it',
         scope: { kind: 'workspace', workspaceId: 'personal', name: 'Personal' },
@@ -122,10 +122,10 @@ describe('RepositoryPreparationNotificationSource', () => {
     const { source, runtime } = arrange();
     await source.refresh();
     // act
-    await source.perform('repository-preparation:flamox-mobile', 'prepare');
-    runtime.repositoryRuntimeBusy.set('flamox-mobile');
+    await source.perform('repository-preparation:example-mobile', 'prepare');
+    runtime.repositoryRuntimeBusy.set('example-mobile');
     // assert
-    expect(runtime.prepareRepository).toHaveBeenCalledExactlyOnceWith('flamox-mobile');
+    expect(runtime.prepareRepository).toHaveBeenCalledExactlyOnceWith('example-mobile');
     expect(source.items()[0]?.detail).toBe('AI work in it waits until it is');
     expect(source.items()[0]?.actions[0]).toMatchObject({ busy: true, disabled: true });
   });

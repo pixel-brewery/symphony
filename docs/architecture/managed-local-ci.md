@@ -57,9 +57,9 @@ The existing job `name` remains unchanged, so a required branch-protection conte
 
 The VM has outbound network access because checkout, package installation, GitHub Actions, Playwright browser installation, and job services require it. It has no host filesystem mounts and receives no Symphony AI/provider credentials. Workflow secrets and the per-job GitHub token retain GitHub's normal event and repository policy.
 
-## Required FLAMOX365 repository patch
+## Required private upstream application repository patch
 
-In the read-only FLAMOX365 reference, `.github/workflows/ci.yml` is the only product-repository file that must change for this integration:
+In the read-only private upstream application reference, `.github/workflows/ci.yml` is the only product-repository file that must change for this integration:
 
 - Replace `runs-on: ubuntu-latest` on `ci`, `e2e`, and `e2e-result` with the four-label block above. Keep `name: Format, Lint, Typecheck & Test` unchanged because branch protection requires that exact check.
 - Make the actionlint download architecture-aware. Map `x86_64` to `amd64` with SHA-256 `8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8`, and `aarch64`/`arm64` to `arm64` with SHA-256 `325e971b6ba9bfa504672e29be93c24981eeb1c07576d730e9f7c8805afff0c6`.

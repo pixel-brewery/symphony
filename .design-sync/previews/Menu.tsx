@@ -10,7 +10,7 @@ export const SettingsNavigation = () => (
       isActive
       isExpanded
     >
-      <MenuItem label="FLAMOX365" subLabel="FLX" textOverflow="wrap" isActive />
+      <MenuItem label="Example Workspace" subLabel="FLX" textOverflow="wrap" isActive />
       <MenuItem label="Symphony" subLabel="SYM" textOverflow="wrap" />
     </MenuItem>
     <MenuItem

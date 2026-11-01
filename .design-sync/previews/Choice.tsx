@@ -98,7 +98,7 @@ export const RichLabelSlots = () => (
       </Choice>
       <Choice value="azure" appearance="outline" variant="primary" icon="azureDevOps">
         <Stack slot="label" orientation="horizontal" gap="small" verticalAlignment="center">
-          <Text text="flamox365/platform-engine" />
+          <Text text="example-workspace/platform-engine" />
           <Badge appearance="soft" variant="warning" label="Token expires in 3 days" size="small" />
         </Stack>
         <Text

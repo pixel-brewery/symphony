@@ -12,7 +12,7 @@ import { WorkItemRelationAssessor } from './WorkItemRelationAssessor';
 // #endregion
 
 const assessedAt = '2026-08-24T10:00:00.000Z';
-const workingDirectory = '/repositories/flamox-invoices';
+const workingDirectory = '/repositories/example-invoices';
 const revisions: Readonly<Record<string, number>> = { 'item-1': 3, 'item-2': 1 };
 
 function workItem(id: string, overrides: Partial<IWorkItem> = {}): IWorkItem {
@@ -23,7 +23,7 @@ function workItem(id: string, overrides: Partial<IWorkItem> = {}): IWorkItem {
     title: `Work item ${id}`,
     body: 'Adjust the shared invoice export.',
     provider: 'github',
-    repository: 'flamox/invoices',
+    repository: 'example/invoices',
     labels: [],
     assignees: [],
     ...overrides,

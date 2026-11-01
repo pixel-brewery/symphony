@@ -42,7 +42,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
         if (command.endsWith('git')) {
           const gitArguments = arguments_.slice(2);
           if (gitArguments[0] === 'branch') return branch;
-          if (gitArguments[0] === 'remote') return 'https://github.com/FLAMOX/Platform.git';
+          if (gitArguments[0] === 'remote') return 'https://github.com/EXAMPLE/Platform.git';
           if (gitArguments[0] === 'status') return ' M libs/example.ts';
           if (gitArguments[0] === 'rev-parse') return 'base-commit';
           if (gitArguments[0] === 'rev-list') return '1';
@@ -53,7 +53,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
         if (path.endsWith('/pulls')) {
           return JSON.stringify({
             number: 42,
-            html_url: 'https://github.com/flamox/platform/pull/42',
+            html_url: 'https://github.com/example/platform/pull/42',
           });
         }
         return '';
@@ -78,12 +78,12 @@ describe('GitHubCloudProvider pull-request delivery', () => {
           id: 'work-item-41',
           workspaceId: 'personal',
           externalId: 'CR-0041',
-          externalUrl: 'https://github.com/flamox/platform/issues/41',
+          externalUrl: 'https://github.com/example/platform/issues/41',
           title: 'Translate tenant administrator dialog',
           body: '',
           stageId: 'progress',
           provider: 'github-projects',
-          repository: 'flamox/platform',
+          repository: 'example/platform',
           repositoryBindingIds: ['repository-1'],
           labels: [],
           assignees: [],
@@ -95,12 +95,12 @@ describe('GitHubCloudProvider pull-request delivery', () => {
       id: 'work-item-40',
       workspaceId: 'personal',
       externalId: 'CR-0040',
-      externalUrl: 'https://github.com/flamox/platform/issues/40',
+      externalUrl: 'https://github.com/example/platform/issues/40',
       title: 'Activate tenant administrator reliably',
       body: '',
       stageId: 'progress',
       provider: 'github-projects',
-      repository: 'flamox/platform',
+      repository: 'example/platform',
       repositoryBindingIds: ['repository-1'],
       labels: [],
       assignees: [],
@@ -109,8 +109,8 @@ describe('GitHubCloudProvider pull-request delivery', () => {
     // assert
     await expect(provider.publishPullRequest(execution, workItem)).resolves.toEqual({
       number: 42,
-      externalUrl: 'https://github.com/flamox/platform/pull/42',
-      branchUrl: 'https://github.com/flamox/platform/tree/codex/work-40-mandantenadministrator',
+      externalUrl: 'https://github.com/example/platform/pull/42',
+      branchUrl: 'https://github.com/example/platform/tree/codex/work-40-mandantenadministrator',
     });
     expect(commands).toEqual(
       expect.arrayContaining([
@@ -179,7 +179,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
         if (command.endsWith('git')) {
           const gitArguments = arguments_.slice(2);
           if (gitArguments[0] === 'branch') return branch;
-          if (gitArguments[0] === 'remote') return 'https://github.com/flamox/platform.git';
+          if (gitArguments[0] === 'remote') return 'https://github.com/example/platform.git';
           if (gitArguments[0] === 'status') return '';
           if (gitArguments[0] === 'rev-parse') return 'base-commit';
           if (gitArguments[0] === 'rev-list') return '1';
@@ -190,7 +190,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
           return JSON.stringify([
             {
               number: 42,
-              html_url: 'https://github.com/flamox/platform/pull/42',
+              html_url: 'https://github.com/example/platform/pull/42',
               body: 'Reviewer notes that must survive.',
             },
           ]);
@@ -205,7 +205,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
     ).resolves.toMatchObject({ number: 42 });
 
     const patch = commands.find((command) => command.arguments_.includes('PATCH'));
-    expect(patch?.arguments_.at(-1)).toBe('repos/flamox/platform/pulls/42');
+    expect(patch?.arguments_.at(-1)).toBe('repos/example/platform/pulls/42');
     expect(patch?.arguments_.find((argument) => argument.startsWith('body='))).toBe(
       'body=Reviewer notes that must survive.\n\nCloses #40',
     );
@@ -229,7 +229,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
         if (command.endsWith('git')) {
           const gitArguments = arguments_.slice(2);
           if (gitArguments[0] === 'branch') return branch;
-          if (gitArguments[0] === 'remote') return 'https://github.com/flamox/platform.git';
+          if (gitArguments[0] === 'remote') return 'https://github.com/example/platform.git';
           if (gitArguments[0] === 'status') return '';
           if (gitArguments[0] === 'rev-parse') return 'base-commit';
           if (gitArguments[0] === 'rev-list') return '1';
@@ -240,7 +240,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
           return JSON.stringify([
             {
               number: 42,
-              html_url: 'https://github.com/flamox/platform/pull/42',
+              html_url: 'https://github.com/example/platform/pull/42',
               body: 'Done.\n\nFixes #40',
             },
           ]);
@@ -273,7 +273,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
         if (command.endsWith('git')) {
           const gitArguments = arguments_.slice(2);
           if (gitArguments[0] === 'branch') return branch;
-          if (gitArguments[0] === 'remote') return 'https://github.com/flamox/platform.git';
+          if (gitArguments[0] === 'remote') return 'https://github.com/example/platform.git';
           if (gitArguments[0] === 'status') return '';
           if (gitArguments[0] === 'rev-parse') return 'base-commit';
           if (gitArguments[0] === 'rev-list') return '1';
@@ -284,7 +284,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
         if (path.endsWith('/pulls')) {
           return JSON.stringify({
             number: 43,
-            html_url: 'https://github.com/flamox/platform/pull/43',
+            html_url: 'https://github.com/example/platform/pull/43',
           });
         }
         return '{}';
@@ -294,7 +294,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
     await provider.publishPullRequest(deliveryExecution(workspacePath, branch), {
       ...issueWorkItem(),
       provider: 'azure-devops',
-      externalUrl: 'https://dev.azure.com/flamox/Platform/_workitems/edit/40',
+      externalUrl: 'https://dev.azure.com/example/Platform/_workitems/edit/40',
     });
 
     // act
@@ -303,7 +303,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
       ?.arguments_.find((argument) => argument.startsWith('body='));
     // A keyword GitHub cannot resolve would claim a link that does not exist.
     // assert
-    expect(body).toContain('Issue: https://dev.azure.com/flamox/Platform/_workitems/edit/40');
+    expect(body).toContain('Issue: https://dev.azure.com/example/Platform/_workitems/edit/40');
     expect(body).not.toContain('Closes');
   });
 
@@ -319,7 +319,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
         commands.push({ command: basename(command), arguments_ });
         return JSON.stringify({
           number: 42,
-          html_url: 'https://github.com/flamox/platform/pull/42',
+          html_url: 'https://github.com/example/platform/pull/42',
           state: 'closed',
           draft: false,
           merged_at: '2026-08-12T08:30:00Z',
@@ -338,8 +338,8 @@ describe('GitHubCloudProvider pull-request delivery', () => {
       startedAt: '2026-08-12T08:00:00Z',
       pullRequest: {
         number: 42,
-        externalUrl: 'https://github.com/flamox/platform/pull/42',
-        branchUrl: 'https://github.com/flamox/platform/tree/codex/issue-42',
+        externalUrl: 'https://github.com/example/platform/pull/42',
+        branchUrl: 'https://github.com/example/platform/tree/codex/issue-42',
       },
     };
     // act
@@ -351,7 +351,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
       body: '',
       stageId: 'acceptance',
       provider: 'github-projects',
-      repository: 'flamox/platform',
+      repository: 'example/platform',
       repositoryBindingIds: ['repository-1'],
       labels: [],
       assignees: [],
@@ -366,7 +366,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
     expect(commands).toEqual([
       expect.objectContaining({
         command: 'gh',
-        arguments_: expect.arrayContaining(['--method', 'GET', 'repos/flamox/platform/pulls/42']),
+        arguments_: expect.arrayContaining(['--method', 'GET', 'repos/example/platform/pulls/42']),
       }),
     ]);
   });
@@ -382,7 +382,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
       execute: async () =>
         JSON.stringify({
           number: 42,
-          html_url: 'https://github.com/flamox/platform/pull/42',
+          html_url: 'https://github.com/example/platform/pull/42',
           state: 'open',
           draft: false,
           merged_at: null,
@@ -400,8 +400,8 @@ describe('GitHubCloudProvider pull-request delivery', () => {
       startedAt: '2026-08-12T08:00:00Z',
       pullRequest: {
         number: 42,
-        externalUrl: 'https://github.com/flamox/platform/pull/42',
-        branchUrl: 'https://github.com/flamox/platform/tree/codex/issue-42',
+        externalUrl: 'https://github.com/example/platform/pull/42',
+        branchUrl: 'https://github.com/example/platform/tree/codex/issue-42',
       },
     };
 
@@ -436,8 +436,8 @@ describe('GitHubCloudProvider pull-request delivery', () => {
       workspaceReference: 'codex/issue-42',
       pullRequest: {
         number: 42,
-        externalUrl: 'https://github.com/flamox/platform/pull/42',
-        branchUrl: 'https://github.com/flamox/platform/tree/codex/issue-42',
+        externalUrl: 'https://github.com/example/platform/pull/42',
+        branchUrl: 'https://github.com/example/platform/tree/codex/issue-42',
       },
     };
 
@@ -453,7 +453,7 @@ describe('GitHubCloudProvider pull-request delivery', () => {
           'PUT',
           '--raw-field',
           'expected_head_sha=abc123',
-          'repos/flamox/platform/pulls/42/update-branch',
+          'repos/example/platform/pulls/42/update-branch',
         ]),
       }),
     ]);
@@ -475,7 +475,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
         requests.push(path);
         const pullRequest = {
           number: 203,
-          html_url: 'https://github.com/flamox/platform/pull/203',
+          html_url: 'https://github.com/example/platform/pull/203',
           title: 'Restore user invitation save action',
           state: 'open' as const,
           draft: false,
@@ -505,14 +505,14 @@ describe('GitHubCloudProvider pull-request collection', () => {
         sourceBranch: 'fix/user-invitation',
         targetBranch: 'main',
         baseBranchStatus: 'behind',
-        externalUrl: 'https://github.com/flamox/platform/pull/203',
+        externalUrl: 'https://github.com/example/platform/pull/203',
         createdAt: '2026-08-14T13:34:38Z',
         updatedAt: '2026-08-14T14:20:00Z',
       },
     ]);
     expect(requests).toEqual([
-      'repos/flamox/platform/pulls?state=open&per_page=100&page=1',
-      'repos/flamox/platform/pulls/203',
+      'repos/example/platform/pulls?state=open&per_page=100&page=1',
+      'repos/example/platform/pulls/203',
     ]);
   });
 
@@ -526,7 +526,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
         JSON.stringify([
           {
             number: 205,
-            html_url: 'https://github.com/flamox/platform/pull/205',
+            html_url: 'https://github.com/example/platform/pull/205',
             title: 'Export the audit log',
             state: 'open',
             draft: false,
@@ -536,7 +536,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
             base: { ref: 'main' },
             requested_reviewers: [{ login: 'RueDeRennes', id: 7 }, { login: ' ' }, {}],
             requested_teams: [
-              { slug: 'reviewers', organization: { login: 'flamox' } },
+              { slug: 'reviewers', organization: { login: 'example' } },
               { slug: 'platform' },
             ],
             created_at: '2026-08-14T13:34:38Z',
@@ -544,7 +544,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
           },
           {
             number: 206,
-            html_url: 'https://github.com/flamox/platform/pull/206',
+            html_url: 'https://github.com/example/platform/pull/206',
             title: 'Nobody asked',
             state: 'open',
             draft: true,
@@ -567,7 +567,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
     expect(pullRequests[0]).toMatchObject({
       number: 205,
       requestedReviewers: ['RueDeRennes'],
-      requestedTeams: ['flamox/reviewers', 'flamox/platform'],
+      requestedTeams: ['example/reviewers', 'example/platform'],
     });
     expect(pullRequests[1]).not.toHaveProperty('requestedReviewers');
     expect(pullRequests[1]).not.toHaveProperty('requestedTeams');
@@ -584,7 +584,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
       mergeability: Partial<{ mergeable: boolean | null; mergeable_state: string }>,
     ) => ({
       number,
-      html_url: `https://github.com/flamox/platform/pull/${number}`,
+      html_url: `https://github.com/example/platform/pull/${number}`,
       title: `Pull request #${number}`,
       state: 'open' as const,
       draft: false,
@@ -623,8 +623,8 @@ describe('GitHubCloudProvider pull-request collection', () => {
       expect.objectContaining({ number: 203, baseBranchStatus: 'conflicting' }),
     ]);
     expect(requests).toEqual([
-      'repos/flamox/platform/pulls?state=open&per_page=100&page=1',
-      'repos/flamox/platform/pulls/204',
+      'repos/example/platform/pulls?state=open&per_page=100&page=1',
+      'repos/example/platform/pulls/204',
     ]);
   });
 
@@ -643,7 +643,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
         reads += 1;
         return JSON.stringify({
           number: 203,
-          html_url: 'https://github.com/flamox/platform/pull/203',
+          html_url: 'https://github.com/example/platform/pull/203',
           title: 'Restore user invitation save action',
           state: 'open',
           draft: false,
@@ -674,7 +674,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
         'PUT',
         '--raw-field',
         'expected_head_sha=old-head',
-        'repos/flamox/platform/pulls/203/update-branch',
+        'repos/example/platform/pulls/203/update-branch',
       ]),
     );
   });
@@ -690,7 +690,7 @@ describe('GitHubCloudProvider pull-request collection', () => {
         commands.push([...arguments_]);
         return JSON.stringify({
           number: 203,
-          html_url: 'https://github.com/flamox/platform/pull/203',
+          html_url: 'https://github.com/example/platform/pull/203',
           title: 'Restore user invitation save action',
           state: 'open',
           draft: false,
@@ -805,7 +805,7 @@ describe('GitHubCloudProvider workflow catalog', () => {
                 name: 'PR Quality',
                 path: '.github/workflows/ci.yml',
                 state: 'active',
-                html_url: 'https://github.com/flamox/platform/actions/workflows/ci.yml',
+                html_url: 'https://github.com/example/platform/actions/workflows/ci.yml',
               },
               {
                 id: 102,
@@ -1178,11 +1178,11 @@ describe('GitHubCloudProvider Actions usage', () => {
       now: () => new Date('2026-08-14T12:00:00.000Z'),
       execute: async (_command, arguments_) => {
         const path = arguments_.at(-1) ?? '';
-        if (path === 'repos/flamox/platform') {
-          return JSON.stringify({ owner: { login: 'flamox', type: 'Organization' } });
+        if (path === 'repos/example/platform') {
+          return JSON.stringify({ owner: { login: 'example', type: 'Organization' } });
         }
-        if (path === 'orgs/flamox') return JSON.stringify({ plan: { name: 'team' } });
-        if (path.startsWith('organizations/flamox/settings/billing/usage/summary?')) {
+        if (path === 'orgs/example') return JSON.stringify({ plan: { name: 'team' } });
+        if (path.startsWith('organizations/example/settings/billing/usage/summary?')) {
           return JSON.stringify({
             usageItems: [
               {
@@ -1214,7 +1214,7 @@ describe('GitHubCloudProvider Actions usage', () => {
     await expect(provider.readUsage(['repository-1'])).resolves.toEqual([
       {
         repositoryBindingId: 'repository-1',
-        account: { type: 'organization', login: 'flamox', planName: 'team' },
+        account: { type: 'organization', login: 'example', planName: 'team' },
         period: {
           startedAt: '2026-08-01T00:00:00.000Z',
           resetsAt: '2026-09-01T00:00:00.000Z',
@@ -1239,11 +1239,11 @@ describe('GitHubCloudProvider Actions usage', () => {
       now: () => new Date('2026-08-14T12:00:00.000Z'),
       execute: async (_command, arguments_) => {
         const path = arguments_.at(-1) ?? '';
-        if (path === 'repos/flamox/platform') {
-          return JSON.stringify({ owner: { login: 'flamox', type: 'Organization' } });
+        if (path === 'repos/example/platform') {
+          return JSON.stringify({ owner: { login: 'example', type: 'Organization' } });
         }
-        if (path === 'orgs/flamox') return JSON.stringify({ plan: { name: 'business' } });
-        if (path.startsWith('organizations/flamox/settings/billing/usage/summary?')) {
+        if (path === 'orgs/example') return JSON.stringify({ plan: { name: 'business' } });
+        if (path.startsWith('organizations/example/settings/billing/usage/summary?')) {
           return JSON.stringify({
             usageItems: [
               {
@@ -1425,7 +1425,7 @@ describe('GitHubCloudProvider Action details', () => {
                 name: 'Quality',
                 status: 'in_progress',
                 started_at: '2026-08-15T08:00:00Z',
-                html_url: 'https://github.com/flamox/platform/actions/runs/203/job/44',
+                html_url: 'https://github.com/example/platform/actions/runs/203/job/44',
                 steps: [
                   {
                     number: 1,
@@ -1492,7 +1492,7 @@ describe('GitHubCloudProvider Action details', () => {
           name: 'Quality',
           status: 'in-progress',
           startedAt: '2026-08-15T08:00:00Z',
-          externalUrl: 'https://github.com/flamox/platform/actions/runs/203/job/44',
+          externalUrl: 'https://github.com/example/platform/actions/runs/203/job/44',
           steps: [
             {
               id: 'ci-1:203:job:44:step:1',
@@ -1538,7 +1538,7 @@ describe('GitHubCloudProvider Action details', () => {
       ],
     });
     expect(requests).toContain(
-      'repos/flamox/platform/actions/runs/203/jobs?filter=all&per_page=100',
+      'repos/example/platform/actions/runs/203/jobs?filter=all&per_page=100',
     );
   });
 
@@ -1568,7 +1568,7 @@ describe('GitHubCloudProvider Action details', () => {
                 conclusion: 'failure',
                 startedAt: '2026-08-16T05:00:00Z',
                 completedAt: '2026-08-16T05:12:00Z',
-                url: 'https://github.com/flamox/platform/actions/runs/203/job/44',
+                url: 'https://github.com/example/platform/actions/runs/203/job/44',
                 steps: [
                   {
                     number: 1,
@@ -1810,7 +1810,7 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
         if (path.startsWith('repos/unavailable/project/')) {
           throw new Error('gh: Not Found (HTTP 404)');
         }
-        if (path === 'repos/flamox/platform/actions/runs?per_page=50') {
+        if (path === 'repos/example/platform/actions/runs?per_page=50') {
           return JSON.stringify({
             workflow_runs: [
               {
@@ -1823,7 +1823,7 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
             ],
           });
         }
-        if (path === 'repos/flamox/platform/actions/runs/203/jobs?filter=all&per_page=100') {
+        if (path === 'repos/example/platform/actions/runs/203/jobs?filter=all&per_page=100') {
           return JSON.stringify({
             jobs: [
               {
@@ -1846,8 +1846,8 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
       expect.objectContaining({ id: 'ci-1:203', workspaceId: 'personal', status: 'queued' }),
     ]);
     expect(requests).toEqual([
-      'repos/flamox/platform/actions/runs?per_page=50',
-      'repos/flamox/platform/actions/runs/203/jobs?filter=all&per_page=100',
+      'repos/example/platform/actions/runs?per_page=50',
+      'repos/example/platform/actions/runs/203/jobs?filter=all&per_page=100',
     ]);
   });
 
@@ -1993,8 +1993,8 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
     expect(
       requests.filter((request) => request.method === 'POST').map((request) => request.path),
     ).toEqual([
-      'repos/flamox/platform/actions/runs/202/cancel',
-      'repos/flamox/platform/actions/runners/registration-token',
+      'repos/example/platform/actions/runs/202/cancel',
+      'repos/example/platform/actions/runners/registration-token',
     ]);
   });
 
@@ -2147,12 +2147,12 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
       .filter((request) => request.method === 'POST')
       .map(({ path }) => path);
     expect(mutations).toEqual([
-      'repos/flamox/platform/actions/runs/203/cancel',
-      'repos/flamox/platform/actions/runs/203/force-cancel',
-      'repos/flamox/platform/actions/runs/203/force-cancel',
-      'repos/flamox/platform/actions/runs/203/force-cancel',
-      'repos/flamox/platform/actions/runs/203/rerun',
-      'repos/flamox/platform/actions/runners/registration-token',
+      'repos/example/platform/actions/runs/203/cancel',
+      'repos/example/platform/actions/runs/203/force-cancel',
+      'repos/example/platform/actions/runs/203/force-cancel',
+      'repos/example/platform/actions/runs/203/force-cancel',
+      'repos/example/platform/actions/runs/203/rerun',
+      'repos/example/platform/actions/runners/registration-token',
     ]);
   });
 
@@ -2416,11 +2416,11 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
     expect(stopped).toBe(true);
     expect(requests).toContainEqual({
       method: 'POST',
-      path: 'repos/flamox/platform/actions/runs/203/rerun',
+      path: 'repos/example/platform/actions/runs/203/rerun',
     });
     expect(starts).toEqual([
       expect.objectContaining({
-        repositoryUrl: 'https://github.com/flamox/platform',
+        repositoryUrl: 'https://github.com/example/platform',
         labels: ['symphony-local-ci', 'symphony-run-203'],
         runtimeRoot: '/tmp/symphony-local-ci/runtime',
         resources: { cpus: 4, memoryGiB: 8, diskGiB: 24, cacheGiB: 4 },
@@ -2430,7 +2430,7 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
     ]);
     expect(requests).toContainEqual({
       method: 'DELETE',
-      path: 'repos/flamox/platform/actions/runners/44',
+      path: 'repos/example/platform/actions/runners/44',
     });
   });
 });
@@ -2463,8 +2463,8 @@ describe('GitHubCloudProvider pull-request authoring', () => {
 
     // assert
     expect(requests).toEqual([
-      'repos/flamox/platform/branches?per_page=100&page=1',
-      'repos/flamox/platform/branches?per_page=100&page=2',
+      'repos/example/platform/branches?per_page=100&page=1',
+      'repos/example/platform/branches?per_page=100&page=2',
     ]);
     expect(inventory.repositoryBindingId).toBe('repository-1');
     expect(inventory.defaultBranch).toBe('main');
@@ -2527,7 +2527,7 @@ describe('GitHubCloudProvider pull-request authoring', () => {
           });
         }
         return JSON.stringify([
-          { number: 7, html_url: 'https://github.com/flamox/platform/pull/7' },
+          { number: 7, html_url: 'https://github.com/example/platform/pull/7' },
         ]);
       },
     });
@@ -2552,11 +2552,11 @@ describe('GitHubCloudProvider pull-request authoring', () => {
           committedAt: '2026-08-15T06:00:00Z',
         },
       ],
-      existingPullRequest: { number: 7, externalUrl: 'https://github.com/flamox/platform/pull/7' },
+      existingPullRequest: { number: 7, externalUrl: 'https://github.com/example/platform/pull/7' },
     });
-    expect(requests[0]).toBe('repos/flamox/platform/compare/main...feature/pull-request-drawer');
+    expect(requests[0]).toBe('repos/example/platform/compare/main...feature/pull-request-drawer');
     expect(requests[1]).toBe(
-      'repos/flamox/platform/pulls?state=open&head=flamox%3Afeature%2Fpull-request-drawer&base=main',
+      'repos/example/platform/pulls?state=open&head=example%3Afeature%2Fpull-request-drawer&base=main',
     );
   });
 
@@ -2589,7 +2589,7 @@ describe('GitHubCloudProvider pull-request authoring', () => {
         commands.push([...arguments_]);
         return JSON.stringify({
           number: 128,
-          html_url: 'https://github.com/flamox/platform/pull/128',
+          html_url: 'https://github.com/example/platform/pull/128',
           title: 'Open pull requests from the delivery view',
           state: 'open',
           draft: true,
@@ -2624,13 +2624,13 @@ describe('GitHubCloudProvider pull-request authoring', () => {
       author: 'RueDeRennes',
       sourceBranch: 'feature/pull-request-drawer',
       targetBranch: 'main',
-      externalUrl: 'https://github.com/flamox/platform/pull/128',
+      externalUrl: 'https://github.com/example/platform/pull/128',
       createdAt: '2026-08-19T08:59:00Z',
       updatedAt: '2026-08-19T08:59:00Z',
     });
     const request = commands[0] ?? [];
     expect(request).toContain('POST');
-    expect(request.at(-1)).toBe('repos/flamox/platform/pulls');
+    expect(request.at(-1)).toBe('repos/example/platform/pulls');
     expect(request).toContain('title=Open pull requests from the delivery view');
     expect(request).toContain('head=feature/pull-request-drawer');
     expect(request).toContain('base=main');
@@ -2877,10 +2877,10 @@ function deliverySettings(workspacePath: string): IApplicationSettings {
         id: 'repository-1',
         workspaceId: 'personal',
         sourceControlConnectionId: 'github-1',
-        displayName: 'flamox/platform',
+        displayName: 'example/platform',
         provider: 'github',
         host: 'github.com',
-        owner: 'flamox',
+        owner: 'example',
         name: 'platform',
         defaultBranch: 'main',
         localPath: workspacePath,
@@ -2922,7 +2922,7 @@ function updatablePullRequestResponse(
 ): Readonly<Record<string, unknown>> {
   return {
     number: 203,
-    html_url: 'https://github.com/flamox/platform/pull/203',
+    html_url: 'https://github.com/example/platform/pull/203',
     title: 'Restore user invitation save action',
     state: 'open',
     draft: false,
@@ -2941,12 +2941,12 @@ function issueWorkItem(): IWorkItem {
     id: 'work-item-40',
     workspaceId: 'personal',
     externalId: 'CR-0040',
-    externalUrl: 'https://github.com/flamox/platform/issues/40',
+    externalUrl: 'https://github.com/example/platform/issues/40',
     title: 'Activate tenant administrator reliably',
     body: '',
     stageId: 'progress',
     provider: 'github-projects',
-    repository: 'flamox/platform',
+    repository: 'example/platform',
     repositoryBindingIds: ['repository-1'],
     labels: [],
     assignees: [],

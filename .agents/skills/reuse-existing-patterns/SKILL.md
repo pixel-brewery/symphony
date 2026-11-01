@@ -9,7 +9,7 @@ description: Find and reuse the owning Symphony implementation path and the clos
 
 1. Read the nearest `AGENTS.md` and applicable repository guidance.
 2. Search the actual workspace before designing. Locate the exact owner or the closest complete path from domain model through application service, IPC, persistence, and renderer.
-3. Inspect the read-only `../flamox` and `../mosaik` references when renderer, shell, presenter, Mosaik, or FlowBoard behavior is involved.
+3. Inspect the read-only `$SYMPHONY_REFERENCE_ROOT` and `../mosaik` references when renderer, shell, presenter, Mosaik, or FlowBoard behavior is involved.
 4. Name the principal references and extend them by default. Introduce a new abstraction only when no existing owner can accept the responsibility without violating a boundary.
 5. Keep the renderer sandboxed and keep provider-specific shapes at adapter boundaries.
 

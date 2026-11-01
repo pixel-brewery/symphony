@@ -54,7 +54,7 @@ export const WorkspacePanorama = () => (
         {[
           ['symphony', '8.2 GB · 3 executions today', 'Ready'],
           ['mosaik', '6.1 GB · 1 execution today', 'Idle'],
-          ['flamox', '4.1 GB · no executions', 'Idle'],
+          ['example', '4.1 GB · no executions', 'Idle'],
           ['platform-engine-frontend', '2.4 GB · 2 executions today', 'Ready'],
         ].map(([name, meta, state]) => (
           <Card key={name} style={{ width: '260px' }}>

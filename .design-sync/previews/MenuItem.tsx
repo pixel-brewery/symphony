@@ -42,7 +42,7 @@ export const States = () => (
 export const InlineSubmenu = () => (
   <Menu>
     <MenuItem label="Workspaces" subLabel="Two workspaces configured" menuMode="inline" isExpanded>
-      <MenuItem label="FLAMOX365" subLabel="FLX" />
+      <MenuItem label="Example Workspace" subLabel="FLX" />
       <MenuItem label="Symphony" subLabel="SYM" isActive />
     </MenuItem>
     <MenuItem label="Repositories" subLabel="Bindings and setup scripts" menuMode="inline">
@@ -59,7 +59,7 @@ export const SlottedContent = () => (
       <Text slot="end" text="SYM" variant="neutral" />
     </MenuItem>
     <MenuItem>
-      <Text slot="label" text="flamox365/mosaik" />
+      <Text slot="label" text="example-workspace/mosaik" />
       <Text slot="subLabel" text="main · 3 open pull requests" variant="neutral" />
       <Text slot="end" text="MSK" variant="neutral" />
     </MenuItem>

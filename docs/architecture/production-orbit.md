@@ -58,18 +58,18 @@ profile ID that will be saved. The workspace's
 AI team list opens this same editor; there is no separate employee view or appearance
 persistence command.
 
-FLAMOX365's `libs/frontend/pet` renderer is now ported into Symphony's existing
+private upstream application's `libs/frontend/pet` renderer is now ported into Symphony's existing
 employee component: frame timing, CSS atlas registration, sixteen clockwise look
 directions, decoded-image checks, finite gestures and cleanup. The exact reference
 revision is `2fc29a56e37449b4fbbfb1d7027249af652eb28f`. Symphony adapts the fixed overlay
 to inline employees in the existing product surfaces and Mobile; smooth
 plush rendering replaces pixelated sampling. A shared decoded-image cache and one
-frame-throttled pointer listener serve all employees. There is no FLAMOX runtime
+frame-throttled pointer listener serve all employees. There is no private upstream application runtime
 dependency, floating global assistant or Mosaik change.
 
 The original PNGs remain unchanged as catalogue thumbnails, startup/error fallbacks
 and canonical artwork references. Symphony-generated `<character>-v2.png` atlases
-provide nine distinct states plus sixteen looks in the Codex/FLAMOX 1536 × 2288
+provide nine distinct states plus sixteen looks in the Codex/private upstream application 1536 × 2288
 layout. Custom single PNGs keep the static-image path. The surrounding UI remains
 Soho; employee artwork retains the OpenDots plush material and construction.
 
@@ -464,7 +464,7 @@ packaged process boundary and UI behavior, not a live external production deploy
 or a real-account five-minute onboarding benchmark. The required handoff gates
 are `yarn agents:check`, `yarn verify`, `yarn e2e` and `yarn forge:package`.
 Intentional reference differences are recorded in
-[the FLAMOX365 reference contract](frontend-reference-flamox.md).
+[the private upstream application reference contract](frontend-reference/README.md).
 
 The original-project integration passed those four gates on 2026-10-09. That full
 Electron suite reported 38 passed and two existing skips: native activation in

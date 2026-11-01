@@ -426,7 +426,7 @@ WebGL-/Electron-Abnahme nicht.
 
 ## Referenzentscheidung und Grenzen
 
-Gelesen wurden FLAMOX365 PresenterView.html, TaskListView.html und
+Gelesen wurden private upstream application PresenterView.html, TaskListView.html und
 libs/frontend/pet sowie Mosaiks öffentliche FlowBoard-, Avatar- und Persona-
 Verträge. Shell, Befehle, Auswahl und Details bleiben bewährte Muster.
 Astronomische Szenenkomposition ist ein beabsichtigtes **Differ**;
@@ -434,7 +434,7 @@ die projizierten Ticket- und Zielbeschriftungen ein **Adapt** der öffentlichen
 Mosaik-Bedienelemente. Figuren werden nach der Produktkorrektur ausschließlich
 außerhalb des Orbits angezeigt.
 Die umgesetzten Entscheidungen sind in
-[frontend-reference-flamox.md](frontend-reference-flamox.md) als Adopt, Adapt und
+[frontend-reference/README.md](frontend-reference/README.md) als Adopt, Adapt und
 Differ festgehalten. Die Orbit-Integration verändert keine Referenzrepositorys.
 
 Provider, Git, Persistenz und CLI-Aufgaben bleiben im Orchestrator beziehungsweise

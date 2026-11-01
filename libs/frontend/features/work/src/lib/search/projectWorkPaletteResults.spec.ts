@@ -113,7 +113,7 @@ function workItem(
     title,
     body,
     provider: 'local',
-    repository: 'flamox/app',
+    repository: 'example/app',
     boardColumnId,
     labels: [],
     assignees: [],

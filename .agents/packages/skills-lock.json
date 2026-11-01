@@ -48,7 +48,7 @@
       "source": ".agents/skills/create-employee-figure",
       "archive": ".agents/packages/create-employee-figure.skill",
       "claude": ".claude/skills/create-employee-figure/SKILL.md",
-      "sha256": "575485f9b6a17c205f36d63c2d68deb3e67742609f502196490da6a96d55c3be"
+      "sha256": "7ea56f7ec9c7bf47c1773d2abde1a12d078fa89289e742864f505235f5260a4d"
     },
     {
       "name": "definition-of-done",
@@ -69,7 +69,7 @@
       "source": ".agents/skills/inspect-reference-ui",
       "archive": ".agents/packages/inspect-reference-ui.skill",
       "claude": ".claude/skills/inspect-reference-ui/SKILL.md",
-      "sha256": "64271921ed60c077fe3f650ab762bcc62137d8bd18a1d9fa25499d271e0c211a"
+      "sha256": "f8266cd511e901385af68c951d18bd76b17bcf740fb8aaa5cc5874e3210dae60"
     },
     {
       "name": "link-workspace-packages",
@@ -83,14 +83,14 @@
       "source": ".agents/skills/maintain-documentation",
       "archive": ".agents/packages/maintain-documentation.skill",
       "claude": ".claude/skills/maintain-documentation/SKILL.md",
-      "sha256": "efc19462ee3ade62442b882ecc644ec3bcf47a3be24f04be35a706c065870136"
+      "sha256": "a02c753e853131e5fe49678e023469367d4290892a93d9fbfec96ff7b8231d4b"
     },
     {
       "name": "maintain-i18n",
       "source": ".agents/skills/maintain-i18n",
       "archive": ".agents/packages/maintain-i18n.skill",
       "claude": ".claude/skills/maintain-i18n/SKILL.md",
-      "sha256": "66cc5a6d2931831fdd1332fbb76934543535b440beffb88a6babb24858971c7e"
+      "sha256": "a36f852812b22f33da80c4722e11f4a8bf7e517d9edb562fc6bb4da04b927242"
     },
     {
       "name": "manage-portable-skills",
@@ -174,7 +174,7 @@
       "source": ".agents/skills/reuse-existing-patterns",
       "archive": ".agents/packages/reuse-existing-patterns.skill",
       "claude": ".claude/skills/reuse-existing-patterns/SKILL.md",
-      "sha256": "1c4d71bab3b86be65143b2309503a44d56c64dabdfa9c19cd5db3629f8b5d6c0"
+      "sha256": "11ba86b0812f3fbf839ded139990a4111fc94ffb5483c8acecfc20a66e0455d6"
     },
     {
       "name": "review-german-eu-compliance",
@@ -195,7 +195,7 @@
       "source": ".agents/skills/symphony-architect",
       "archive": ".agents/packages/symphony-architect.skill",
       "claude": ".claude/skills/symphony-architect/SKILL.md",
-      "sha256": "358e5b362b4833503238f4d41abbb3fa8272df735eef4a4e995c33be1823bfbd"
+      "sha256": "96c777723e4530424c9881f5808a03c28e4f0b02bdd5d6912dd3774f699dee96"
     },
     {
       "name": "symphony-docs",

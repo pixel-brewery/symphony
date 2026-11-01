@@ -16,15 +16,15 @@ Symphony now renders Mosaik 0.1.183 in Soho, but its window is still the origina
 
 ## Expected behavior
 
-The app matches the artboards in `screens/`: thirteen main-window screens (1440 × 900), the tray (`Tray-*`, 520 px with the menu bar) and Settings with every section, sheet and confirmation dialog (1000 px wide; drawn at full scroll length as a 1000 × 760 window — since the decision of 2026-10-31 Settings opens inside the main window, see `DECISIONS.md`). Light mode as drawn, dark mode through the same tokens; `screens/Overview-dark.png` shows the dark mode of the start page.
+The app matches the artboards in `artboards/`: thirteen main-window screens (1440 × 900), the tray (`Tray-*`, 520 px with the menu bar) and Settings with every section, sheet and confirmation dialog (1000 px wide; drawn at full scroll length as a 1000 × 760 window — since the decision of 2026-10-31 Settings opens inside the main window, see `DECISIONS.md`). Light mode as drawn, dark mode through the same tokens; `artboards/Overview.dc.html` shows the dark mode of the start page.
 
 ### Window chrome (every main screen)
 
-- A 240 px source-list sidebar on `mosaik-color-neutral-100` with a 1 px `mosaik-scheme-highlight` divider: the traffic-light area (macOS only) and `Hide sidebar`, a workspace switcher card (`FLAMOX365`, repository slug, `Switch workspace`), `Overview` as the first entry, the group `Delivery` with `Inbox`, `Board`, `Pull requests`, `Actions`, `Orbit`, the group `More` with `Arcade`, a run panel at the bottom and `Settings` pinned below it.
+- A 240 px source-list sidebar on `mosaik-color-neutral-100` with a 1 px `mosaik-scheme-highlight` divider: the traffic-light area (macOS only) and `Hide sidebar`, a workspace switcher card (`Example Workspace`, repository slug, `Switch workspace`), `Overview` as the first entry, the group `Delivery` with `Inbox`, `Board`, `Pull requests`, `Actions`, `Orbit`, the group `More` with `Arcade`, a run panel at the bottom and `Settings` pinned below it.
 - `Overview` is the start page: the first sidebar entry, above `Delivery`, and the screen Symphony opens on at launch.
-- The run panel switches between `Agents` and `Actions` with a small two-segment switch on a neutral track (`Agents | Actions · 2`, the count being running and queued runs). `Agents` lists each agent with its avatar, name, current activity and status dot, as drawn. `Actions` lists the current action runs — running with an indeterminate `ProgressRing`, queued, and the latest failure — each with workflow, revision and state, as in `screens/ActionsOverview.png`. The panel takes the place of the workspace rail's `Runs` panel.
+- The run panel switches between `Agents` and `Actions` with a small two-segment switch on a neutral track (`Agents | Actions · 2`, the count being running and queued runs). `Agents` lists each agent with its avatar, name, current activity and status dot, as drawn. `Actions` lists the current action runs — running with an indeterminate `ProgressRing`, queued, and the latest failure — each with workflow, revision and state, as in `artboards/ActionsOverview.dc.html`. The panel takes the place of the workspace rail's `Runs` panel.
 - A 28 px status bar spans the whole bottom edge of the window in every main view, on `mosaik-color-neutral-100` with a 1 px `mosaik-scheme-highlight` top border, in `mosaik-typography-caption` and `mosaik-scheme-lowlight`. It carries small notices as icons and short texts: on the left the GitHub sync state (`Synced with GitHub 2 min ago`), on the right the notification bell with its count (see `Notifications`), the app version (`Symphony v0.1.16`) and the app-update button. Its controls are 24 px.
-- The app-update button appears only while a newer Symphony version is available: icon-only (`download` icon, no text) with an accessible label. A click starts the download, and a Mosaik `ProgressRing` around the icon fills with its progress. Once the update is downloaded, the button turns into a labelled `Restart to update` button; clicking it installs the update and restarts Symphony. `screens/UpdateStates.png` shows the three states.
+- The app-update button appears only while a newer Symphony version is available: icon-only (`download` icon, no text) with an accessible label. A click starts the download, and a Mosaik `ProgressRing` around the icon fills with its progress. Once the update is downloaded, the button turns into a labelled `Restart to update` button; clicking it installs the update and restarts Symphony. `artboards/Main.dc.html` shows the three states.
 - Small notices live in the status bar, not in toolbars or page headers; the sync note leaves the `Pull requests` header and the `Board` subtitle.
 - The chrome has no voice input.
 - Sidebar rows show counts on the right; the inbox count and the failing-actions count use a danger badge, the others a quiet number.
@@ -33,18 +33,18 @@ The app matches the artboards in `screens/`: thirteen main-window screens (1440 
 
 ### Screens
 
-- `Notifications` (`screens/Notifications.png`): the bell in the status bar opens a 400 px popover upwards over the current view. Header `Notifications` with the count and `Mark all as read`; `Needs attention` with one row per problem (icon, title, where it lives, fix buttons such as `Install with Homebrew`, `Sign in`, `Prepare locally`, `Reject` / `Approve`, unread dot); `Earlier today` with read notices such as `Repository prepared locally.` and `Guest image updated.`; a footer noting that work-item decisions stay in the `Inbox`, with `Clear read`. Without anything to show it says so.
+- `Notifications` (`artboards/Notifications.dc.html`): the bell in the status bar opens a 400 px popover upwards over the current view. Header `Notifications` with the count and `Mark all as read`; `Needs attention` with one row per problem (icon, title, where it lives, fix buttons such as `Install with Homebrew`, `Sign in`, `Prepare locally`, `Reject` / `Approve`, unread dot); `Earlier today` with read notices such as `Repository prepared locally.` and `Guest image updated.`; a footer noting that work-item decisions stay in the `Inbox`, with `Clear read`. Without anything to show it says so.
 - `Inbox`: a segment `All 6 · Decisions 4 · Updates 2`, a list grouped into `NEEDS YOUR DECISION` and `UPDATES`, and a detail pane with status chips, the five-stage stepper (`Analysis`, `Solution`, `Implementation`, `Checks`, `Acceptance`), selectable continuation options, `Assign and start`, `Snooze until tomorrow` and the analysis findings with `Open analysis`.
 - `Board`: a segment `All · Needs you · Agents running · Mine`, the repository chip, `Filter` and `New work item`; Backlog, Qualified and Done collapse to narrow vertical columns; cards show the id in the technical-value style, the title, a status chip, the agent avatar and a five-step progress bar.
 - `Work item`: status and label chips, id and pull-request number, title, description, the stage stepper, the checks table with `View log` and `Stop run`, `Acceptance criteria` with a met count, `Activity`, and a right inspector (`Column`, `Agent`, `Skill`, `Pull request`, `Branch`, `Repository`, `Assignee`, created and changed dates).
 - `Pull requests`: a segment `Open · Needs action · Drafts`, `Synced with GitHub …`, `New pull request`, a table (`Pull request`, `Item`, `Checks`, `Merge`, `Agent`, `Updated`) and an inspector with the failing-checks message, the checks list, `Repair with AI`, `Run checks locally` and `Open in GitHub`.
-- `Actions`: `All runs` above a `WORKFLOWS` list with status dots. `All runs` is the overview (`screens/ActionsOverview.png`): `Running now` with every running and queued run across workflows (workflow, revision, runner, elapsed time, `View log`, `Stop`, `Cancel`) and `History`, a table of finished runs across all workflows, newest first (`Result`, `Workflow`, `Revision`, `Runner`, `Duration`, `Started`), with `Show older runs`. A selected workflow shows its file path, `Run locally` and `Run on GitHub`, a runs table (`Result`, `Revision`, `Runner`, `Duration`, `Started`), the selected run's steps, a log excerpt and a `Diagnosis` card with `Fix with AI`, `Rerun on GitHub` and `Open in GitHub` (`screens/Actions.png`).
+- `Actions`: `All runs` above a `WORKFLOWS` list with status dots. `All runs` is the overview (`artboards/ActionsOverview.dc.html`): `Running now` with every running and queued run across workflows (workflow, revision, runner, elapsed time, `View log`, `Stop`, `Cancel`) and `History`, a table of finished runs across all workflows, newest first (`Result`, `Workflow`, `Revision`, `Runner`, `Duration`, `Started`), with `Show older runs`. A selected workflow shows its file path, `Run locally` and `Run on GitHub`, a runs table (`Result`, `Revision`, `Runner`, `Duration`, `Started`), the selected run's steps, a log excerpt and a `Diagnosis` card with `Fix with AI`, `Rerun on GitHub` and `Open in GitHub` (`artboards/Actions.dc.html`).
 - `Orbit`: a `Production` destination control in the toolbar, the orbit diagram with stage clusters around the destination, zoom controls (`+`, `100 %`, `Fit`) and an inspector for the `Selected cluster` with evidence progress, its work items and `Show on board`.
 - `Command palette`: ⌘K opens a centred overlay over the dimmed window with a search field, results grouped into `WORK ITEMS`, `PULL REQUESTS` and `COMMANDS`, shortcuts on the right and the hint row `↑↓ to move · ↵ to open · ⌘↵ to open in a new window`.
 - `New work item sheet`: a modal with `Write it myself` / `Draft with AI`, `Title`, `Description` (`Markdown is rendered when the work item is viewed.`), `Repository`, `Column`, `Labels` with `Add label`, `Analyze with Codex after creating`, `Cancel` and `Create work item`.
 - `Arcade`: `Choose a game` with the shipped games as cards (cover, player count, `Play`) and `Leaderboard` in the toolbar.
 - `Settings`: opens inside the main window on every platform (decision of 2026-10-31, superseding the separate window); see the Settings section below.
-- `Overview` (`screens/Overview.png`): the start page that shows the whole delivery at a glance without opening a sub-area. Toolbar title `Overview` with the workspace and the date. A greeting with a one-line summary of what needs attention, and the quick actions `Sync now`, `Run workflow` and `New work item` (primary). Below it three cards, each with an `Open` link to its screen:
+- `Overview` (`artboards/Overview.dc.html`): the start page that shows the whole delivery at a glance without opening a sub-area. Toolbar title `Overview` with the workspace and the date. A greeting with a one-line summary of what needs attention, and the quick actions `Sync now`, `Run workflow` and `New work item` (primary). Below it three cards, each with an `Open` link to its screen:
   - `Waiting for you`: the four oldest inbox decisions with icon, title, work item and age, and `Open inbox`.
   - `Pull requests`: open pull requests by state — `Waiting for your review`, `Checks failing`, `Ready to merge`, `Checks running`, `Drafts` — with counts.
   - `Production`: the confirmed Production version and its date, the warning for work items not in a confirmed version, and the evidence progress, from Orbit.
@@ -57,9 +57,9 @@ The app matches the artboards in `screens/`: thirteen main-window screens (1440 
 
 ### Tray (menu-bar extra)
 
-The tray uses the main window's language (canvas page `Tray`, `screens/Tray-*.png`), still 328 px wide:
+The tray uses the main window's language (canvas page `Tray`, `artboards/Tray-*.dc.html`), still 328 px wide:
 
-- Header: the Symphony mark, `Symphony`, a status line (`2 running · FLAMOX365`, `Nothing running`, `Latest run failed`) and icon buttons `Open Symphony` and `Settings`.
+- Header: the Symphony mark, `Symphony`, a status line (`2 running · Example Workspace`, `Nothing running`, `Latest run failed`) and icon buttons `Open Symphony` and `Settings`.
 - Runs: the same `Agents | Actions` switch as the sidebar run panel, with counts, showing the runs at once instead of collapsed lists. Agents appear with their figure, name and activity, a running indicator, and `Pause` / `Resume` where the execution allows it. Actions show workflow, source, state, revision and an open button, and the list ends in `All runs in Symphony`. Empty: `No agent is working` / `Runs appear here as soon as one starts.`
 - `Execution slots`: one segment per slot, filled when in use, with `{used} of {total} in use` and the waiting-step line when steps wait.
 - `Needs you`: `Inbox` with its decision count and the first decision, and `Notifications` with the count of what needs attention and the first item. Both open the main window at that place; `Repository preparation required` becomes one of the notifications.
@@ -70,7 +70,7 @@ The tray uses the main window's language (canvas page `Tray`, `screens/Tray-*.pn
 
 ### Settings
 
-Every current section and dialog of Settings, redesigned (canvas page `Settings`, `screens/Settings-*.png`, `screens/Sheet-*.png`). The canvas draws a separate window; since the decision of 2026-10-31 Settings opens inside the main window instead: while it is open, the whole side navigation switches to the Settings area, the normal navigation entries are not shown, and the toolbar's `Back` is the only way back. Copy is the current app's unless noted; no setting is dropped.
+Every current section and dialog of Settings, redesigned (canvas page `Settings`, `artboards/Settings-*.dc.html`, `artboards/Sheet-*.dc.html`). The canvas draws a separate window; since the decision of 2026-10-31 Settings opens inside the main window instead: while it is open, the whole side navigation switches to the Settings area, the normal navigation entries are not shown, and the toolbar's `Back` is the only way back. Copy is the current app's unless noted; no setting is dropped.
 
 The redesign has one thread: the delivery flow. A work item passes five steps — `Create`, `Plan`, `Implement and verify`, `Fix failed checks`, `Address reviews` — before a person accepts it. The steps follow the board stages and the skill flow roles (`work-item-creation`, `analysis`, `solution`, `ci-diagnosis` and `ci-repair`, `pull-request-review`). `AI team` shows who does each step, `Skills` how each step is done and `Automation` how far each step may run on its own. All three use the same step names and icons, so a step reads the same wherever it appears.
 
@@ -78,7 +78,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 - Sidebar: `Search settings`; `Workspaces` (the list, where Settings opens) with each workspace (short-code tile and name) and, under the selected workspace, its six sections as nested rows (`AI team`, `Connected services`, `Repositories`, `Delivery destinations`, `Local GitHub Actions`, `Administration`); the heading `Symphony` with `Automation`, `Skills`, `System`, `Mobile access` and `Appearance`. The workspace segment of the current page goes away.
 - Saving: every control applies when it changes (numbers on commit), with the existing `Settings saved.` / `Unable to save settings.` notices; the per-card `Save` buttons go away.
 - States that appear only in some situations are drawn in dashed frames labelled with the condition.
-- `Workspaces` (`Settings-Workspaces`; Settings opens here, `screens/Settings.png` shows the window at this page): each workspace with a one-line summary (agents, AI accounts, repositories, storage) and its state, `Open`, plus `Import workspace` and `Add workspace`. What needs attention is not shown in Settings; it lives in the notification centre of the main window.
+- `Workspaces` (`Settings-Workspaces`; Settings opens here, `artboards/Settings-Workspaces.dc.html` shows the window at this page): each workspace with a one-line summary (agents, AI accounts, repositories, storage) and its state, `Open`, plus `Import workspace` and `Add workspace`. What needs attention is not shown in Settings; it lives in the notification centre of the main window.
 - `AI team` (`Settings-AITeam`): `Delivery flow` shows the five steps and `Acceptance` as a vertical flow with the agent who does each step (figure, name, job title) and the backup after `then`. `Agents` shows each agent as a card with its figure, job title and description, account, model and effort, responsibilities, availability, intelligence and backup; `Add an AI agent` is a card of its own. `Technical AI setup` keeps positions, AI services and the backup order.
 - `Skills` (`Settings-Skills`): one block per step with its process roles (`Create`; `Analyze`; `Solve` and `Verify`; `Diagnose CI` and `Repair CI`; `Address reviews`), their version, permissions and whether your additions exist, `Edit instructions` (opens `Sheet-RoleInstructions`), and the skill package attached to that step with `Deactivate`, or `Add skill`. The former Skills page's packages live here; `Import skill`, `Add skills`, `New skill` and refresh sit in the toolbar (`Import skill` moves here from `System`).
 - `Automation` (`Settings-Automation`), the policies for every workspace:
@@ -103,7 +103,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 
 ## Navigation and reproduction
 
-- Reference: open the [screenshots](screens/) beside this file and their [artboard sources](artboards/). No canvas account or older branch is required.
+- Reference: open the [editable artboard sources](artboards/) beside this file. No canvas account or older branch is required.
 - Screen names: `Overview` is the start page, `Notifications` the open notification popover, `Main` is `Inbox`, `ActionsOverview` is `Actions` with `All runs` selected, `Palette` the command palette, `NewItem` the new-work-item sheet; `Settings-<Section>` are the Settings sections, `Sheet-<Name>` its sheets and `Settings-Dialogs` its confirmation dialogs; `Settings` is Settings drawn as a window at its former default size; the others carry their screen's name.
 - Exact copy, spacing and token use: the artboard sources in `artboards/` (`<Name>.dc.html`); `x-import component-from-global-scope="Mosaik.<Name>"` names the Mosaik component each element maps to, and `macos-chrome.css` holds the only component overrides the design needs.
 - Current app: start the desktop app locally, select a workspace and open `/main/home`, `/main/board`, `/main/pull-requests`, `/main/actions`, `/main/orbit`, `/main/arcade` and `/main/settings`.
@@ -175,7 +175,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 
 ## Acceptance criteria
 
-- Every main route shows the 240 px sidebar, the 52 px toolbar and the status bar as in `screens/Main.png`.
+- Every main route shows the 240 px sidebar, the 52 px toolbar and the status bar as in `artboards/Main.dc.html`.
 - The sidebar lists `Overview` first, then `Inbox`, `Board`, `Pull requests`, `Actions`, `Orbit`, `Arcade`, the run panel and `Settings`, and every former header destination stays reachable.
 - The run panel switches between `Agents` and `Actions`; `Actions` shows the current action runs and a message when there are none.
 - No voice input control remains in the app shell.
@@ -189,8 +189,8 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 - The selected sidebar row is visibly darker than the sidebar fill, and rows are 32 px high.
 - Sidebar counts match the data behind each screen and are hidden while unavailable.
 - Back and forward in the toolbar follow navigation history.
-- `Inbox` matches `screens/Main.png` in structure: filter segment, grouped list, detail pane with stepper and decision actions.
-- Symphony opens on `Overview`, which matches `screens/Overview.png` in structure and wording, without horizontal scrolling at 1440 × 900.
+- `Inbox` matches `artboards/Main.dc.html` in structure: filter segment, grouped list, detail pane with stepper and decision actions.
+- Symphony opens on `Overview`, which matches `artboards/Overview.dc.html` in structure and wording, without horizontal scrolling at 1440 × 900.
 - The quick actions start the same flows as elsewhere: `New work item` opens the sheet, `Run workflow` the workflow run, `Sync now` the GitHub sync.
 - `Waiting for you`, the pull-request states and the Production card show the same items and counts as `Inbox`, `Pull requests` and `Orbit`.
 - Switching the reporting period updates every stat tile and chart below it; tiles without enough history show `—` without a badge.
@@ -199,7 +199,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 - ⌘K (Ctrl+K off macOS) opens the command palette, Esc closes it, arrow keys move, Enter opens the selection.
 - `New work item` opens the sheet; an empty title blocks `Create work item`; a created item appears on the board in the chosen column.
 - Settings opens inside the main window on macOS, Windows and Linux, its navigation replaces the sidebar destinations, `Back` leads out of it, and it saves changes immediately.
-- Every section, sheet and confirmation in `screens/Settings-*.png` and `screens/Sheet-*.png` exists with the same groups, controls and copy; no current setting is lost.
+- Every section, sheet and confirmation in `artboards/Settings-*.dc.html` and `artboards/Sheet-*.dc.html` exists with the same groups, controls and copy; no current setting is lost.
 - Opening a workspace in the Settings sidebar shows its six sections as nested rows, and `AI team` is selected first.
 - Editors open as sheets and close with `Cancel`, `Save` or Escape; confirmations open as alert sheets.
 - The status bar of every main view shows the bell with the number of items that need attention; clicking it opens the notification popover upwards, every item names where it lives and its fix opens or performs it, and read notices move to `Earlier today`.
@@ -218,16 +218,16 @@ The redesign has one thread: the delivery flow. A work item passes five steps �
 
 - `yarn verify` passes.
 - End-to-end tests cover launching on `Overview`, the reporting period switch, sidebar navigation, back and forward, the run panel switch, the command palette keyboard flow, creating a work item from the sheet, and opening Settings with `Skills`.
-- Screenshots of each screen at 1440 × 900 in light and dark mode are compared side by side with `screens/` (for Settings, the section content against `Settings-*` and `Sheet-*`).
+- Screenshots of each screen at 1440 × 900 in light and dark mode are compared side by side with `artboards/` (for Settings, the section content against `Settings-*` and `Sheet-*`).
 - `yarn design:md-check` and `yarn ui:check` stay green.
 
 ## Evidence and open questions
 
 ### Evidence
 
-- Canvas "Symphony Redesign", version `1793372001-d1f9`: preserved in the local [artboard sources](artboards/) and [screenshots](screens/).
+- Canvas "Symphony Redesign", version `1793372001-d1f9`: preserved in the local [editable artboard sources](artboards/).
 - Symphony Design System on Mosaik 0.1.183 in Soho, version `1793339128-b2c8`: [local sources and build instructions](../../../.design-sync/NOTES.md).
-- `screens/*.png`: the artboards rendered with the real Mosaik bundle in Soho, without the canvas editor.
+- `artboards/*.dc.html`: retained editable layouts with neutral fictional examples; previous raster captures are excluded because they embedded private workspace branding.
 - `artboards/*.dc.html` and `artboards/macos-chrome.css`: the canvas sources at that version.
 - Confirmed in the current app: the header labels, the workspace rail with `Runs`, the `Overview` layout described above (screenshot from the user, v0.1.15), the board dialog for new work items, and the absence of a command palette.
 

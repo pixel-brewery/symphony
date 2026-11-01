@@ -45,7 +45,7 @@ describe('desktopRequestSchemas', () => {
   it('opens Settings at an optional location of at most eight bounded parameters', () => {
     // arrange
     const location = {
-      parameters: { workspace: 'flamox365', section: 'repositories', repository: 'repo-1' },
+      parameters: { workspace: 'example-workspace', section: 'repositories', repository: 'repo-1' },
     };
     const nineParameters = Object.fromEntries(
       Array.from({ length: 9 }, (_, index) => [`key${String.fromCharCode(97 + index)}`, 'value']),

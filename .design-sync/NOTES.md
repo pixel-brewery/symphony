@@ -243,7 +243,7 @@ It only previews inside `<App>`.
 ### Built-in control icons follow Mosaik's Reicon system set
 
 Mosaik's shadow templates use semantic system names that are separate from
-Symphony's product aliases. `ShellConfig.ts` follows FLAMOX365 by registering
+Symphony's product aliases. `ShellConfig.ts` follows private upstream application by registering
 the complete `ReiconAliases` map as the default set, and the preview provider
 does the same. This covers built-in affordances including:
 

@@ -336,3 +336,18 @@ Eine leere Spalte zeigt `No items in <spaltenname klein>`.
 - [Pull-Request-Bildschirm](../pull-requests/README.md)
 - [Workflow-Modell](../workflow-model.md), [FlowBoard-Adaption](../flowboard-adaptation.md), [Agentic Delivery](../agentic-delivery.md)
 - [Production Orbit](../production-orbit.md)
+
+## Identität des ausgelieferten Workflows
+
+Neue Konfigurationen verwenden den Workflow `symphony-delivery` mit dem Namen
+`Symphony delivery` und Version 6. Seine sechs Stufen, Human Gates, Übergänge und
+Ausführungsregeln bleiben unverändert. Die Einstellungen übernehmen eine neuere
+Default-Version nur für dieselbe gespeicherte Workflow-ID. Bereits konfigurierte
+andere IDs, Namen, Versionen und Stufen bleiben erhalten; laufende Ausführungen
+werden nicht auf eine neue Identität umgeschrieben. Die Umbenennung des
+Auslieferungsstandards ist keine Migration persönlicher Workspace-Daten.
+
+Die Produktionsbesitzer sind `DefaultWorkflow.ts` im Domain-Workflow und
+`upgradeApplicationSettings.ts` in der Konfigurationskomposition. Die
+Migrationsspezifikation prüft ausdrücklich, dass eine gespeicherte ältere
+Workflow-Identität erhalten bleibt.

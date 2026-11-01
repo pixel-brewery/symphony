@@ -16,7 +16,7 @@ Die Glocke trägt die Zahl der Punkte, die Aufmerksamkeit brauchen. Solange daru
 
 ### Inhalt
 
-- Kopf: **Notifications**, darunter die Zahl der offenen Punkte und woher sie stammen (zum Beispiel `2 need attention · FLAMOX365 and this Mac`), rechts **Mark all as read**.
+- Kopf: **Notifications**, darunter die Zahl der offenen Punkte und woher sie stammen (zum Beispiel `2 need attention · Example Workspace and this Mac`), rechts **Mark all as read**.
 - **Needs attention**: ein Eintrag je Problem mit Symbol, Titel, Ort als Pfad (zum Beispiel `System › Developer tools`), der Folge oder dem nötigen Kontext und den Schaltflächen, die das Problem beheben. Ungelesene Einträge tragen einen blauen Punkt.
 - **Earlier today**: die Hinweise, die Symphony heute in diesem Fenster als Einblendung gezeigt hat, neueste zuerst, mit Uhrzeit. Ein Hinweis, der erschien, während das Fenster nicht im Vordergrund war, gilt als ungelesen.
 - Fuß: `Work-item decisions stay in the Inbox.` und **Clear read**.

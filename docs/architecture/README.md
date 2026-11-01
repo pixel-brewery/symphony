@@ -17,4 +17,6 @@
 - [Automation-Einstellungen](automation/README.md): Laufzeit- und Agentic-Delivery-Vertrag mit Standardwerten und Schemagrenzen, Leitermodell (acht Schalter, Stufen, Sperrgrund, Kaskade beim Ausschalten, abgeleitete Stufe), Speicherwarteschlange mit Wiederherstellung, Auswertung im Orchestrator, Suchbeiträge und die Rückfrage zum Aufräumen.
 - [Einstellungen dieses Mac](system/README.md): Bereiche System, Mobile access und Appearance mit Speicherstatus `storage.status.get`, Druckregeln und Fail-closed-Schreibsperre, Speichergrenzen, Runner-Ausstattung und Maschinenliste, Updates-Karte, Wachhalten über `power.*` und `keep-awake.json`, `mobile-access.*`-Vertrag, Farbschema und Appearance-Slot.
 
-- [Repository AI configuration](repository-ai-configuration/README.md): versioned Architecture derivation, native skill installation locks, provider mirrors and self-contained portable archives.
+- [Repository AI configuration](repository-ai-configuration/README.md): versioned Architecture derivation, native skill installation locks, provider mirrors, self-contained portable archives and the public-source privacy guard.
+
+- [Frontend reference contract](frontend-reference/README.md): private-reference parity decisions through an owner-supplied local checkout, public Mosaik APIs and recorded desktop adaptations.

@@ -21,7 +21,7 @@ import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
-test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electron', async () => {
+test('runs the Example Workspace-aligned shell and secure Analyzer slice through Electron', async () => {
   // arrange
   test.setTimeout(240_000);
   const workspace = resolve('.');
@@ -871,7 +871,10 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
     await expect(settings.getByText('Plan and run tests', { exact: true })).toHaveCount(0);
     await expect(settings.getByText('Allow AI tasks', { exact: true })).toHaveCount(0);
     await settings.getByTestId('add-repository-personal').click();
-    await settings.getByTestId('repository-display-name').locator('input').fill('FLAMOX365 API');
+    await settings
+      .getByTestId('repository-display-name')
+      .locator('input')
+      .fill('Example Workspace API');
     await settings.getByTestId('repository-owner').locator('input').fill('ruederennes');
     await settings.getByTestId('repository-name').locator('input').fill('platform-api');
     await settings.getByTestId('save-settings-editor').click();
@@ -880,7 +883,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
       'Symphony E2E',
     );
     await expect(settings.getByTestId('workspace-repositories-personal')).toContainText(
-      'FLAMOX365 API',
+      'Example Workspace API',
     );
     expect(
       await page.evaluate(async () => {
@@ -889,7 +892,7 @@ test('runs the FLAMOX365-aligned shell and secure Analyzer slice through Electro
           .filter((repository) => repository.workspaceId === 'personal')
           .map((repository) => repository.displayName);
       }),
-    ).toEqual(expect.arrayContaining(['Symphony E2E', 'FLAMOX365 API']));
+    ).toEqual(expect.arrayContaining(['Symphony E2E', 'Example Workspace API']));
     const portableSettings = JSON.parse(
       readFileSync(resolve(configurationRoot, 'settings.json'), 'utf8'),
     ) as { user: { displayName: string }; runtime: Record<string, unknown> };

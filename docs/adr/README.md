@@ -18,20 +18,20 @@ The tradeoff is that Node 24 documents `node:sqlite` at stability 1.2 (release c
 
 **Status:** Accepted on 2026-08-07.
 
-| Concern                  | Version        | Evidence and compatibility                                                                  |
-| ------------------------ | -------------- | ------------------------------------------------------------------------------------------- |
-| Node development runtime | 26.0.0 minimum | Installed runtime and Angular 22-supported range. Electron embeds its own Node runtime.     |
-| Yarn Berry               | 4.10.3         | Proven FLAMOX365 workspace version; node-modules linker supports Forge and Angular tooling. |
-| Nx / Angular plugin      | 23.1.1         | Current registry stable; Nx matrix supports Angular 22 from 23.1.0.                         |
-| Angular                  | 22.1.0         | Same proven FLAMOX365 version; requires TypeScript 6.0.x.                                   |
-| TypeScript               | 6.0.3          | Angular compiler peer range is `>=6.0 <6.1`.                                                |
-| Electron                 | 43.3.0         | Current stable registry release; Electron 43 uses Node 24.17 or later patch levels.         |
-| Electron Forge           | 7.11.2         | Current stable registry release and compatible with supported Node versions.                |
-| Mosaik                   | 0.1.178        | Published Flow API with case-correct core imports, matched Angular wrappers and themes.     |
-| Markdowner core          | 0.1.175        | Correctly cased module paths support the shared Markdown dialect on Linux and macOS.        |
-| Zod                      | 4.4.3          | Current stable registry release.                                                            |
-| Vitest                   | 4.1.10         | Current stable and FLAMOX365-proven version; supports Vite 8.                               |
-| Playwright               | 1.62.1         | Current stable and FLAMOX365-proven version.                                                |
+| Concern                  | Version        | Evidence and compatibility                                                                                     |
+| ------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------- |
+| Node development runtime | 26.0.0 minimum | Installed runtime and Angular 22-supported range. Electron embeds its own Node runtime.                        |
+| Yarn Berry               | 4.10.3         | Proven private upstream application workspace version; node-modules linker supports Forge and Angular tooling. |
+| Nx / Angular plugin      | 23.1.1         | Current registry stable; Nx matrix supports Angular 22 from 23.1.0.                                            |
+| Angular                  | 22.1.0         | Same proven private upstream application version; requires TypeScript 6.0.x.                                   |
+| TypeScript               | 6.0.3          | Angular compiler peer range is `>=6.0 <6.1`.                                                                   |
+| Electron                 | 43.3.0         | Current stable registry release; Electron 43 uses Node 24.17 or later patch levels.                            |
+| Electron Forge           | 7.11.2         | Current stable registry release and compatible with supported Node versions.                                   |
+| Mosaik                   | 0.1.178        | Published Flow API with case-correct core imports, matched Angular wrappers and themes.                        |
+| Markdowner core          | 0.1.175        | Correctly cased module paths support the shared Markdown dialect on Linux and macOS.                           |
+| Zod                      | 4.4.3          | Current stable registry release.                                                                               |
+| Vitest                   | 4.1.10         | Current stable and private upstream application-proven version; supports Vite 8.                               |
+| Playwright               | 1.62.1         | Current stable and private upstream application-proven version.                                                |
 
 Versions are exact in `package.json`; transitive lock data is committed.
 
@@ -95,7 +95,7 @@ Both diagrams are read-only. Selection opens details or existing logs; no gestur
 
 ## ADR-013: Horizontal feature ownership and static product composition
 
-**Status:** Accepted. The FLAMOX365 architecture is the reference for fifteen horizontal renderer features: Workspace, Work, Team, AI, Skills, Workflow, Execution, CI, Delivery, Automation, Feedback, Mobile, Home, Arcade and Platform. Each feature owns its state, commands, adapters, settings cards/editors and capability contributions behind public package entries and one cohesive `provideXFeature()` composition. The desktop application selects provider/route definitions statically. Generic Search, Setting, Notification, Quick Create, Widget, Update, Interaction, Core, UI and Presentation capabilities are composed once.
+**Status:** Accepted. The private upstream application architecture is the reference for fifteen horizontal renderer features: Workspace, Work, Team, AI, Skills, Workflow, Execution, CI, Delivery, Automation, Feedback, Mobile, Home, Arcade and Platform. Each feature owns its state, commands, adapters, settings cards/editors and capability contributions behind public package entries and one cohesive `provideXFeature()` composition. The desktop application selects provider/route definitions statically. Generic Search, Setting, Notification, Quick Create, Widget, Update, Interaction, Core, UI and Presentation capabilities are composed once.
 
 Domain, Application, Configuration, IPC and Persistence use populated Core/Feature packages and the required composition owners. Provider packages follow their actual integration families. Cross-feature operations use consumed ports and retain one canonical state or execution owner. Foundation frontend capabilities cannot import feature implementations; Presentation integrates selected desktop/mobile feature surfaces through their public entries. Nx enforces public boundaries and an acyclic graph. The full folder tree and responsibility matrix are in [Dependency model](../architecture/dependency-model.md).
 

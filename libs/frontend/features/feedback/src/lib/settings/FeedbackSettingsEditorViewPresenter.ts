@@ -223,7 +223,7 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
     );
     return createTrackedSettingsDraft(
       {
-        displayName: source?.displayName ?? 'FLAMOX365 feedback',
+        displayName: source?.displayName ?? 'Teams feedback',
         tenantId: source?.tenantId ?? '',
         clientId: source?.clientId ?? '',
         credentialRef: source?.credentialRef ?? '',

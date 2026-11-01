@@ -1,7 +1,7 @@
 # Product naming
 
-- Write the company and platform name exactly as `FLAMOX365` in every human-readable occurrence.
-- Write the connector product name exactly as `Edge Connector`.
-- Never combine those names into one product name.
-- Keep new technical identifiers brand-neutral and name them after the smallest unambiguous domain concept.
-- Preserve legacy technical identifiers only where changing them would break compatibility or established tooling.
+- Name this product `Symphony` and its public dependencies by their published names.
+- Use `Example Workspace` and `example/project` for fictional workspace/repository examples.
+- Never publish private application names, repository identities or local checkout paths in source, examples, generated artifacts or documentation. Refer to a private reference as the `private upstream application`.
+- Resolve the owner-provided private reference through `SYMPHONY_REFERENCE_ROOT` locally; never persist its value in repository files.
+- Keep technical identifiers neutral and preserve user-configured identities unless an explicit migration owns the change.

@@ -18,7 +18,7 @@ export class AgentSpriteAssets {
 
   // #region Methods
 
-  /** FLAMOX's decoded-image gate, cached for a team rather than fetched per employee. @public */
+  /** private upstream application's decoded-image gate, cached for a team rather than fetched per employee. @public */
   public load(source: string): Promise<string> {
     const cached = this._images.get(source);
     if (cached) return cached;

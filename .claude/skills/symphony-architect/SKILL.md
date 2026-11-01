@@ -48,7 +48,7 @@ Examples of combined selection:
 
 - Provider or agent-runtime change: Architecture + Platform + Backend safety + Testing; preserve workspace/account scope, typed results, bounded execution and owned cancellation/disposal.
 - IPC method: Backend + Backend contracts + Testing; trace request and response validation, preload, Main routing, Utility Process dispatch and the real renderer consumer.
-- Angular form/drawer/board: Frontend + Frontend patterns + Testing; inspect the exact FLAMOX365/Mosaik owners and record Adopt/Adapt/Differ decisions before verifying the affected Electron route.
+- Angular form/drawer/board: Frontend + Frontend patterns + Testing; inspect the exact private upstream application/Mosaik owners and record Adopt/Adapt/Differ decisions before verifying the affected Electron route.
 - Workspace/persistence migration: Architecture + Backend + Platform + Testing; preserve leases, versioned state, recovery and isolated executable worktrees.
 - Browser task: Browser E2E + Symphony's packaged-process integration; Chrome-only reference guidance does not replace the real Electron application.
 

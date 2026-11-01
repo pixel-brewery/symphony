@@ -45,13 +45,13 @@ test('configures several repositories in one workspace without a second AI appro
     await expect(settings.getByText('Plan and run tests', { exact: true })).toHaveCount(0);
     await expect(settings.getByText('Allow AI tasks', { exact: true })).toHaveCount(0);
 
-    await addRepository(settings, 'FLAMOX365 Web', 'ruederennes', 'web-app');
-    await addRepository(settings, 'FLAMOX365 API', 'ruederennes', 'platform-api');
+    await addRepository(settings, 'Example Workspace Web', 'ruederennes', 'web-app');
+    await addRepository(settings, 'Example Workspace API', 'ruederennes', 'platform-api');
 
     const repositoryGroup = settings.getByTestId('workspace-repositories-personal');
     await expect(repositoryGroup.locator('[test-id^="local-repository-"]')).toHaveCount(2);
-    await expect(repositoryGroup).toContainText('FLAMOX365 Web');
-    await expect(repositoryGroup).toContainText('FLAMOX365 API');
+    await expect(repositoryGroup).toContainText('Example Workspace Web');
+    await expect(repositoryGroup).toContainText('Example Workspace API');
     await expect(settings.getByTestId('add-repository-personal')).toBeVisible();
     const configured = await page.evaluate(async () => {
       const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
@@ -66,8 +66,8 @@ test('configures several repositories in one workspace without a second AI appro
       };
     });
     expect(configured.repositories.map((repository) => repository.displayName)).toEqual([
-      'FLAMOX365 Web',
-      'FLAMOX365 API',
+      'Example Workspace Web',
+      'Example Workspace API',
     ]);
     expect(configured.repositories.every((repository) => repository.enabled)).toBe(true);
     expect(

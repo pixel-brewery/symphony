@@ -96,7 +96,7 @@ describe('ManagedLimaGithubRunner', () => {
 
     const session = await runner.start(
       {
-        repositoryUrl: 'https://github.com/flamox/platform',
+        repositoryUrl: 'https://github.com/example/platform',
         registrationToken: 'registration-token-that-must-stay-secret',
         runnerName: 'symphony-31863236976-d3ec04e72565',
         labels: ['symphony-local-ci', 'symphony-run-203'],
@@ -333,7 +333,7 @@ function createWarmHarness(existing?: { status: string; fingerprint: string }): 
 async function startWarmRun(harness: IWarmHarness, reuse: boolean): Promise<void> {
   const session = await harness.runner.start(
     {
-      repositoryUrl: 'https://github.com/ruederennes/flamox',
+      repositoryUrl: 'https://github.com/example/project',
       registrationToken: 'registration-token-that-must-stay-secret',
       runnerName: 'symphony-203-abcdef012345',
       labels: ['symphony-local-ci', 'symphony-run-203'],

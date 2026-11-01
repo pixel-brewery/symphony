@@ -142,7 +142,7 @@ export const WrappingHeadings = () => (
         <TableBodyCell text="2.1 GB" />
       </TableBodyRow>
       <TableBodyRow>
-        <TableBodyCell text="flamox365" />
+        <TableBodyCell text="example-workspace" />
         <TableBodyCell text="RueDeRennes" />
         <TableBodyCell>{status('Merged', 'success')}</TableBodyCell>
         <TableBodyCell text="640 MB" />

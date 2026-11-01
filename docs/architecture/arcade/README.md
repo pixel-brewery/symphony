@@ -16,7 +16,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Präferenz und ihr Einstellungsbeitrag, Navigationsbeitrag, Routenschutz, Spielauswahl, Bestenlisten-Dialog und -Speicher, God mode, Palettenbeiträge, gemeinsame Pausensteuerung der Spiele.
-- Nicht enthalten: Regeln, Simulation, Rendering und Audio der einzelnen Spiele. Jedes Spiel besitzt sie in seinem eigenen Verzeichnis samt README mit Quellen und Treue-Checkliste; die Referenz- und Treueentscheidungen stehen im [FLAMOX365-Referenzvertrag](../frontend-reference-flamox.md). Der Fensterrahmen gehört zu [Fensterrahmen und Navigation](../window-and-navigation/README.md), die Palette zur [Befehlspalette](../command-palette/README.md), die Einstellungsoberfläche zu den [Einstellungen im Hauptfenster](../window-and-navigation/settings.md).
+- Nicht enthalten: Regeln, Simulation, Rendering und Audio der einzelnen Spiele. Jedes Spiel besitzt sie in seinem eigenen Verzeichnis samt README mit Quellen und Treue-Checkliste; die Referenz- und Treueentscheidungen stehen im [private upstream application-Referenzvertrag](../frontend-reference/README.md). Der Fensterrahmen gehört zu [Fensterrahmen und Navigation](../window-and-navigation/README.md), die Palette zur [Befehlspalette](../command-palette/README.md), die Einstellungsoberfläche zu den [Einstellungen im Hauptfenster](../window-and-navigation/settings.md).
 
 ## Verantwortungsgrenzen
 
@@ -161,4 +161,4 @@ Die Spiele schreiben nur beendete Partien; nicht beendete Expeditionen und Match
 - [Fensterrahmen und Navigation](../window-and-navigation/README.md)
 - [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [Befehlspalette](../command-palette/README.md)
-- [FLAMOX365-Referenzvertrag](../frontend-reference-flamox.md)
+- [private upstream application-Referenzvertrag](../frontend-reference/README.md)

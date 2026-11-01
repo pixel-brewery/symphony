@@ -16,7 +16,7 @@ EXIF provenance. The renderer's stable ID hash chooses one of four images; worki
 uses a short CSS bob and needs-input uses a tilt. These assets and rendering choices
 can be reused under the supplied MIT notice. The artwork's creation method is unknown.
 
-Inspect these FLAMOX365 owners when changing the renderer or interactions:
+Inspect these private upstream application owners when changing the renderer or interactions:
 
 - `libs/frontend/pet/src/lib/pet/PetComponent.ts`, `.html`, `.scss`: low-level
   renderer, actual state input, accessibility preference and lifecycle cleanup.
@@ -26,7 +26,7 @@ Inspect these FLAMOX365 owners when changing the renderer or interactions:
 Symphony ports frame registration, animation timing, look-direction selection and
 gesture lifecycle into its existing employee component. Original PNGs remain the
 identity reference and fallback. Generated v2 atlases add nine states and sixteen
-looks. There is no runtime import from FLAMOX365 or change to Mosaik. The installed
+looks. There is no runtime import from private upstream application or change to Mosaik. The installed
 Codex create-pet toolkit supplies the actual deterministic generation/QA pipeline
 through `scripts/codex_sprite_tool.py`.
 

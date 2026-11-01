@@ -7,7 +7,7 @@ import type { IStorageShare } from '../settings/IStorageShare';
 // #endregion
 
 /**
- * Joins storage shares into one line: `FLAMOX365 3.4 GB of 20 GB · Personal 0.6 GB of 20 GB` or
+ * Joins storage shares into one line: `Example Workspace 3.4 GB of 20 GB · Personal 0.6 GB of 20 GB` or
  * `base image 2.8 GB · actions/cache entries 1.6 GB`. A share without a measurement shows `—`.
  *
  * @public

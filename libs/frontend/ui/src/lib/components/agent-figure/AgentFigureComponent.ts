@@ -31,7 +31,7 @@ import type { IAgentSpriteFrame } from './IAgentSpriteFrame';
 
 // #endregion
 
-/** FLAMOX sprite playback and attention gestures, bound to real Symphony activity. */
+/** private upstream application sprite playback and attention gestures, bound to real Symphony activity. */
 @Component({
   selector: 'symphony-agent-figure',
   host: {
@@ -135,7 +135,7 @@ export class AgentFigureComponent implements AfterViewInit {
 
   // #region Ctor
 
-  /** Adapts FLAMOX's asset, motion-preference and finite-gesture lifecycle. @public */
+  /** Adapts private upstream application's asset, motion-preference and finite-gesture lifecycle. @public */
   public constructor() {
     effect((onCleanup) => {
       const source = this.source();

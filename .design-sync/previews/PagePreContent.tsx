@@ -12,7 +12,7 @@ import {
 
 export const StaleDataBanner = () => (
   <Page>
-    <PageHeader text="Board" subText="flamox365 / symphony" inset="all" />
+    <PageHeader text="Board" subText="example-workspace / symphony" inset="all" />
     <PagePreContent inset="horizontal">
       <Banner
         isOpen

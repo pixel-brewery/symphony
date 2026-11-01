@@ -49,9 +49,9 @@ describe('searchSettings', () => {
       result(
         'pat',
         'Personal access token',
-        ['FLAMOX365', 'Connected services', 'Support'],
+        ['Example Workspace', 'Connected services', 'Support'],
         {},
-        'flamox',
+        'example',
       ),
     ];
 
@@ -61,7 +61,7 @@ describe('searchSettings', () => {
     // assert
     expect(groups.map((group) => group.breadcrumb.join(' › '))).toEqual([
       'Automation › Fix failed checks › Budgets',
-      'FLAMOX365 › Connected services › Support',
+      'Example Workspace › Connected services › Support',
       'Automation › Execution',
     ]);
     expect(groups[0]?.results.map((entry) => entry.key)).toEqual(['diagnosis', 'repair']);
