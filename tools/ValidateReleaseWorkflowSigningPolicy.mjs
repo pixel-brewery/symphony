@@ -7,19 +7,13 @@ import { parse } from 'yaml';
 
 // #endregion
 
-const signingSecrets = [
-  'APPLE_SIGNING_IDENTITY',
-  'MACOS_CERTIFICATE_BASE64',
-  'MACOS_CERTIFICATE_PASSWORD',
-  'APPLE_API_KEY_BASE64',
-  'APPLE_API_KEY_ID',
-  'APPLE_API_ISSUER',
-  'WINDOWS_CERTIFICATE_BASE64',
-  'WINDOWS_CERTIFICATE_PASSWORD',
-];
+const certificateInputs =
+  /\b(?:APPLE_SIGNING_IDENTITY|APPLE_API_[A-Z0-9_]+|MACOS_CERTIFICATE_[A-Z0-9_]+|WINDOWS_CERTIFICATE_[A-Z0-9_]+|WINDOWS_SIGN_WITH_PARAMS|SYMPHONY_SIGNED)\b/u;
+const certificateOptions =
+  /\b(?:osxNotarize|windowsSign|certificateFile|certificatePassword|signWithParams|appleApiKey(?:Id|Issuer)?)\b/u;
 
 /**
- * Validates that desktop signing remains an optional, platform-scoped release capability.
+ * Validates fixed ad-hoc macOS sealing, unsigned installers and release integrity gates.
  *
  * @param {string} workflowSource GitHub Actions release workflow source.
  * @param {string} forgeSource Electron Forge configuration source.
@@ -228,34 +222,14 @@ export function ValidateReleaseWorkflowSigningPolicy(workflowSource, forgeSource
       'Release API, Pages and workflow dispatch calls must keep the repository job token.',
     );
   }
-  const macosSigningStep = macosSteps.find((step) => step.id === 'macos-signing');
-  const windowsSigningStep = windowsSteps.find(
-    (step) => step.name === 'Import signing certificate when available',
-  );
-
-  if (configureSteps.some((step) => /require.*credential/iu.test(step.name ?? ''))) {
-    violations.push('The configure job must not require signing credentials.');
-  }
-  if (!macosSigningStep) {
-    violations.push('The macOS job must own the optional macOS signing step.');
-  }
-  if (!windowsSigningStep) {
-    violations.push('The Windows job must own the optional Windows signing step.');
-  }
-
-  for (const secret of signingSecrets) {
-    const expectedReference = `\${{ secrets.${secret} }}`;
-    const owner = secret.startsWith('WINDOWS_') ? windowsSigningStep : macosSigningStep;
-    if (owner?.env?.[secret] !== expectedReference) {
-      violations.push(`${secret} must be scoped to its platform signing step.`);
-    }
-  }
-
-  if (jobs.macos?.env?.APPLE_SIGNING_IDENTITY !== undefined) {
-    violations.push('Apple signing credentials must not be exposed at macOS job scope.');
-  }
-  if (jobs.windows?.env?.WINDOWS_CERTIFICATE_BASE64 !== undefined) {
-    violations.push('Windows signing credentials must not be exposed at Windows job scope.');
+  if (
+    certificateInputs.test(workflowSource) ||
+    certificateOptions.test(workflowSource) ||
+    /\b(?:Get-AuthenticodeSignature|signtool|notarytool)\b|\bsecurity\s+(?:create-keychain|unlock-keychain|import)\b/iu.test(
+      workflowSource,
+    )
+  ) {
+    violations.push('Release workflows must not configure platform certificates or notarization.');
   }
 
   for (const platform of ['macos', 'windows', 'linux']) {
@@ -308,27 +282,15 @@ export function ValidateReleaseWorkflowSigningPolicy(workflowSource, forgeSource
   ) {
     violations.push('Every macOS build must verify its app signature and DMG before upload.');
   }
-  const macosDeveloperIdVerification = macosSteps.find(
-    (step) => step.name === 'Verify Developer ID signature',
-  );
   const macosAdHocVerification = macosSteps.find(
     (step) => step.name === 'Verify launchable ad-hoc signature',
   );
   if (
-    macosAdHocVerification?.if !== "steps.macos-signing.outputs.signed != 'true'" ||
+    macosAdHocVerification?.if !== undefined ||
     !macosAdHocVerification?.run?.includes('Signature=adhoc') ||
     !macosAdHocVerification.run.includes('flags=.*runtime')
   ) {
     violations.push('Ad-hoc macOS builds must reject Hardened Runtime before publication.');
-  }
-  if (macosDeveloperIdVerification?.if !== "steps.macos-signing.outputs.signed == 'true'") {
-    violations.push('Developer ID verification must run only when Apple signing is configured.');
-  }
-  const windowsVerification = windowsSteps.find(
-    (step) => step.name === 'Verify installer signature',
-  );
-  if (windowsVerification?.if !== "env.SYMPHONY_SIGNED == 'true'") {
-    violations.push('Windows signature verification must run only for a signed build.');
   }
 
   if (!linuxSteps.some((step) => step.name === 'Report Linux package signing mode')) {
@@ -354,33 +316,21 @@ export function ValidateReleaseWorkflowSigningPolicy(workflowSource, forgeSource
   ) {
     violations.push('Generated release changelogs must be formatted before publishing the tag.');
   }
-  for (const platform of ['macos', 'windows']) {
-    const steps = jobs[platform]?.steps ?? [];
-    const installIndex = steps.findIndex((step) => step.name === 'Install dependencies');
-    const signingIndex = steps.indexOf(
-      platform === 'macos' ? macosSigningStep : windowsSigningStep,
-    );
-    if (installIndex < 0 || signingIndex <= installIndex) {
-      violations.push(
-        `${platform} signing credentials must be configured after dependency installation.`,
-      );
-    }
-  }
-  if (!workflowSource.includes('Install unsigned artifacts only if you trust this repository')) {
-    violations.push('GitHub Release notes must disclose the unsigned-install trust decision.');
-  }
-  if (!/const osxNotarize =\s+appleSigningIdentity &&/u.test(forgeSource)) {
-    violations.push('Apple notarization must remain disabled when macOS signing is disabled.');
+  if (
+    certificateInputs.test(forgeSource) ||
+    certificateOptions.test(forgeSource) ||
+    /\bhardenedRuntime:\s*true\b/u.test(forgeSource)
+  ) {
+    violations.push('Forge must not accept platform certificates or notarization inputs.');
   }
   if (
+    !forgeSource.includes('osxSign: {') ||
     !forgeSource.includes("identity: '-'") ||
     !forgeSource.includes('identityValidation: false') ||
     !forgeSource.includes('optionsForFile: () => ({ hardenedRuntime: false })') ||
     !forgeSource.includes('continueOnError: false')
   ) {
-    violations.push(
-      'macOS builds without Apple credentials must receive a launchable complete ad-hoc signature.',
-    );
+    violations.push('Every macOS build must receive a launchable complete ad-hoc signature.');
   }
   if (!forgeSource.includes('new MakerDMG')) {
     violations.push('The macOS release matrix must include a DMG installer.');
@@ -406,7 +356,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     process.exitCode = 1;
   } else {
     process.stdout.write(
-      'Release workflow signing credentials are optional and platform-scoped.\n',
+      'Release workflow uses fixed ad-hoc macOS sealing and unsigned installers.\n',
     );
   }
 }

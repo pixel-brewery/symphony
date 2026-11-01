@@ -52,12 +52,15 @@ Download the latest build for your platform from
 | Linux (ARM64)         | `symphony_<version>_arm64.deb`        |
 
 GitHub adds the source ZIP and source `tar.gz` links automatically. Symphony publishes no other
-ZIP, x64, or NuGet release assets. When the app is built without Apple credentials, its bundle is
-completely ad-hoc signed but is neither trusted by a Developer ID nor notarized. After copying it
-to Applications, macOS therefore requires an explicit approval under **System Settings → Privacy
-& Security → Open Anyway**. If Gatekeeper still reports a checksum-verified app as damaged, remove
-only the browser quarantine with
-`xattr -dr com.apple.quarantine /Applications/Symphony.app`.
+ZIP, x64, or NuGet release assets. macOS uses a complete ad-hoc bundle seal and is not notarized;
+Windows and Debian installers are unsigned. Review the [public source](https://github.com/pixel-brewery/symphony)
+and published SHA-256 values. Download and run at your own discretion. The [MIT license](LICENSE)
+supplies the software as-is, without warranty.
+
+After copying Symphony to Applications, macOS requires an explicit approval under
+**System Settings → Privacy & Security → Open Anyway**. If Gatekeeper still reports a
+checksum-verified app as damaged, remove only its download quarantine with
+`xattr -dr com.apple.quarantine /Applications/Symphony.app`. Windows may show a SmartScreen warning.
 
 Installer-only ARM64 releases are downloaded and verified inside Symphony: the status bar's update
 button downloads the installer, checks its size and SHA-256 digest, and `Restart to update` opens
@@ -157,13 +160,11 @@ the release commit and tag, then publish the macOS ARM64 DMG, Windows ARM64 EXE,
 assets. GitHub supplies the two source archives automatically. The pipeline verifies that no other
 configured asset was attached before it publishes the immutable version manifest.
 
-Platform signing credentials are optional. Complete macOS signing, Apple notarization, or Windows
-signing secret groups enable the corresponding capability; absent or partial groups produce an
-ad-hoc-signed, unnotarized macOS artifact or an unsigned Windows artifact with a workflow warning
-instead of blocking the release. The Debian artifact is published without package signing.
-Untrusted downloads can trigger Gatekeeper or SmartScreen warnings and should be installed only
-after the release-manifest checksums have been verified. Patch, minor, and major releases can also
-be requested explicitly from an authenticated checkout:
+Every release uses the same fixed distribution policy: ad-hoc macOS bundle sealing without
+notarization or Hardened Runtime, and unsigned Windows and Debian installers. Platform certificate
+configuration is not supported. The [installation guidance](#install) explains source review,
+checksums and operating-system prompts. Patch, minor, and major releases can also be requested
+explicitly from an authenticated checkout:
 
 ```bash
 yarn release:patch

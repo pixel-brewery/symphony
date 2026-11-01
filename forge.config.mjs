@@ -26,48 +26,6 @@ const windowsControlPanelIconUrl = updateBaseUrl
   ? `${updateBaseUrl}/releases/${packageVersion}/shared/symphony.ico`
   : undefined;
 
-const windowsSign = process.env['WINDOWS_CERTIFICATE_FILE']
-  ? {
-      certificateFile: process.env['WINDOWS_CERTIFICATE_FILE'],
-      certificatePassword: process.env['WINDOWS_CERTIFICATE_PASSWORD'],
-      description: 'Symphony',
-    }
-  : process.env['WINDOWS_SIGN_WITH_PARAMS']
-    ? {
-        signWithParams: process.env['WINDOWS_SIGN_WITH_PARAMS'],
-        description: 'Symphony',
-      }
-    : undefined;
-
-const appleSigningIdentity = process.env['APPLE_SIGNING_IDENTITY'];
-const osxSign = appleSigningIdentity
-  ? {
-      identity: appleSigningIdentity,
-      continueOnError: false,
-    }
-  : {
-      // Apple Silicon still needs a structurally complete bundle signature. An
-      // ad-hoc identity seals the app without requiring an Apple Developer account.
-      // It has no stable Team ID, so Hardened Runtime library validation would
-      // reject the embedded Electron Framework before the application can start.
-      identity: '-',
-      identityValidation: false,
-      optionsForFile: () => ({ hardenedRuntime: false }),
-      continueOnError: false,
-    };
-
-const osxNotarize =
-  appleSigningIdentity &&
-  process.env['APPLE_API_KEY_PATH'] &&
-  process.env['APPLE_API_KEY_ID'] &&
-  process.env['APPLE_API_ISSUER']
-    ? {
-        appleApiKey: process.env['APPLE_API_KEY_PATH'],
-        appleApiKeyId: process.env['APPLE_API_KEY_ID'],
-        appleApiIssuer: process.env['APPLE_API_ISSUER'],
-      }
-    : undefined;
-
 export default {
   packagerConfig: {
     asar: true,
@@ -85,9 +43,15 @@ export default {
       /^\/(?!dist|package\.json|node_modules)/,
       /^\/node_modules\/(?!(?:zod|electron-native-speech|electron-native-speech-backend-macos|electron-native-speech-preload)(?:\/|$))/,
     ],
-    osxSign,
-    ...(osxNotarize ? { osxNotarize } : {}),
-    ...(windowsSign ? { windowsSign } : {}),
+    osxSign: {
+      // Apple Silicon needs a complete bundle seal even without publisher trust.
+      // Ad-hoc sealing has no stable Team ID, so Hardened Runtime would reject
+      // the embedded Electron Framework before the application can start.
+      identity: '-',
+      identityValidation: false,
+      optionsForFile: () => ({ hardenedRuntime: false }),
+      continueOnError: false,
+    },
   },
   makers: [
     // Archive packages are intentionally not part of the release surface.
@@ -109,7 +73,6 @@ export default {
       setupExe: 'SymphonySetup.exe',
       setupIcon: windowsIcon,
       ...(windowsControlPanelIconUrl ? { iconUrl: windowsControlPanelIconUrl } : {}),
-      ...(windowsSign ? { windowsSign } : {}),
     }),
   ],
 };
