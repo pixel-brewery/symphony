@@ -81,7 +81,7 @@ describe('release signing credential preflight', () => {
     },
   );
 
-  it.each([0, 1, 2, 3])(
+  it.skipIf(process.platform !== 'win32').each([0, 1, 2, 3])(
     'accepts only an absent or complete Windows credential pair for presence mask %i',
     async (mask) => {
       // arrange
