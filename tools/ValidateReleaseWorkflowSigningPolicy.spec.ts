@@ -4,13 +4,121 @@ import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { parse, stringify } from 'yaml';
 import { ValidateReleaseWorkflowSigningPolicy } from './ValidateReleaseWorkflowSigningPolicy.mjs';
 
 // #endregion
 
 const run = promisify(execFile);
+
+describe('release signing credential preflight', () => {
+  const macosSecrets = [
+    'APPLE_SIGNING_IDENTITY',
+    'MACOS_CERTIFICATE_BASE64',
+    'MACOS_CERTIFICATE_PASSWORD',
+    'APPLE_API_KEY_BASE64',
+    'APPLE_API_KEY_ID',
+    'APPLE_API_ISSUER',
+  ];
+  let macosPreflight = '';
+  let windowsPreflight = '';
+
+  beforeAll(async () => {
+    const workflow = parse(await readFile(resolve('.github/workflows/release.yml'), 'utf8'));
+    const macosScript = workflow.jobs.macos.steps.find(
+      (step: { id?: string }) => step.id === 'macos-signing',
+    )?.run;
+    const windowsScript = workflow.jobs.windows.steps.find(
+      (step: { name?: string }) => step.name === 'Import signing certificate when available',
+    )?.run;
+    if (typeof macosScript !== 'string' || typeof windowsScript !== 'string') {
+      throw new Error('The release workflow must expose both platform signing scripts.');
+    }
+    const macosBoundary = macosScript.indexOf('\nsigned=false');
+    const windowsBoundary = windowsScript.indexOf('\nif ($configured.Count -eq 2)');
+    if (macosBoundary < 0 || windowsBoundary < 0) {
+      throw new Error('Cannot isolate signing validation from credential materialization.');
+    }
+    // Execute the workflow's checks without entering any credential import branch.
+    macosPreflight = macosScript.slice(0, macosBoundary);
+    windowsPreflight = windowsScript.slice(0, windowsBoundary);
+  });
+
+  it.skipIf(process.platform === 'win32').each(Array.from({ length: 64 }, (_, mask) => mask))(
+    'accepts only absent or complete macOS credential groups for presence mask %i',
+    async (mask) => {
+      // arrange
+      const credentials = Object.fromEntries(
+        macosSecrets.map((secret, index) => [
+          secret,
+          mask & (1 << index) ? 'synthetic-credential' : '',
+        ]),
+      );
+
+      // act
+      const result = run(
+        '/bin/bash',
+        ['--noprofile', '--norc', '-c', `${macosPreflight}\necho validated`],
+        {
+          env: { PATH: '', ...credentials },
+          timeout: 5_000,
+        },
+      );
+
+      // assert
+      if ([0, 7, 63].includes(mask)) {
+        await expect(result).resolves.toMatchObject({ stdout: 'validated\n', stderr: '' });
+      } else {
+        await expect(result).rejects.toMatchObject({
+          code: 1,
+          stdout: '',
+          stderr: expect.stringMatching(
+            /Configure the complete (?:macOS signing|Apple notarization) credential group\.|Notarization requires trusted macOS signing\./u,
+          ),
+        });
+      }
+    },
+  );
+
+  it.each([0, 1, 2, 3])(
+    'accepts only an absent or complete Windows credential pair for presence mask %i',
+    async (mask) => {
+      // arrange
+      const environment = {
+        PATH: process.env['PATH'],
+        SystemRoot: process.env['SystemRoot'] ?? process.env['SYSTEMROOT'],
+        WINDOWS_CERTIFICATE_BASE64: mask & 1 ? 'synthetic-certificate' : '',
+        WINDOWS_CERTIFICATE_PASSWORD: mask & 2 ? 'synthetic-password' : '',
+      };
+
+      // act
+      const result = run(
+        'pwsh',
+        [
+          '-NoLogo',
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          `${windowsPreflight}\nWrite-Output 'validated'`,
+        ],
+        { env: environment, timeout: 5_000 },
+      );
+
+      // assert
+      if (mask === 0 || mask === 3) {
+        expect((await result).stdout.trim()).toBe('validated');
+      } else {
+        await expect(result).rejects.toMatchObject({
+          code: 1,
+          stderr: expect.stringContaining(
+            'Configure the complete Windows signing credential group.',
+          ),
+        });
+      }
+    },
+  );
+});
 
 describe('release workflow signing policy', () => {
   it('keeps signing credentials optional and platform-scoped', async () => {

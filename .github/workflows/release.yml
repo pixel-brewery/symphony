@@ -301,8 +301,8 @@ jobs:
         run: yarn install --immutable
       - run: yarn release:version "$RELEASE_VERSION"
       - run: yarn build
-      # Signing and notarization are independent optional capabilities. Secrets stay
-      # scoped to this step and reach Forge only when their complete group exists.
+      # Signing and notarization are optional complete credential groups. Validate
+      # both before creating signing material or exposing their values to Forge.
       - name: Configure optional macOS signing and notarization
         id: macos-signing
         env:
@@ -332,6 +332,18 @@ jobs:
             "$APPLE_API_KEY_BASE64" \
             "$APPLE_API_KEY_ID" \
             "$APPLE_API_ISSUER")"
+          if [ "$signing_count" -ne 0 ] && [ "$signing_count" -ne 3 ]; then
+            echo 'Configure the complete macOS signing credential group.' >&2
+            exit 1
+          fi
+          if [ "$notarization_count" -ne 0 ] && [ "$notarization_count" -ne 3 ]; then
+            echo 'Configure the complete Apple notarization credential group.' >&2
+            exit 1
+          fi
+          if [ "$notarization_count" -eq 3 ] && [ "$signing_count" -ne 3 ]; then
+            echo 'Notarization requires trusted macOS signing.' >&2
+            exit 1
+          fi
           signed=false
 
           if [ "$signing_count" -eq 3 ]; then
@@ -346,10 +358,8 @@ jobs:
             security list-keychain -d user -s "$keychain_path"
             echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY" >> "$GITHUB_ENV"
             signed=true
-          elif [ "$signing_count" -eq 0 ]; then
-            echo '::warning title=Ad-hoc-signed macOS build::No signing credentials are configured. The release continues with a complete ad-hoc signature but without Apple trust or notarization.'
           else
-            echo '::warning title=Incomplete macOS signing credentials::The partial signing secret set is ignored and the release continues with a complete ad-hoc signature but without Apple trust or notarization.'
+            echo '::warning title=Ad-hoc-signed macOS build::No signing credentials are configured. The release continues with a complete ad-hoc signature but without Apple trust or notarization.'
           fi
 
           if [ "$signed" = true ] && [ "$notarization_count" -eq 3 ]; then
@@ -358,8 +368,6 @@ jobs:
             echo "APPLE_API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
             echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> "$GITHUB_ENV"
             echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> "$GITHUB_ENV"
-          elif [ "$notarization_count" -gt 0 ]; then
-            echo '::warning title=Notarization disabled::The notarization secrets are incomplete or macOS signing is unavailable, so they are ignored.'
           elif [ "$signed" = true ]; then
             echo '::warning title=Unnotarized macOS build::The application will be signed but not notarized because no notarization credentials are configured.'
           fi
@@ -453,7 +461,9 @@ jobs:
           WINDOWS_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
-          if ($env:WINDOWS_CERTIFICATE_BASE64 -and $env:WINDOWS_CERTIFICATE_PASSWORD) {
+          $configured = @($env:WINDOWS_CERTIFICATE_BASE64, $env:WINDOWS_CERTIFICATE_PASSWORD) | Where-Object { $_ }
+          if ($configured.Count -ne 0 -and $configured.Count -ne 2) { throw 'Configure the complete Windows signing credential group.' }
+          if ($configured.Count -eq 2) {
             $certificatePath = Join-Path $env:RUNNER_TEMP 'symphony-signing.pfx'
             [IO.File]::WriteAllBytes($certificatePath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_BASE64))
             "WINDOWS_CERTIFICATE_FILE=$certificatePath" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -461,11 +471,7 @@ jobs:
             "SYMPHONY_SIGNED=true" | Out-File -FilePath $env:GITHUB_ENV -Append
           } else {
             "SYMPHONY_SIGNED=false" | Out-File -FilePath $env:GITHUB_ENV -Append
-            if ($env:WINDOWS_CERTIFICATE_BASE64 -or $env:WINDOWS_CERTIFICATE_PASSWORD) {
-              Write-Output "::warning title=Incomplete Windows signing credentials::The partial certificate secret set is ignored and the release continues unsigned."
-            } else {
-              Write-Output "::warning title=Unsigned Windows build::No code-signing certificate is configured. The release continues unsigned and Windows may show a SmartScreen warning."
-            }
+            Write-Output "::warning title=Unsigned Windows build::No code-signing certificate is configured. The release continues unsigned and Windows may show a SmartScreen warning."
           }
 
       # x64 packaging stays available for a later support expansion.
