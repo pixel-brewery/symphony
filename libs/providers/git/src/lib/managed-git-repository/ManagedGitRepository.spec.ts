@@ -1,10 +1,10 @@
 // #region Imports
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { IRepositoryBinding } from '@symphony/domain-workspace';
 import { ManagedGitRepository } from './ManagedGitRepository';
 
@@ -12,15 +12,23 @@ import { ManagedGitRepository } from './ManagedGitRepository';
 
 const directories: string[] = [];
 
-afterEach(() => {
+afterAll(() => {
   for (const directory of directories.splice(0))
     rmSync(directory, { recursive: true, force: true });
 });
 
 describe('ManagedGitRepository', () => {
+  let existingCheckout: string;
+  let unrelatedCheckout: string;
+
+  beforeAll(() => {
+    existingCheckout = repositoryDirectory('https://github.com/example/platform.git');
+    unrelatedCheckout = repositoryDirectory('https://github.com/other/project.git');
+  });
+
   it('inspects an existing checkout without executing hooks or requiring credentials', async () => {
     // arrange
-    const root = repositoryDirectory('https://github.com/example/platform.git');
+    const root = existingCheckout;
     const adapter = new ManagedGitRepository({ token: async () => undefined });
 
     // act
@@ -33,7 +41,7 @@ describe('ManagedGitRepository', () => {
 
   it('rejects a configured checkout whose origin belongs to another repository', async () => {
     // arrange
-    const root = repositoryDirectory('https://github.com/other/project.git');
+    const root = unrelatedCheckout;
     // act
     const adapter = new ManagedGitRepository({ token: async () => undefined });
 
@@ -47,12 +55,25 @@ describe('ManagedGitRepository', () => {
 function repositoryDirectory(remote: string): string {
   const root = mkdtempSync(join(tmpdir(), 'symphony-managed-repository-'));
   directories.push(root);
-  execFileSync('git', ['init', '-b', 'main', root]);
-  execFileSync('git', ['-C', root, 'config', 'user.name', 'Symphony Test']);
-  execFileSync('git', ['-C', root, 'config', 'user.email', 'test@example.com']);
-  writeFileSync(join(root, 'README.md'), '# Test\n');
-  execFileSync('git', ['-C', root, 'add', 'README.md']);
-  execFileSync('git', ['-C', root, 'commit', '-m', 'Initial']);
+  const hooksPath = join(root, '.disabled-hooks');
+  mkdirSync(hooksPath);
+  execFileSync('git', ['init', `--template=${hooksPath}`, '-b', 'main', root]);
+  execFileSync('git', [
+    '-C',
+    root,
+    '-c',
+    'user.name=Symphony Test',
+    '-c',
+    'user.email=symphony@example.invalid',
+    '-c',
+    `core.hooksPath=${hooksPath}`,
+    '-c',
+    'commit.gpgsign=false',
+    'commit',
+    '--allow-empty',
+    '-m',
+    'Initial',
+  ]);
   execFileSync('git', ['-C', root, 'remote', 'add', 'origin', remote]);
   return root;
 }

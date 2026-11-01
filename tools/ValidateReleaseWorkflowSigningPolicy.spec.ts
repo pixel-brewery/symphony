@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parse, stringify } from 'yaml';
 import { ValidateReleaseWorkflowSigningPolicy } from './ValidateReleaseWorkflowSigningPolicy.mjs';
 
@@ -12,116 +12,72 @@ import { ValidateReleaseWorkflowSigningPolicy } from './ValidateReleaseWorkflowS
 
 const run = promisify(execFile);
 
-describe('release signing credential preflight', () => {
-  const macosSecrets = [
-    'APPLE_SIGNING_IDENTITY',
-    'MACOS_CERTIFICATE_BASE64',
-    'MACOS_CERTIFICATE_PASSWORD',
-    'APPLE_API_KEY_BASE64',
-    'APPLE_API_KEY_ID',
-    'APPLE_API_ISSUER',
-  ];
-  let macosPreflight = '';
-  let windowsPreflight = '';
-
-  beforeAll(async () => {
-    const workflow = parse(await readFile(resolve('.github/workflows/release.yml'), 'utf8'));
-    const macosScript = workflow.jobs.macos.steps.find(
-      (step: { id?: string }) => step.id === 'macos-signing',
-    )?.run;
-    const windowsScript = workflow.jobs.windows.steps.find(
-      (step: { name?: string }) => step.name === 'Import signing certificate when available',
-    )?.run;
-    if (typeof macosScript !== 'string' || typeof windowsScript !== 'string') {
-      throw new Error('The release workflow must expose both platform signing scripts.');
-    }
-    const macosBoundary = macosScript.indexOf('\nsigned=false');
-    const windowsBoundary = windowsScript.indexOf('\nif ($configured.Count -eq 2)');
-    if (macosBoundary < 0 || windowsBoundary < 0) {
-      throw new Error('Cannot isolate signing validation from credential materialization.');
-    }
-    // Execute the workflow's checks without entering any credential import branch.
-    macosPreflight = macosScript.slice(0, macosBoundary);
-    windowsPreflight = windowsScript.slice(0, windowsBoundary);
-  });
-
-  it.skipIf(process.platform === 'win32').each(Array.from({ length: 64 }, (_, mask) => mask))(
-    'accepts only absent or complete macOS credential groups for presence mask %i',
-    async (mask) => {
+describe('fixed desktop distribution configuration', () => {
+  it.each(['darwin', 'win32', 'linux'])(
+    'keeps ad-hoc sealing and unsigned installers with legacy certificate variables on %s',
+    async (platform) => {
       // arrange
-      const credentials = Object.fromEntries(
-        macosSecrets.map((secret, index) => [
-          secret,
-          mask & (1 << index) ? 'synthetic-credential' : '',
-        ]),
-      );
+      const script = `
+        Object.defineProperty(process, 'platform', { value: ${JSON.stringify(platform)} });
+        const { default: config } = await import('./forge.config.mjs');
+        const squirrel = config.makers.find((maker) => maker.name === 'squirrel');
+        if (!squirrel) throw new Error('The Windows installer maker is required.');
+        await squirrel.prepareConfig('arm64');
+        const signing = config.packagerConfig.osxSign;
+        process.stdout.write(JSON.stringify({
+          macos: {
+            identity: signing?.identity,
+            identityValidation: signing?.identityValidation,
+            continueOnError: signing?.continueOnError,
+            options: signing?.optionsForFile?.('Symphony.app'),
+          },
+          notarization: 'osxNotarize' in config.packagerConfig,
+          windowsPackageSigning: 'windowsSign' in config.packagerConfig,
+          windowsInstallerSigning: [
+            'windowsSign', 'certificateFile', 'certificatePassword', 'signWithParams',
+          ].filter((key) => key in squirrel.config),
+        }));
+      `;
 
       // act
-      const result = run(
-        '/bin/bash',
-        ['--noprofile', '--norc', '-c', `${macosPreflight}\necho validated`],
-        {
-          env: { PATH: '', ...credentials },
-          timeout: 5_000,
+      const result = await run(process.execPath, ['--input-type=module', '-e', script], {
+        cwd: resolve('.'),
+        env: {
+          PATH: process.env['PATH'],
+          SystemRoot: process.env['SystemRoot'] ?? process.env['SYSTEMROOT'],
+          APPLE_SIGNING_IDENTITY: 'synthetic-publisher-identity',
+          MACOS_CERTIFICATE_BASE64: 'synthetic-certificate',
+          MACOS_CERTIFICATE_PASSWORD: 'synthetic-password',
+          APPLE_API_KEY_BASE64: 'synthetic-api-key',
+          APPLE_API_KEY_PATH: 'synthetic-api-key.p8',
+          APPLE_API_KEY_ID: 'synthetic-key-id',
+          APPLE_API_ISSUER: 'synthetic-issuer',
+          WINDOWS_CERTIFICATE_BASE64: 'synthetic-certificate',
+          WINDOWS_CERTIFICATE_FILE: 'synthetic-certificate.pfx',
+          WINDOWS_CERTIFICATE_PASSWORD: 'synthetic-password',
+          WINDOWS_SIGN_WITH_PARAMS: '/a /f synthetic-certificate.pfx',
         },
-      );
+        timeout: 5_000,
+      });
 
       // assert
-      if ([0, 7, 63].includes(mask)) {
-        await expect(result).resolves.toMatchObject({ stdout: 'validated\n', stderr: '' });
-      } else {
-        await expect(result).rejects.toMatchObject({
-          code: 1,
-          stdout: '',
-          stderr: expect.stringMatching(
-            /Configure the complete (?:macOS signing|Apple notarization) credential group\.|Notarization requires trusted macOS signing\./u,
-          ),
-        });
-      }
-    },
-  );
-
-  it.skipIf(process.platform !== 'win32').each([0, 1, 2, 3])(
-    'accepts only an absent or complete Windows credential pair for presence mask %i',
-    async (mask) => {
-      // arrange
-      const environment = {
-        PATH: process.env['PATH'],
-        SystemRoot: process.env['SystemRoot'] ?? process.env['SYSTEMROOT'],
-        WINDOWS_CERTIFICATE_BASE64: mask & 1 ? 'synthetic-certificate' : '',
-        WINDOWS_CERTIFICATE_PASSWORD: mask & 2 ? 'synthetic-password' : '',
-      };
-
-      // act
-      const result = run(
-        'pwsh',
-        [
-          '-NoLogo',
-          '-NoProfile',
-          '-NonInteractive',
-          '-Command',
-          `${windowsPreflight}\nWrite-Output 'validated'`,
-        ],
-        { env: environment, timeout: 5_000 },
-      );
-
-      // assert
-      if (mask === 0 || mask === 3) {
-        expect((await result).stdout.trim()).toBe('validated');
-      } else {
-        await expect(result).rejects.toMatchObject({
-          code: 1,
-          stderr: expect.stringContaining(
-            'Configure the complete Windows signing credential group.',
-          ),
-        });
-      }
+      expect(JSON.parse(result.stdout)).toEqual({
+        macos: {
+          identity: '-',
+          identityValidation: false,
+          continueOnError: false,
+          options: { hardenedRuntime: false },
+        },
+        notarization: false,
+        windowsPackageSigning: false,
+        windowsInstallerSigning: [],
+      });
     },
   );
 });
 
 describe('release workflow signing policy', () => {
-  it('keeps signing credentials optional and platform-scoped', async () => {
+  it('keeps fixed macOS sealing and unsigned installers', async () => {
     // arrange
     const policyScript = resolve('tools/ValidateReleaseWorkflowSigningPolicy.mjs');
 
@@ -130,7 +86,7 @@ describe('release workflow signing policy', () => {
 
     // assert
     expect(result.stderr).toBe('');
-    expect(result.stdout).toContain('signing credentials are optional');
+    expect(result.stdout).toContain('fixed ad-hoc macOS sealing and unsigned installers');
   });
 
   it('rejects hardened runtime for the ad-hoc identity', async () => {
@@ -146,7 +102,102 @@ describe('release workflow signing policy', () => {
 
     // assert
     expect(violations).toContain(
-      'macOS builds without Apple credentials must receive a launchable complete ad-hoc signature.',
+      'Every macOS build must receive a launchable complete ad-hoc signature.',
+    );
+  });
+
+  it.each(['APPLE_SIGNING_IDENTITY', 'WINDOWS_CERTIFICATE_BASE64'])(
+    'rejects a release workflow that accepts platform credential %s',
+    async (secret) => {
+      // arrange
+      const workflow = parse(await readFile(resolve('.github/workflows/release.yml'), 'utf8'));
+      const forgeSource = await readFile(resolve('forge.config.mjs'), 'utf8');
+      workflow.jobs.configure.env = {
+        ...workflow.jobs.configure.env,
+        [secret]: '${{ secrets.' + secret + ' }}',
+      };
+
+      // act
+      const violations = ValidateReleaseWorkflowSigningPolicy(stringify(workflow), forgeSource);
+
+      // assert
+      expect(violations).toContain(
+        'Release workflows must not configure platform certificates or notarization.',
+      );
+    },
+  );
+
+  it.each([
+    'security create-keychain -p synthetic-password synthetic.keychain',
+    'xcrun notarytool submit synthetic.zip',
+    'Get-AuthenticodeSignature synthetic.exe',
+  ])('rejects certificate operations without an explicit secret reference: %s', async (command) => {
+    // arrange
+    const workflow = parse(await readFile(resolve('.github/workflows/release.yml'), 'utf8'));
+    const forgeSource = await readFile(resolve('forge.config.mjs'), 'utf8');
+    workflow.jobs.macos.steps.push({ name: 'Configure platform trust', run: command });
+
+    // act
+    const violations = ValidateReleaseWorkflowSigningPolicy(stringify(workflow), forgeSource);
+
+    // assert
+    expect(violations).toContain(
+      'Release workflows must not configure platform certificates or notarization.',
+    );
+  });
+
+  it.each(['osxNotarize', 'windowsSign', 'certificateFile', 'signWithParams'])(
+    'rejects reintroducing Forge option %s',
+    async (option) => {
+      // arrange
+      const workflowSource = await readFile(resolve('.github/workflows/release.yml'), 'utf8');
+      const forgeSource = (await readFile(resolve('forge.config.mjs'), 'utf8')).replace(
+        '    asar: true,',
+        `    asar: true,\n    ${option}: {},`,
+      );
+
+      // act
+      const violations = ValidateReleaseWorkflowSigningPolicy(workflowSource, forgeSource);
+
+      // assert
+      expect(violations).toContain(
+        'Forge must not accept platform certificates or notarization inputs.',
+      );
+    },
+  );
+
+  it('requires unconditional ad-hoc identity and runtime-flag verification', async () => {
+    // arrange
+    const workflow = parse(await readFile(resolve('.github/workflows/release.yml'), 'utf8'));
+    const forgeSource = await readFile(resolve('forge.config.mjs'), 'utf8');
+    const verification = workflow.jobs.macos.steps.find(
+      (step: { name?: string }) => step.name === 'Verify launchable ad-hoc signature',
+    );
+    verification.if = 'false';
+
+    // act
+    const violations = ValidateReleaseWorkflowSigningPolicy(stringify(workflow), forgeSource);
+
+    // assert
+    expect(violations).toContain(
+      'Ad-hoc macOS builds must reject Hardened Runtime before publication.',
+    );
+  });
+
+  it('requires strict bundle and disk-image integrity verification', async () => {
+    // arrange
+    const workflow = parse(await readFile(resolve('.github/workflows/release.yml'), 'utf8'));
+    const forgeSource = await readFile(resolve('forge.config.mjs'), 'utf8');
+    workflow.jobs.macos.steps = workflow.jobs.macos.steps.filter(
+      (step: { name?: string }) => step.name !== 'Verify macOS application and disk image',
+    );
+
+    // act
+    const violations = ValidateReleaseWorkflowSigningPolicy(stringify(workflow), forgeSource);
+
+    // assert
+    expect(violations).toContain(
+      'Every macOS build must verify its app signature and DMG before upload.',
     );
   });
 

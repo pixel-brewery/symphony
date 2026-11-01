@@ -10,6 +10,8 @@ Symphony zeigt auf macOS und Windows an, wenn im ausgewählten Updatekanal eine 
 
 Für öffentliche Downloads ist kein GitHub-Konto erforderlich. Aktuell werden Installer für ARM64 angeboten. Unter Linux erfolgt die Aktualisierung manuell über das veröffentlichte Debian-Paket; die Updateprüfung in der Anwendung ist dort deaktiviert.
 
+macOS downloads use an ad-hoc bundle seal and are not notarized; Windows and Debian installers are unsigned. Review the [public source](https://github.com/pixel-brewery/symphony) and published checksums. Download and run at your own discretion. The [MIT license](../../../LICENSE) provides the software as-is, without warranty. Gatekeeper or SmartScreen may require your explicit approval.
+
 ## Neue Versionen finden
 
 Symphony prüft etwa 15 Sekunden nach dem Start, danach stündlich sowie nach dem Aufwachen oder Entsperren des Rechners auf Updates. Ist eine neuere Version verfügbar, erscheint rechts in der [Statusleiste](../window-and-navigation/README.md#statusleiste) neben `Symphony v<Version>` eine Downloadschaltfläche mit dem Downloadsymbol. Ihr Hinweistext lautet `Download Symphony <Version>`. Dieselbe Aktion bietet auf macOS das Menüleisten-Menü (**Download update** mit der Versionsnummer). **Settings → System → Updates** zeigt nur den Zustand; Download und Neustart gehören der Statusleiste. Ohne verfügbares Update zeigt die Statusleiste keine Updateschaltfläche.
