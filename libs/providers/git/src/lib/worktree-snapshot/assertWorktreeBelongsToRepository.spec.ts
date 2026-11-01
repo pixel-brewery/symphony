@@ -6,7 +6,7 @@ import { assertWorktreeBelongsToRepository } from './assertWorktreeBelongsToRepo
 // #endregion
 
 describe('assertWorktreeBelongsToRepository', () => {
-  const identity = { host: 'github.com', owner: 'ruederennes', name: 'flamox' } as const;
+  const identity = { host: 'github.com', owner: 'example', name: 'project' } as const;
 
   async function check(remote: string): Promise<void> {
     await assertWorktreeBelongsToRepository(
@@ -19,9 +19,9 @@ describe('assertWorktreeBelongsToRepository', () => {
 
   it('accepts the HTTPS and SSH remotes of the bound repository', async () => {
     // act
-    const httpsResult = check('https://github.com/ruederennes/flamox.git');
-    const sshResult = check('git@github.com:ruederennes/flamox.git');
-    const caseInsensitiveResult = check('https://github.com/RueDeRennes/Flamox');
+    const httpsResult = check('https://github.com/example/project.git');
+    const sshResult = check('git@github.com:example/project.git');
+    const caseInsensitiveResult = check('https://github.com/Example/Project');
 
     // assert
     await expect(httpsResult).resolves.toBeUndefined();
@@ -31,7 +31,7 @@ describe('assertWorktreeBelongsToRepository', () => {
 
   it('rejects a worktree of a different repository', async () => {
     // act
-    const actual = check('https://github.com/someone-else/flamox.git');
+    const actual = check('https://github.com/someone-else/project.git');
 
     // assert
     await expect(actual).rejects.toThrow(/different repository/u);

@@ -43,7 +43,7 @@ describe('githubConnectionAccountLogin', () => {
           workspaceId: 'personal',
           connectionId: connection.id,
           provider: 'github-projects' as const,
-          displayName: 'FLAMOX365',
+          displayName: 'Example Workspace',
           ownerType: 'user' as const,
           owner: 'RueDeRennes',
           projectNumber: 3,

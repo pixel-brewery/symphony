@@ -193,6 +193,24 @@ describe('upgradeApplicationSettings', () => {
     ).toHaveLength(6);
   });
 
+  it('preserves configured workflow identity when the shipped default identity changes', () => {
+    // arrange
+    const defaults = createDefaultApplicationSettings('/Users/operator');
+    const configuredWorkflow = {
+      ...defaultWorkflow,
+      id: 'existing-delivery',
+      name: 'Existing delivery',
+      version: 5,
+    };
+
+    // act
+    const upgraded = upgradeApplicationSettings({ ...defaults, workflow: configuredWorkflow });
+
+    // assert
+    expect(upgraded.workflow).toEqual(configuredWorkflow);
+    expect(upgraded.workflow.id).not.toBe(defaultWorkflow.id);
+  });
+
   it('moves the former host-wide local runner switch onto every workspace', () => {
     // arrange
     const defaults = createDefaultApplicationSettings('/Users/operator');

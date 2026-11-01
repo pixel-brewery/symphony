@@ -5,7 +5,7 @@ import type { IWorkflowDefinition } from './workflow';
 // #endregion
 
 /**
- * Shipped default: the recommended FLAMOX365 delivery process.
+ * Shipped default: the recommended Symphony delivery process.
  *
  * Six human-visible stages, two mandatory human gates, and one automated stage per
  * executing role. This value is only a starting point - installations edit stages,
@@ -13,11 +13,11 @@ import type { IWorkflowDefinition } from './workflow';
  * identifiers exist.
  */
 export const defaultWorkflow: IWorkflowDefinition = {
-  id: 'flamox365-delivery',
-  name: 'FLAMOX365 delivery',
+  id: 'symphony-delivery',
+  name: 'Symphony delivery',
   // Raise the version whenever this definition changes: an installation that still runs the
   // shipped process (same id, older version) adopts the new definition on settings load.
-  version: 5,
+  version: 6,
   initialStageId: 'backlog',
   stages: [
     {

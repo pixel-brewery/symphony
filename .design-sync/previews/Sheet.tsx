@@ -53,7 +53,7 @@ export const WorkspaceRailSheet = () => (
           {[
             ['symphony', '8.2 GB · 3 executions today'],
             ['mosaik', '6.1 GB · 1 execution today'],
-            ['flamox', '4.1 GB · no executions'],
+            ['example', '4.1 GB · no executions'],
           ].map(([name, meta]) => (
             <Stack
               key={name}

@@ -19,6 +19,12 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/tools/**/*",
+        "{workspaceRoot}/.github/workflows/**/*"
+      ],
       "options": { "command": "vitest run --config apps/desktop/vitest.config.ts" }
     }
   },

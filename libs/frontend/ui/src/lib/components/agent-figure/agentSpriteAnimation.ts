@@ -32,7 +32,7 @@ const framesByState: Record<AgentSpriteState, readonly IAgentSpriteFrame[]> = {
   review: row(8, 6, 150, 280),
 };
 
-/** Adapts FLAMOX's timing: real work loops until its status changes; gestures finish. @public */
+/** Adapts private upstream application's timing: real work loops until its status changes; gestures finish. @public */
 export function agentSpriteAnimation(
   state: AgentSpriteState,
   reducedMotion: boolean,

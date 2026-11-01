@@ -1,8 +1,8 @@
-# FLAMOX365-Zielworkflow – Konsolidierungsplan für Symphony
+# private upstream application-Zielworkflow – Konsolidierungsplan für Symphony
 
 **Status:** Planungsentwurf (Schritt 1, keine Produktcode-Änderung)  
 **Stand:** 2026-08-18  
-**Quelle Sollzustand:** `FLAMOX365_Empfohlener_Gesamtworkflow.md` (Version 1.0, Board `Backlog → Qualified → Ready → Progress → Acceptance → Done`)  
+**Quelle Sollzustand:** `recommended-delivery-workflow.md` (Version 1.0, Board `Backlog → Qualified → Ready → Progress → Acceptance → Done`)<br>
 **Quelle Istzustand:** aktueller `main` inklusive Working-Tree (provider-eigene Spalten, `columnMappings`, `columnId`)
 
 Dieser Entwurf dokumentiert den Stand vom 18. August 2026. Seine damaligen Dateipfade und Migrationsoptionen sind historische Ausgangspunkte. Die aktuelle modulare Struktur, implementierten Zuständigkeiten und verbindlichen Paketgrenzen stehen im [Dependency Model](../architecture/dependency-model.md).
@@ -11,7 +11,7 @@ Dieser Entwurf dokumentiert den Stand vom 18. August 2026. Seine damaligen Datei
 
 ## 1. Ziel in einem Satz
 
-Symphony wird vom „Skill-Package-Launcher mit neun internen Workflow-States“ zum **Supervisor/Orchestrator des FLAMOX365-Zielprozesses**: fünf fest eingebaute Prozessrollen (Create, Analyze, Solve, Verify, Supervisor), sechs Board-Status, orthogonaler technischer Workflow-State, atomare Claims mit Lease/Heartbeat/Fencing, Transition Guards, strukturierte Skill-Outcomes, Retry-/Rework-/Blocked-/Human-Required-/Fatal-Routing, Reconciliation und lückenlose Traceability. Skills sind keine importierbaren Pakete mehr, sondern eingebauter Code mit versionierten Prompts; einzige Anpassung durch den Anwender ist eine zusätzliche Prompt-Box je Rolle in den Settings.
+Symphony wird vom „Skill-Package-Launcher mit neun internen Workflow-States“ zum **Supervisor/Orchestrator des private upstream application-Zielprozesses**: fünf fest eingebaute Prozessrollen (Create, Analyze, Solve, Verify, Supervisor), sechs Board-Status, orthogonaler technischer Workflow-State, atomare Claims mit Lease/Heartbeat/Fencing, Transition Guards, strukturierte Skill-Outcomes, Retry-/Rework-/Blocked-/Human-Required-/Fatal-Routing, Reconciliation und lückenlose Traceability. Skills sind keine importierbaren Pakete mehr, sondern eingebauter Code mit versionierten Prompts; einzige Anpassung durch den Anwender ist eine zusätzliche Prompt-Box je Rolle in den Settings.
 
 ---
 
@@ -108,7 +108,7 @@ Jede Phase endet mit `yarn verify`, betroffenen E2E-Tests und Doku-Sync; jede Ph
 
 - Working-Tree-Änderungen (Spalten/`columnId`/Azure-Parität) committen; sie sind Voraussetzung.
 - `libs/skills/src/lib/catalog.ts` entfernen, Spec anpassen.
-- ADR-012 „FLAMOX365-Zielworkflow als Symphony-Prozessmodell“ (Board-Semantik, eingebaute Skills, Merge-Entscheidung, Claim/Lease/Fencing) und `docs/architecture/delivery-workflow.md` als normative Kurzfassung des Sollprozesses anlegen; `workflow-model.md`, `skill-model.md`, `skill-resolution.md`, `frontend-architecture.md`, `roadmap.md` als „wird durch Phase X ersetzt“ markieren.
+- ADR-012 „private upstream application-Zielworkflow als Symphony-Prozessmodell“ (Board-Semantik, eingebaute Skills, Merge-Entscheidung, Claim/Lease/Fencing) und `docs/architecture/delivery-workflow.md` als normative Kurzfassung des Sollprozesses anlegen; `workflow-model.md`, `skill-model.md`, `skill-resolution.md`, `frontend-architecture.md`, `roadmap.md` als „wird durch Phase X ersetzt“ markieren.
 - Minimale Migrations-Infrastruktur in `libs/persistence` (`schema_migrations`, geordnete Migrations-Funktionen), damit spätere Phasen Tabellen/Spalten sicher ergänzen.
 
 ### Phase 1 – Prozessgrundlage (Board, Rollen, Outcomes, Guards)

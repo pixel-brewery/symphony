@@ -96,7 +96,7 @@ function arrange(
   const settings = signal<ApplicationSettingsDto | undefined>({
     ...defaults,
     workspaces: [
-      { ...defaults.workspaces[0]!, id: 'flamox', displayName: 'FLAMOX365' },
+      { ...defaults.workspaces[0]!, id: 'example', displayName: 'Example Workspace' },
       { ...defaults.workspaces[0]!, id: 'personal', displayName: 'Personal' },
     ],
   });
@@ -183,7 +183,7 @@ describe('SettingsViewPresenter', () => {
 
   it('opens the location named by ?workspace=&section= once the workspaces are known', () => {
     // arrange
-    const { parameters } = arrange([], { workspace: 'flamox', section: 'administration' });
+    const { parameters } = arrange([], { workspace: 'example', section: 'administration' });
     const presenter = TestBed.inject(SettingsViewPresenter);
     TestBed.tick();
     const opened = [presenter.settingsWorkspaceId(), presenter.workspaceSettingsSection()];
@@ -193,7 +193,7 @@ describe('SettingsViewPresenter', () => {
     TestBed.tick();
 
     // assert
-    expect(opened).toEqual(['flamox', 'administration']);
+    expect(opened).toEqual(['example', 'administration']);
     expect(presenter.settingsWorkspaceId()).toBeNull();
     expect(presenter.globalSettingsSection()).toBe('skills');
     expect(presenter.selectedSection()?.label).toBe('Skills');
@@ -237,7 +237,7 @@ describe('SettingsViewPresenter', () => {
 
     // assert
     expect(searching).toBe(true);
-    expect(groups).toEqual(['FLAMOX365 › Administration', 'Personal › Administration']);
+    expect(groups).toEqual(['Example Workspace › Administration', 'Personal › Administration']);
     expect(presenter.searching()).toBe(false);
     expect(presenter.settingsWorkspaceId()).toBe('personal');
     expect(presenter.workspaceSettingsSection()).toBe('administration');

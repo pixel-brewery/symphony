@@ -10,9 +10,10 @@ Use the current Symphony repository checkout. The complete handoff is committed 
 
 ```text
 Implement the macOS redesign of Symphony described in docs/workitems/macos-redesign/.
-Read START-HERE.md, DECISIONS.md and change-request.md first; screens/ shows every
-screen as drawn (1440 × 900 main window, Settings sections 1000 px wide at full length),
-artboards/ holds the exact copy, spacing and Mosaik components of each screen.
+Read START-HERE.md, DECISIONS.md and change-request.md first. The editable artboards/
+sources preserve the copy, spacing and Mosaik components (1440 × 900 main window;
+Settings sections 1000 px wide at full length). Historical branded raster captures
+were removed for privacy; render the neutral sources locally when comparing screens.
 
 Work in the slices listed in START-HERE.md, one slice at a time: run the
 analyze-change-request skill on change-request.md for the slice, then
@@ -38,8 +39,7 @@ handoff. Start with slice 1.
 
 - `change-request.md` — the work item: current and expected behaviour, requirements, acceptance criteria, dependencies, the one open question.
 - `DECISIONS.md` — every decision taken in the design conversation, in order.
-- `README.md` — what `screens/` and `artboards/` contain.
-- `screens/` — every screen rendered with the real Mosaik bundle in Soho; `README.md` records the four locally regenerated captures.
+- `README.md` — the source handoff, privacy boundary and local comparison workflow.
 - `artboards/` — the canvas sources; `x-import component-from-global-scope="Mosaik.<Name>"` names the Mosaik component, and `macos-chrome.css` holds the only overrides.
 
-Local design-system references and build instructions are in [`.design-sync/NOTES.md`](../../../.design-sync/NOTES.md). The [artboards](artboards/) and [screens](screens/) preserve the `Overview`, `Settings` and `Tray` designs.
+Local design-system references and build instructions are in [`.design-sync/NOTES.md`](../../../.design-sync/NOTES.md). The [editable artboards](artboards/) preserve the `Overview`, `Settings` and `Tray` designs.

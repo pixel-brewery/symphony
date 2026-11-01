@@ -144,7 +144,7 @@
       <mosaik-textbox
         test-id="ai-account-name"
         [label]="'Account name'"
-        [placeholder]="'FLAMOX365 ' + presenter.aiRuntimeLabel()(presenter.aiAccount.kind) + ' account'"
+        [placeholder]="'Symphony ' + presenter.aiRuntimeLabel()(presenter.aiAccount.kind) + ' account'"
         [value]="presenter.aiAccount.displayName"
         (input)="presenter.aiAccount.displayName = presenter.eventText()($event)"
       />

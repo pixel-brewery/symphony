@@ -19,7 +19,7 @@ const signal: IFeedbackIntakeSignal = {
   targetRepositoryBindingId: 'repository',
   occurredAt: '2030-01-01T10:05:00.000Z',
   marker,
-  title: 'FLAMOX365 feedback',
+  title: 'Teams feedback',
   prompt: 'Create a work item from this feedback.',
   actor: 'Ada Lovelace',
   externalUrl: 'https://teams.microsoft.com/l/message/reply',

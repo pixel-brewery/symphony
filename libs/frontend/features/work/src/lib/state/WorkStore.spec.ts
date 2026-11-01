@@ -201,7 +201,7 @@ describe('WorkStore', () => {
     );
 
     // act
-    const users = await store.loadAssignableUsers('ruederennes/flamox', 'flamox', 'project', false);
+    const users = await store.loadAssignableUsers('example/project', 'example', 'project', false);
 
     // assert
     expect(users).toBeUndefined();

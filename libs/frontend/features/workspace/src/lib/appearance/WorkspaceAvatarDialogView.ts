@@ -31,7 +31,7 @@ import { WorkspaceAvatarIconsPipe } from './WorkspaceAvatarIconsPipe';
 // #endregion
 
 /**
- * Workspace-owned icon, emoji and monogram dialog using the FLAMOX365 composition.
+ * Workspace-owned icon, emoji and monogram dialog using the private upstream application composition.
  *
  * @public
  */

@@ -15,7 +15,7 @@ export const ExecutionEvent = () => (
       <TimelineContent>
         <Stack orientation="vertical" gap="tiny">
           <Text text="Execution started for skill solve-change-request" wrap />
-          <Text text="Workspace flamox365 · Claude Opus · 11:04" variant="neutral" wrap />
+          <Text text="Workspace example-workspace · Claude Opus · 11:04" variant="neutral" wrap />
         </Stack>
       </TimelineContent>
     </TimelineItem>

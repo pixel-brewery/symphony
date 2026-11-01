@@ -9,7 +9,7 @@
 
 ## Overview
 
-Symphony öffnet sich auf **Overview**. Die Werkzeugleiste zeigt den Titel `Overview` und darunter Workspace und Datum, zum Beispiel `FLAMOX365 · Thursday, October 30`.
+Symphony öffnet sich auf **Overview**. Die Werkzeugleiste zeigt den Titel `Overview` und darunter Workspace und Datum, zum Beispiel `Example Workspace · Thursday, October 30`.
 
 ### Begrüßung und Schnellaktionen
 

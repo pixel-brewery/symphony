@@ -1,4 +1,4 @@
-# FLAMOX365 – Empfohlener Gesamtworkflow für KI-gestützte Ticketbearbeitung
+# private upstream application – Empfohlener Gesamtworkflow für KI-gestützte Ticketbearbeitung
 
 **Dokumenttyp:** Technische und prozessuale Gesamtspezifikation  
 **Version:** 1.0  
@@ -12,7 +12,7 @@
 
 ## 1. Zweck dieses Dokuments
 
-Dieses Dokument beschreibt den vollständigen empfohlenen FLAMOX365-Workflow für die KI-gestützte Erstellung, Analyse, Implementierung, Verifikation und menschliche Abnahme von GitHub-Issues.
+Dieses Dokument beschreibt den vollständigen empfohlenen private upstream application-Workflow für die KI-gestützte Erstellung, Analyse, Implementierung, Verifikation und menschliche Abnahme von GitHub-Issues.
 
 Es definiert:
 

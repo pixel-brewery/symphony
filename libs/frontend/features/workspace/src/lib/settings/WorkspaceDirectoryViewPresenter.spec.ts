@@ -32,23 +32,23 @@ function arrange(confirmed = true) {
   const settings = signal<ApplicationSettingsDto>({
     ...initial,
     workspaces: [
-      { ...workspace, id: 'flamox', displayName: 'FLAMOX365', storageLimitGiB: 20 },
+      { ...workspace, id: 'example', displayName: 'Example Workspace', storageLimitGiB: 20 },
       { ...workspace, id: 'personal', displayName: 'Personal', enabled: false },
     ],
     agentProfiles: initial.agentProfiles.map((profile) => ({
       ...profile,
-      workspaceId: 'flamox',
+      workspaceId: 'example',
     })),
     connections: initial.connections.map((connection) => ({
       ...connection,
-      workspaceId: 'flamox',
+      workspaceId: 'example',
     })),
   });
   const storageStatus = signal<ResponsePayload<'storage.status.get'> | undefined>(undefined);
   const repositoryRuntimeStatuses = signal<ResponsePayload<'repositories.runtime.list'>>([]);
   const selectPath = vi.fn<IWorkspacePathSelector['selectPath']>(async () => ({
     canceled: false,
-    paths: ['/tmp/flamox.json'],
+    paths: ['/tmp/example.json'],
   }));
   const confirm = vi.fn<SettingsAlertService['confirm']>(async () => confirmed);
   const open = vi.fn(async () => undefined);
@@ -97,7 +97,7 @@ describe('WorkspaceDirectoryViewPresenter', () => {
     const disabled = presenter.disabledEntries();
 
     // assert
-    expect(enabled.map((entry) => entry.workspace.id)).toEqual(['flamox']);
+    expect(enabled.map((entry) => entry.workspace.id)).toEqual(['example']);
     expect(disabled.map((entry) => entry.workspace.id)).toEqual(['personal']);
     expect(enabled[0]).toMatchObject({
       agents: initial.agentProfiles.length,
@@ -113,11 +113,11 @@ describe('WorkspaceDirectoryViewPresenter', () => {
     const { presenter, session, open } = arrange();
 
     // act
-    presenter.openSettingsWorkspaceCommand.execute('flamox');
+    presenter.openSettingsWorkspaceCommand.execute('example');
     presenter.addWorkspaceCommand.execute();
 
     // assert
-    expect(session.workspaceId()).toBe('flamox');
+    expect(session.workspaceId()).toBe('example');
     expect(session.workspaceSection()).toBe('team');
     expect(open).toHaveBeenCalledExactlyOnceWith({ kind: 'workspace' });
   });
@@ -138,7 +138,7 @@ describe('WorkspaceDirectoryViewPresenter', () => {
         cancelLabel: 'Cancel',
       }),
     );
-    expect(accepted.importWorkspace).toHaveBeenCalledWith('/tmp/flamox.json');
+    expect(accepted.importWorkspace).toHaveBeenCalledWith('/tmp/example.json');
   });
 
   it('keeps the configuration when the import is cancelled', async () => {

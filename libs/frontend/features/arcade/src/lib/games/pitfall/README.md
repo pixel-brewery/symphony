@@ -148,7 +148,7 @@ personal to this browser profile, not shared online.
 Adjacent model and leaderboard-store specs cover world generation, gameplay transitions
 and persistence behavior. The Electron journey is
 `apps/renderer-e2e/src/arcade-pitfall.spec.ts`; the route parity decisions are in
-`docs/architecture/frontend-reference-flamox.md`. Verification should cover the
+`docs/architecture/frontend-reference/README.md`. Verification should cover the
 selection-to-game path, waiting start, controls, menus, restart, focus suspension,
 responsive fill, theme changes and return to Arcade.
 

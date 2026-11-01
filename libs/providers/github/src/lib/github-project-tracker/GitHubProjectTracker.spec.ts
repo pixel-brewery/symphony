@@ -1878,7 +1878,9 @@ describe('GitHubProjectTracker', () => {
                     pageInfo: cursor
                       ? { hasNextPage: false, endCursor: null }
                       : { hasNextPage: true, endCursor: 'more' },
-                    nodes: cursor ? [project(3, 'flamox', 'User')] : [project(1, 'Mosaik', 'User')],
+                    nodes: cursor
+                      ? [project(3, 'example', 'User')]
+                      : [project(1, 'Mosaik', 'User')],
                   },
                 },
               },
@@ -1890,7 +1892,7 @@ describe('GitHubProjectTracker', () => {
                 repository: {
                   projectsV2: {
                     pageInfo: { hasNextPage: false },
-                    nodes: [project(3, 'flamox', 'User'), project(7, 'Roadmap', 'Organization')],
+                    nodes: [project(3, 'example', 'User'), project(7, 'Roadmap', 'Organization')],
                   },
                 },
               },
@@ -1939,7 +1941,7 @@ describe('GitHubProjectTracker', () => {
         project.origin,
       ]),
     ).toEqual([
-      ['user', 3, 'flamox', 'repository'],
+      ['user', 3, 'example', 'repository'],
       ['user', 1, 'Mosaik', 'account'],
       ['organization', 7, 'Roadmap', 'repository'],
     ]);

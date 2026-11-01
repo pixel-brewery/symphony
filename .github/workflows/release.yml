@@ -14,6 +14,11 @@ on:
           - patch
           - minor
           - major
+      source_sha:
+        description: Exact merge source required by the automatic dependency release request
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -49,6 +54,16 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Require the requested merge source
+        env:
+          EXPECTED_SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          if [ -n "$EXPECTED_SOURCE_SHA" ] && [ "$EXPECTED_SOURCE_SHA" != "$GITHUB_SHA" ]; then
+            echo 'The requested merge source no longer matches this workflow revision.' >&2
+            exit 1
+          fi
 
       - name: Require the public release repository and configured update site
         env:

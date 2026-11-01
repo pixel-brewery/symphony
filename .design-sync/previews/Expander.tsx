@@ -33,7 +33,7 @@ export const CollapsedSections = () => (
     />
     <Expander
       header="Feedback intake"
-      subHeader="Turn requested FLAMOX365 feedback from Microsoft Teams into tickets"
+      subHeader="Turn requested Teams feedback from Microsoft Teams into tickets"
     />
     <Expander
       header="Enter project manually"

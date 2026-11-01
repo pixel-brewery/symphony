@@ -10,7 +10,7 @@ import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 export class AgentFigurePointer {
   // #region Fields
 
-  /** Viewport coordinates for FLAMOX-compatible look selection. @public */
+  /** Viewport coordinates for the established v2 look selection. @public */
   public readonly target = signal<Readonly<{ x: number; y: number }> | null>(null);
   private readonly _document = inject(DOCUMENT);
   private readonly _destroy = inject(DestroyRef);

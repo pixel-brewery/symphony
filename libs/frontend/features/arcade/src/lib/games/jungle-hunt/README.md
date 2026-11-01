@@ -27,7 +27,7 @@ Rules and original-screen composition are source-backed. The pendulum frequencie
 
 The pixel character poses and scenery are reconstructed from the inspected low-resolution reference images. They are not extracted original sprite bytes. Audio uses short deterministic TIA-style pulse/noise effects for jumps, grabs, stabbing, collisions, stage exits, extra life, rescue and game over. The event phrases are reconstructed; original waveform and music-note identity has not been established. This implementation therefore does not claim byte-identical sprites, cycle accuracy or an exact cartridge audio recording.
 
-All raster colors come from `readArcadePalette` and its six public Mosaik scheme tones. The original Atari hue palette is intentionally replaced by the active Symphony theme. The game View uses the inspected FLAMOX365 TaskListView's Mosaik Page/header/content composition and public Card/Button APIs; the user-requested self-contained arcade View owns Commands/Signals without a ViewPresenter.
+All raster colors come from `readArcadePalette` and its six public Mosaik scheme tones. The original Atari hue palette is intentionally replaced by the active Symphony theme. The game View uses the inspected private upstream application TaskListView's Mosaik Page/header/content composition and public Card/Button APIs; the user-requested self-contained arcade View owns Commands/Signals without a ViewPresenter.
 
 ## Cover provenance
 

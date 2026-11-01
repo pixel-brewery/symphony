@@ -4,7 +4,7 @@ import type { IAgentSpriteFrame } from './IAgentSpriteFrame';
 
 // #endregion
 
-/** FLAMOX's sixteen viewer-relative look directions; zero points upwards. @public */
+/** private upstream application's sixteen viewer-relative look directions; zero points upwards. @public */
 export function agentSpriteLookFrame(
   bounds: Readonly<{ left: number; top: number; width: number; height: number }>,
   target: Readonly<{ x: number; y: number }>,

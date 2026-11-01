@@ -33,14 +33,14 @@ describe('initializeSetupSettingsRoute', () => {
 
   it('opens the setup sheet once for ?sheet=setup with its workspace', () => {
     // arrange
-    const { parameters, openEditor } = arrange({ sheet: 'setup', workspace: 'flamox' });
+    const { parameters, openEditor } = arrange({ sheet: 'setup', workspace: 'example' });
 
     // act
-    parameters.set(convertToParamMap({ sheet: 'setup', workspace: 'flamox' }));
+    parameters.set(convertToParamMap({ sheet: 'setup', workspace: 'example' }));
     TestBed.tick();
 
     // assert
-    expect(openEditor).toHaveBeenCalledExactlyOnceWith({ kind: 'setup', workspaceId: 'flamox' });
+    expect(openEditor).toHaveBeenCalledExactlyOnceWith({ kind: 'setup', workspaceId: 'example' });
   });
 
   it('ignores other Settings locations and opens again after leaving the sheet location', () => {

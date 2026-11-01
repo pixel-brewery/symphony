@@ -90,7 +90,7 @@ Konto-Zeilen des Work-Features: Azure DevOps (`Azure DevOps · <organization>`) 
 | Regel          | Vertrag                                                                                                                                                                                                                                                                       |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Zielkandidaten | eingeschaltete `github-projects`-Quellen und eingeschaltete `github`-Repositories des Workspace; ein neuer Entwurf wählt jeweils den ersten                                                                                                                                   |
-| Entwurf        | `displayName` (Standard `FLAMOX365 feedback`), `tenantId`, `clientId`, `credentialRef`, `teamId`, `channelId`, beide Ziele, `enabled` (Standard `false`)                                                                                                                      |
+| Entwurf        | `displayName` (Standard `Teams feedback`), `tenantId`, `clientId`, `credentialRef`, `teamId`, `channelId`, beide Ziele, `enabled` (Standard `false`)                                                                                                                          |
 | Prüfen         | `feedback-intake.test { source }` erst mit allen Pflichtangaben; Erfolg meldet die Antwort, Fehler `Unable to read the configured Microsoft Teams channel.`                                                                                                                   |
 | Speichern      | **Save** gesperrt, bis alle Pflichtangaben vorliegen (`validationIssues`, angezeigt in `With missing details`); bei `enabled` zuerst Prüfen, ein Fehlschlag verhindert das Speichern; Datensatz `{ id: vorhanden \| feedback-intake-<uuid>, provider: 'microsoft-teams', … }` |
 | Entfernen      | **Remove intake** fragt zuerst `remove-feedback-intake-<id>` (`Remove <Name>?`, `danger`, destruktiv, **Remove intake** / **Keep intake**) und entfernt den Datensatz erst nach Bestätigung                                                                                   |
@@ -142,6 +142,6 @@ Repository-, Board- und KI-Konto-Editoren rufen vor dem Speichern `synchronizeDe
 
 - [Workspaces in den Einstellungen](README.md)
 - [Connected services (Produkthandbuch)](../../project/workspaces/connected-services.md)
-- [Teams-Feedback-Intake](../teams-feedback-intake.md)
+- [Teams-Feedback-Intake](teams-feedback-intake.md)
 - [AI-Team](../ai-team/README.md)
 - [Provider-Modell](../provider-model.md)

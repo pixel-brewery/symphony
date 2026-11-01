@@ -16,7 +16,7 @@ import { renderPlainMarkdown } from './renderPlainMarkdown';
 // #endregion
 
 /**
- * Renders untrusted GitHub-flavored Markdown as Mosaik elements, mirroring FLAMOX365's
+ * Renders untrusted GitHub-flavored Markdown as Mosaik elements, mirroring private upstream application's
  * `MarkdownComponent`. Embedded raw HTML is shown as text.
  */
 @Component({

@@ -70,7 +70,7 @@ function configuredWorkspace(): IApplicationSettings {
       {
         id: 'teams-feedback',
         workspaceId: 'personal',
-        displayName: 'FLAMOX365 feedback',
+        displayName: 'Teams feedback',
         provider: 'microsoft-teams',
         tenantId: '00000000-0000-4000-8000-000000000001',
         clientId: '00000000-0000-4000-8000-000000000002',

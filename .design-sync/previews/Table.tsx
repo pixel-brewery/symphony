@@ -107,7 +107,7 @@ export const SelectableRows = () => (
       </TableBodyRow>
       <TableBodyRow disabled>
         <TableBodyCell text="SYM-201 Archived item" />
-        <TableBodyCell text="flamox365" />
+        <TableBodyCell text="example-workspace" />
         <TableBodyCell>{status('Archived', 'neutral')}</TableBodyCell>
       </TableBodyRow>
     </TableBody>

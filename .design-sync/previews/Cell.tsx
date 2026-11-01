@@ -46,7 +46,7 @@ export const NavigationAndDisabled = () => (
     <Cell label="RueDeRennes/mosaik" subLabel="main · read-only reference" isNavigation>
       <Icon slot="end" icon="chevronRight" size="small" />
     </Cell>
-    <Cell label="RueDeRennes/flamox" subLabel="Binding disabled by the workspace owner" disabled>
+    <Cell label="example/project" subLabel="Binding disabled by the workspace owner" disabled>
       <Icon slot="end" icon="chevronRight" size="small" disabled />
     </Cell>
   </CellGroup>

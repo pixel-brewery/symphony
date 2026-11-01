@@ -24,7 +24,7 @@ const renderer = new Marked({
 });
 
 /**
- * Renders untrusted GitHub-flavored Markdown into the Mosaik markup FLAMOX365 uses, without raw
+ * Renders untrusted GitHub-flavored Markdown into the Mosaik markup private upstream application uses, without raw
  * HTML pass-through.
  */
 export function renderMarkdown(text: string, breaks = false): string {

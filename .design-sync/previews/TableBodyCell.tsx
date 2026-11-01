@@ -96,7 +96,7 @@ export const CellsWithContent = () => (
         <TableBodyCell>
           <Stack orientation="horizontal" gap="tiny" verticalAlignment="center">
             <Icon icon="folder" size="small" variant="primary" />
-            <Text text="flamox365" />
+            <Text text="example-workspace" />
           </Stack>
         </TableBodyCell>
         <TableBodyCell text="anthropic@…" />

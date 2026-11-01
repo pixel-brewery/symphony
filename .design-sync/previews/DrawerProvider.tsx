@@ -63,7 +63,7 @@ export const SettingsShell = () => (
         </ListItem>
         <ListItem>
           <Stack orientation="horizontal" gap="small" verticalAlignment="center" fit="width">
-            <Text text="flamox365/mosaik" wrap />
+            <Text text="example-workspace/mosaik" wrap />
             <Stack orientation="horizontal" gap="tiny" horizontalAlignment="right" fit="width">
               <Button icon="edit" appearance="plain" variant="neutral" />
             </Stack>

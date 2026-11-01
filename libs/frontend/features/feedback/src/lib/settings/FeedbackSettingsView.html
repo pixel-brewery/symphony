@@ -1,7 +1,7 @@
 @if (presenter.workspace(); as item) {
 <symphony-settings-group
   [heading]="'Feedback intake'"
-  [description]="'Turn requested FLAMOX365 feedback from Microsoft Teams into tickets'"
+  [description]="'Turn requested Teams feedback from Microsoft Teams into tickets'"
   [attr.test-id]="'feedback-intake-settings-' + item.id"
 >
   @for (source of presenter.sources(); track source.id) { @let targetRepository =

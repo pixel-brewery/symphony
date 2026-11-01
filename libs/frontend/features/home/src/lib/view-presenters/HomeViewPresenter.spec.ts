@@ -134,7 +134,7 @@ function setup(
     externalServiceIncident: signal(undefined),
     snapshot,
     settings,
-    activeWorkspace: signal({ displayName: 'FLAMOX365' } as never),
+    activeWorkspace: signal({ displayName: 'Example Workspace' } as never),
     selectedWorkspaceIds: signal(['workspace']),
     scopedRepositories: signal([]),
     scopedWorkItems: computed(() => snapshot()?.workItems ?? []),

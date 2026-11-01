@@ -1,6 +1,6 @@
 # Instruction Compliance Refactoring
 
-Symphony adopts the FLAMOX365 engineering instructions (`../flamox/.github/instructions/*`) as
+Symphony adopts the private upstream application engineering instructions (`$SYMPHONY_REFERENCE_ROOT/.github/instructions/*`) as
 binding for its own source. This document is the program plan: the goal, the interpretation of
 each rule for this repository, the phase order, and the exit criteria.
 
@@ -71,7 +71,7 @@ the TypeScript AST, and several are driven by the compiler's own diagnostics:
 
 ## Rule interpretation for Symphony
 
-The FLAMOX365 instructions target a NestJS + Angular product. Symphony is an Electron
+The private upstream application instructions target a NestJS + Angular product. Symphony is an Electron
 three-process desktop application. The rules are adopted as follows.
 
 **Adopted verbatim.** One public export per file; PascalCase file names matching the export;

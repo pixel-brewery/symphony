@@ -9,7 +9,7 @@ const LIST_FORMAT = new Intl.ListFormat('en', { style: 'long', type: 'conjunctio
 
 /**
  * Names the places problems come from, workspaces first and this Mac last:
- * `FLAMOX365 and this Mac`.
+ * `Example Workspace and this Mac`.
  *
  * @public
  */

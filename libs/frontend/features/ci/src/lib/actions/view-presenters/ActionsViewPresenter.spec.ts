@@ -124,7 +124,7 @@ const failedDetails: ICiRunDetails = {
       id: 'job',
       name: 'deploy',
       status: 'failed',
-      steps: [{ id: 'step', name: 'Deploy to app-flamox-dev', status: 'failed' }],
+      steps: [{ id: 'step', name: 'Deploy to app-example-dev', status: 'failed' }],
     },
   ],
   failureLog: 'ERROR: The resource could not be found.',
@@ -236,7 +236,7 @@ describe('ActionsViewPresenter', () => {
     expect(executions.startSolver).toHaveBeenCalledWith(
       false,
       'work-item-589',
-      expect.stringContaining('Failed steps: Deploy to app-flamox-dev.'),
+      expect.stringContaining('Failed steps: Deploy to app-example-dev.'),
     );
   });
 

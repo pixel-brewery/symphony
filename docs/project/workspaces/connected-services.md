@@ -97,11 +97,11 @@ Im Abschnitt **Columns** wird jede Spalte des Anbieters zu einer Board-Spalte. J
 
 ## Feedback aus Microsoft Teams
 
-**Connect** an **Microsoft Teams** oder **Edit** an einem Intake öffnet **Add Microsoft Teams feedback intake** beziehungsweise **Edit Microsoft Teams feedback intake**. Symphony liest einen Teams-Kanal und legt ein GitHub-Work-Item an, wenn auf einer FLAMOX365-Feedbackkarte `@Symphony` erwähnt wird. Voraussetzung ist eine Microsoft-Entra-Anwendung mit der Berechtigung `ChannelMessage.Read.Group` für das Team; ihr Client-Secret liegt in einer Umgebungsvariablen.
+**Connect** an **Microsoft Teams** oder **Edit** an einem Intake öffnet **Add Microsoft Teams feedback intake** beziehungsweise **Edit Microsoft Teams feedback intake**. Symphony liest einen Teams-Kanal und legt ein GitHub-Work-Item an, wenn auf einer passenden Feedbackkarte `@Symphony` erwähnt wird. Die Karte beginnt mit **Symphony feedback** oder enthält die strukturierten Angaben **Type**, **Urgency** und einen Feedback-Link. Eine beliebige Teams-Nachricht oder eine andere Karte mit dem Wort „feedback“ reicht nicht aus. Voraussetzung ist eine Microsoft-Entra-Anwendung mit der Berechtigung `ChannelMessage.Read.Group` für das Team; ihr Client-Secret liegt in einer Umgebungsvariablen.
 
 | Feld                                                       | Regel                                                                                                                                          |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Display name**                                           | Pflicht; vorbelegt mit `FLAMOX365 feedback`                                                                                                    |
+| **Display name**                                           | Pflicht; vorbelegt mit `Teams feedback`                                                                                                        |
 | **Microsoft Entra tenant ID**, **Application / client ID** | Pflicht                                                                                                                                        |
 | **Client secret credential reference**                     | Pflicht; der Name einer Umgebungsvariablen, etwa `env:TEAMS_FEEDBACK_CLIENT_SECRET`, nie das Secret selbst                                     |
 | **Team ID**, **Channel ID**                                | Pflicht                                                                                                                                        |

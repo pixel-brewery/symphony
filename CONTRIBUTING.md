@@ -162,7 +162,7 @@ records channel, feed and recovery behavior.
 
 Report vulnerabilities through [SECURITY.md](SECURITY.md), never in a public issue.
 
-The FLAMOX365 and Mosaik source checkouts are reference material for maintainers, not
+The private upstream application and Mosaik source checkouts are reference material for maintainers, not
 installation dependencies. Contributors without access should describe the intended
 behavior in their pull request; a maintainer can perform the required reference review.
 Copyright, upstream provenance and third-party license notices remain part of the source.

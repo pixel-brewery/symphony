@@ -2,6 +2,7 @@ name: Repository Quality
 
 on:
   pull_request:
+  merge_group:
   push:
     branches: [main]
   workflow_dispatch:
@@ -148,3 +149,21 @@ jobs:
 
       - name: Package
         run: yarn forge:package
+
+  quality-gate:
+    name: Quality Gate
+    if: ${{ always() }}
+    needs: [quality, electron-e2e, package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every verification job to succeed
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          E2E_RESULT: ${{ needs.electron-e2e.result }}
+          PACKAGE_RESULT: ${{ needs.package.result }}
+        run: |
+          test "$QUALITY_RESULT" = success
+          test "$E2E_RESULT" = success
+          test "$PACKAGE_RESULT" = success

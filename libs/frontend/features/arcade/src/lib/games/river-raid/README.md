@@ -26,6 +26,6 @@ Original [AtariAge front-box scan](https://atariage.com/2600/boxes/b_RiverRaid_f
 
 ## Integration and verification
 
-The View follows the shared `ArcadeCanvasController`, `readArcadePalette`, `ArcadeGodModeStore` and `ArcadeLeaderboardStore` owners. The inspected FLAMOX `TaskListView.ts/html` supplies the Mosaik Page/Header and Command composition. Exact companion `PageComponent`, `CardComponent` and `ButtonComponent` contracts supply the shell and menu controls. An isolated three-file View with empty SCSS adopts that composition; the game-specific canvas and View-owned simulation are intentional Arcade adaptations.
+The View follows the shared `ArcadeCanvasController`, `readArcadePalette`, `ArcadeGodModeStore` and `ArcadeLeaderboardStore` owners. The inspected private upstream application `TaskListView.ts/html` supplies the Mosaik Page/Header and Command composition. Exact companion `PageComponent`, `CardComponent` and `ButtonComponent` contracts supply the shell and menu controls. An isolated three-file View with empty SCSS adopts that composition; the game-specific canvas and View-owned simulation are intentional Arcade adaptations.
 
 Adjacent model, world, audio and View tests cover the deterministic river and checkpoints, steering/difficulty, speed, reserves, player switching, pause preservation, result deduplication and audio disposal. `apps/renderer-e2e/src/arcade-river-raid.spec.ts` exercises actual keyboard controls, both themes, menus, mute, reset, player handoff and losing all four aircraft through normal collisions in Electron.

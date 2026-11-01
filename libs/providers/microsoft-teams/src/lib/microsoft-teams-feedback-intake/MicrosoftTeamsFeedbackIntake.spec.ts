@@ -11,7 +11,7 @@ import { describe, expect, it, vi } from 'vitest';
 const source: IFeedbackIntakeSource = {
   id: 'teams-feedback',
   workspaceId: 'personal',
-  displayName: 'FLAMOX365 feedback',
+  displayName: 'Teams feedback',
   provider: 'microsoft-teams',
   tenantId: '00000000-0000-4000-8000-000000000001',
   clientId: '00000000-0000-4000-8000-000000000002',
@@ -34,7 +34,7 @@ function cardContent(): string {
       {
         type: 'Container',
         items: [
-          { type: 'TextBlock', text: 'FLAMOX365 Feedback · FEATURE_REQUEST · HIGH' },
+          { type: 'TextBlock', text: 'Legacy Application Feedback · FEATURE_REQUEST · HIGH' },
           { type: 'TextBlock', text: 'Add keyboard navigation to the task board.' },
         ],
       },
@@ -49,15 +49,15 @@ function cardContent(): string {
     actions: [
       {
         type: 'Action.OpenUrl',
-        title: 'Open feedback in FLAMOX365',
-        url: 'https://flamox.example/main/feedback/feedback-1',
+        title: 'Open feedback in Example Workspace',
+        url: 'https://feedback.example/main/feedback/feedback-1',
       },
     ],
   });
 }
 
 describe('MicrosoftTeamsFeedbackIntake', () => {
-  it('reads a FLAMOX365 card and one @Symphony reply as a provider-neutral signal', async () => {
+  it('reads a structured external card and one @Symphony reply as a provider-neutral signal', async () => {
     // arrange
     const requests: string[] = [];
     const fetcher = vi.fn<typeof fetch>(async (input) => {
@@ -112,7 +112,7 @@ describe('MicrosoftTeamsFeedbackIntake', () => {
     expect(signals[0]).toMatchObject({
       sourceId: source.id,
       workspaceId: source.workspaceId,
-      title: 'FLAMOX365 Feedback · FEATURE_REQUEST · HIGH',
+      title: 'Legacy Application Feedback · FEATURE_REQUEST · HIGH',
       actor: 'Ada Lovelace',
       externalUrl: 'https://teams.microsoft.com/l/message/reply',
     });
@@ -154,6 +154,48 @@ describe('MicrosoftTeamsFeedbackIntake', () => {
 
     // assert
     await expect(intake.listSignals()).resolves.toEqual([]);
+  });
+
+  it.each([
+    ['Symphony Feedback', 1],
+    ['Unrelated feedback discussion', 0],
+  ])('requires the Symphony header for an unstructured card: %s', async (title, count) => {
+    // arrange
+    const fetcher = vi.fn<typeof fetch>(async (input) =>
+      String(input).includes('/oauth2/v2.0/token')
+        ? Response.json({ access_token: 'access-token' })
+        : Response.json({
+            value: [
+              {
+                id: 'generic-message',
+                createdDateTime: '2030-01-01T10:00:00.000Z',
+                body: { content: '@Symphony Please create a ticket.' },
+                mentions: [],
+                attachments: [
+                  {
+                    contentType: 'application/vnd.microsoft.card.adaptive',
+                    content: JSON.stringify({
+                      type: 'AdaptiveCard',
+                      body: [{ type: 'TextBlock', text: title }],
+                    }),
+                  },
+                ],
+                replies: [],
+              },
+            ],
+          }),
+    );
+    const intake = new MicrosoftTeamsFeedbackIntake({
+      settings,
+      credential: () => 'client-secret',
+      fetcher,
+    });
+
+    // act
+    const signals = await intake.listSignals();
+
+    // assert
+    expect(signals).toHaveLength(count);
   });
 
   it('returns a secret-safe authorization failure', async () => {

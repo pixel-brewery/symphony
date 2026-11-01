@@ -1,12 +1,12 @@
 ---
 name: create-employee-figure
-description: Create, animate, repair and validate Symphony employee figures in the OpenDots plush style, adapting the Codex create-pet sprite workflow and FLAMOX interaction components. Use for employee character art, nine animation states, sixteen look directions and catalogue integration in desktop and mobile.
+description: Create, animate, repair and validate Symphony employee figures in the OpenDots plush style, adapting the Codex create-pet sprite workflow and private upstream application interaction components. Use for employee character art, nine animation states, sixteen look directions and catalogue integration in desktop and mobile.
 ---
 
 # Create an employee figure
 
 Create recognizable, interactive Symphony employees. Use `AgentFigureComponent`,
-the existing real activity projection and FLAMOX-compatible v2 sprites. The product
+the existing real activity projection and the established v2 sprite contract. The product
 calls them employees or figures. Keep Mosaik unchanged.
 
 ## Prepare identity and the authoritative tools

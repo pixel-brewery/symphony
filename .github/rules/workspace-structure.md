@@ -13,7 +13,7 @@ The repository root is the Nx workspace. `package.json`, `nx.json`, project-leve
 - `libs/persistence/{core,features,composition}`: existing durable stores and their shared connection/lifecycle composition.
 - `libs/ipc-contracts/{core,features,composition,desktop}`: method-specific Zod schemas, orchestration composition and separate native desktop methods.
 - `libs/frontend/core`: typed renderer client, configuration writer, transport synchronization, readonly projections, bootstrap and consumed feature contracts.
-- `libs/frontend/presentation`: the FLAMOX365-aligned `PresenterView`, its presenter, and presentation routing.
+- `libs/frontend/presentation`: the reference-aligned `PresenterView`, its presenter, and presentation routing.
 - `libs/frontend/features/<feature>/src/lib`: fifteen horizontal feature owners with public exports and cohesive `provideXFeature` composition. Optional cross-feature operations use consumed ports; public helper/view imports remain acyclic.
 - `libs/frontend/{ui,search,setting,notification,quick-create,widget,update,interaction}`: product capabilities composed once and extended by selected features. Setting owns the generic host, selection, slots and editor registry.
 - `libs/mobile-contracts` and `libs/logging`: the dedicated mobile protocol and structured logging.

@@ -7,8 +7,8 @@ description: 'Angular, Mosaik, presenter, shell, state, forms, and visible UI ru
 # Renderer architecture
 
 - Use standalone Angular components, Signals, Signal Forms where appropriate, route-level lazy loading, and `ChangeDetectionStrategy.OnPush`.
-- Follow the inspected FLAMOX365 ShellView, ShellConfig, PresenterView, ViewPresenter, settings, and FlowBoard patterns when they fit the desktop product.
-- Treat FLAMOX365 as the visible renderer baseline. Inspect the exact reference source for every affected route, prefer its Mosaik composition over parallel custom primitives, and record every intentional Adapt or Differ decision in `docs/architecture/frontend-reference-flamox.md`.
+- Follow the inspected private upstream application ShellView, ShellConfig, PresenterView, ViewPresenter, settings, and FlowBoard patterns when they fit the desktop product.
+- Treat private upstream application as the visible renderer baseline. Inspect the exact reference source for every affected route, prefer its Mosaik composition over parallel custom primitives, and record every intentional Adapt or Differ decision in `docs/architecture/frontend-reference/README.md`.
 - Use Mosaik components, icons, tokens, slots, parts, and theme configuration before creating product-owned UI primitives.
 - Use Tailwind v4 utilities directly in View templates only for layout, positioning, sizing, spacing, overflow, and responsive composition. View markup must not introduce semantic product class names.
 - Never use Tailwind utilities for color, background, border styling, radii, shadows, typography, opacity, transitions, animations, or filters. Drive those decisions through public Mosaik `appearance`, `variant`, `elevation`, typography, slot, and theme inputs.
@@ -19,4 +19,4 @@ description: 'Angular, Mosaik, presenter, shell, state, forms, and visible UI ru
 - Derive board columns and items from the provider-neutral workflow model; never hard-code GitHub field values as domain state.
 - Add stable domain-specific `test-id` attributes to interactive acceptance surfaces.
 - Add visible content only when it supports a user decision or action, explains a user-facing problem, or supplies necessary task context. Avoid decorative badges, architecture claims, generic health copy, and duplicate status.
-- Verify affected routes in the running Electron application and leave no unexplained visual, structural, interaction, responsive, or state-handling drift from the applicable FLAMOX365 pattern.
+- Verify affected routes in the running Electron application and leave no unexplained visual, structural, interaction, responsive, or state-handling drift from the applicable private upstream application pattern.

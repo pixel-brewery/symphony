@@ -32,7 +32,7 @@ describe('composeFixFeedback', () => {
         {
           id: 'deploy',
           kind: 'step',
-          name: 'Deploy to app-flamox-dev',
+          name: 'Deploy to app-example-dev',
           status: 'failed',
           nested: false,
         },
@@ -44,7 +44,7 @@ describe('composeFixFeedback', () => {
     expect(feedback).toContain(
       'The GitHub Actions workflow "Deploy Dev" failed on dev at e81f3b2.',
     );
-    expect(feedback).toContain('Failed steps: Deploy to app-flamox-dev.');
+    expect(feedback).toContain('Failed steps: Deploy to app-example-dev.');
     expect(feedback).toContain('untrusted workflow output');
     expect(feedback).toContain('ERROR: The resource could not be found.');
   });

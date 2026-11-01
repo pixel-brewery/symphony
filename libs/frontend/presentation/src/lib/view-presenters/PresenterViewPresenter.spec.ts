@@ -382,7 +382,7 @@ describe('PresenterViewPresenter', () => {
     const { presenter } = configure({
       snapshot,
       settings: {
-        workspaces: [{ id: 'workspace', displayName: 'FLAMOX365', shortCode: 'FL' }],
+        workspaces: [{ id: 'workspace', displayName: 'Example Workspace', shortCode: 'FL' }],
         repositoryBindings: [],
         agentProfiles: [
           {

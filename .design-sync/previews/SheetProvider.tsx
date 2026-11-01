@@ -37,7 +37,7 @@ export const SheetScope = () => (
           <Stack orientation="vertical" gap="small">
             <Text text="Switch workspace" wrap />
             <Hint
-              text="symphony · mosaik · flamox · platform-engine-frontend"
+              text="symphony · mosaik · example · platform-engine-frontend"
               textOverflow="wrap"
             />
             <Stack orientation="horizontal" gap="small" horizontalAlignment="right" fit="width">

@@ -1,12 +1,12 @@
 # Angular, Mosaik and renderer integration
 
-Use with common Frontend and Frontend patterns. Read [renderer architecture](../../../../.github/instructions/renderer-architecture.instructions.md), [inspect-reference-ui](../../inspect-reference-ui/SKILL.md), the affected Symphony owner and the exact FLAMOX365/Mosaik source.
+Use with common Frontend and Frontend patterns. Read [renderer architecture](../../../../.github/instructions/renderer-architecture.instructions.md), [inspect-reference-ui](../../inspect-reference-ui/SKILL.md), the affected Symphony owner and the exact private upstream application/Mosaik source.
 
 ## Reference and ownership contract
 
-- FLAMOX365 is the permanent visible-behavior/composition baseline. Inspect the exact corresponding route, `ShellView`, `ShellConfig`, `PresenterView`, `ViewPresenter`, form/dialog/settings or FlowBoard source. Adopt the proven pattern unless an evidenced desktop/product constraint requires adaptation.
-- Keep `../flamox` read-only. `../mosaik` is editable only for explicitly required coordinated Mosaik API work; Mosaik stays a package dependency and is never copied into Symphony. Use the installed public API and tokens before inventing product primitives or workarounds for library-owned behavior.
-- Record every material Adopt, Adapt or Differ decision in [frontend reference parity](../../../../docs/architecture/frontend-reference-flamox.md). Product-neutral data, desktop boundaries and unavailable FLAMOX365 services justify explicit adaptations, not unexplained drift. Verify every affected route in the real running Electron application.
+- private upstream application is the permanent visible-behavior/composition baseline. Inspect the exact corresponding route, `ShellView`, `ShellConfig`, `PresenterView`, `ViewPresenter`, form/dialog/settings or FlowBoard source. Adopt the proven pattern unless an evidenced desktop/product constraint requires adaptation.
+- Keep `$SYMPHONY_REFERENCE_ROOT` read-only. `../mosaik` is editable only for explicitly required coordinated Mosaik API work; Mosaik stays a package dependency and is never copied into Symphony. Use the installed public API and tokens before inventing product primitives or workarounds for library-owned behavior.
+- Record every material Adopt, Adapt or Differ decision in [frontend reference parity](../../../../docs/architecture/frontend-reference/README.md). Product-neutral data, desktop boundaries and unavailable private upstream application services justify explicit adaptations, not unexplained drift. Verify every affected route in the real running Electron application.
 - Renderer and shared mobile frontend source stay sandboxed and free of Node.js APIs. Access application operations through the typed frontend client and desktop/mobile contract. Derive board projections from the provider-neutral workflow model, never hard-coded GitHub values.
 
 ## Components, presenters and forms
@@ -14,7 +14,7 @@ Use with common Frontend and Frontend patterns. Read [renderer architecture](../
 - Use Angular standalone components, Signals, OnPush, route-level lazy loading and Signal Forms where appropriate to the existing owner. Keep Views in matching `.ts`, `.html` and `.scss` units; retain the current PresenterView/ViewPresenter/ShellConfig composition and lifecycle.
 - ViewPresenters own application state, domain projections, lifecycle and commands. Put simple conditional copy in the owning HTML template; use standalone pure pipes for reusable formatting, labels, icons, appearances and variants. Avoid opaque `details`, `summary`, `subtitle` or pre-concatenated display strings that hide presentation decisions.
 - Keep loading/error/empty/retry state explicit, mounted controls and scroll stable, and subscriptions/effects scoped to the owning lifecycle. Preserve real Mosaik slots, events, form-state/command integration, focus, keyboard and accessibility contracts rather than duplicating them.
-- Use typed form state, schema/reusable cross-field validators and actual Command enabled-state ownership. Validate before mutation and provide actionable feedback. Do not import a FLAMOX365 generated API client, SaaS state or push service absent from Symphony; use its actual validated IPC events and scoped refresh/invalidation owner.
+- Use typed form state, schema/reusable cross-field validators and actual Command enabled-state ownership. Validate before mutation and provide actionable feedback. Do not import a private upstream application generated API client, SaaS state or push service absent from Symphony; use its actual validated IPC events and scoped refresh/invalidation owner.
 
 ## Styling and relevance
 

@@ -3,7 +3,7 @@
     slot="header"
     class="flex min-w-0 flex-1"
     [text]="presenter.data.sourceId ? 'Edit Microsoft Teams feedback intake' : 'Add Microsoft Teams feedback intake'"
-    [subText]="'FLAMOX365 feedback to GitHub work items'"
+    [subText]="'Teams feedback to GitHub work items'"
   >
     <mosaik-button
       slot="suffix"
@@ -59,8 +59,8 @@
           [fit]="'width'"
           [icon]="'info'"
           [iconSize]="'small'"
-          [header]="'Read FLAMOX365 feedback from Microsoft Teams'"
-          [content]="'Register a Microsoft Entra application, grant the Teams app ChannelMessage.Read.Group for the target team, and store its client secret in an environment variable. Symphony reads only the configured channel every 15 minutes and creates a GitHub work item when @Symphony is mentioned on a FLAMOX365 feedback card.'"
+          [header]="'Read Teams feedback from Microsoft Teams'"
+          [content]="'Register a Microsoft Entra application, grant the Teams app ChannelMessage.Read.Group for the target team, and store its client secret in an environment variable. Symphony reads only the configured channel every 15 minutes and creates a GitHub work item when @Symphony is mentioned on a Teams feedback card.'"
         />
         <div class="flex min-w-0 flex-col gap-0.5">
           <mosaik-text

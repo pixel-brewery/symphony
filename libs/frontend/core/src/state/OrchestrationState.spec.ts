@@ -10,8 +10,8 @@ import { OrchestrationState } from './OrchestrationState';
 
 function snapshotWithWorkspaceItems(): IOrchestrationSnapshot {
   const baseItem = {
-    id: 'flamox-item',
-    workspaceId: 'flamox',
+    id: 'example-item',
+    workspaceId: 'example',
     sourceId: 'project',
     externalId: '#18',
     title: 'Period picker',
@@ -59,8 +59,8 @@ describe('OrchestrationState', () => {
         workspaces: [
           ...defaults.workspaces,
           {
-            id: 'flamox',
-            displayName: 'FLAMOX365',
+            id: 'example',
+            displayName: 'Example Workspace',
             shortCode: 'FL',
             color: '#4f6bed',
             enabled: true,

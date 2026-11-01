@@ -276,7 +276,7 @@ function arrange(policyOverrides: { sourceRepairEnabled?: boolean } = {}) {
         workspaceId: 'workspace',
         provider: 'github',
         owner: 'ruederennes',
-        name: 'flamox',
+        name: 'example',
         enabled: true,
       },
     ],
@@ -379,7 +379,7 @@ function pullRequest(
     draft: false,
     sourceBranch,
     targetBranch: 'dev',
-    externalUrl: `https://github.com/ruederennes/flamox/pull/${number}`,
+    externalUrl: `https://github.com/example/project/pull/${number}`,
     createdAt: '2026-10-29T08:00:00.000Z',
     updatedAt: '2026-10-30T08:00:00.000Z',
     ...overrides,
@@ -411,8 +411,8 @@ function execution(workItemId: string, number: number, agentProfileId: string): 
     startedAt: '2026-10-29T07:00:00.000Z',
     pullRequest: {
       number,
-      externalUrl: `https://github.com/ruederennes/flamox/pull/${number}`,
-      branchUrl: 'https://github.com/ruederennes/flamox/tree/codex/cr-0589',
+      externalUrl: `https://github.com/example/project/pull/${number}`,
+      branchUrl: 'https://github.com/example/project/tree/codex/cr-0589',
     },
     bindingSnapshot: {
       agentProfileId,

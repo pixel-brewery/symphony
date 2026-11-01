@@ -7,7 +7,7 @@ import { Directive, ElementRef, inject, OnInit, Renderer2 } from '@angular/core'
 /**
  * Removes the user-agent link styling from an anchor that wraps composed Mosaik content
  * (brand, cards, cells) while keeping every link capability: routing, href, context menu,
- * middle-click, and keyboard activation. Mirrors the FLAMOX365 `flamoxPseudoLink` directive.
+ * middle-click, and keyboard activation. Mirrors the upstream wrapper-link directive.
  * Text-only hyperlinks use `mosaik-anchor` instead.
  *
  * @example

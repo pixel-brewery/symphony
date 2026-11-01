@@ -33,8 +33,8 @@ describe('isDesktopNavigationPath', () => {
       '/main/settings',
       '/main/settings?section=skills',
       '/main/settings?workspace=4f1c2b9e-7d3a-4e8b-9c1d-2a3b4c5d6e7f',
-      '/main/settings?workspace=flamox365&section=team',
-      '/main/settings?workspace=flamox365&section=repositories&repository=repo_1.main',
+      '/main/settings?workspace=example-workspace&section=team',
+      '/main/settings?workspace=example-workspace&section=repositories&repository=repo_1.main',
       '/main/settings?section=delivery&target=production~eu',
       `/main/settings?${eightParameters}`,
     ];
@@ -51,7 +51,7 @@ describe('isDesktopNavigationPath', () => {
     const values = [
       '/settings',
       '/settings?section=skills',
-      '/settings?workspace=flamox365&section=team',
+      '/settings?workspace=example-workspace&section=team',
       '#/settings',
       'settings',
     ];

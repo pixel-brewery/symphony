@@ -159,4 +159,4 @@ Gemerkte Größen haben kein Ablaufdatum und werden nur überschrieben; Löschen
 - [Fensterrahmen und Navigation](README.md)
 - [Einstellungen im Hauptfenster](settings.md)
 - [Bereiche anpassen und scrollen](../../project/window-and-navigation/resizable-panes.md)
-- [FLAMOX365-Referenzabgleich](../frontend-reference-flamox.md#2026-10-31-settings-in-the-main-window-and-resizable-panes)
+- [private upstream application-Referenzabgleich](../frontend-reference/README.md#2026-10-31-settings-in-the-main-window-and-resizable-panes)

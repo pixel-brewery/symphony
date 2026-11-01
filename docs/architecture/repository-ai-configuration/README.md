@@ -50,3 +50,28 @@ Review the root lock's immutable `ref`, source and digest. A branch name or floa
 For a declared `metadata.inherits` base, packaging includes that base under `dependencies/<base-name>` inside the derived archive and rewrites included Markdown links to their archive-relative locations. `dependencies/skills-lock.json` carries only the bundled dependencies' native installation entries, retaining their immutable upstream revisions and content digests. Importing `symphony-architect.skill` therefore retains both the foundation and local rules without requiring a sibling skill installation. Missing bases and inheritance cycles fail packaging. Source files remain unchanged by this projection.
 
 Never edit archives, provider mirrors or the portable catalog directly. Run `yarn agents:sync` to regenerate them and `yarn agents:check` to detect drift. These checks prove skill-source integrity and generation consistency; they do not establish a product runtime, browser journey, build, package or release result.
+
+## Public-source privacy guard
+
+`yarn verify:public-content` scans Git-tracked files, including files explicitly
+tracked despite ignore rules, and new unignored files. Deleted tracked paths are
+ignored. Symlink names/targets are checked without following the link. Ignored
+local state and old build/package outputs are outside this public-source scan.
+
+The guard rejects the excluded private project identifier in paths and UTF-8 or
+UTF-16LE bytes, including case variants and matches crossing stream boundaries.
+It decodes gzip payloads in bounded chunks and ZIP/portable-skill members through
+the already required Python standard library. Archive detection uses magic bytes;
+ZIP/skill extensions are also inspected. Corrupt archives fail verification. No
+archive is extracted or loaded wholly into memory. Diagnostics redact the excluded
+identifier even when it appears in a filename. `yarn test:public-content` covers
+these contracts and runs in `yarn verify` with the guard.
+
+Canonical skills and guidance remain the editable owners. `yarn agents:sync`
+regenerates provider adapters and portable `.skill` archives; never sanitize those
+projections by hand or modify the locked Architecture foundation. Private UI
+reference comparisons retain their behavior/source contract, but the local
+checkout is supplied through `SYMPHONY_REFERENCE_ROOT`; its value and repository
+identity must not be committed. Public examples use fictional workspace and
+repository identities. Historical raster handoffs with private branding are
+excluded; neutral editable HTML and textual workflow contracts remain available.

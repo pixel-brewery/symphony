@@ -16,6 +16,7 @@ const requiredJobs = [
   'Agents, Format, Lint, Typecheck, Test and Build (windows-latest)',
   'Electron E2E',
   'Package smoke test',
+  'Quality Gate',
 ];
 const shaPattern = /^[0-9a-f]{40}$/u;
 const requestFailure =

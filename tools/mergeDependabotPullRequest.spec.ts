@@ -30,6 +30,7 @@ const requiredJobNames = [
   'Agents, Format, Lint, Typecheck, Test and Build (windows-latest)',
   'Electron E2E',
   'Package smoke test',
+  'Quality Gate',
 ];
 
 function controlled(repositoryName = 'pixel-brewery/symphony', defaultBranch = 'main') {
@@ -136,7 +137,7 @@ afterEach(() => {
 });
 
 describe('Dependabot pull request merge', () => {
-  it('matches the five jobs emitted by CI and keeps macOS acceptance behind the full source matrix', () => {
+  it('matches all jobs emitted by CI and keeps macOS acceptance behind the full source matrix', () => {
     // arrange
     const workflow = parse(readFileSync('.github/workflows/ci.yml', 'utf8'));
     const quality = workflow.jobs.quality;
@@ -148,6 +149,7 @@ describe('Dependabot pull request merge', () => {
       ),
       workflow.jobs['electron-e2e'].name,
       workflow.jobs.package.name,
+      workflow.jobs['quality-gate'].name,
     ];
 
     // assert
@@ -160,6 +162,8 @@ describe('Dependabot pull request merge', () => {
     expect(workflow.jobs.package.needs).toBe('quality');
     expect(workflow.jobs['electron-e2e']['runs-on']).toBe('macos-latest');
     expect(workflow.jobs.package['runs-on']).toBe('macos-latest');
+    expect(workflow.jobs['quality-gate'].needs).toEqual(['quality', 'electron-e2e', 'package']);
+    expect(workflow.jobs['quality-gate'].if).toBe('${{ always() }}');
     expect(workflow.permissions).toEqual({ contents: 'read', packages: 'read' });
   });
 
@@ -401,8 +405,8 @@ describe('Dependabot pull request merge', () => {
     const jobs = dependencies.records.jobs;
 
     if (kind === 'missing') jobs.pop();
-    else if (kind === 'duplicate') jobs[2] = { ...jobs[0], id: 6 };
-    else jobs.push({ ...jobs[0], id: 6, name: 'extra job' });
+    else if (kind === 'duplicate') jobs[2] = { ...jobs[0], id: 7 };
+    else jobs.push({ ...jobs[0], id: 7, name: 'extra job' });
 
     dependencies.records.jobPages[0].total_count = jobs.length;
 
@@ -441,6 +445,23 @@ describe('Dependabot pull request merge', () => {
     expect(writes(dependencies.request)).toEqual([]);
   });
 
+  it.each(['failure', 'cancelled', 'skipped'])(
+    'rejects a %s aggregate gate even when the workflow reports success',
+    async (conclusion) => {
+      // arrange
+      const dependencies = controlled();
+
+      dependencies.records.jobs[requiredJobNames.length - 1].conclusion = conclusion;
+
+      // act
+      const result = await mergeDependabotPullRequest(context, dependencies);
+
+      // assert
+      expect(result).toEqual({ status: 'skipped', reason: 'incomplete-verification' });
+      expect(writes(dependencies.request)).toEqual([]);
+    },
+  );
+
   it('rejects a successful run with the old Ubuntu-only three-job coverage', async () => {
     // arrange
     const dependencies = controlled();
@@ -471,8 +492,8 @@ describe('Dependabot pull request merge', () => {
     const dependencies = controlled();
 
     dependencies.records.jobPages = [
-      { total_count: 5, jobs: dependencies.records.jobs.slice(0, 1) },
-      { total_count: 5, jobs: dependencies.records.jobs.slice(1) },
+      { total_count: 6, jobs: dependencies.records.jobs.slice(0, 1) },
+      { total_count: 6, jobs: dependencies.records.jobs.slice(1) },
     ];
 
     // act
@@ -496,8 +517,8 @@ describe('Dependabot pull request merge', () => {
       const jobs = dependencies.records.jobs;
 
       dependencies.records.jobPages = [
-        { total_count: 5, jobs: jobs.slice(0, 1) },
-        { total_count: kind === 'count-changed' ? 6 : 5, jobs: jobs.slice(1) },
+        { total_count: 6, jobs: jobs.slice(0, 1) },
+        { total_count: kind === 'count-changed' ? 7 : 6, jobs: jobs.slice(1) },
       ];
 
       if (kind === 'empty-page') dependencies.records.jobPages[1].jobs = [];

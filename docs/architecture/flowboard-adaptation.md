@@ -2,7 +2,7 @@
 
 ## Reference findings
 
-The FLAMOX365 task and order views define flow views as projections over typed collections. Each projection supplies stable item keys, a column resolver, configured columns, title/subtitle functions, and a signal grouping items by column. Templates then render Mosaik `mosaik-flow-board`, `mosaik-flow-board-column`, and `mosaik-flow-board-column-item` wrappers with title, meta, subtitle, empty, and actions slots. Column counts and empty states are explicit. The bootstrap views disable drag-and-drop where persistence semantics are not available.
+The private upstream application task and order views define flow views as projections over typed collections. Each projection supplies stable item keys, a column resolver, configured columns, title/subtitle functions, and a signal grouping items by column. Templates then render Mosaik `mosaik-flow-board`, `mosaik-flow-board-column`, and `mosaik-flow-board-column-item` wrappers with title, meta, subtitle, empty, and actions slots. Column counts and empty states are explicit. The bootstrap views disable drag-and-drop where persistence semantics are not available.
 
 ## Provider-neutral model
 

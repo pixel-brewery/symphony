@@ -14,12 +14,12 @@ describe('StorageShareSummaryPipe', () => {
 
     // act
     const line = pipe.transform([
-      { label: 'FLAMOX365', allocatedBytes: 2 * 1024 ** 3, limitGiB: 20 },
+      { label: 'Example Workspace', allocatedBytes: 2 * 1024 ** 3, limitGiB: 20 },
       { label: 'Personal', allocatedBytes: undefined, limitGiB: 20 },
       { label: 'base image', allocatedBytes: 0 },
     ]);
 
     // assert
-    expect(line).toMatch(/^FLAMOX365 .+ of 20 GB · Personal — of 20 GB · base image .+$/u);
+    expect(line).toMatch(/^Example Workspace .+ of 20 GB · Personal — of 20 GB · base image .+$/u);
   });
 });

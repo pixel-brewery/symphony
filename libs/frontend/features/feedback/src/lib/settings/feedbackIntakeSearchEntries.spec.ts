@@ -31,7 +31,7 @@ describe('feedbackIntakeSearchEntries', () => {
         {
           id: 'teams',
           workspaceId: 'personal',
-          displayName: 'FLAMOX365 feedback',
+          displayName: 'Teams feedback',
           provider: 'microsoft-teams',
           tenantId: 'tenant',
           clientId: 'client',
@@ -54,7 +54,7 @@ describe('feedbackIntakeSearchEntries', () => {
     // assert
     expect(entries).toEqual([
       expect.objectContaining({
-        label: 'FLAMOX365 feedback',
+        label: 'Teams feedback',
         group: 'Feedback intake',
         value: 'Enabled',
         workspaceId: 'personal',

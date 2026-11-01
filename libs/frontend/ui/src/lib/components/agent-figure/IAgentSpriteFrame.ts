@@ -1,4 +1,4 @@
-/** One frame in the FLAMOX-compatible employee atlas. @public */
+/** One frame in the established v2 employee atlas. @public */
 export interface IAgentSpriteFrame {
   readonly rowIndex: number;
   readonly columnIndex: number;

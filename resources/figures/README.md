@@ -60,7 +60,7 @@ employee's identity. Both appearance schemas and the Mobile contract accept the
 new `gold` and `rose` IDs.
 
 Activity still comes from execution snapshots, queues and decisions. The shared
-Symphony renderer uses FLAMOX-compatible v2 atlases beside these originals:
+Symphony renderer uses private upstream application-compatible v2 atlases beside these originals:
 `blue-v2.png`, `mint-v2.png`, `orange-v2.png`, `purple-v2.png`, `gold-v2.png` and
 `rose-v2.png`. Each contains nine
 animation states and sixteen clockwise looks in a transparent 1536 × 2288 PNG.
@@ -89,7 +89,7 @@ installed proprietary toolkit is invoked locally rather than vendored. No
 ChatGPT Pet is uploaded or activated.
 
 The accepted animation catalogue was produced with the installed
-`work-pets/0.1.6` toolkit and FLAMOX reference revision
+`work-pets/0.1.6` toolkit and private upstream application reference revision
 `2fc29a56e37449b4fbbfb1d7027249af652eb28f`. Every final encoded atlas passed
 the bundled alpha/geometry, frame, chroma, direction, continuity and quality
 gates. Three independent blind reviewers checked each figure's look directions;

@@ -93,7 +93,7 @@ export function withWorkspaceSettings(): readonly IFeature<SettingsFeatureKind>[
             {
               id: 'feedback-intake',
               label: 'Feedback intake',
-              description: 'Turn requested FLAMOX365 feedback from Microsoft Teams into tickets',
+              description: 'Turn requested Teams feedback from Microsoft Teams into tickets',
               keywords: ['Microsoft Teams', 'channel', 'feedback'],
             },
             {

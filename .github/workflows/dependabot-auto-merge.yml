@@ -16,11 +16,14 @@ jobs:
           github.event.workflow_run.head_repository.id == github.event.repository.id }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      merged: ${{ steps.merge.outputs.merged }}
+      merge_sha: ${{ steps.merge.outputs.merge_sha }}
     concurrency:
       group: dependabot-merge-${{ github.event.workflow_run.pull_requests[0].number || github.event.workflow_run.id }}
       cancel-in-progress: false
     permissions:
-      actions: write
+      actions: read
       contents: write
       pull-requests: read
     steps:
@@ -44,17 +47,37 @@ jobs:
           WORKFLOW_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
         run: node tools/mergeDependabotPullRequest.mjs
 
-      # A GITHUB_TOKEN merge does not trigger the normal main-push release workflow.
-      - name: Request the next desktop release
-        if: steps.merge.outputs.merged == 'true'
+  request-release:
+    needs: merge
+    if: needs.merge.outputs.merged == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: dependency-release-${{ needs.merge.outputs.merge_sha }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      # Retain the successful merge output when retrying a failed release request.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+
+      - name: Request the release for the retained merge source
         env:
           GH_TOKEN: ${{ github.token }}
-          DEFAULT_BRANCH: ${{ steps.merge.outputs.default_branch }}
-        run: gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "$DEFAULT_BRANCH" -f specifier=patch
+          MERGE_COMMIT_SHA: ${{ needs.merge.outputs.merge_sha }}
+        run: node tools/requestMergedRelease.mjs
 
       - name: Refresh the remaining Dependabot updates
-        if: always() && steps.merge.outputs.merged == 'true'
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-          DEFAULT_BRANCH: ${{ steps.merge.outputs.default_branch }}
-        run: gh workflow run rebase-dependabot.yml --repo "$GITHUB_REPOSITORY" --ref "$DEFAULT_BRANCH"
+        run: gh workflow run rebase-dependabot.yml --repo "$GITHUB_REPOSITORY" --ref main
