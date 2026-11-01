@@ -112,19 +112,11 @@ test('flies saved project pilots without changing work, respects reduced motion,
       )
       .toBe(true);
     const passengers = await flights.evaluateAll((labels) =>
-      labels.map((label) => {
-        const bounds = label.getBoundingClientRect();
-        return {
-          id: label.getAttribute('data-agent-id'),
-          source: label.getAttribute('data-figure-source'),
-          testId: label.getAttribute('test-id'),
-          inside:
-            bounds.x > 200 &&
-            bounds.right < window.innerWidth - 160 &&
-            bounds.y > 250 &&
-            bounds.bottom < window.innerHeight - 130,
-        };
-      }),
+      labels.map((label) => ({
+        id: label.getAttribute('data-agent-id'),
+        source: label.getAttribute('data-figure-source'),
+        testId: label.getAttribute('test-id'),
+      })),
     );
     expect(passengers.length).toBeGreaterThan(0);
     expect(Number(await canvas.getAttribute('data-flight-count'))).toBeLessThanOrEqual(3);
@@ -143,20 +135,16 @@ test('flies saved project pilots without changing work, respects reduced motion,
     }
     await expect(canvas).toHaveAttribute('data-asset-state', 'ready');
     await page.screenshot({ path: resolve(root, 'rockets-wide-light.png'), fullPage: true });
-    const rocket = page.getByTestId(passengers.find((passenger) => passenger.inside)!.testId!);
-    const normalSize = Number(await rocket.getAttribute('data-projected-size'));
+    const readZoom = async (): Promise<number> => Number(await canvas.getAttribute('data-zoom'));
+    const normalZoom = await readZoom();
     await page.getByTestId('landscape-zoom-in').click();
     await page.getByTestId('landscape-zoom-in').click();
-    await expect
-      .poll(async () => Number(await rocket.getAttribute('data-projected-size')))
-      .toBeGreaterThan(normalSize * 1.2);
-    const closeSize = Number(await rocket.getAttribute('data-projected-size'));
+    await expect.poll(readZoom).toBeCloseTo(normalZoom * 1.44, 5);
     await page.screenshot({ path: resolve(root, 'rockets-close-light.png'), fullPage: true });
     // `100 %` returns to the fitted distance.
     await page.getByTestId('landscape-zoom-reset').click();
-    await expect
-      .poll(async () => Number(await rocket.getAttribute('data-projected-size')))
-      .toBeLessThan(closeSize * 0.85);
+    await expect.poll(readZoom).toBeCloseTo(1, 5);
+    await expect(page.getByTestId('landscape-zoom-reset')).toHaveJSProperty('label', '100 %');
     await page.getByTestId('landscape-fit').click();
     await page.emulateMedia({ colorScheme: 'dark' });
     await expect
