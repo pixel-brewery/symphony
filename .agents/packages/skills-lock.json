@@ -20,7 +20,7 @@
       "source": ".agents/skills/architecture",
       "archive": ".agents/packages/architecture.skill",
       "claude": ".claude/skills/architecture/SKILL.md",
-      "sha256": "7207615816bbc1aa9368858e125479809f6ad21fcbd8c0adc26268e6b81e97c2"
+      "sha256": "978c9ffcce6842cb9f49dfdd97c65f205de44a1093ebd049c89e7cfdd8e30a39"
     },
     {
       "name": "caveman",
@@ -195,7 +195,7 @@
       "source": ".agents/skills/symphony-architect",
       "archive": ".agents/packages/symphony-architect.skill",
       "claude": ".claude/skills/symphony-architect/SKILL.md",
-      "sha256": "96c777723e4530424c9881f5808a03c28e4f0b02bdd5d6912dd3774f699dee96"
+      "sha256": "9d3f45cd5e43edea24fc347b3381ba2f6d929efdcb916810b77c84975b4966e5"
     },
     {
       "name": "symphony-docs",
