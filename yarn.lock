@@ -2230,18 +2230,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electron-forge/maker-squirrel@npm:7.11.2":
-  version: 7.11.2
-  resolution: "@electron-forge/maker-squirrel@npm:7.11.2"
+"@electron-forge/maker-squirrel@npm:8.0.1":
+  version: 8.0.1
+  resolution: "@electron-forge/maker-squirrel@npm:8.0.1"
   dependencies:
-    "@electron-forge/maker-base": "npm:7.11.2"
-    "@electron-forge/shared-types": "npm:7.11.2"
+    "@electron-forge/core-utils": "npm:8.0.1"
+    "@electron-forge/maker-base": "npm:8.0.1"
+    "@electron-forge/shared-types": "npm:8.0.1"
     electron-winstaller: "npm:^5.3.0"
-    fs-extra: "npm:^10.0.0"
   dependenciesMeta:
     electron-winstaller:
       optional: true
-  checksum: 10c0/55268b7d33789e782f466f4c2307a8bac1b0c6b988fb7513741e4b761b61384f965244be677106ee785a9524a6988e61d64115255d3147dfc90df0b1cc23b96d
+  checksum: 10c0/342715d22a659256f7997598adab3c6cefb1689a5f41e9554ef3df62af37431a095f2a1553179c00f3ba231036642179ff0ed98e8e8d07b72ce62566566b3f64
   languageName: node
   linkType: hard
 
@@ -14920,7 +14920,7 @@ __metadata:
     "@electron-forge/cli": "npm:8.0.1"
     "@electron-forge/maker-deb": "npm:7.11.2"
     "@electron-forge/maker-dmg": "npm:7.11.2"
-    "@electron-forge/maker-squirrel": "npm:7.11.2"
+    "@electron-forge/maker-squirrel": "npm:8.0.1"
     "@electron-forge/maker-zip": "npm:7.11.2"
     "@electron/asar": "npm:4.3.0"
     "@eslint/js": "npm:10.0.1"
