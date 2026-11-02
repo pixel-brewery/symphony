@@ -69,6 +69,8 @@ jobs:
         run: yarn node .agents/skills/symphony-docs/scripts/validate-docs.mjs docs
 
       - name: Verify repository
+        env:
+          VITEST_MAX_WORKERS: ${{ runner.os == 'Windows' && '1' || '' }}
         run: yarn verify
 
   electron-e2e:
