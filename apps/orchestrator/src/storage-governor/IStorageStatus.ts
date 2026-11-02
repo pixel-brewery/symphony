@@ -26,6 +26,43 @@ export interface IStorageStatus {
     readonly availableStorageBytes: number;
     readonly presets: Readonly<Record<LocalCiResourcePresetName, IResolvedLocalCiResourcePreset>>;
   };
+  /**
+   * The default local-CI storage admission decision, using the same bounded growth as a start.
+   * Byte amounts are live filesystem evidence plus the current conservative growth budget.
+   * A pending allocation inventory cannot establish quota availability; a live reserve block
+   * is still conclusive. Shortfall is the extra free space needed to retain the Mac reserve.
+   */
+  readonly localCiAdmission:
+    | {
+        readonly state: 'permitted';
+        readonly availableBytes: number;
+        readonly reserveBytes: number;
+        readonly requiredGrowthBytes: number;
+        readonly shortfallBytes: 0;
+      }
+    | {
+        readonly state: 'blocked';
+        readonly reason:
+          'filesystem-reserve' | 'managed-limit' | 'local-ci-limit' | 'workspace-limit';
+        readonly availableBytes: number;
+        readonly reserveBytes: number;
+        readonly requiredGrowthBytes: number;
+        readonly shortfallBytes: number;
+        readonly workspaceId?: string;
+      }
+    | {
+        readonly state: 'unknown';
+        readonly reason: 'allocation-pending';
+        readonly availableBytes: number;
+        readonly reserveBytes: number;
+        readonly requiredGrowthBytes: number;
+        readonly shortfallBytes: 0;
+      }
+    | {
+        readonly state: 'unknown';
+        readonly reason: 'measurement-failed';
+        readonly reserveBytes: number;
+      };
   readonly workspaces: readonly IStorageUsage[];
   readonly filesystem: {
     readonly availableBytes: number;

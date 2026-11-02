@@ -10,6 +10,12 @@ Der Schalter gilt sofort. Scheitert das Speichern, zeigt er wieder den gespeiche
 
 Die automatische Übernahme berücksichtigt nur Workspaces mit eingeschalteten lokalen Läufen, unabhängig von der Workspace-Auswahl im Hauptfenster. Eine nicht erreichbare GitHub-Anbindung eines Workspace mit ausgeschalteten lokalen Läufen hält die Übernahme für andere freigegebene Workspaces nicht auf.
 
+## Wenn Speicher den Start verhindert
+
+Vor einem lokalen Start muss nach dessen zusätzlichem Speicherbedarf noch die gesamte unter [System › Storage](../system/README.md#storage) eingestellte Mac-Reserve frei bleiben. Reicht der Platz nicht, beginnt Symphony den lokalen Lauf nicht; die gespeicherte Reserve wird dabei nicht herabgesetzt. Das gilt auch, solange die ausführliche Belegungszählung noch läuft. Eine nicht abgeschlossene Zählung bestätigt keine freien Kontingente, und eine fehlgeschlagene Messung gibt keinen Start frei.
+
+Eine solche Ablehnung erzeugt keinen fehlgeschlagenen oder erfolgreichen lokalen Ausführungseintrag und verbraucht keinen GitHub-Laufversuch. Ein bereits in GitHub wartender Workflow bleibt wartend. Wenn wieder genug Platz vorhanden ist, berücksichtigt die automatische Übernahme denselben weiterhin geeigneten wartenden Versuch beim nächsten Durchlauf; ein anderer lokaler Lauf muss zuvor seinen Platz freigeben. Der Grund und die Aktion zur Behebung stehen in der [Mitteilungszentrale](../notifications-and-tray/README.md). Wie du Platz freigibst, beschreibt [System](../system/README.md#speicherzustand).
+
 ## Gastabbild
 
 Die Gruppe **Guest image** wählt, welches veröffentlichte GitHub-Runner-Abbild der Workspace nachbildet. Symphony liest dessen Softwarebericht und installiert die angegebenen Pakete, die Node.js-Laufzeit und die Umgebung in der virtuellen Maschine.
