@@ -50,9 +50,7 @@
   <symphony-notification-bell class="flex flex-none" />
 
   @if (presenter.updates.state(); as update) {
-  <span test-id="app-version-watermark" class="flex-none"
-    >Symphony v{{ update.currentVersion }}</span
-  >
+  <span test-id="app-version-watermark" class="flex-none">V{{ update.currentVersion }}</span>
 
   @if (update.kind === 'available' || update.kind === 'downloading') {
   <span class="relative flex h-[24px] w-[24px] flex-none items-center justify-center">

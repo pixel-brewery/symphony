@@ -13,10 +13,6 @@
   background-color: var(--mosaik-color-neutral-100);
 }
 
-[part~='window-sidebar-footer'] {
-  border-top: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
-}
-
 [part~='window-toolbar'] {
   border-bottom: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-highlight);
 }
@@ -142,7 +138,13 @@ mosaik-split[part~='pane-split'] {
   // dragged past their edge can never scroll the window chrome away; each pane brings its own
   // scroll container. A clipping pane is not a scroll container, so it gets an explicit minimum
   // size of zero; otherwise the row would grow to the tallest pane's content.
-  grid-template-rows: minmax(0, 1fr);
+  &:not([orientation='vertical']) {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  &[orientation='vertical'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
   &::part(panel) {
     overflow: clip;
@@ -159,6 +161,13 @@ mosaik-split[part~='pane-split'] {
     left: calc(var(--split-divider-hit-area) / -2 + var(--split-divider-width) / 2);
     width: var(--split-divider-hit-area);
     height: 100%;
+  }
+
+  &[orientation='vertical']::part(divider)::after {
+    top: calc(var(--split-divider-hit-area) / -2 + var(--split-divider-width) / 2);
+    left: 0;
+    width: 100%;
+    height: var(--split-divider-hit-area);
   }
 
   &::part(divider):hover,

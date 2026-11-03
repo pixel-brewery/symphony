@@ -16,6 +16,7 @@ import {
   SkeletonComponent,
   SplitComponent,
   TextComponent,
+  TooltipComponent,
   TooltipDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
@@ -62,6 +63,7 @@ import { ActionsWorkflowView } from './ActionsWorkflowView';
     SkeletonComponent,
     SplitComponent,
     TextComponent,
+    TooltipComponent,
     TooltipDirective,
     TypographyDirective,
     WindowToolbarDirective,

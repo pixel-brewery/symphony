@@ -16,7 +16,7 @@ Garantien:
 - Der Synchronisierungshinweis der Statusleiste meldet nie einen besseren Stand als die schwächste der beiden GitHub-Datenquellen.
 - Der Renderer sendet für Fensteraktionen nur benannte, schemavalidierte Desktop-Anfragen; er erhält keine Electron-Objekte, Fensteroptionen oder freien Routen. Seitenleiste, Workspace-Umschalter und Laufpanel öffnen die Einstellungen als Route des Hauptfensters ohne Desktop-Anfrage.
 - Seitenleiste und Inhalt sind eine größenveränderbare Teilung; Werkzeugleiste, Seitenleiste und Statusleiste können weder durch Scrollen noch durch eine gezogene Textauswahl aus dem Bild geschoben werden.
-- Der Rahmen selbst speichert nur lokale Darstellungspräferenzen (ausgeblendete Seitenleiste, Segment des Laufpanels, Breite der Seitenleiste) und keine fachlichen Daten; die Workspace-Auswahl speichert das Workspace-Feature über den Einstellungsschreiber.
+- Der Rahmen selbst speichert nur lokale Darstellungspräferenzen (ausgeblendete Seitenleiste, Segment des Laufpanels, Breite der Seitenleiste, Höhe des Laufpanels) und keine fachlichen Daten; die Workspace-Auswahl speichert das Workspace-Feature über den Einstellungsschreiber.
 
 ## Geltungsbereich und Nicht-Ziele
 
@@ -51,8 +51,9 @@ mosaik-app (hasHeader=false, hasNav=false)
     │   │   ├── solange ersetzt:           Navigation des Bildschirms (Settings)
     │   │   └── sonst:
     │   │       ├── Workspace-Umschalter   (nur mit aktivem Workspace)
-    │   │       ├── Navigation             Gruppen und Ziele aus Region desktop-main, scrollt für sich
-    │   │       ├── Laufpanel              (nur wenn Execution- oder CI-Feature enthalten)
+    │   │       ├── vertikale Teilung      window.activity: Navigation / Laufpanel, Endhöhe gemerkt
+    │   │       │   ├── Navigation        Gruppen und Ziele aus Region desktop-main, scrollt für sich
+    │   │       │   └── Laufpanel         (nur wenn Execution- oder CI-Feature enthalten)
     │   │       └── „Settings“             öffnet die Route /main/settings
     │   └── Endbereich: Inhaltsspalte
     │       ├── Werkzeugleiste 52 px       Ziehbereich: Show sidebar?, Back, Forward, Titel/Untertitel, Aktionen, Suchfeld
@@ -166,7 +167,7 @@ Relative Zeiten verwenden eine gemeinsame Uhr, die alle 30 Sekunden tickt. `form
 
 ### Statusleiste: Version und Update
 
-Ist ein Updatezustand bekannt, zeigt die Statusleiste `Symphony v<currentVersion>`. Die Updateschaltfläche folgt dem Zustand:
+Ist ein Updatezustand bekannt, zeigt die Statusleiste ausschließlich `V<currentVersion>` ohne Produktnamen. Die Versionsquelle und etwaige Prerelease-Zusätze bleiben unverändert. Die Updateschaltfläche folgt dem Zustand:
 
 | `UpdateState.kind` | Darstellung                                                                                                                                                                                    |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

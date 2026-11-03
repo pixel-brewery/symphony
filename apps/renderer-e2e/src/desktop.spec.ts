@@ -222,9 +222,7 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
     await expect(page.getByTestId('voice-search')).toHaveCount(0);
     await expect(page.getByTestId('toggle-rail')).toHaveCount(0);
     await expect(page.getByTestId('workspace-rail')).toHaveCount(0);
-    await expect(page.getByTestId('app-version-watermark')).toHaveText(
-      `Symphony v${applicationVersion}`,
-    );
+    await expect(page.getByTestId('app-version-watermark')).toHaveText(`V${applicationVersion}`);
     await expect(page.getByTestId('download-available-update')).toHaveCount(0);
     await expect(page.getByTestId('install-ready-update')).toHaveCount(0);
     await expect(page.getByTestId('notification-bell')).toBeVisible();

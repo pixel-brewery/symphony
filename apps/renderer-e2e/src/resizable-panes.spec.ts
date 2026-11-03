@@ -56,11 +56,11 @@ async function launch(
 }
 
 /** Drags a split divider horizontally to a window x coordinate with the real pointer. */
-async function dragDivider(page: Page, divider: Locator, x: number): Promise<void> {
-  const box = await divider.boundingBox();
-  if (!box) throw new Error('The split divider is not rendered.');
+async function dragDivider(page: Page, startPane: Locator, x: number): Promise<void> {
+  const box = await startPane.boundingBox();
+  if (!box) throw new Error('The resizable pane is not rendered.');
   const y = box.y + Math.min(box.height / 2, 200);
-  await page.mouse.move(box.x + box.width / 2, y);
+  await page.mouse.move(box.x + box.width + 0.5, y);
   await page.mouse.down();
   await page.mouse.move(x, y, { steps: 8 });
   await page.mouse.up();
@@ -232,16 +232,13 @@ test('resizes the sidebar within its bounds and remembers its width across a rel
     const page = await prepareMainWindow(app);
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.stack ?? error.message));
-    // Overview has no split of its own, so the window split's divider is the only one.
-    const divider = page.getByTestId('window-split').locator('[part="divider"]');
     const sidebar = page.getByTestId('window-sidebar');
     const toolbar = page.getByTestId('window-toolbar');
-    await expect(divider).toHaveCount(1);
     expectSize(await widthOf(sidebar), 240);
     expect(await rememberedSize(page, 'window.sidebar')).not.toBe('300');
 
     // act
-    await dragDivider(page, divider, 300);
+    await dragDivider(page, sidebar, 300);
 
     // assert: the sidebar follows the divider and the content starts beside it.
     expectSize(await widthOf(sidebar), 300);
@@ -255,20 +252,20 @@ test('resizes the sidebar within its bounds and remembers its width across a rel
     await expect.poll(() => rememberedSize(page, 'window.sidebar')).toBe('300');
 
     // act
-    await dragDivider(page, divider, 700);
+    await dragDivider(page, sidebar, 700);
 
     // assert: never wider than 360 px.
     expectSize(await widthOf(sidebar), 360);
 
     // act
-    await dragDivider(page, divider, 40);
+    await dragDivider(page, sidebar, 40);
 
     // assert: never narrower than 200 px; the sidebar keeps its destinations.
     expectSize(await widthOf(sidebar), 200);
     await expect(page.getByTestId('navigation-home')).toBeVisible();
 
     // act
-    await dragDivider(page, divider, 320);
+    await dragDivider(page, sidebar, 320);
     await expect.poll(() => rememberedSize(page, 'window.sidebar')).toBe('320');
     await reloadRenderer(app, page);
 
@@ -294,13 +291,12 @@ test('resizes the Inbox list by its divider without moving the sidebar', async (
     await page.getByTestId('navigation-inbox').click();
     await expect(page.getByTestId('inbox-view')).toBeVisible();
     const list = page.getByTestId('inbox-list');
-    const divider = page.getByTestId('inbox-view').locator('[part="divider"]');
     const sidebarWidth = await widthOf(page.getByTestId('window-sidebar'));
     expectSize(await widthOf(list), 400);
     const listX = (await list.boundingBox())!.x;
 
     // act
-    await dragDivider(page, divider, listX + 440);
+    await dragDivider(page, list, listX + 440);
 
     // assert
     expectSize(await widthOf(list), 440);
@@ -308,13 +304,91 @@ test('resizes the Inbox list by its divider without moving the sidebar', async (
     expect(await widthOf(page.getByTestId('window-sidebar'))).toBe(sidebarWidth);
 
     // act
-    await dragDivider(page, divider, listX + 100);
+    await dragDivider(page, list, listX + 100);
 
     // assert: never narrower than 300 px.
     expectSize(await widthOf(list), 300);
     await expect(page.getByTestId('inbox-filter')).toBeVisible();
     await expectChromeInPlace(page);
     expect(errors).toEqual([]);
+  } finally {
+    await app.close();
+    rmSync(configurationRoot, { force: true, recursive: true });
+  }
+});
+
+test('resizes the sidebar activity height and keeps both run tabs and navigation accessible', async () => {
+  // arrange
+  const { app, configurationRoot, outputDirectory } = await launch('sidebar-activity');
+
+  try {
+    const page = await prepareMainWindow(app);
+    const pane = page.getByTestId('sidebar-runs-pane');
+    const split = page.getByTestId('sidebar-runs-split');
+    const before = await pane.boundingBox();
+    if (!before) throw new Error('The sidebar activity pane is not rendered.');
+    expectSize(before.height, 200);
+
+    // act
+    const x = before.x + before.width / 2;
+    await page.mouse.move(x, before.y - 0.5);
+    await page.mouse.down();
+    await page.mouse.move(x, before.y - 40.5, { steps: 8 });
+    await page.mouse.up();
+
+    // assert
+    await expect
+      .poll(async () => (await pane.boundingBox())?.height ?? 0)
+      .toBeGreaterThan(before.height + 35);
+    await expect.poll(() => rememberedSize(page, 'window.activity')).not.toBeNull();
+    await expect(page.getByTestId('rail-run-segment-agent-runs')).toBeInViewport();
+    await expect(page.getByTestId('rail-run-segment-actions')).toBeInViewport();
+    await expectChromeInPlace(page);
+    const draggedHeight = (await pane.boundingBox())!.height;
+
+    // act
+    await reloadRenderer(app, page);
+
+    // assert
+    await expect
+      .poll(async () => Math.abs(((await pane.boundingBox())?.height ?? 0) - draggedHeight))
+      .toBeLessThanOrEqual(1);
+
+    // act: the divider immediately precedes the Agents tab in keyboard order.
+    await page.getByTestId('rail-run-segment-agent-runs').focus();
+    await page.keyboard.press('Shift+Tab');
+
+    // assert
+    await expect
+      .poll(() =>
+        split.evaluate((element) => element.shadowRoot?.activeElement?.getAttribute('role')),
+      )
+      .toBe('separator');
+
+    // act
+    await page.keyboard.press('Shift+ArrowUp');
+
+    // assert
+    await expect
+      .poll(async () => (await pane.boundingBox())?.height ?? 0)
+      .toBeGreaterThan(draggedHeight + 5);
+
+    // act: collapse towards a size smaller than the activity controls can use.
+    const current = (await pane.boundingBox())!;
+    await page.mouse.move(x, current.y - 0.5);
+    await page.mouse.down();
+    await page.mouse.move(x, current.y + current.height - 20, { steps: 8 });
+    await page.mouse.up();
+    await page.getByTestId('rail-run-segment-actions').click();
+
+    // assert
+    expectSize((await pane.boundingBox())!.height, 128);
+    await expect(page.getByTestId('rail-run-list')).toBeInViewport();
+    await expect(page.getByTestId('navigation-inbox')).toBeInViewport();
+    await expectChromeInPlace(page);
+    await page.screenshot({
+      path: resolve(outputDirectory, 'resizable-panes-sidebar-activity.png'),
+    });
   } finally {
     await app.close();
     rmSync(configurationRoot, { force: true, recursive: true });

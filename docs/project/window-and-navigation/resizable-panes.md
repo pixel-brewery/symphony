@@ -1,14 +1,14 @@
 # Bereiche anpassen und scrollen
 
-Wo Symphony zwei Bereiche nebeneinander zeigt – die Seitenleiste neben dem Inhalt oder eine Liste neben ihren Details –, kannst du die Breite selbst festlegen. Symphony merkt sich die Breite und öffnet den Bereich beim nächsten Mal wieder so. Jeder Bereich scrollt für sich, sodass Werkzeugleiste, Seitenleiste und Statusleiste immer an ihrem Platz bleiben.
+Wo Symphony zwei Bereiche nebeneinander zeigt – die Seitenleiste neben dem Inhalt oder eine Liste neben ihren Details –, kannst du die Breite selbst festlegen. In der Seitenleiste lässt sich außerdem die Höhe des Laufpanels unterhalb der Navigation anpassen. Symphony merkt sich jede Größe und öffnet den Bereich beim nächsten Mal wieder so. Jeder Bereich scrollt für sich, sodass Werkzeugleiste, Seitenleiste und Statusleiste immer an ihrem Platz bleiben.
 
-## Breite ändern
+## Größe ändern
 
 1. Zeige auf die feine Linie zwischen zwei Bereichen. Die Linie wird etwas dunkler; du kannst sie ein paar Pixel links oder rechts davon greifen, ein Griffsymbol gibt es nicht.
 2. Ziehe die Linie an die gewünschte Stelle.
 3. Symphony merkt sich die Breite auf diesem Rechner, getrennt für jeden Bereich, und stellt sie nach einem Wechsel des Bildschirms oder einem Neustart wieder her.
 
-Mit der Tastatur erreichst du die Linie mit Tab. Die Pfeiltasten links und rechts verschieben sie in kleinen Schritten, mit Shift in größeren; Home und End setzen sie an die Grenzen. Auch diese Breite merkt sich Symphony.
+Mit der Tastatur erreichst du die Linie mit Tab. Die Pfeiltasten links und rechts verschieben sie in kleinen Schritten, mit Shift in größeren; Home und End setzen sie an die Grenzen. Beim horizontalen Trenner oberhalb von **Agents | Actions** verwendest du die Pfeiltasten oben und unten. Auch diese Größen merkt sich Symphony.
 
 ## Welche Bereiche sich anpassen lassen
 
@@ -22,6 +22,8 @@ Mit der Tastatur erreichst du die Linie mit Tab. Die Pfeiltasten links und recht
 | Work item         | Inspektor rechts                      | 300 px         | 240 px bis 50 % der Breite |
 
 Vergrößerst oder verkleinerst du das Fenster, behält der anpassbare Bereich seine Breite; der andere Bereich wächst oder schrumpft. Passt eine gemerkte Breite in einem kleineren Fenster nicht mehr, zeigt Symphony den Bereich so breit wie erlaubt und behält die gemerkte Breite für ein größeres Fenster.
+
+Die horizontale Linie oberhalb von **Agents | Actions** teilt die Navigation und das Laufpanel. Das Laufpanel beginnt mit 200 px Höhe und lässt sich zwischen 128 px und 60 Prozent des gemeinsam verfügbaren Platzes einstellen. Beide Listen scrollen intern; Umschalter und **Settings** bleiben erreichbar. Beim Verkleinern des Fensters gilt die aktuelle Höhengrenze, ohne die gespeicherte Wunschhöhe zu löschen. Ohne Execution- und CI-Feature erscheint diese Teilung nicht.
 
 ## Regeln
 

@@ -25,6 +25,12 @@
 | **All runs**       | **Running now · <n>** mit Workflow, Branch · Revision · Auslöser, Runner, Laufzeit (`running 2 min`, `waiting 3 min`), **View log** und **Stop** bzw. **Cancel**; **History** als Tabelle mit `Result`, `Workflow`, `Revision`, `Runner`, `Duration`, `Started` und **Show older runs** |
 | Gewählter Workflow | Name und Workflow-Datei, **Run locally** und **Run on GitHub**, die Läufe des Workflows (`Result`, `Revision`, `Runner`, `Duration`, `Started`), die Schritte des gewählten Laufs, ein Protokollauszug und bei einem Fehlschlag die **Diagnosis**                                       |
 
+Die Arbeitsfläche bleibt innerhalb der Fensterhöhe. Werkzeugleiste und Kopf der gewählten Ansicht bleiben beim Scrollen sichtbar. In **All runs** teilen sich **Running now** und **History** den verbleibenden Platz zu gleichen Teilen; beide Listen scrollen unabhängig. In einem gewählten Workflow belegt die Lauftabelle die obere Hälfte und der gewählte Lauf die untere Hälfte. Tabellenüberschriften bleiben beim Scrollen der Zeilen sichtbar.
+
+Im unteren Bereich stehen Schritte und **Run log** nebeneinander. Beide scrollen intern. Bei einem fehlgeschlagenen Lauf bleibt **Diagnosis** darunter sichtbar; Diagnoseüberschrift und Laufaktionen bleiben stehen, während längere Erklärungen innerhalb der Diagnose scrollen. Ohne Protokollauszug zeigt **Run log** einen Hinweis auf das vollständige Protokoll. Ein erfolgreicher oder wartender Lauf erhält keine Diagnosefläche. Das Formular **Run on GitHub** scrollt bei vielen Eingaben in einem begrenzten Bereich, ohne die Arbeitsfläche nach unten zu vergrößern.
+
+Statuspunkt und Workflow-Name liegen in derselben Auswahlfläche. Ein Klick auf einen der beiden Teile wählt den Workflow. Ein Tooltip zeigt beim Überfahren oder bei Tastaturfokus den vollständigen Namen, auch wenn er in der schmalen Liste abgeschnitten ist. Für deaktivierte Workflows enthält es zusätzlich `Disabled on GitHub`; ihre Historie bleibt auswählbar.
+
 `Runner` nennt, wo ein Lauf ausgeführt wurde: `GitHub`, `Local runner` oder `GitHub + local`, wenn der lokale Runner denselben Lauf wiederholt hat. Bei `GitHub + local` zeigt `Result` das jüngere der beiden Ergebnisse.
 
 ## Läufe bedienen
