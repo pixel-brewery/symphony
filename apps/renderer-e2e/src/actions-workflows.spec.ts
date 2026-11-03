@@ -5,6 +5,8 @@ import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
 import type { FlowElement } from '@pixel-brewery/mosaik-elements-foundation/components/flow';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
+import type { BrowserWindow } from 'electron';
+import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
@@ -239,6 +241,178 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     await expect(page.getByTestId(`action-detail-job-${runId}:job:quality`)).toBeInViewport();
     await job.click();
     await expect(page.getByTestId(`action-detail-job-${runId}:job:job-1`)).toBeInViewport();
+    // Long histories, steps and failure output stay in independently bounded desktop regions.
+    await app.close();
+    app = await electron.launch({
+      ...launchOptions,
+      env: {
+        ...launchOptions.env,
+        SYMPHONY_SIMULATED_CI_LAYOUT_FIXTURE: '1',
+        SYMPHONY_SIMULATED_CI_JOB_COUNT: '30',
+      },
+    });
+    // The preserved profile restores its last screen, Actions, rather than a fresh Overview.
+    const layoutPage = await prepareMainWindow(app, 'actions-view');
+    layoutPage.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
+    const layoutWindow = await app.browserWindow(layoutPage);
+    await layoutPage.getByTestId('actions-scope-all').click();
+    await expect(layoutPage.getByTestId('actions-history-table')).toBeVisible();
+    await expect(layoutPage.getByTestId('actions-all-runs-header')).toBeInViewport({ ratio: 1 });
+    await expect(layoutPage.getByTestId('actions-history')).toBeInViewport({ ratio: 1 });
+
+    // The status point is part of the same selectable item and tooltip anchor.
+    const failedWorkflow = layoutPage.getByTestId('actions-workflow-actions-ci:102');
+    const failedPoint = layoutPage.getByTestId('actions-workflow-health-actions-ci:102');
+    const workflowTooltip = layoutPage.getByTestId('actions-workflow-tooltip-actions-ci:102');
+    await failedPoint.hover();
+    await expect(workflowTooltip).toHaveJSProperty('isOpen', true);
+    await expect(workflowTooltip).toHaveJSProperty('content', 'Deploy Dev');
+    await failedPoint.click();
+    await expect(layoutPage).toHaveURL(/workflow=actions-ci(?::|%3A)102/u);
+    await expect(failedWorkflow).toHaveAttribute('aria-current', 'page');
+    await expect(failedWorkflow).toHaveAccessibleName('Deploy Dev · Latest run failed');
+    const itemBounds = await failedWorkflow.boundingBox();
+    const pointBounds = await failedPoint.boundingBox();
+    expect(itemBounds).not.toBeNull();
+    expect(pointBounds).not.toBeNull();
+    if (!itemBounds || !pointBounds) throw new Error('Workflow selection is not rendered.');
+    expect(pointBounds.x).toBeGreaterThanOrEqual(itemBounds.x);
+    expect(pointBounds.x + pointBounds.width).toBeLessThanOrEqual(itemBounds.x + itemBounds.width);
+
+    await layoutPage.getByTestId('refresh-actions').focus();
+    await expect(workflowTooltip).toHaveJSProperty('isOpen', false);
+    await failedWorkflow.focus();
+    await expect(workflowTooltip).toHaveJSProperty('isOpen', true);
+    await layoutPage.keyboard.press('Escape');
+    await expect(workflowTooltip).toHaveJSProperty('isOpen', false);
+
+    const table = layoutPage.getByTestId('actions-workflow-table');
+    const tableHeader = layoutPage.getByTestId('actions-workflow-table-header');
+    await expect(layoutPage.getByTestId(/^action-run-actions-ci:/u)).toHaveCount(24);
+    await expect(layoutPage.getByTestId('actions-run-log-excerpt')).toBeVisible();
+    await expect(layoutPage.getByTestId('actions-diagnosis')).toBeVisible();
+    await expect(layoutPage.getByTestId('actions-diagnosis-rerun')).toHaveAccessibleName(
+      'Rerun on GitHub',
+    );
+    await expect(layoutPage.getByTestId('actions-diagnosis-open')).toHaveAccessibleName(
+      'Open in GitHub',
+    );
+    for (const size of [
+      { width: 1024, height: 674 },
+      { width: 960, height: 674 },
+    ]) {
+      // These native sizes fit the visible macOS runner as well as local hidden-window runs.
+      await layoutWindow.evaluate((window: BrowserWindow, dimensions) => {
+        window.setContentSize(dimensions.width, dimensions.height);
+      }, size);
+      await layoutPage.waitForFunction(
+        ({ width, height }) => window.innerWidth === width && window.innerHeight === height,
+        size,
+      );
+      const upper = layoutPage.getByTestId('actions-workflow-runs');
+      const lower = layoutPage.getByTestId('actions-selected-run');
+      await expect(upper).toBeInViewport({ ratio: 1 });
+      await expect(lower).toBeInViewport({ ratio: 1 });
+      await expect(layoutPage.getByTestId('actions-workflow-header')).toBeInViewport({ ratio: 1 });
+      await expect(layoutPage.getByTestId('actions-run-log-region')).toBeInViewport({ ratio: 1 });
+      await expect(layoutPage.getByTestId('actions-diagnosis')).toBeInViewport({ ratio: 1 });
+      await expect(layoutPage.getByTestId('actions-diagnosis-content')).toBeInViewport({
+        ratio: 1,
+      });
+      const diagnosisCopy = await layoutPage.getByTestId('actions-diagnosis-content').boundingBox();
+      expect(diagnosisCopy?.height ?? 0).toBeGreaterThan(12);
+      await expect(layoutPage.getByTestId('actions-fix-with-ai')).toBeInViewport({ ratio: 1 });
+      const upperBounds = await upper.boundingBox();
+      const lowerBounds = await lower.boundingBox();
+      if (!upperBounds || !lowerBounds) throw new Error('The workflow panes are not rendered.');
+      expect(Math.abs(upperBounds.height - lowerBounds.height)).toBeLessThanOrEqual(2);
+    }
+    const diagnosis = layoutPage.getByTestId('actions-diagnosis-content');
+    const explanationBounds = await layoutPage.getByTestId('actions-diagnosis-text').boundingBox();
+    const policyBounds = await layoutPage.getByTestId('actions-fix-with-ai-reason').boundingBox();
+    if (!explanationBounds || !policyBounds) throw new Error('The diagnosis copy is not rendered.');
+    expect(policyBounds.y).toBeGreaterThanOrEqual(explanationBounds.y + explanationBounds.height);
+    const diagnosisScroll = await diagnosis.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+      return {
+        top: element.scrollTop,
+        height: element.clientHeight,
+        content: element.scrollHeight,
+      };
+    });
+    expect(diagnosisScroll.content).toBeGreaterThan(diagnosisScroll.height);
+    expect(diagnosisScroll.top).toBeGreaterThan(0);
+    await expect(layoutPage.getByTestId('actions-fix-with-ai')).toBeInViewport({ ratio: 1 });
+    await diagnosis.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+
+    const revisionBounds = await layoutPage
+      .getByTestId('actions-workflow-revision-heading')
+      .boundingBox();
+    expect(revisionBounds?.width ?? 0).toBeGreaterThanOrEqual(180);
+    const horizontalScroll = await table.evaluate((element) => {
+      const viewport = element.shadowRoot?.querySelector<HTMLElement>('[part="viewport"]');
+      if (!viewport) throw new Error('The table does not expose its scroll viewport.');
+      viewport.scrollLeft = viewport.scrollWidth;
+      const result = {
+        left: viewport.scrollLeft,
+        width: viewport.clientWidth,
+        content: viewport.scrollWidth,
+      };
+      viewport.scrollLeft = 0;
+      return result;
+    });
+    expect(horizontalScroll.content).toBeGreaterThan(horizontalScroll.width);
+    expect(horizontalScroll.left).toBeGreaterThan(0);
+    const headerBefore = await tableHeader.boundingBox();
+    const scrollResult = await table.evaluate((element) => {
+      const viewport = element.shadowRoot?.querySelector<HTMLElement>('[part="viewport"]');
+      if (!viewport) throw new Error('The table does not expose its scroll viewport.');
+      viewport.scrollTop = viewport.scrollHeight;
+      return {
+        top: viewport.scrollTop,
+        height: viewport.clientHeight,
+        content: viewport.scrollHeight,
+      };
+    });
+    expect(scrollResult.content).toBeGreaterThan(scrollResult.height);
+    expect(scrollResult.top).toBeGreaterThan(0);
+    await expect(tableHeader).toBeInViewport({ ratio: 1 });
+    const headerAfter = await tableHeader.boundingBox();
+    if (!headerBefore || !headerAfter) throw new Error('The table header is not rendered.');
+    expect(Math.abs(headerBefore.y - headerAfter.y)).toBeLessThanOrEqual(2);
+    const logScroll = await layoutPage
+      .getByTestId('actions-run-log-excerpt')
+      .evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+        return {
+          top: element.scrollTop,
+          height: element.clientHeight,
+          content: element.scrollHeight,
+        };
+      });
+    expect(logScroll.content).toBeGreaterThan(logScroll.height);
+    expect(logScroll.top).toBeGreaterThan(0);
+    await expect(layoutPage.getByTestId('actions-diagnosis-rerun')).toBeInViewport({ ratio: 1 });
+    await expect(layoutPage.getByTestId('actions-workflow-header')).toBeInViewport({ ratio: 1 });
+    await layoutPage.screenshot({
+      animations: 'disabled',
+      path: resolve(outputDirectory, 'actions-workflow-bounded-layout.png'),
+      fullPage: true,
+    });
+
+    const disabledWorkflow = layoutPage.getByTestId('actions-workflow-actions-ci:103');
+    const disabledTooltip = layoutPage.getByTestId('actions-workflow-tooltip-actions-ci:103');
+    await disabledWorkflow.hover();
+    await expect(disabledTooltip).toHaveJSProperty('isOpen', true);
+    await expect(disabledTooltip).toHaveJSProperty(
+      'content',
+      'Cache Maintenance with a deliberately long workflow name for layout inspection · Disabled on GitHub',
+    );
+    await disabledWorkflow.click();
+    await expect(layoutPage.getByTestId('actions-diagnosis')).toHaveCount(0);
+    await expect(layoutPage.getByTestId('actions-run-log-empty')).toBeVisible();
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();

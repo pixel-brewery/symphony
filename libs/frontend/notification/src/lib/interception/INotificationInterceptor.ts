@@ -5,5 +5,5 @@ import type { INotificationMessage } from '../models/INotificationMessage';
 // #endregion
 
 export interface INotificationInterceptor {
-  push(notification: INotificationMessage): void;
+  push(notification: INotificationMessage, repeated?: boolean): void;
 }

@@ -66,7 +66,12 @@ function arrange(includeRepositories = true) {
       repository('outside', true, 'other'),
     ],
   });
-  const notifications = { showWarning: vi.fn(), showSuccess: vi.fn(), showError: vi.fn() };
+  const notifications = {
+    showWarning: vi.fn(),
+    showSuccess: vi.fn(),
+    showError: vi.fn(),
+    resolveError: vi.fn(),
+  };
   const client: IRepositoryRuntimeClient = {
     request: async () => {
       throw new Error('Unexpected native request.');

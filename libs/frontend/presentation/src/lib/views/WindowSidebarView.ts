@@ -12,11 +12,12 @@ import {
   DropDownButtonComponent,
   MenuComponent,
   MenuItemComponent,
+  SplitComponent,
   TextComponent,
   TooltipDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { WindowSidebar } from '@symphony/frontend-core';
+import { PaneSizeDirective, WindowSidebar } from '@symphony/frontend-core';
 import { WorkspaceAvatarSourcePipe } from '@symphony/frontend-ui';
 import { PresenterViewPresenter } from '../view-presenters/PresenterViewPresenter';
 import { RunPanelView } from './RunPanelView';
@@ -43,9 +44,11 @@ import { RunPanelView } from './RunPanelView';
     MenuComponent,
     MenuItemComponent,
     NgTemplateOutlet,
+    PaneSizeDirective,
     RouterLink,
     RouterLinkActive,
     RunPanelView,
+    SplitComponent,
     TextComponent,
     TooltipDirective,
     TypographyDirective,

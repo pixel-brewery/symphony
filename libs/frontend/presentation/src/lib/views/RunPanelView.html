@@ -1,11 +1,15 @@
-<section class="flex w-full min-w-0 flex-col gap-0.5" test-id="run-panel" aria-label="Runs">
+<section
+  class="flex h-full min-h-0 w-full min-w-0 flex-col gap-0.5"
+  test-id="run-panel"
+  aria-label="Runs"
+>
   @if (presenter.executionAvailable && presenter.ciAvailable) {
   <div
     part="run-switch"
     role="group"
     aria-label="Runs"
     test-id="rail-run-segment"
-    class="mx-1 mb-0.5 flex gap-[2px] p-[2px]"
+    class="mx-1 mb-0.5 flex flex-none gap-[2px] p-[2px]"
   >
     <div class="min-w-0 flex-1">
       <mosaik-button
@@ -33,7 +37,7 @@
   }
 
   <div
-    class="flex max-h-[220px] min-h-0 flex-col overflow-y-auto overscroll-contain"
+    class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
     test-id="rail-run-list"
   >
     @if (presenter.selectedRunView() === 'agents' && presenter.executionAvailable) { @for (agent of

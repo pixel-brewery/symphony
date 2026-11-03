@@ -11,7 +11,10 @@ export const repositoryRuntimeStatusSchema = z.object({
   displayName: z.string().min(1),
   repositoryIdentity: z.string().min(1),
   preparation: z.discriminatedUnion('state', [
-    z.object({ state: z.literal('unprepared') }),
+    z.object({
+      state: z.literal('unprepared'),
+      inspectionError: z.string().min(1).max(2_000).optional(),
+    }),
     z.object({
       state: z.literal('prepared'),
       path: z.string().min(1),

@@ -25,6 +25,7 @@ export class ContinuousIntegrationProjectionService {
     readonly status: IRemoteDataStatus;
   }>;
   private _continuousIntegrationRefreshScope: string | undefined;
+  private _continuousIntegrationRefreshIncludesCatalog = false;
 
   // #endregion
 
@@ -79,10 +80,12 @@ export class ContinuousIntegrationProjectionService {
       if (this._continuousIntegrationRefresh === operation) {
         this._continuousIntegrationRefresh = undefined;
         this._continuousIntegrationRefreshScope = undefined;
+        this._continuousIntegrationRefreshIncludesCatalog = false;
       }
     });
     this._continuousIntegrationRefresh = operation;
     this._continuousIntegrationRefreshScope = scope.continuousIntegration;
+    this._continuousIntegrationRefreshIncludesCatalog = false;
     return operation;
   }
 
@@ -127,13 +130,16 @@ export class ContinuousIntegrationProjectionService {
       }
     }
     if (this._continuousIntegrationRefresh) {
-      if (this._continuousIntegrationRefreshScope === scope.continuousIntegration) {
+      if (
+        this._continuousIntegrationRefreshScope === scope.continuousIntegration &&
+        (!forceRefresh || this._continuousIntegrationRefreshIncludesCatalog)
+      ) {
         return this._continuousIntegrationRefresh;
       }
       try {
         await this._continuousIntegrationRefresh;
       } catch {
-        // The newly selected workspace has an independent Actions projection below.
+        // A new scope or an explicit catalog read still needs its own provider attempt below.
       }
       return this.loadProjection(forceRefresh);
     }
@@ -141,10 +147,12 @@ export class ContinuousIntegrationProjectionService {
       if (this._continuousIntegrationRefresh === operation) {
         this._continuousIntegrationRefresh = undefined;
         this._continuousIntegrationRefreshScope = undefined;
+        this._continuousIntegrationRefreshIncludesCatalog = false;
       }
     });
     this._continuousIntegrationRefresh = operation;
     this._continuousIntegrationRefreshScope = scope.continuousIntegration;
+    this._continuousIntegrationRefreshIncludesCatalog = true;
     return operation;
   }
 

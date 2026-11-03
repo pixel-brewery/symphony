@@ -3176,3 +3176,25 @@ render failures leave Mosaik's text fallback. A bounded render cache and Angular
 AsyncPipe prevent repeated drawing and stale asynchronous display. These
 workspace-specific persistence and fallback rules are documented in
 [Workspaces](../workspaces/README.md#workspace-symbol-und-farbe).
+
+## 2026-11-03 Repository inspection errors and grouped notices
+
+The exact read-only private upstream application notification service, notification manager and toast interceptor were inspected. Symphony **adopts** their existing dispatcher → interceptor → public Mosaik toast composition. The desktop-specific **Adapt** adds a caller-owned resource key to persistent errors: an unchanged repository-inspection failure displays one toast per unresolved episode, while the day's history groups identical kind/title/content/resource combinations into one counted row. A changed cause or a confirmed recovery permits a new toast; independent operation failures retain their feedback. The resource key encodes workspace and repository identifiers as a tuple, so valid separator characters cannot collide.
+
+Repository inspection is a per-binding result. One broken local checkout cannot discard healthy repository statuses. The owning notification source supplies an actionable current problem with workspace/repository context and opens that repository's settings through the existing renderer route. This adapts the reference's application-level notification composition to Symphony's local repository lifecycle; the upstream source does not own Git metadata recovery. Preparation and execution continue to reject corrupt Git state without repairing or replacing user files.
+
+## 2026-11-03 Bounded Actions workspace and sidebar activity resize
+
+The exact private upstream application `PresenterView.html`, report/task collection views and report-folder split behavior were inspected read-only alongside the installed Mosaik Split, Table, Button and Tooltip APIs. Symphony **adopts** constrained full-height containers, independent collection scrolling, public split slots and keyboard/pointer interaction, and Mosaik's own sticky table header and button icon/label slots.
+
+The lower sidebar activity region is an **Adapt** of that split pattern: a vertical, non-collapsing end pane replaces the former horizontal border above Agents/Actions, and the existing pane-memory owner stores its 200 px default height locally under `window.activity`. Its 128 px minimum and 60 percent maximum leave navigation separately scrollable; Settings stays outside the split. The global chrome stylesheet rotates the existing divider hit area and single-axis grid geometry for the vertical orientation, using the same public split parts and tokens.
+
+Actions is an **Adapt** because the reference has no equivalent GitHub Actions route. All runs reserves equal bounded Running/History regions; a selected workflow reserves equal run-table/selected-run regions under fixed headers. The selected run composes internally scrolling steps and log beside each other, plus a bounded full-width diagnosis region for failures. Its heading, primary repair action and accessible compact rerun/open actions remain fixed while diagnosis/policy text scrolls. Non-scrolling containers clip, preventing focus or text selection from shifting the outer work area.
+
+Workflow status dots **adopt** the public Button icon slot so the dot and name belong to one clickable selection surface. The button's accessible name retains the workflow health. Tooltips use the public slotted-control composition and native hover/focus triggers, avoiding identifier-based selector lookup for provider identifiers that contain separators. The only copy **Differ** is the product-specific footer: it shows `V<currentVersion>` without repeating the application name; the version source and suffixes are unchanged.
+
+## 2026-11-03 Actions workflow catalogue hydration
+
+The exact read-only private upstream application `patterns-and-practices/presenters/behaviors/Hydratable.ts` was re-inspected. Symphony **adopts** its lifecycle: initial presentation waits for the owning hydration operation to settle. The Actions route **adapts** that operation to the existing typed desktop CI request: after application initialization, it explicitly asks for workflow definitions and runs so a cold projection includes workflows without runs. No Mosaik component, layout, copy or theme contract changes.
+
+The existing application projection owner retains request sharing, scope checks and cached-data recovery. A catalogue-inclusive request arriving during a runs-only read waits and then performs one shared catalogue-inclusive read; another runs-only read cannot satisfy that requirement. Routine run polling remains narrow. This is a desktop CI data-acquisition adaptation; the inspected reference does not own a GitHub Actions catalogue.

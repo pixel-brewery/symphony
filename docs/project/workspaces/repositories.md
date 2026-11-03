@@ -14,6 +14,10 @@ Die Gruppe **Repositories** („Add every source-code repository used by this wo
 
 Jede Zeile hat außerdem **Edit** und eine Schaltfläche zum Entfernen. Die letzte Zeile **Add repository** („Add another GitHub repository to this workspace“) öffnet das Sheet zum Hinzufügen.
 
+Kann eine lokale Arbeitskopie nicht geprüft werden, nennt **Unable to inspect the local repository.** den betroffenen Workspace, das Repository und den Grund. Einstellungen, Kontoverbindungen und die Zustände anderer Repositories bleiben verfügbar. Symphony prüft die konfigurierten Repositories auch beim Workspace-Wechsel und nach dem Speichern von Einstellungen; der im Hinweis genannte Workspace ist daher entscheidend, nicht der gerade geöffnete Bildschirm.
+
+Die [Mitteilungszentrale](../notifications-and-tray/README.md) hält einen solchen Fehler unter **Needs attention** fest. **Open repository settings** öffnet direkt das betroffene Repository im zugehörigen Workspace. Prüfe dort **Local checkout** und die Git-Metadaten. Erneute identische Fehler werden im Tagesverlauf mit Anzahl und letzter Uhrzeit zusammengefasst und erzeugen während derselben Störung keine weiteren Einblendungen. Ein anderer Fehler oder ein erneuter Fehler nach bestätigter Erholung wird wieder gemeldet. Das Lesen repariert oder ersetzt keine Arbeitskopie; auch **Prepare locally** bricht bei ungültigen vorhandenen Git-Metadaten ab.
+
 ## Lokal vorbereiten
 
 **Prepare locally** und **Refresh** holen den aktuellen Stand des Repositories auf diesen Mac, ohne Projektcode auszuführen:

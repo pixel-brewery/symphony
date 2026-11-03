@@ -18,7 +18,7 @@ Die Glocke trägt die Zahl der Punkte, die Aufmerksamkeit brauchen. Solange daru
 
 - Kopf: **Notifications**, darunter die Zahl der offenen Punkte und woher sie stammen (zum Beispiel `2 need attention · Example Workspace and this Mac`), rechts **Mark all as read**.
 - **Needs attention**: ein Eintrag je Problem mit Symbol, Titel, Ort als Pfad (zum Beispiel `System › Developer tools`), der Folge oder dem nötigen Kontext und den Schaltflächen, die das Problem beheben. Ungelesene Einträge tragen einen blauen Punkt.
-- **Earlier today**: die Hinweise, die Symphony heute in diesem Fenster als Einblendung gezeigt hat, neueste zuerst, mit Uhrzeit. Ein Hinweis, der erschien, während das Fenster nicht im Vordergrund war, gilt als ungelesen.
+- **Earlier today**: die Hinweise dieses Fensters, neueste zuerst, mit letzter Uhrzeit. Gleiche Fehler mit gleichem Kontext stehen in einem Eintrag; bei Wiederholung zeigt er die Zahl der Vorkommen. Ein Hinweis, der erstmals erschien, während das Fenster nicht im Vordergrund war, gilt als ungelesen. Eine Wiederholung ändert einen bereits gelesenen Eintrag nicht wieder auf ungelesen.
 - Fuß: `Work-item decisions stay in the Inbox.` und **Clear read**.
 - Ohne Problem und ohne Hinweis steht dort `Nothing needs your attention`.
 
@@ -37,6 +37,8 @@ Entscheidungen zu Work Items erscheinen nicht hier, sondern in der **Inbox**.
 | Ein Workspace nahe oder an seiner Speichergrenze                                                             | `<Workspace> › Administration`                                                | **Review storage** öffnet den Workspace unter **Administration**.                                                                                           |
 
 Ein Problem verschwindet, sobald es behoben ist. Beim Ausführen einer Behebung schließt sich die Mitteilungszentrale; die Bestätigung oder die Einstellungen übernehmen.
+
+Scheitert die Prüfung einer vorhandenen lokalen Arbeitskopie, erscheint ein Fehler mit Workspace, Repository und Diagnose. **Open repository settings** öffnet genau dieses Repository. Dafür wird **Prepare locally** in der Mitteilungszentrale nicht angeboten, weil eine ungültige Git-Verknüpfung zuerst geprüft werden muss. Andere Repositories bleiben unabhängig davon verfügbar. Wiederholte Prüfungen derselben unveränderten Störung aktualisieren nur den vorhandenen Verlaufseintrag; erst ein anderer Fehler oder eine erneute Störung nach bestätigter Erholung erzeugt wieder eine Einblendung. Eine fehlgeschlagene Abfrage aller Repository-Zustände nennt ausdrücklich **All configured workspaces** und behält die zuletzt bekannten Zustände.
 
 ### Wenn Local GitHub Actions wegen Speicher wartet
 

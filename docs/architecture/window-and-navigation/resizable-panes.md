@@ -10,7 +10,7 @@ Garantien:
 
 - Jede Teilung hat einen festen Namen, eine Standardgröße und Grenzen. Der primäre Bereich öffnet in der zuletzt gezogenen Größe und ohne gemerkte Größe in der Standardgröße.
 - Die Grenzen gelten immer, auch für eine gemerkte Größe, die in einem kleineren Fenster nicht mehr passt; die gemerkte Größe selbst wird dadurch nicht überschrieben.
-- Der feste Bereich jeder Teilung behält bei einer Änderung der Fenstergröße seine Pixelbreite; der andere Bereich nimmt die Änderung auf.
+- Der feste Bereich jeder Teilung behält bei einer Änderung der Fenstergröße seine Pixelgröße auf der jeweiligen Achse; der andere Bereich nimmt die Änderung auf.
 - Eine gemerkte Größe ist eine positive ganze Pixelzahl. Fehlender, voller, gesperrter oder nicht vorhandener Speicher kostet nur die gemerkte Größe; Bereiche öffnen dann in der Standardgröße, und es entsteht kein Fehler.
 - Weder Scrollen noch eine über den Rand gezogene Textauswahl noch eine Fokusverschiebung kann den Fensterrahmen oder einen Bereich als Ganzes verschieben. Nur die Scrollbereiche innerhalb der Bereiche scrollen, und ein Scrollbereich gibt sein Scrollende nicht an den umgebenden weiter.
 - Der Trenner ist eine 1 px hohe Haarlinie in der Linienfarbe des Rahmens ohne Griffsymbol, mit einer 9 px breiten Zieh- und Klickfläche, und per Tastatur bedienbar.
@@ -37,11 +37,11 @@ Garantien:
 
 Eine Ersatzimplementierung muss dieselben Eigenschaften liefern:
 
-- Zwei Bereiche (`slot="start"`, `slot="end"`) mit einem Trenner dazwischen, horizontal angeordnet.
+- Zwei Bereiche (`slot="start"`, `slot="end"`) mit einem Trenner dazwischen; `orientation="horizontal"` ordnet sie nebeneinander und `orientation="vertical"` untereinander an.
 - `lock`: `start` macht den Startbereich zum primären Bereich, `end` den Endbereich (Layout, Ziehen und Tastatur sind dann gespiegelt). In beiden Fällen bleibt die Pixelgröße des primären Bereichs bei einer Größenänderung des Behälters erhalten.
-- `position`, `min`, `max`: CSS-Längen (Pixel oder Prozent der Behälterbreite) für den primären Bereich. Die Darstellung begrenzt die Größe auf `min` … `max` und auf den Behälter; Ziehen und Tastatur ebenso.
+- `position`, `min`, `max`: CSS-Längen (Pixel oder Prozent der Behältergröße auf der Teilungsachse) für den primären Bereich. Die Darstellung begrenzt die Größe auf `min` … `max` und auf den Behälter; Ziehen und Tastatur ebenso.
 - `disabled`: der Trenner ist nicht fokussierbar und reagiert weder auf Ziehen noch auf Tasten.
-- Trenner: `role="separator"`, fokussierbar (`tabindex="0"`), Beschriftung `Resize`, `aria-valuenow` in Prozent. Pfeil links/rechts verschiebt um 1 % der Behälterbreite, mit Shift um 10 %; Home und End springen an die Grenzen.
+- Trenner: `role="separator"`, fokussierbar (`tabindex="0"`), Beschriftung `Resize`, `aria-valuenow` in Prozent. Pfeil links/rechts verschiebt horizontale Teilungen um 1 % der Breite, Pfeil oben/unten vertikale Teilungen um 1 % der Höhe, mit Shift jeweils um 10 %; Home und End springen an die Grenzen.
 - `splitReposition` feuert bei jeder Positionsänderung (Ziehen, Tastatur, gesetzte Eigenschaft) mit der Position in Prozent; `positionInPixels` liefert die aktuelle Größe des primären Bereichs in Pixeln.
 - `updateComplete` erfüllt sich nach dem ersten Rendern, wenn der Behälter vermessen ist.
 - Öffentliche Gestaltungseingänge: Custom Properties `--split-divider-width`, `--split-divider-background-color`, `--split-divider-hit-area`; Parts `panel`, `divider`, `thumb`.
@@ -54,7 +54,7 @@ Die Teilungen verwenden keine Einklapplogik (`collapsible`) und keine Rastpunkte
 - Eingaben: `symphonyPaneSize` (Pflicht, eindeutiger Name je Teilung) und `paneSize` (Pflicht, Standardgröße des primären Bereichs in Pixeln). `min`, `max`, `lock` und `disabled` bleiben Bindungen der Teilung selbst.
 - Anwenden: Nach dem ersten Rendern – und erneut, wenn sich Name oder Standardgröße ändern – liest die Direktive die gemerkte Größe, ersatzweise die Standardgröße, wartet auf `updateComplete` und setzt erst dann `position = "<n − d/2>px"`. Eine früher gesetzte Position würde gegen die Breite 0 aufgelöst und den Bereich zusammengeklappt öffnen. `d` ist die Breite der Trennlinie (`--split-divider-width`, bei einer zusammengeklappten Teilung ersatzweise die Haarlinie `--mosaik-layout-thickness`): Mosaik zentriert die Linie auf `position`, so dass der Bereich `n − d` Pixel breit ist und der nächste Bereich genau bei `n` px beginnt, wie die Artboards Bereich und Linie zeichnen.
 - Merken: Bei `splitReposition` speichert die Direktive `positionInPixels` unter ihrem Namen, aber erst, nachdem sie die Anfangsgröße angewandt hat. Ereignisse vor diesem Zeitpunkt (die Komponente meldet auch ihre Ausgangsposition) überschreiben die gemerkte Größe nicht. Weil das Ereignis jede Positionsänderung meldet, merkt sich Symphony auch Verschiebungen per Tastatur.
-- Bei `lock="end"` ist der primäre Bereich der Endbereich; gemerkt wird also die Breite des Inspektors, nicht die der Liste.
+- Bei `lock="end"` ist der primäre Bereich der Endbereich; gemerkt wird also die Breite des Inspektors beziehungsweise die Höhe des Laufpanels, nicht die Größe des gegenüberliegenden Bereichs.
 
 ### Speicherformat (`PaneSizeMemory`)
 
@@ -71,16 +71,17 @@ Die gemerkten Größen sind reine Darstellungspräferenzen. Sie werden nicht mit
 
 ### Teilungen
 
-| Name                      | Bildschirm    | Startbereich / Endbereich                | Fester Bereich | Standard | Minimum | Maximum | Besonderheit                                                                                                                                               |
-| ------------------------- | ------------- | ---------------------------------------- | -------------- | -------- | ------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `window.sidebar`          | Hauptfenster  | Seitenleiste / Werkzeugleiste und Inhalt | Start          | 240 px   | 200 px  | 360 px  | Ausgeblendete Seitenleiste: Minimum und Maximum 0 px, Teilung gesperrt, Trennerbreite 0; der Bereich und die Linie verschwinden, die gemerkte Größe bleibt |
-| `inbox.list`              | Inbox         | Liste / Detail                           | Start          | 400 px   | 300 px  | 60 %    | –                                                                                                                                                          |
-| `pull-requests.inspector` | Pull requests | Liste / Inspektor                        | Ende           | 360 px   | 300 px  | 60 %    | Solange kein Pull Request gewählt ist oder die Liste lädt: Minimum und Maximum 0 px, gesperrt, Trennerbreite 0                                             |
-| `actions.workflows`       | Actions       | Workflow-Liste / Inhalt                  | Start          | 220 px   | 180 px  | 40 %    | –                                                                                                                                                          |
-| `orbit.inspector`         | Orbit         | Orbit-Diagramm / Inspektor               | Ende           | 340 px   | 280 px  | 50 %    | –                                                                                                                                                          |
-| `work-item.inspector`     | Work item     | Hauptbereich / Inspektor                 | Ende           | 300 px   | 240 px  | 50 %    | –                                                                                                                                                          |
+| Name                      | Bildschirm    | Startbereich / Endbereich                | Fester Bereich | Standard    | Minimum | Maximum | Besonderheit                                                                                                                                               |
+| ------------------------- | ------------- | ---------------------------------------- | -------------- | ----------- | ------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `window.sidebar`          | Hauptfenster  | Seitenleiste / Werkzeugleiste und Inhalt | Start          | 240 px      | 200 px  | 360 px  | Ausgeblendete Seitenleiste: Minimum und Maximum 0 px, Teilung gesperrt, Trennerbreite 0; der Bereich und die Linie verschwinden, die gemerkte Größe bleibt |
+| `window.activity`         | Seitenleiste  | Navigation / Laufpanel                   | Ende           | 200 px Höhe | 128 px  | 60 %    | Vertikale Orientierung; fester Umschalter im Laufpanel, Listeneinträge scrollen intern; entfällt ohne Execution und CI                                     |
+| `inbox.list`              | Inbox         | Liste / Detail                           | Start          | 400 px      | 300 px  | 60 %    | –                                                                                                                                                          |
+| `pull-requests.inspector` | Pull requests | Liste / Inspektor                        | Ende           | 360 px      | 300 px  | 60 %    | Solange kein Pull Request gewählt ist oder die Liste lädt: Minimum und Maximum 0 px, gesperrt, Trennerbreite 0                                             |
+| `actions.workflows`       | Actions       | Workflow-Liste / Inhalt                  | Start          | 220 px      | 180 px  | 40 %    | –                                                                                                                                                          |
+| `orbit.inspector`         | Orbit         | Orbit-Diagramm / Inspektor               | Ende           | 340 px      | 280 px  | 50 %    | –                                                                                                                                                          |
+| `work-item.inspector`     | Work item     | Hauptbereich / Inspektor                 | Ende           | 300 px      | 240 px  | 50 %    | –                                                                                                                                                          |
 
-Prozentangaben beziehen sich auf die Breite der jeweiligen Teilung. Die Fensterteilung umfasst die Höhe zwischen Fensteroberkante und Statusleiste; die Statusleiste bleibt über die volle Fensterbreite.
+Prozentangaben beziehen sich auf die jeweilige Teilungsachse: bei `window.activity` auf die Höhe unterhalb von Kopfzeile und Workspace-Umschalter sowie oberhalb von Settings, sonst auf die Breite. Die gemeinsame Größen-Direktive behandelt die Pixelposition orientierungsneutral; für das Laufpanel gilt derselbe lokale Speicher- und Wiederherstellungsvertrag unter `symphony.pane.window.activity`. Die Fensterteilung umfasst die Höhe zwischen Fensteroberkante und Statusleiste; die Statusleiste bleibt über die volle Fensterbreite.
 
 ### Gestaltung des Trenners
 
@@ -96,22 +97,24 @@ Alle Teilungen tragen `part="pane-split"`. Das Stylesheet des Fensterrahmens set
 
 Die Flächen links und rechts zeichnen keine eigene Trennlinie mehr; Seitenleiste, Inbox-Liste, Actions-Workflow-Liste und die Inspektoren von Pull requests, Orbit und Work item haben ihre frühere Randlinie verloren.
 
+Die vertikale Laufpanelteilung verwendet dieselbe Haarlinie und Hit-Area wie die übrigen Teilungen. Der Hit-Bereich erstreckt sich dort über die Breite und 9 px in der Höhe; die globale Rahmenkomposition setzt die einzelne Grid-Spalte statt einer einzelnen Grid-Zeile. Die frühere feste Oberkante des Laufpanels entfällt.
+
 ### Scroll-Eingrenzung
 
 - Der Fensterinhalt (`part="window"`) und jeder Bereich einer Teilung verwenden `overflow: clip` statt `overflow: hidden`. Ein Element mit `hidden` bleibt ein Scrollbehälter, den der Browser bei einer über den Rand gezogenen Textauswahl, bei `scrollIntoView` oder bei Fokuswechseln verschiebt; `clip` erzeugt keinen Scrollbehälter, sodass der Rahmen an seiner Stelle bleibt.
 - Jeder Bereich bringt seinen eigenen Scrollbereich mit, in der Regel mit `overscroll-behavior: contain`, damit das Scrollende nicht an den umgebenden Bereich weitergegeben wird:
 
-| Bereich                  | Scrollverhalten                                                                                                                                       |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Inhalt des Hauptfensters | eigener Scrollbereich unter der Werkzeugleiste (Router-Outlet)                                                                                        |
-| Ziele der Seitenleiste   | scrollen für sich, wenn das Fenster zu niedrig ist; Workspace-Umschalter oben sowie Laufpanel und **Settings** unten bleiben stehen                   |
-| Einstellungsnavigation   | scrollt unter dem fest stehenden **Search settings**                                                                                                  |
-| Inbox-Liste              | Mosaik-Liste: der Filter `All · Decisions · Updates` ist ihre feste Kopfzeile, nur die Einträge scrollen                                              |
-| Inbox-Detail             | scrollt für sich und nutzt die volle restliche Breite (die frühere Obergrenze von 760 px entfällt); Innenabstand 28 px oben und unten, 36 px seitlich |
-| Pull requests            | Kopfleiste fest, Tabelle scrollt; der Inspektor scrollt für sich                                                                                      |
-| Actions                  | Workflow-Liste und Inhalt scrollen je für sich                                                                                                        |
-| Orbit                    | das Diagramm wird abgeschnitten statt gescrollt; der Inspektor scrollt vertikal für sich                                                              |
-| Work item                | Hauptbereich und Inspektor scrollen je für sich                                                                                                       |
+| Bereich                  | Scrollverhalten                                                                                                                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Inhalt des Hauptfensters | eigener Scrollbereich unter der Werkzeugleiste (Router-Outlet)                                                                                                                                                                                         |
+| Ziele der Seitenleiste   | scrollen für sich, wenn das Fenster zu niedrig ist; Workspace-Umschalter oben sowie Laufpanel und **Settings** unten bleiben stehen                                                                                                                    |
+| Einstellungsnavigation   | scrollt unter dem fest stehenden **Search settings**                                                                                                                                                                                                   |
+| Inbox-Liste              | Mosaik-Liste: der Filter `All · Decisions · Updates` ist ihre feste Kopfzeile, nur die Einträge scrollen                                                                                                                                               |
+| Inbox-Detail             | scrollt für sich und nutzt die volle restliche Breite (die frühere Obergrenze von 760 px entfällt); Innenabstand 28 px oben und unten, 36 px seitlich                                                                                                  |
+| Pull requests            | Kopfleiste fest, Tabelle scrollt; der Inspektor scrollt für sich                                                                                                                                                                                       |
+| Actions                  | Workflow-Liste scrollt für sich; die äußere Inhaltsfläche clippt. Feste Köpfe, gleiche Höhen für Lauftabelle und gewählten Lauf; Schritte, Log und Diagnose scrollen intern. In All runs teilen sich Running und History den Platz zu gleichen Teilen. |
+| Orbit                    | das Diagramm wird abgeschnitten statt gescrollt; der Inspektor scrollt vertikal für sich                                                                                                                                                               |
+| Work item                | Hauptbereich und Inspektor scrollen je für sich                                                                                                                                                                                                        |
 
 ## Zustand und Lebenszyklus
 

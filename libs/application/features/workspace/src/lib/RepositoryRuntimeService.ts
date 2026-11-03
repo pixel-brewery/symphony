@@ -26,7 +26,7 @@ export class RepositoryRuntimeService {
   // #region Methods
 
   /**
-   * Returns the statuses.
+   * Returns every configured repository status, isolating read-only inspection failures.
    *
    * @param repositoryBindingId - Repository binding id.
    * @public
@@ -42,7 +42,7 @@ export class RepositoryRuntimeService {
     if (repositoryBindingId && !repositories.length) {
       throw new Error(`Unknown repository binding: ${repositoryBindingId}`);
     }
-    return Promise.all(repositories.map((repository) => this.status(repository)));
+    return Promise.all(repositories.map((repository) => this.status(repository, true)));
   }
 
   /**
@@ -210,25 +210,40 @@ export class RepositoryRuntimeService {
     this._dependencies.trust.revokeTrustGrant(repositoryBindingId);
   }
 
-  private async status(repository: IRepositoryBinding): Promise<IRepositoryRuntimeStatus> {
-    const prepared = await this._dependencies.acquisition.inspect(
-      repository,
-      this._dependencies.managedRepositoryRoot(repository.workspaceId),
-    );
-    const trust = this.validTrust(repository);
-    return {
-      repositoryBindingId: repository.id,
-      workspaceId: repository.workspaceId,
-      displayName: repository.displayName,
-      repositoryIdentity: repositoryIdentity(repository),
-      preparation: prepared
+  private async status(
+    repository: IRepositoryBinding,
+    reportInspectionError = false,
+  ): Promise<IRepositoryRuntimeStatus> {
+    let preparation: IRepositoryRuntimeStatus['preparation'];
+    try {
+      const prepared = await this._dependencies.acquisition.inspect(
+        repository,
+        this._dependencies.managedRepositoryRoot(repository.workspaceId),
+      );
+      preparation = prepared
         ? {
             state: 'prepared',
             path: prepared.path,
             revision: prepared.revision,
             managed: prepared.managed,
           }
-        : { state: 'unprepared' },
+        : { state: 'unprepared' };
+    } catch (cause) {
+      // Commands still reject invalid Git state; only the read-only list can degrade per binding.
+      if (!reportInspectionError) throw cause;
+      const message = cause instanceof Error ? cause.message : '';
+      preparation = {
+        state: 'unprepared',
+        inspectionError: message.trim().slice(0, 2_000) || 'Local repository inspection failed.',
+      };
+    }
+    const trust = this.validTrust(repository);
+    return {
+      repositoryBindingId: repository.id,
+      workspaceId: repository.workspaceId,
+      displayName: repository.displayName,
+      repositoryIdentity: repositoryIdentity(repository),
+      preparation,
       trust: trust
         ? {
             state: 'trusted',

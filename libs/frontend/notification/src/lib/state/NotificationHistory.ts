@@ -13,7 +13,8 @@ const MAXIMUM_NOTICES = 50;
 /**
  * Keeps the toasts this window shows as today's history for the notification centre. It is a
  * notification interceptor beside the toast interceptor, so every `NotificationService` message
- * is recorded without changing its callers. The history lives in memory for the day.
+ * is represented without changing its callers. Matching errors share one counted notice.
+ * The history lives in memory for the day.
  *
  * @public
  */
@@ -72,26 +73,39 @@ export class NotificationHistory implements INotificationInterceptor {
   // #region Methods
 
   /**
-   * Records a toast as a notice. A toast shown while the window was in front counts as read.
+   * Records a message and combines matching errors without changing an existing read state.
+   * A first message shown while the window was in front counts as read.
    *
    * @param notification - The message the toast shows.
+   * @param repeated - Whether an owned error remains in the same unresolved episode.
    * @public
    */
-  public push(notification: INotificationMessage): void {
+  public push(notification: INotificationMessage, repeated = false): void {
     const now = Date.now();
+    const today = this._notices().filter((entry) => entry.occurredAt >= startOfDay(now));
+    const previous =
+      notification.kind === 'error'
+        ? today.find(
+            (entry) =>
+              entry.kind === 'error' &&
+              entry.groupKey === notification.groupKey &&
+              entry.title === notification.title &&
+              entry.content === notification.content,
+          )
+        : undefined;
     const notice: INotificationNotice = {
-      id: `notice-${++this._sequence}`,
+      id: previous?.id ?? `notice-${++this._sequence}`,
       kind: notification.kind,
       title: notification.title,
       content: notification.content,
+      ...(notification.groupKey ? { groupKey: notification.groupKey } : {}),
+      occurrences: Math.min(Number.MAX_SAFE_INTEGER, (previous?.occurrences ?? 0) + 1),
       occurredAt: now,
-      read: this.isWindowInFront(),
+      read:
+        previous && (!notification.groupKey || repeated) ? previous.read : this.isWindowInFront(),
     };
-    this._notices.update((notices) =>
-      [notice, ...notices.filter((entry) => entry.occurredAt >= startOfDay(now))].slice(
-        0,
-        MAXIMUM_NOTICES,
-      ),
+    this._notices.set(
+      [notice, ...today.filter((entry) => entry.id !== notice.id)].slice(0, MAXIMUM_NOTICES),
     );
   }
 

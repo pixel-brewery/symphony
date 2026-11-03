@@ -57,10 +57,25 @@ Windows and Debian installers are unsigned. Review the [public source](https://g
 and published SHA-256 values. Download and run at your own discretion. The [MIT license](LICENSE)
 supplies the software as-is, without warranty.
 
-After copying Symphony to Applications, macOS requires an explicit approval under
-**System Settings → Privacy & Security → Open Anyway**. If Gatekeeper still reports a
-checksum-verified app as damaged, remove only its download quarantine with
-`xattr -dr com.apple.quarantine /Applications/Symphony.app`. Windows may show a SmartScreen warning.
+Windows may show a SmartScreen warning.
+
+### macOS: install and open for the first time
+
+The disk image includes **Read me first - Open Symphony.txt** above the Symphony and Applications
+icons, with instructions in English and German. An Apple Developer account or paid certificate
+is not required to install Symphony. If macOS asks for approval:
+
+1. Drag **Symphony.app** onto **Applications** and wait for the copy to finish.
+2. Open **Applications** in Finder and double-click Symphony there.
+3. If macOS blocks it because the developer cannot be verified, choose **Done**.
+4. Open **System Settings → Privacy & Security**, scroll to **Security**, and choose
+   **Open Anyway** for Symphony.
+5. Confirm with **Open** and authenticate if requested. This copy can then open normally.
+
+The app-specific approval appears only after a blocked launch and is available for a limited
+time. If it is missing, attempt step 2 again before returning to Settings. A managed Mac may
+restrict this option. The guide changes no security settings; follow the
+[Apple instructions](https://support.apple.com/en-hk/102445) for the selected application only.
 
 Installer-only ARM64 releases are downloaded and verified inside Symphony: the status bar's update
 button downloads the installer, checks its size and SHA-256 digest, and `Restart to update` opens

@@ -1,6 +1,6 @@
 # Hauptfenster und Navigation
 
-Das Hauptfenster von Symphony ist wie eine macOS-Anwendung aufgebaut: links eine Seitenleiste mit Workspace-Umschalter, Zielen und laufender Arbeit, oben eine einheitliche Werkzeugleiste und unten eine Statusleiste über die volle Fensterbreite. So bleiben das gewählte Ziel, der Stand der GitHub-Synchronisierung und verfügbare Updates sichtbar, ohne dass ein Bildschirm diese Hinweise selbst anzeigen muss. Die [Einstellungen](settings.md) öffnen sich im selben Fenster; solange sie offen sind, zeigt die Seitenleiste ihre Bereiche. Die Breite der Seitenleiste und der Listen kannst du selbst anpassen ([Bereiche anpassen und scrollen](resizable-panes.md)).
+Das Hauptfenster von Symphony ist wie eine macOS-Anwendung aufgebaut: links eine Seitenleiste mit Workspace-Umschalter, Zielen und laufender Arbeit, oben eine einheitliche Werkzeugleiste und unten eine Statusleiste über die volle Fensterbreite. So bleiben das gewählte Ziel, der Stand der GitHub-Synchronisierung und verfügbare Updates sichtbar, ohne dass ein Bildschirm diese Hinweise selbst anzeigen muss. Die [Einstellungen](settings.md) öffnen sich im selben Fenster; solange sie offen sind, zeigt die Seitenleiste ihre Bereiche. Die Breite der Seitenleiste und der Listen sowie die Höhe des Laufpanels kannst du selbst anpassen ([Bereiche anpassen und scrollen](resizable-panes.md)).
 
 ## Was das Feature bietet
 
@@ -15,12 +15,12 @@ Das Hauptfenster von Symphony ist wie eine macOS-Anwendung aufgebaut: links eine
 
 ## Aufbau des Fensters
 
-| Bereich        | Lage                                      | Inhalt                                                                                                |
-| -------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Seitenleiste   | links, 240 px breit, anpassbar            | **Hide sidebar**, Workspace-Umschalter, Ziele mit Zahlen, Laufpanel, unten fest **Settings**          |
-| Werkzeugleiste | oben über dem Inhalt, 52 px hoch          | **Back**, **Forward**, Titel und Untertitel, Aktionen des Bildschirms, Suchfeld                       |
-| Inhalt         | zwischen Werkzeugleiste und Statusleiste  | der geöffnete Bildschirm, zum Beispiel Overview oder Board                                            |
-| Statusleiste   | unten über die gesamte Breite, 28 px hoch | GitHub-Synchronisierung links; **Notifications**, `Symphony v<Version>` und Updateschaltfläche rechts |
+| Bereich        | Lage                                      | Inhalt                                                                                       |
+| -------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Seitenleiste   | links, 240 px breit, anpassbar            | **Hide sidebar**, Workspace-Umschalter, Ziele mit Zahlen, Laufpanel, unten fest **Settings** |
+| Werkzeugleiste | oben über dem Inhalt, 52 px hoch          | **Back**, **Forward**, Titel und Untertitel, Aktionen des Bildschirms, Suchfeld              |
+| Inhalt         | zwischen Werkzeugleiste und Statusleiste  | der geöffnete Bildschirm, zum Beispiel Overview oder Board                                   |
+| Statusleiste   | unten über die gesamte Breite, 28 px hoch | GitHub-Synchronisierung links; **Notifications**, `V<Version>` und Updateschaltfläche rechts |
 
 Die Werkzeugleiste und die Kopfzeile der Seitenleiste dienen zugleich als Titelleiste: Du kannst das Fenster dort verschieben, die Schaltflächen bleiben bedienbar. Zwischen Seitenleiste und Inhalt liegt eine feine Linie; ziehst du sie, ändert sich die Breite der Seitenleiste, und Symphony merkt sich die neue Breite ([Bereiche anpassen und scrollen](resizable-panes.md)).
 
@@ -81,7 +81,7 @@ Ist das Fenster so niedrig, dass nicht alle Ziele Platz haben, scrollt die Liste
 
 ## Laufpanel
 
-Das Laufpanel steht unten in der Seitenleiste über **Settings**. Der Schalter **Agents | Actions** wechselt zwischen den beiden Ansichten; Symphony merkt sich die gewählte Ansicht. Ist eine Liste länger als der verfügbare Platz, lässt sie sich innerhalb des Panels scrollen.
+Das Laufpanel steht unten in der Seitenleiste über **Settings**. Der Schalter **Agents | Actions** wechselt zwischen den beiden Ansichten; Symphony merkt sich die gewählte Ansicht. Die horizontale Linie oberhalb des Schalters ist ein Splitter: Ziehe sie nach oben oder unten, um die Höhe des Laufpanels anzupassen. Symphony merkt sich die Höhe auf diesem Rechner. Mit Tab erreichst du die Linie; die Pfeiltasten oben und unten verschieben sie, mit Shift in größeren Schritten. Die Höhe beginnt bei 200 px und bleibt zwischen 128 px und 60 Prozent des gemeinsam mit der Navigation verfügbaren Platzes. Navigation und Laufpanel scrollen jeweils intern; der Umschalter sowie **Settings** bleiben sichtbar. Ohne Execution- und CI-Feature entfällt das Laufpanel einschließlich Splitter.
 
 ### Agents
 
@@ -134,7 +134,7 @@ Links zeigt die Statusleiste, wie aktuell die Pull-Request- und Actions-Daten vo
 
 ### Benachrichtigungen, Version und Update
 
-Rechts stehen die Glocke **Notifications**, die installierte Version als `Symphony v<Version>` und, solange eine neuere Version verfügbar ist oder bereitsteht, die Updateschaltfläche. Die Glocke zeigt als Zahl, wie viele Hinweise Aufmerksamkeit brauchen, und öffnet per Klick das Benachrichtigungscenter. Download, Fortschritt und **Restart to update** beschreibt [Symphony aktualisieren](../application-updates/README.md).
+Rechts stehen die Glocke **Notifications**, die installierte Version als `V<Version>` und, solange eine neuere Version verfügbar ist oder bereitsteht, die Updateschaltfläche. Die Glocke zeigt als Zahl, wie viele Hinweise Aufmerksamkeit brauchen, und öffnet per Klick das Benachrichtigungscenter. Download, Fortschritt und **Restart to update** beschreibt [Symphony aktualisieren](../application-updates/README.md).
 
 ## Tastenkürzel und Menü
 

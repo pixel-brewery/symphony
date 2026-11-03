@@ -23,7 +23,9 @@
         "default",
         "^production",
         "{workspaceRoot}/tools/**/*",
-        "{workspaceRoot}/.github/workflows/**/*"
+        "{workspaceRoot}/.github/workflows/**/*",
+        "{workspaceRoot}/forge.config.*",
+        "{workspaceRoot}/resources/macos/**/*"
       ],
       "options": { "command": "vitest run --config apps/desktop/vitest.config.ts" }
     }

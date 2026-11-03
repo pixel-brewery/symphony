@@ -1,6 +1,7 @@
 // #region Imports
 
 import { computed, inject, Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { AUTOMATION_PREPARATION } from '@symphony/frontend-core/automation';
 import { ConfigurationStore } from '@symphony/frontend-core/configuration';
 import type { INotificationItem, INotificationSource } from '@symphony/frontend-notification';
@@ -13,8 +14,8 @@ const ITEM_PREFIX = 'repository-preparation:';
 
 /**
  * Reports enabled repositories that are not prepared locally, which AI work in them waits for.
- * The fix prepares the repository with the same command as `Repositories` in Settings. This
- * replaces the tray's former `Repository preparation required` row.
+ * Missing copies use the existing preparation command; inspection failures open the affected
+ * repository's settings so invalid Git metadata is not treated as an absent checkout.
  *
  * @public
  */
@@ -25,6 +26,7 @@ export class RepositoryPreparationNotificationSource implements INotificationSou
   private readonly _runtime = inject(RepositoryRuntimeStore);
   private readonly _client = inject(REPOSITORY_RUNTIME_CLIENT);
   private readonly _configuration = inject(ConfigurationStore);
+  private readonly _router = inject(Router);
   private readonly _preparation = inject(AUTOMATION_PREPARATION, { optional: true });
 
   /**
@@ -56,23 +58,28 @@ export class RepositoryPreparationNotificationSource implements INotificationSou
       if (!repository.enabled || !workspaceName || status?.preparation.state !== 'unprepared') {
         return [];
       }
+      const inspectionError = status.preparation.inspectionError;
       return [
         {
           id: `${ITEM_PREFIX}${repository.id}`,
-          severity: 'warning',
-          title: `${repository.displayName} is not prepared locally`,
+          severity: inspectionError ? 'error' : 'warning',
+          title: inspectionError
+            ? `${repository.displayName} cannot be inspected locally`
+            : `${repository.displayName} is not prepared locally`,
           location: [workspaceName, 'Repositories'],
-          detail: automatic.has(repository.id)
-            ? 'automatic AI work waits for it'
-            : 'AI work in it waits until it is',
+          detail: inspectionError
+            ? `Check Local checkout and its Git metadata. ${inspectionError}`
+            : automatic.has(repository.id)
+              ? 'automatic AI work waits for it'
+              : 'AI work in it waits until it is',
           scope: { kind: 'workspace', workspaceId: repository.workspaceId, name: workspaceName },
           actions: [
             {
-              id: 'prepare',
-              label: 'Prepare locally',
+              id: inspectionError ? 'open-repository' : 'prepare',
+              label: inspectionError ? 'Open repository settings' : 'Prepare locally',
               emphasis: 'secondary',
-              busy: busy === repository.id,
-              disabled: busy !== undefined,
+              busy: !inspectionError && busy === repository.id,
+              disabled: !inspectionError && busy !== undefined,
             },
           ],
         },
@@ -100,15 +107,32 @@ export class RepositoryPreparationNotificationSource implements INotificationSou
   }
 
   /**
-   * Prepares the repository locally.
+   * Prepares an absent repository or opens the failed repository's settings.
    *
    * @param itemId - Identifier of an unprepared-repository item.
-   * @param actionId - `prepare`.
+   * @param actionId - `prepare` or `open-repository`.
    * @public
    */
   public async perform(itemId: string, actionId: string): Promise<void> {
-    if (actionId !== 'prepare') return;
-    await this._runtime.prepareRepository(itemId.slice(ITEM_PREFIX.length));
+    if (!itemId.startsWith(ITEM_PREFIX)) return;
+    const repositoryId = itemId.slice(ITEM_PREFIX.length);
+    const repository = this._configuration
+      .settings()
+      ?.repositoryBindings.find((candidate) => candidate.id === repositoryId);
+    if (!repository) return;
+    const item = this.items().find((candidate) => candidate.id === itemId);
+    if (!item?.actions.some((action) => action.id === actionId && !action.disabled)) return;
+    if (actionId === 'open-repository') {
+      await this._router.navigate(['/main/settings'], {
+        queryParams: {
+          workspace: repository.workspaceId,
+          section: 'repositories',
+          repository: repositoryId,
+        },
+      });
+    } else if (actionId === 'prepare') {
+      await this._runtime.prepareRepository(repositoryId);
+    }
   }
 
   // #endregion

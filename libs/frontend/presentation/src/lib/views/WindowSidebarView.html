@@ -115,60 +115,79 @@
   </div>
   }
 
-  <nav
-    aria-label="Main"
-    test-id="presenter-navigation"
-    class="flex min-h-0 flex-initial flex-col gap-px overflow-y-auto overscroll-contain px-[10px]"
-  >
-    @for (group of presenter.navigationGroups(); track group.key) { @if (group.label) {
-    <mosaik-text
-      class="px-1 pt-[14px] pb-0.5"
-      [attr.test-id]="'navigation-group-' + group.key"
-      [mosaikTypography]="'overline'"
-      [variant]="'neutral'"
-      [text]="group.label"
-    />
-    } @for (item of group.items; track item.key) {
-    <div class="relative">
-      <mosaik-button
-        class="w-full"
-        [attr.test-id]="'navigation-' + item.key"
-        [routerLink]="item.route"
-        routerLinkActive
-        #activeRoute="routerLinkActive"
-        [attr.aria-current]="activeRoute.isActive ? 'page' : null"
-        [label]="item.label"
-        [iconName]="item.icon"
-        [iconSize]="'small'"
-        [appearance]="activeRoute.isActive ? 'soft' : 'plain'"
-        [fit]="'width'"
-        [horizontalContentAlignment]="'left'"
+  <ng-template #destinations>
+    <nav
+      aria-label="Main"
+      test-id="presenter-navigation"
+      class="flex min-h-0 flex-1 flex-col gap-px overflow-y-auto overscroll-contain px-[10px]"
+    >
+      @for (group of presenter.navigationGroups(); track group.key) { @if (group.label) {
+      <mosaik-text
+        class="px-1 pt-[14px] pb-0.5"
+        [attr.test-id]="'navigation-group-' + group.key"
+        [mosaikTypography]="'overline'"
+        [variant]="'neutral'"
+        [text]="group.label"
       />
-      @if (item.count?.(); as count) {
-      <span
-        class="pointer-events-none absolute top-1/2 right-[10px] flex -translate-y-1/2 items-center"
-        [attr.test-id]="'navigation-count-' + item.key"
-      >
-        @if (item.countTone === 'attention') {
-        <mosaik-badge
-          [label]="'' + count"
-          [variant]="'danger'"
-          [appearance]="'solid'"
-          [size]="'small'"
+      } @for (item of group.items; track item.key) {
+      <div class="relative">
+        <mosaik-button
+          class="w-full"
+          [attr.test-id]="'navigation-' + item.key"
+          [routerLink]="item.route"
+          routerLinkActive
+          #activeRoute="routerLinkActive"
+          [attr.aria-current]="activeRoute.isActive ? 'page' : null"
+          [label]="item.label"
+          [iconName]="item.icon"
+          [iconSize]="'small'"
+          [appearance]="activeRoute.isActive ? 'soft' : 'plain'"
+          [fit]="'width'"
+          [horizontalContentAlignment]="'left'"
         />
-        } @else {
-        <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'' + count" />
+        @if (item.count?.(); as count) {
+        <span
+          class="pointer-events-none absolute top-1/2 right-[10px] flex -translate-y-1/2 items-center"
+          [attr.test-id]="'navigation-count-' + item.key"
+        >
+          @if (item.countTone === 'attention') {
+          <mosaik-badge
+            [label]="'' + count"
+            [variant]="'danger'"
+            [appearance]="'solid'"
+            [size]="'small'"
+          />
+          } @else {
+          <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'' + count" />
+          }
+        </span>
         }
-      </span>
-      }
-    </div>
-    } }
-  </nav>
-
-  <div class="min-h-0 flex-1"></div>
+      </div>
+      } }
+    </nav>
+  </ng-template>
 
   @if (presenter.executionAvailable || presenter.ciAvailable) {
-  <symphony-run-panel part="window-sidebar-footer" class="flex flex-none px-[2px] py-[10px]" />
+  <mosaik-split
+    part="pane-split"
+    test-id="sidebar-runs-split"
+    class="min-h-0 flex-1"
+    symphonyPaneSize="window.activity"
+    [paneSize]="200"
+    [orientation]="'vertical'"
+    [lock]="'end'"
+    [min]="'128px'"
+    [max]="'60%'"
+  >
+    <div slot="start" class="flex h-full min-h-0 min-w-0 flex-col">
+      <ng-container [ngTemplateOutlet]="destinations" />
+    </div>
+    <div slot="end" test-id="sidebar-runs-pane" class="flex h-full min-h-0 min-w-0">
+      <symphony-run-panel class="box-border flex h-full min-h-0 w-full px-[2px] py-[10px]" />
+    </div>
+  </mosaik-split>
+  } @else {
+  <ng-container [ngTemplateOutlet]="destinations" />
   }
 
   <div class="flex-none px-[10px] pb-1.5">

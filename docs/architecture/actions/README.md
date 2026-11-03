@@ -1,5 +1,7 @@
 # Actions-Bildschirm
 
+**Dokumentstatus:** Implementierter Ist-Stand
+
 Der Actions-Bildschirm (`/main/actions`, CI-Feature) projiziert GitHub-Actions-Läufe, lokale Runner-Ausführungen und agentische Diagnosen auf eine Übersicht aller Läufe und eine Workflow-Ansicht. Er besitzt keine eigene Persistenz; alle Daten stammen aus dem Orchestrations-Snapshot und den bestehenden CI-Anfragen.
 
 ## Implementierter Stand
@@ -16,6 +18,26 @@ Der Actions-Bildschirm (`/main/actions`, CI-Feature) projiziert GitHub-Actions-L
 | `pipes/*`              | reine Formatierungen (Ergebnis-Badge, Runner, Dauer, Startzeit, Revisionszeile, Workflow-Punkt, Schrittsymbol)                                                    |
 
 Eingaben: `CiStore` (`runs`, `workflows`, `remoteData`, `localCiRunningRunId`, `localCiStartedAt`, `continuousIntegrationRunsBusy`, `localCiEnabledFor`) und der Port `CI_ACTION_CONTEXT` (Snapshot-Felder `localCiExecutions`, `executions`; Einstellungen `repositoryBindings`, `agentProfiles`, `runtime.agenticDelivery`). `ICiAgentExecution` ist eine strukturelle Teilmenge der Ausführungsdatensätze, damit das CI-Feature nicht vom Execution-Feature abhängt. `EXECUTION_OPERATIONS` wird optional injiziert.
+
+### Initiales Laden und überlappende Aktualisierungen
+
+Der Einstieg in Actions wartet auf die bestehende Anwendungsinitialisierung und fordert anschließend mit `ci.runs.refresh` und `includeWorkflowCatalog: true` Workflow-Definitionen und Läufe an. Der Hydratable-Ladezustand endet erst nach dieser Anfrage. Die Definitionen liefern auch Workflows ohne Läufe sowie deren Dispatch-Fähigkeiten. Manuelles `Refresh` und `Retry` nutzen dieselbe inklusive Anfrage; gewöhnliche Laufaktualisierungen behalten die gespeicherten Definitionen bei.
+
+Ein gemeinsamer Projektionsbesitzer verwaltet je aktiver Scope-Kennung die laufende Provideranfrage und merkt, ob sie den Katalog einschließt. Eine Laufanfrage darf eine laufende inklusive Anfrage teilen. Eine inklusive Anfrage darf dagegen keine reine Laufanfrage als Erfüllung ihres Katalogbedarfs behandeln: Sie wartet deren Abschluss ab und startet danach einen vollständigen Read. Mehrere wartende inklusive Aufrufer teilen diesen nachfolgenden Read. Ein bereits laufender vollständiger Read wird im selben Scope von beiden Anfragearten geteilt.
+
+Nach dem Warten wird der aktuelle Scope erneut bestimmt. Ein Read des vorherigen Scopes darf keine Projektion für den neu gewählten Scope speichern. Erfolgreiche Laufaktualisierungen speichern neue Läufe zusammen mit dem bisherigen Katalog; schlägt der anschließende Katalog-Read fehl, bleibt genau diese zuletzt gespeicherte Projektion mit dem bestehenden Fehler-/Veraltetstatus verfügbar. Ohne gespeicherte Projektion liefert die vorhandene Fehlerbehandlung leere Daten und den Fehlerstatus. Diese Reihenfolge ändert keine Provider-Timeouts, Wiederholungsregeln oder Pollingintervalle. Der aktuelle Besitzer ist `ContinuousIntegrationProjectionService`; der Route-Einstieg bleibt bei `hydrateActionsRoute` und `ActionsViewPresenter`.
+
+### Höhenvertrag, Scrollen und Workflow-Auswahl
+
+Die Actions-Route erhält eine begrenzte verfügbare Höhe aus der Fensterkomposition. Jeder beteiligte Flex-/Grid-Elterncontainer erlaubt mit Mindesthöhe null das Schrumpfen seiner Kinder und begrenzt äußeren Überlauf. Der Bildschirm darf durch zusätzliche Zeilen oder langen Text nicht höher als sein zugewiesener Bereich werden. Die Werkzeugleiste gehört weiterhin zum festen Fensterkopf. Der optionale Hinweis auf veraltete Daten, der Ansichtskopf und die Dispatch-Aktionen stehen außerhalb der jeweiligen Inhalts-Scroller.
+
+`All runs` teilt den verbleibenden Platz in zwei gleich hohe Grid-Zeilen. Die erste besitzt den festen Titel `Running now` und eine intern scrollbar begrenzte Aktivitätsliste. Die zweite besitzt den festen Titel `History`, eine begrenzte Tabelle sowie bei Bedarf `Show older runs` außerhalb des Tabellen-Scrollers. Es entsteht dort kein zusätzliches Detail-/Logpanel.
+
+Die Workflow-Ansicht hält Workflow-Name, Dateipfad und Dispatch-Aktionen fest. Ein offenes Dispatch-Formular nimmt höchstens 45 Prozent ihrer Höhe ein und scrollt intern. Der übrige Platz wird nach Abzug des Abstands in zwei gleich hohe Grid-Zeilen geteilt: Lauftabelle oben und gewählter Lauf unten. Die Mosaik-Tabelle erhält eine begrenzte Höhe; ihr öffentlicher Komponentenvertrag stellt einen eigenen Viewport und einen darin oben haftenden Tabellenkopf bereit. Die Anwendung fügt keinen zweiten Tabellen-Scroller und keine Überschreibung interner Mosaik-Stile hinzu. Revisionsspalten behalten mindestens 180 Pixel Breite; reicht der Platz nicht für alle Spalten, scrollt die Tabelle innerhalb desselben Mosaik-Viewports horizontal, statt die Revision vollständig zusammenzudrücken.
+
+Der gewählte Lauf hält seine Überschrift und Aktionen außerhalb seiner Inhaltsscroller. Schritte und `Run log` stehen in zwei gleich breiten Spalten mit eigener Scrollbegrenzung. Bei einem fehlgeschlagenen Lauf teilt eine zweite gleich hohe Zeile den Detailinhalt mit der Diagnose. Deren Überschrift, Reparaturstatus und Laufaktionen bleiben fest; die sekundären Aktionen zum Wiederholen und Öffnen nutzen kompakte Mosaik-Icon-Buttons mit zugänglichem Namen und Tooltip, damit der Kopf auch in schmalen Fenstern einzeilig bleibt; Diagnose- und Richtlinienerklärungen teilen einen internen Scrollbereich. Darin hält ein nicht schrumpfender innerer Inhaltscontainer beide Erklärungen in ihrer natürlichen Höhe, sodass knappe Höhe zu Scrollen und nicht zu überlappenden Textzeilen führt. Auch die einzelnen Schrittzeilen behalten ihre natürliche Höhe. Bei anderen Laufzuständen füllt die Ausgabe den gesamten Detailinhalt. Fehlende Logs zeigen eine explizite Leerinformation. Ohne ausgewählten Lauf nimmt ein Leerzustand die untere Hälfte ein. Lade-, Filterleer- und Abfragefehler bleiben innerhalb dieser Aufteilung. Lauf- und Fenstergrößenwechsel erhalten die Begrenzung; ein anderer Lauf übernimmt keine Diagnose des vorherigen.
+
+Workflow-Punkt und Name sind über den öffentlichen `icon`- beziehungsweise `label`-Slot eines einzigen Mosaik-Buttons zusammengesetzt. Derselbe Button besitzt Auswahl, Hover, Tastaturbedienung und den vollständigen zugänglichen Namen. Ein explizites Mosaik-Tooltip umschließt den Button als sein öffentliches Control und zeigt den vollständigen Namen; deaktivierte Workflows ergänzen `Disabled on GitHub`. Der native öffentliche `trigger`-Tokenvertrag `hover focus` aktiviert beide Bedienwege; die Bibliothek übernimmt Platzierung, Randbegrenzung, Escape und Aufräumen beim Entfernen. Die Auswahl deaktivierter Workflows bleibt erlaubt, ihre Dispatch-Bedingungen bleiben unverändert.
 
 ### Laufzeilen (`buildActionRunRows`)
 
@@ -93,7 +115,11 @@ Die agentische Auslieferung kennzeichnet jede Ausführung, die sie für einen fe
 ## Abnahme
 
 - `/main/actions` öffnet `All runs`; `actions-running` listet alle aktiven Zeilen, `actions-history` die abgeschlossenen, neueste zuerst.
+- Ein Einstieg ohne gespeicherten Katalog liest Workflow-Definitionen. Trifft er auf einen laufenden reinen Lauf-Read, folgt genau ein von inklusiven Aufrufern geteilter Katalog-Read. Ein Fehler erhält die zuletzt gespeicherten Läufe und Definitionen; ein Scope-Wechsel speichert keine alten Daten unter dem neuen Scope.
 - Ein Workflow-Klick setzt `?workflow=`; Back führt zu `All runs` zurück.
 - `?run=` öffnet den Drawer und wählt Workflow und Lauf.
 - Filter, Suche und `?status=` grenzen alle Listen ein.
+- Lange Lauflisten bleiben in der oberen Hälfte, Details/Log und zutreffende Diagnose in der unteren; Tabellenköpfe und Workflow-Kopf bleiben bei internem Scrollen sichtbar.
+- Klick auf Statuspunkt und Name wählt dasselbe Workflow-Item; Hover und Tastaturfokus zeigen dessen vollständigen Namen, bei deaktivierten Workflows zusätzlich den Grund.
+- Das simulierte Testprofil `SYMPHONY_SIMULATED_CI_LAYOUT_FIXTURE=1` liefert ausschließlich im simulierten CI-Adapter eine feste Obergrenze von 24 Läufen je Workflow, einen fehlgeschlagenen Lauf mit langem Protokoll und einen deaktivierten Workflow mit langem Namen. Ohne das Profil bleiben Katalog, Laufanzahl und Ergebniszustände unverändert. Der bestehende `SYMPHONY_SIMULATED_CI_JOB_COUNT` erzeugt lange Joblisten. Beide Einstellungen sind interne Teststeuerung und keine Produkteinstellungen.
 - Spezifikationen: `libs/frontend/features/ci/src/lib/actions/view-presenters/**/*.spec.ts`, `libs/frontend/features/ci/src/lib/pipes/*.spec.ts`; E2E: `apps/renderer-e2e/src/actions-workflows.spec.ts`.
