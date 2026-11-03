@@ -1,7 +1,7 @@
 // #region Imports
 
 import { lstat, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
-import { dirname, relative, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // #endregion
@@ -29,7 +29,9 @@ export async function PreparePagesHistory({ sourceDirectory, outputFile }) {
   const relativeDestination = relative(source, destination);
   if (
     relativeDestination === '' ||
-    (relativeDestination !== '..' && !relativeDestination.startsWith(`..${sep}`))
+    (!isAbsolute(relativeDestination) &&
+      relativeDestination !== '..' &&
+      !relativeDestination.startsWith(`..${sep}`))
   ) {
     throw new Error('The history archive must be written outside the source directory.');
   }

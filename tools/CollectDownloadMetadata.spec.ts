@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CollectDownloadMetadata } from './CollectDownloadMetadata.mjs';
 
@@ -193,6 +193,21 @@ function createRequest(releases: IFixtureRelease[], latest = releases[0]) {
 }
 
 describe('CollectDownloadMetadata', () => {
+  it.each([process.cwd(), dirname(process.cwd())])(
+    'rejects workspace ancestor %s before making requests',
+    async (ancestor) => {
+      // arrange
+      const request = createRequest([]);
+
+      // act
+      const collection = CollectDownloadMetadata({ outputDirectory: ancestor, request });
+
+      // assert
+      await expect(collection).rejects.toThrow(/not a workspace ancestor/u);
+      expect(request).not.toHaveBeenCalled();
+    },
+  );
+
   it('keeps an explicit older Stable selection while sorting Canary by numeric version', async () => {
     // arrange
     const older = createFixture('0.1.9', 1);

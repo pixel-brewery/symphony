@@ -2,7 +2,7 @@
 
 import { createHash } from 'node:crypto';
 import { lstat, mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises';
-import { basename, dirname, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VerifyPublishedReleaseAssets } from './VerifyPublishedReleaseAssets.mjs';
 
@@ -383,7 +383,9 @@ async function validateOutputDirectory(outputRoot) {
   const workspaceRelative = relative(outputRoot, resolve('.'));
   if (
     !workspaceRelative ||
-    (workspaceRelative !== '..' && !workspaceRelative.startsWith(`..${sep}`))
+    (!isAbsolute(workspaceRelative) &&
+      workspaceRelative !== '..' &&
+      !workspaceRelative.startsWith(`..${sep}`))
   ) {
     throw new Error(
       'Pages metadata requires a dedicated output directory, not a workspace ancestor.',
