@@ -3098,6 +3098,17 @@ function isTransientRunStatusFailure(cause: unknown): boolean {
   ) {
     return true;
   }
+  // execFile reports its default deadline with SIGTERM and a null exit code, not ETIMEDOUT.
+  if (
+    'killed' in cause &&
+    cause.killed === true &&
+    'signal' in cause &&
+    cause.signal === 'SIGTERM' &&
+    'code' in cause &&
+    cause.code === null
+  ) {
+    return true;
+  }
   if (
     'code' in cause &&
     /^(?:ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|ENETUNREACH)$/u.test(String(cause.code))

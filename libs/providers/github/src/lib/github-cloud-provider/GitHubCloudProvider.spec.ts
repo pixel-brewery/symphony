@@ -2218,9 +2218,17 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
     );
   });
 
+  const statusCommandTimeout = Object.assign(new Error('Command failed: gh api\n'), {
+    code: null,
+    killed: true,
+    signal: 'SIGTERM',
+    stdout: '',
+    stderr: '',
+  });
+
   it.each<{
     readonly scenario: string;
-    readonly responses: readonly (string | undefined)[];
+    readonly responses: readonly (string | Error | undefined)[];
     readonly error?: string;
     readonly interruption?: 'cancel' | 'exit';
   }>([
@@ -2241,6 +2249,42 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
       scenario: 'stops the runner after bounded consecutive connection failures',
       responses: Array<string>(6).fill('error connecting to api.github.com'),
       error: 'error connecting to api.github.com',
+    },
+    {
+      scenario:
+        'keeps the runner alive across status command deadlines and resets the retry budget',
+      responses: [
+        ...Array<Error>(5).fill(statusCommandTimeout),
+        undefined,
+        ...Array<Error>(5).fill(statusCommandTimeout),
+      ],
+    },
+    {
+      scenario: 'stops the runner after bounded consecutive status command deadlines',
+      responses: Array<Error>(6).fill(statusCommandTimeout),
+      error: 'Command failed: gh api',
+    },
+    {
+      scenario: 'does not retry a status command killed after exceeding its output limit',
+      responses: [
+        Object.assign(new Error('stdout maxBuffer length exceeded'), {
+          code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER',
+          killed: true,
+          signal: 'SIGTERM',
+        }),
+      ],
+      error: 'stdout maxBuffer length exceeded',
+    },
+    {
+      scenario: 'does not retry a status command terminated outside its deadline',
+      responses: [
+        Object.assign(new Error('Command failed: gh api'), {
+          code: null,
+          killed: false,
+          signal: 'SIGTERM',
+        }),
+      ],
+      error: 'Command failed: gh api',
     },
     ...[401, 403, 404, 429].map((status) => ({
       scenario: `does not retry a permanent HTTP ${status} status failure`,
@@ -2354,7 +2398,7 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
             expect(stopped).toBe(false);
             if (interruption === 'exit') finishRunner();
             if (interruption === 'cancel') controller.abort();
-            if (failure) throw new Error(failure);
+            if (failure) throw typeof failure === 'string' ? new Error(failure) : failure;
             return JSON.stringify({ id: 203, status: 'in_progress' });
           }
           return JSON.stringify(
