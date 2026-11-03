@@ -1,3 +1,17 @@
+## 0.1.30 (2026-11-03)
+
+### 🩹 Fixes
+
+- **ci:** load workflow catalogue when opening Actions ([44630ae](https://github.com/pixel-brewery/symphony/commit/44630ae))
+- **desktop:** bound Actions panes and resize sidebar activity ([ad93b20](https://github.com/pixel-brewery/symphony/commit/ad93b20))
+- **macos:** guide certificate-free installation and first launch ([c9afd24](https://github.com/pixel-brewery/symphony/commit/c9afd24))
+- **test:** accept Git repository diagnostic variants ([2156736](https://github.com/pixel-brewery/symphony/commit/2156736))
+- **workspace:** isolate and group repository inspection errors ([1032bb4](https://github.com/pixel-brewery/symphony/commit/1032bb4))
+
+### ❤️ Thank You
+
+- RueDeRennes @RueDeRennes
+
 ## 0.1.29 (2026-11-03)
 
 ### 🚀 Features
