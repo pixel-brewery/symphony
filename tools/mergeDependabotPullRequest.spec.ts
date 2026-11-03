@@ -141,6 +141,7 @@ describe('Dependabot pull request merge', () => {
     // arrange
     const workflow = parse(readFileSync('.github/workflows/ci.yml', 'utf8'));
     const quality = workflow.jobs.quality;
+    const runnerFor = new Function('needs', 'matrix', `return ${quality['runs-on'].slice(3, -2)};`);
 
     // act
     const names = [
@@ -155,14 +156,25 @@ describe('Dependabot pull request merge', () => {
     // assert
     expect(quality.strategy.matrix.os).toEqual(['ubuntu-latest', 'macos-latest', 'windows-latest']);
     expect(quality.strategy['fail-fast']).toBe(false);
-    expect(quality['runs-on']).toBe('${{ matrix.os }}');
+    for (const os of quality.strategy.matrix.os) {
+      expect(runnerFor({ changes: { outputs: { documentation_only: 'false' } } }, { os })).toBe(os);
+      expect(runnerFor({ changes: { outputs: { documentation_only: 'true' } } }, { os })).toBe(
+        'ubuntu-latest',
+      );
+    }
     expect(quality.defaults.run.shell).toBe('bash');
     expect(names).toEqual(requiredJobNames);
-    expect(workflow.jobs['electron-e2e'].needs).toBe('quality');
-    expect(workflow.jobs.package.needs).toBe('quality');
+    expect(workflow.jobs['electron-e2e'].needs).toEqual(['changes', 'quality']);
+    expect(workflow.jobs.package.needs).toEqual(['changes', 'quality']);
     expect(workflow.jobs['electron-e2e']['runs-on']).toBe('macos-latest');
     expect(workflow.jobs.package['runs-on']).toBe('macos-latest');
-    expect(workflow.jobs['quality-gate'].needs).toEqual(['quality', 'electron-e2e', 'package']);
+    expect(workflow.jobs['quality-gate'].needs).toEqual([
+      'changes',
+      'documentation',
+      'quality',
+      'electron-e2e',
+      'package',
+    ]);
     expect(workflow.jobs['quality-gate'].if).toBe('${{ always() }}');
     expect(workflow.permissions).toEqual({ contents: 'read', packages: 'read' });
   });
