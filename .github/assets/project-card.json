@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "Symphony",
+    "slug": "symphony",
+    "website": "https://github.com/pixel-brewery/symphony",
+    "repository": "https://github.com/pixel-brewery/symphony"
+  },
+  "description": {
+    "en": "Symphony brings your project board, coding agents and delivery work into one desktop workspace. Isolated Git worktrees and resumable agent runs keep implementation organized, with pull requests and verification results alongside each task.",
+    "de": "Symphony vereint Projektboard, KI-Entwicklungsagenten und Auslieferung in einem Desktop-Arbeitsplatz. Isolierte Git-Worktrees und fortsetzbare Agentenläufe halten die Umsetzung übersichtlich, mit Pull Requests und Prüfergebnissen direkt bei der jeweiligen Aufgabe."
+  },
+  "image": {
+    "file": "project-card.webp",
+    "format": "webp",
+    "width": 960,
+    "height": 540,
+    "alt": {
+      "en": "Symphony's red posthorn beside branching delivery tracks and reviewed task tiles.",
+      "de": "Symphonys rotes Posthorn neben verzweigten Arbeitswegen und geprüften Aufgabenkacheln."
+    }
+  },
+  "artwork": {
+    "kind": "illustration",
+    "generator": "Built-in Imagegen",
+    "generatedOn": "2026-11-03",
+    "prompt": "Use case: ads-marketing. Asset: compact portfolio project card in a SEVEN-PROJECT MATCHED SERIES. Image 1 is the Mosaik MASTER CARD: match its 16:9 landscape framing, composition, typography scale, pure white / very light warm-gray seamless background, soft studio lighting, grounded shadows, restrained tactile ceramic/glass materials, generous 7% safe margins and premium editorial quality. Request target 1280x720. Brand lockup occupies LEFT THIRD with large exact black project name and existing mark when available, sculptural product-specific still life occupies RIGHT TWO THIRDS. Match the master; do not repeat its mosaic subject. Physical metaphor artwork, NOT a screenshot or proposed interface; no operating UI controls, dense text or dashboards. The text must remain readable at 600px wide. No tagline, subtitles, other prose, people, robot, brains, stock clip art, watermark, unrelated logos or background gradients.\n\nPROJECT SPECIFICATION:\nImage2 provides Symphony's existing red posthorn mark and software context. Preserve the exact established red posthorn silhouette above the large exact black word \"Symphony\" in the left brand area. Right: an orderly sculptural project delivery workspace of thin off-white ceramic task cards and a few translucent panels, arranged as a small sequential board with precisely branching metal tracks and understated checkmark grooves. Represent a project board, isolated work branches and reviewed delivery with a calm composed still life, not a new dashboard UI. Brand red accents with off-white, pale gray and matte black. No actual task text, fake customer data, agent-provider logos or red posthorn variations."
+  }
+}

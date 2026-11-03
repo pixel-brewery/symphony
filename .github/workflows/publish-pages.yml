@@ -29,7 +29,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/publish-pages.yml
-      - resources/download-page/**
+      - resources/download-page/downloads.css
       - resources/icons/png/app/symphony-192.png
       - tools/*Download*.mjs
       - tools/*Pages*.mjs

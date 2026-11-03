@@ -167,8 +167,10 @@ repository rules are in [AGENTS.md](AGENTS.md).
 
 ## Releases and updates
 
-After the Pixel Brewery public handover, each source change on `main` requests a
-semantic patch release. Nx Release prepares the root package version, conventional-commit
+After the Pixel Brewery public handover, each change on `main` affecting code,
+configuration or operational instructions requests a semantic patch release.
+Documentation-only pushes skip candidate preparation and publication; explicit
+release dispatches always run the complete pipeline. Nx Release prepares the root package version, conventional-commit
 changelog, release commit, and `v<version>` tag once. Verification and all native builds use
 that same prepared commit. Only after those gates succeed does the pipeline atomically push
 the release commit and tag, then publish the macOS ARM64 DMG, Windows ARM64 EXE, and Linux ARM64 DEB as GitHub Release

@@ -16,9 +16,58 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Classify changed files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      documentation_only: ${{ steps.scope.outputs.documentation_only }}
+      documentation_changed: ${{ steps.scope.outputs.documentation_changed }}
+    steps:
+      - name: Checkout the complete event history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - name: Classify the event diff
+        id: scope
+        run: node tools/ClassifyCiChanges.mjs
+
+  documentation:
+    name: Documentation links and structure
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        if: needs.changes.outputs.documentation_changed == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        if: needs.changes.outputs.documentation_changed == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - name: Validate operational documentation
+        if: needs.changes.outputs.documentation_changed == 'true'
+        run: node .agents/skills/symphony-docs/scripts/validate-docs.mjs docs
+
   quality:
     name: Agents, Format, Lint, Typecheck, Test and Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    needs: changes
+    # Keep every required OS context, with lightweight Linux stubs for prose-only changes.
+    runs-on: ${{ needs.changes.outputs.documentation_only == 'true' && 'ubuntu-latest' || matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -28,54 +77,48 @@ jobs:
       run:
         shell: bash
     steps:
+      - name: Documentation-only change
+        if: needs.changes.outputs.documentation_only == 'true'
+        run: echo 'Documentation-only change; dependency installation and source verification are skipped.'
+
       - name: Checkout
+        if: needs.changes.outputs.documentation_only != 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node.js
+        if: needs.changes.outputs.documentation_only != 'true'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.15.0
           package-manager-cache: false
 
       - name: Enable Corepack
+        if: needs.changes.outputs.documentation_only != 'true'
         run: corepack enable
 
       - name: Enable Yarn
+        if: needs.changes.outputs.documentation_only != 'true'
         run: corepack prepare yarn@4.10.3 --activate
 
       - name: Install dependencies
+        if: needs.changes.outputs.documentation_only != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: yarn install --immutable
 
-      - name: Classify documentation changes
-        id: documentation-scope
-        env:
-          DOCUMENTATION_BASE_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-        run: |
-          if [ -z "$DOCUMENTATION_BASE_REVISION" ] || [ "$DOCUMENTATION_BASE_REVISION" = "0000000000000000000000000000000000000000" ]; then
-            echo "documentation_changed=true" >> "$GITHUB_OUTPUT"
-          elif git diff --quiet "$DOCUMENTATION_BASE_REVISION" HEAD -- docs/; then
-            echo "documentation_changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "documentation_changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Validate operational documentation
-        if: steps.documentation-scope.outputs.documentation_changed == 'true'
-        run: yarn node .agents/skills/symphony-docs/scripts/validate-docs.mjs docs
-
       - name: Verify repository
+        if: needs.changes.outputs.documentation_only != 'true'
         env:
           VITEST_MAX_WORKERS: ${{ runner.os == 'Windows' && '1' || '' }}
         run: yarn verify
 
   electron-e2e:
     name: Electron E2E
-    needs: quality
+    needs: [changes, quality]
+    if: needs.changes.outputs.documentation_only != 'true'
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
@@ -123,7 +166,8 @@ jobs:
 
   package:
     name: Package smoke test
-    needs: quality
+    needs: [changes, quality]
+    if: needs.changes.outputs.documentation_only != 'true'
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
@@ -155,17 +199,28 @@ jobs:
   quality-gate:
     name: Quality Gate
     if: ${{ always() }}
-    needs: [quality, electron-e2e, package]
+    needs: [changes, documentation, quality, electron-e2e, package]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
     steps:
-      - name: Require every verification job to succeed
+      - name: Require the verification path selected by the successful classification
         env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          DOCUMENTATION_RESULT: ${{ needs.documentation.result }}
+          DOCUMENTATION_ONLY: ${{ needs.changes.outputs.documentation_only }}
           QUALITY_RESULT: ${{ needs.quality.result }}
           E2E_RESULT: ${{ needs.electron-e2e.result }}
           PACKAGE_RESULT: ${{ needs.package.result }}
         run: |
+          set -euo pipefail
+          test "$CHANGES_RESULT" = success
+          test "$DOCUMENTATION_RESULT" = success
           test "$QUALITY_RESULT" = success
-          test "$E2E_RESULT" = success
-          test "$PACKAGE_RESULT" = success
+          case "$DOCUMENTATION_ONLY" in
+            true) expected=skipped ;;
+            false) expected=success ;;
+            *) echo 'Missing or invalid change classification.' >&2; exit 1 ;;
+          esac
+          test "$E2E_RESULT" = "$expected"
+          test "$PACKAGE_RESULT" = "$expected"
