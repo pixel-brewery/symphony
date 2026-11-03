@@ -1,3 +1,15 @@
+## 0.1.28 (2026-11-03)
+
+### 🩹 Fixes
+
+- **ci:** retry workflow status timeouts ([55dd614](https://github.com/pixel-brewery/symphony/commit/55dd614))
+- **ci:** retry workflow status command timeouts ([#33](https://github.com/pixel-brewery/symphony/pull/33))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+- RueDeRennes @RueDeRennes
+
 ## 0.1.27 (2026-11-03)
 
 This was a version bump only, there were no code changes.

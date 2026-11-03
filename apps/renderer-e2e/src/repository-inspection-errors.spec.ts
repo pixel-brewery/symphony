@@ -20,6 +20,8 @@ test('isolates a broken Git worktree and groups its scoped errors while healthy 
   const missingGitDirectory = resolve(configurationRoot, 'missing-git-store/worktrees/broken');
   const emptyGitConfig = resolve(configurationRoot, 'empty-git-config');
   const brokenGitMarker = `gitdir: ${missingGitDirectory}\n`;
+  const invalidRepositoryError =
+    /fatal: (?:not a git repository|gitfile does not point to a valid repository)/u;
   const fixture = {
     healthyPath,
     brokenPath,
@@ -180,7 +182,7 @@ test('isolates a broken Git worktree and groups its scoped errors while healthy 
       workspaceId: fixture.brokenWorkspaceId,
       preparation: {
         state: 'unprepared',
-        inspectionError: expect.stringContaining('not a git repository'),
+        inspectionError: expect.stringMatching(invalidRepositoryError),
       },
     });
 
@@ -193,7 +195,7 @@ test('isolates a broken Git worktree and groups its scoped errors while healthy 
     await expect(problem).toBeVisible();
     await expect(problem).toContainText('Broken workspace');
     await expect(problem).toContainText('Broken checkout');
-    await expect(problem).toContainText('not a git repository');
+    await expect(problem).toContainText(invalidRepositoryError);
     await expect(notices).toHaveCount(1);
     await expect(notices).toContainText('Broken workspace › Broken checkout:');
     await page.keyboard.press('Escape');

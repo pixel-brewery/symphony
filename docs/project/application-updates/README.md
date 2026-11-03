@@ -12,6 +12,14 @@ Für öffentliche Downloads ist kein GitHub-Konto erforderlich. Aktuell werden I
 
 macOS downloads use an ad-hoc bundle seal and are not notarized; Windows and Debian installers are unsigned. Review the [public source](https://github.com/pixel-brewery/symphony) and published checksums. Download and run at your own discretion. The [MIT license](../../../LICENSE) provides the software as-is, without warranty. Gatekeeper or SmartScreen may require your explicit approval.
 
+## Symphony manuell herunterladen
+
+Die öffentliche [Downloadseite](https://pixel-brewery.github.io/symphony/) bietet die Installer für macOS mit Apple Silicon, Windows auf ARM64 und Linux auf ARM64 als Debian-Paket. Sie zeigt die Stable-Version mit Veröffentlichungsdatum, Dateigrößen und SHA-256-Prüfsummen sowie einen Link zu den Release Notes. Ist Canary auf einer anderen Version, steht dafür ein eigener Downloadbereich bereit. Sind beide Kanäle gleich, wird derselbe Download nicht doppelt angeboten.
+
+Nach jeder vollständig veröffentlichten Version und nach einer neuen Stable-Auswahl wird die Downloadseite automatisch aktualisiert. Angezeigt werden ausschließlich vollständige veröffentlichte Versionen; Entwürfe erscheinen nicht. Schlägt das Erstellen oder Bereitstellen der Seite fehl, bleibt der bisher veröffentlichte Seitenstand verfügbar. Die [offiziellen Releases](https://github.com/pixel-brewery/symphony/releases) bieten die veröffentlichten Versionen weiterhin direkt an.
+
+Wähle den Installer für dein Betriebssystem und prüfe vor dem Start bei Bedarf seine SHA-256-Prüfsumme. Der Download allein installiert nichts: Unter macOS öffnest du das Disk-Image und ersetzt Symphony im Ordner **Programme**; unter Windows startest du das Setup; unter Linux installierst du das Debian-Paket. Die Hinweise zur Signierung und mögliche Bestätigungen des Betriebssystems gelten auch für diese manuellen Downloads. Intel- beziehungsweise x64-Installer werden derzeit nicht angeboten.
+
 ## macOS: installieren und erstmals öffnen
 
 Das Disk-Image zeigt oberhalb von Symphony und dem Programme-Ziel die Datei **Read me first - Open Symphony.txt**. Sie erklärt den ersten Start auf Deutsch und Englisch. Dafür brauchst du kein Apple-Developer-Konto und kein kostenpflichtiges Zertifikat.
@@ -95,4 +103,4 @@ Bietet eine ältere Updateadresse noch kein Installer-Manifest an, verwendet Sym
 
 Bereits installierte Builds behalten die bei ihrer Auslieferung hinterlegte Updateadresse. Die Übertragung des Repositorys ändert diese Adresse in einer bestehenden Installation nicht.
 
-Installiere beim erstmaligen Wechsel die erste unter Pixel Brewery bereitgestellte Symphony-Version manuell aus den [offiziellen Releases](https://github.com/pixel-brewery/symphony/releases). Dieser Download ist erst verfügbar, wenn die öffentliche Veröffentlichung erfolgt ist. Anschließend nutzt die neue Anwendung die für diese Verteilung eingerichtete Updateadresse.
+Installiere beim erstmaligen Wechsel eine unter Pixel Brewery bereitgestellte Symphony-Version manuell von der [Downloadseite](https://pixel-brewery.github.io/symphony/) oder aus den [offiziellen Releases](https://github.com/pixel-brewery/symphony/releases). Anschließend nutzt die neue Anwendung die für diese Verteilung eingerichtete Updateadresse.

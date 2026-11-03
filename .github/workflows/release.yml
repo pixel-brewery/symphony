@@ -88,8 +88,8 @@ jobs:
           if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search || parsed.hash) {
             throw new Error('The update origin must be a credential-free HTTPS URL.');
           }
-          if (pages.build_type !== 'legacy' || pages.source?.branch !== 'gh-pages' || pages.source?.path !== '/' || pages.html_url?.replace(/\/+$/u, '') !== baseUrl) {
-            throw new Error('Configure GitHub Pages from gh-pages / and match SYMPHONY_UPDATE_BASE_URL to the published site before releasing.');
+          if (pages.html_url?.replace(/\/+$/u, '') !== baseUrl) {
+            throw new Error('Match SYMPHONY_UPDATE_BASE_URL to this repository\'s configured GitHub Pages site before releasing.');
           }
           NODE
 
@@ -452,7 +452,6 @@ jobs:
     permissions:
       contents: write
       actions: write
-      pages: write
     env:
       SYMPHONY_RELEASE_VERSION: ${{ needs.configure.outputs.version }}
       RELEASE_TAG: ${{ needs.configure.outputs.tag }}
@@ -628,6 +627,7 @@ jobs:
 
       # Assets must exist at their advertised URLs before any channel points at them.
       - name: Publish the GitHub release
+        id: staged-release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -635,20 +635,27 @@ jobs:
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
+            --draft \
+            --latest=false \
             --title "Symphony $SYMPHONY_RELEASE_VERSION" \
             --notes-file out/release-notes.md \
-            out/update-publication/assets/*
+            out/update-publication/assets/* \
+            "out/update-publication/releases/${SYMPHONY_RELEASE_VERSION}/manifest.json" \
+            "out/update-publication/releases/${SYMPHONY_RELEASE_VERSION}/shared/symphony.ico"
+          release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq '[.[] | select(.tag_name == env.RELEASE_TAG and .draft == true)] | if length == 1 then .[0].id else error("Expected exactly one staged release") end')"
+          echo "release-id=$release_id" >> "$GITHUB_OUTPUT"
 
-      - name: Confirm every advertised asset is published
+      - name: Verify the staged release assets
         env:
           GH_TOKEN: ${{ github.token }}
+          STAGED_RELEASE_ID: ${{ steps.staged-release.outputs.release-id }}
         run: |
           set -euo pipefail
           manifest_path="out/update-publication/releases/${SYMPHONY_RELEASE_VERSION}/manifest.json"
-          release_path='out/published-release.json'
+          release_path='out/staged-release.json'
           for attempt in 1 2 3 4 5; do
-            gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" > "$release_path"
-            if node tools/VerifyPublishedReleaseAssets.mjs "$manifest_path" "$release_path"; then
+            gh api "repos/${GITHUB_REPOSITORY}/releases/${STAGED_RELEASE_ID}" > "$release_path"
+            if node tools/VerifyPublishedReleaseAssets.mjs "$manifest_path" "$release_path" --draft; then
               exit 0
             fi
             sleep "$((attempt * 5))"
@@ -656,75 +663,36 @@ jobs:
           echo "The published release does not match its version manifest." >&2
           exit 1
 
-      # The origin accumulates every immutable version manifest. Installer channel
-      # manifests always move; native Squirrel feeds move only when their currently
-      # disabled ZIP/NuGet payloads exist.
-      - name: Publish the version manifest and update channels
-        id: update-origin
+      # The release becomes visible only after every installer and its durable
+      # metadata have been uploaded and checked. Both channels advance together.
+      - name: Publish the verified release and select Stable
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git fetch origin refs/heads/gh-pages:refs/remotes/origin/gh-pages
-          git worktree add --detach out/origin refs/remotes/origin/gh-pages
-          if [ -e "out/origin/releases/${SYMPHONY_RELEASE_VERSION}" ]; then
-            echo 'The immutable version manifest already exists.' >&2
-            exit 1
-          fi
-          mkdir -p out/origin/channels out/origin/releases
-          cp -R out/update-publication/releases/. out/origin/releases/
-          cp -R out/update-publication/channels/. out/origin/channels/
-          # Pages otherwise hides any path segment that begins with an underscore
-          # and applies Jekyll processing this site does not need.
-          touch out/origin/.nojekyll
-          git -C out/origin add --all
-          git -C out/origin commit -m "release: ${SYMPHONY_RELEASE_VERSION} (${GITHUB_SHA})"
-          auth_header="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
-          git -C out/origin -c "http.${GITHUB_SERVER_URL}/.extraheader=AUTHORIZATION: basic ${auth_header}" push origin HEAD:refs/heads/gh-pages
-          echo "commit=$(git -C out/origin rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          STAGED_RELEASE_ID: ${{ steps.staged-release.outputs.release-id }}
+        run: gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${STAGED_RELEASE_ID}" -F draft=false -f make_latest=true > /dev/null
 
-      # GITHUB_TOKEN branch pushes do not start Pages. Request the documented build
-      # explicitly and fail rather than report an unpublished feed as successful.
-      - name: Build and verify the update site
+      - name: Confirm every advertised asset is published
         env:
           GH_TOKEN: ${{ github.token }}
-          ORIGIN_COMMIT: ${{ steps.update-origin.outputs.commit }}
         run: |
           set -euo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/pages/builds" --method POST > /dev/null
-          for attempt in {1..60}; do
-            build="$(gh api "repos/${GITHUB_REPOSITORY}/pages/builds/latest")"
-            status="$(jq -r '.status' <<< "$build")"
-            commit="$(jq -r '.commit' <<< "$build")"
-            if [ "$commit" = "$ORIGIN_COMMIT" ] && [ "$status" = built ]; then
+          for attempt in 1 2 3 4 5; do
+            if gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" > out/published-release.json && node tools/VerifyPublishedReleaseAssets.mjs "out/update-publication/releases/${SYMPHONY_RELEASE_VERSION}/manifest.json" out/published-release.json; then
               exit 0
             fi
-            if [ "$commit" = "$ORIGIN_COMMIT" ] && [ "$status" = errored ]; then
-              echo 'The update site build failed.' >&2
-              exit 1
-            fi
-            sleep 5
+            sleep "$((attempt * 5))"
           done
-          echo 'The update site did not publish the expected metadata commit.' >&2
+          echo 'The public release did not expose its verified canonical download URLs.' >&2
           exit 1
 
-      - name: Confirm the public installer feeds
-        run: |
-          set -euo pipefail
-          for file in "out/update-publication/releases/${SYMPHONY_RELEASE_VERSION}/manifest.json" out/update-publication/channels/{canary,stable}/{darwin,win32,linux}/arm64/installer.json; do
-            relative="${file#out/update-publication/}"
-            matched=false
-            for attempt in {1..12}; do
-              if curl --fail --silent --show-error --max-time 15 "${SYMPHONY_UPDATE_BASE_URL}/${relative}" -o "$RUNNER_TEMP/published-feed.json" && cmp --silent "$file" "$RUNNER_TEMP/published-feed.json"; then
-                matched=true
-                break
-              fi
-              sleep 5
-            done
-            if [ "$matched" != true ]; then
-              echo "The public update feed does not match ${relative}." >&2
-              exit 1
-            fi
-          done
+  update-site:
+    name: Refresh public downloads and update feeds
+    needs: [configure, publish]
+    uses: ./.github/workflows/publish-pages.yml
+    with:
+      stable-version: ${{ needs.configure.outputs.version }}
+      advance-canary: true
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
