@@ -49,7 +49,11 @@ Der freie Platz des Mac wird an der Reserve gemessen: höchstens doppelt so viel
 
 Erreicht eine Grenze – gesamt, Local GitHub Actions, ein Workspace oder die Reserve des Mac – den gesperrten Zustand, nimmt Symphony keine neue schreibende Arbeit an. In einem gestrichelten Rahmen **When storage is not writable** erscheint dann `Alarm: new disk-writing work is blocked`: Symphony hat neue AI-Aufgaben, Worktrees, Prüfläufe und Local GitHub Actions angehalten, bis verwaltete Daten entfernt sind. Kann Symphony den Speicher nicht messen, gilt er vorsichtshalber ebenfalls als nicht beschreibbar.
 
-Ist der Speicher knapp oder gesperrt, erscheint zusätzlich ein Eintrag in der [Mitteilungszentrale](../notifications-and-tray/README.md); **Review storage** öffnet diesen Bereich beziehungsweise die **Administration** des betroffenen Workspace.
+Ein neuer lokaler GitHub-Actions-Lauf braucht zusätzlich Platz für das noch ausstehende Wachstum seiner Maschine, des Caches und der Runner-Werkzeuge. Deshalb kann sein Start gesperrt sein, obwohl die aktuelle Belegung noch innerhalb der Grenzen liegt: Nach dem Startbudget muss die gesamte eingestellte Mac-Reserve frei bleiben. Die Ablehnung benennt dann die Reserve statt fälschlich eine volle Grenze der verwalteten Daten. Ein gespeicherter Wert bleibt erhalten; beispielsweise bleiben eingestellte 200 GB geschützt, bis du die Einstellung selbst änderst.
+
+Die Reserve wird auch geprüft, solange die erste ausführliche Belegungszählung noch läuft. Der bekannte freie Platz bestätigt dabei noch keine vollständig gemessenen Kontingente. Scheitert die Messung, bleibt die Speicherfreigabe unbekannt und ein neuer lokaler Lauf gesperrt.
+
+Ist der Speicher knapp oder ein lokaler Start gesperrt, beschreibt die [Mitteilungszentrale](../notifications-and-tray/README.md) den Grund und bietet den Weg zur Behebung. Die Folgen für wartende Läufe und ihre erneute Übernahme stehen unter [Local GitHub Actions](../workspaces/local-github-actions.md#wenn-speicher-den-start-verhindert).
 
 Platz schaffst du unter [Automation](../automation/README.md) mit **Clear inactive workspaces**, hier unter **Virtual machines** mit **Clear runner data** oder durch das Entfernen einzelner Maschinen.
 

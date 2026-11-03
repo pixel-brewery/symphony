@@ -66,6 +66,7 @@ Suchbeiträge (`search`) dieser Bereiche:
   localCi: StorageUsage;  // id 'local-ci', Label 'Local GitHub Actions'
   workspaces: StorageUsage[]; // id 'workspace:<id>', Label = Workspace-Name, workspaceId
   localCiCapacity: { logicalCpus; totalMemoryBytes; availableStorageBytes; presets: { compact; balanced; performance; custom } };
+  localCiAdmission: LocalCiAdmission;
   filesystem: { availableBytes; reserveBytes; pressure: StoragePressure };
   error?: string;
 }
@@ -82,6 +83,55 @@ Regeln des Produzenten:
 - Druck des Dateisystems gegenüber der Reserve `minimumFreeDiskGiB`: frei `≤ Reserve` → `critical`, `≤ 1,25 × Reserve` → `danger`, `≤ 2 × Reserve` → `warning`, sonst `healthy`. Der Druck von `global` ist das Maximum aus Kontingent- und Dateisystemdruck.
 - `writable` ist genau dann wahr, wenn weder `global`, das Dateisystem, `localCi` noch ein Workspace `critical` ist.
 - Scheitert die Messung, liefert der Produzent `measured: false`, `writable: false`, alle Nutzungen mit `pressure: 'critical'` und Grenze 0 sowie `error`.
+
+### Lokale CI: Speicherfreigabe
+
+Der Speicherwächter berechnet die Freigabe eines lokalen CI-Starts und deren lesbare Projektion gemeinsam. `localCiAdmission` beschreibt ausschließlich die Speicherzulassung mit dem gespeicherten Ressourcenprofil und der normalen Startreserve. Es ist weder ein GitHub-Jobstatus noch eine Zusage, dass Anmeldung, Runner-Abbild oder andere Startvoraussetzungen erfüllt sind. Der Renderer interpretiert das Ergebnis und berechnet keine eigene Zulassung.
+
+Der verpflichtende Teilvertrag von `storage.status.get` lautet:
+
+```ts
+type AdmissionBudget = {
+  availableBytes: number;
+  reserveBytes: number;
+  requiredGrowthBytes: number;
+  shortfallBytes: number;
+};
+
+type LocalCiAdmission =
+  | (AdmissionBudget & { state: 'permitted'; shortfallBytes: 0 })
+  | (AdmissionBudget & {
+      state: 'blocked';
+      reason: 'filesystem-reserve' | 'managed-limit' | 'local-ci-limit' | 'workspace-limit';
+      workspaceId?: string;
+    })
+  | (AdmissionBudget & {
+      state: 'unknown';
+      reason: 'allocation-pending';
+      shortfallBytes: 0;
+    })
+  | {
+      state: 'unknown';
+      reason: 'measurement-failed';
+      reserveBytes: number;
+    };
+```
+
+Alle Bytewerte sind nichtnegative ganze Zahlen; ein vorhandenes `workspaceId` ist nicht leer. `availableBytes` ist der aktuell freie Platz des Dateisystems. `reserveBytes` ist die gespeicherte Mac-Reserve in GiB × 2³⁰. `requiredGrowthBytes` ist das zusätzlich reservierte Wachstum des lokalen Laufs, kein neu gemessener Verbrauch: `max(512 MiB, (diskGiB + cacheGiB + 2) × 2³⁰ − localCi.allocatedBytes)`. Bereits gemessene Runner-Daten reduzieren damit das verbleibende Wachstum; der Mindestpuffer bleibt erhalten. `shortfallBytes = max(0, reserveBytes + requiredGrowthBytes − availableBytes)` benennt ausschließlich zusätzlich benötigten freien Mac-Speicher. Eine reine Kontingentsperre hat hier den Wert null.
+
+Projektion und schreibender Start verwenden dieselbe Bedarfsberechnung und dieselbe Entscheidung über Sperrgründe. Zuerst wird geprüft, ob der freie Platz nach dem reservierten Wachstum unter die Mac-Reserve fiele; erst danach folgen verwaltetes Gesamtkontingent, Local-CI-Kontingent und die bestehenden Workspace-Prüfungen. Eine Reserveverletzung meldet deshalb `filesystem-reserve` beziehungsweise `Storage safety stop: the Mac must keep at least … free.` und wird nicht durch den von Dateisystemdruck geerbten kritischen Gesamtstatus als volle Anwendungsspeichergrenze ausgegeben. Der allgemeine Wert `writable` bleibt unverändert: Er beschreibt den aktuellen Druck und kann wahr sein, obwohl ein neuer lokaler Lauf wegen seines zusätzlichen Budgets blockiert ist.
+
+| Evidenz                                                                     | Ergebnis und Grenze der Aussage                                                                                                                                                                                                                                      |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vollständige Belegungsinventur vorhanden, keine Sperrregel greift           | `permitted`; der normale lokale Start besteht dieselbe Speicherprüfung.                                                                                                                                                                                              |
+| Live-Dateisystemprüfung verweigert das durch den Start reservierte Wachstum | `blocked`, `filesystem-reserve`, auch bei `measured: false`. Während der ersten Inventur entspricht das Wachstum dem konservativen Budget, das der tatsächliche Start ebenfalls erzwingt; der Fehlbetrag behauptet keine bereits gemessene physische Zusatzbelegung. |
+| Vollständige Inventur vorhanden, eine Kontingentregel greift                | `blocked` mit dem zutreffenden Kontingentgrund; bei einem Workspace-Grund liefert der Produzent dessen Kennung mit.                                                                                                                                                  |
+| Erste Inventur noch ausstehend, keine Reserveverletzung                     | `unknown`, `allocation-pending`; freie Bytes und konservatives Startbudget sind bekannt, die Kontingentbelegung ist noch nicht bestätigt. Das ändert die bestehende Startprüfung gegen konfigurierte Kapazitäten nicht und behauptet keine gemessene Freigabe.       |
+| Messung fehlgeschlagen                                                      | `unknown`, `measurement-failed`; nur die konfigurierte Reserve bleibt als Zahl erhalten. Freier Platz, Wachstum und Fehlbetrag fehlen, statt als erfundene Nullen zu erscheinen. Der Start bleibt mit dem bestehenden Messfehler gesperrt.                           |
+
+Eine Statusabfrage ändert weder Einstellungen noch Ausführungsversuche. Die gespeicherte Reserve bleibt erhalten: Eine beispielsweise auf 200 GiB gesetzte Reserve bleibt 200 GiB; die Projektion senkt sie nicht und ersetzt sie nicht durch den Standardwert. Eine Speicherablehnung vor dem Start erzeugt keinen terminalen lokalen Ausführungsnachweis und verbraucht keinen GitHub-Laufversuch. Die automatische Übernahme prüft denselben weiterhin geeigneten wartenden Versuch bei ihrem nächsten regulären Durchlauf erneut; bestehende Lauf- und Startvoraussetzungen bleiben erhalten. Darstellung, Aktualisierung und Behebung der Meldung gehören der [Mitteilungszentrale](../notifications-and-tray/README.md).
+
+Implementierungsabbildung: `StorageGovernor` und `IStorageStatus` unter `apps/orchestrator/src/storage-governor` besitzen Berechnung und interne Projektion; `StorageStatusSchema` unter `libs/ipc-contracts/features/platform/src/lib` validiert den Transport. Der bestehende parameterlose Leseaufruf bleibt erhalten; die Erweiterung ist ein verpflichtendes Antwortfeld und wird mit Produzent und Renderer gemeinsam ausgeliefert. Persistierte Einstellungen und Ausführungsdaten erhalten dadurch kein neues Format. Die angrenzenden Governor-Spezifikationen prüfen Reserve vor Gesamtkontingent, Wachstum trotz allgemeinem `writable`, exakte Reservegrenze, bestehende Runner-Belegung, ausstehende Inventur, Messfehler, getrennte Kontingentgründe und Erholung ohne Reserveänderung.
 
 ### Karte
 
