@@ -1,3 +1,17 @@
+## 0.1.29 (2026-11-03)
+
+### 🚀 Features
+
+- **releases:** publish downloads with GitHub Actions ([#35](https://github.com/pixel-brewery/symphony/pull/35))
+
+### 🩹 Fixes
+
+- **releases:** validate history migration shell syntax ([#41](https://github.com/pixel-brewery/symphony/pull/41))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+
 ## 0.1.28 (2026-11-03)
 
 ### 🩹 Fixes
