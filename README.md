@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="resources/icons/symphony.svg" alt="Symphony posthorn" width="160" />
+  <img src=".github/assets/symphony-hero.png" alt="Symphony posthorn beside an Inbox view with delivery decisions and agent assignments" width="1200" />
 </p>
 
 # Symphony
