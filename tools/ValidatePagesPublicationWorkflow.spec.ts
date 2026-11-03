@@ -1,7 +1,9 @@
 // #region Imports
 
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 import { ValidatePagesPublicationWorkflow } from './ValidatePagesPublicationWorkflow.mjs';
 
 // #endregion
@@ -16,6 +18,41 @@ function sources() {
 }
 
 describe('ValidatePagesPublicationWorkflow', () => {
+  it.skipIf(process.platform === 'win32')(
+    'parses the actual Linux publication scripts as Bash',
+    () => {
+      // arrange
+      const workflows = sources();
+      const scripts = [
+        workflows.pagesSource,
+        workflows.promotionSource,
+        workflows.refreshSource,
+      ].flatMap((source) => {
+        const workflow = parse(source) as {
+          jobs: Record<string, { steps?: { name?: string; run?: string }[] }>;
+        };
+        return Object.values(workflow.jobs)
+          .flatMap((job) => job.steps ?? [])
+          .filter((step) => typeof step.run === 'string');
+      });
+
+      // act
+      const results = scripts.map((step) => ({
+        name: step.name,
+        result: spawnSync('bash', ['--noprofile', '--norc', '-n'], {
+          input: step.run,
+          encoding: 'utf8',
+        }),
+      }));
+
+      // assert
+      for (const { name, result } of results) {
+        expect(result.error, name).toBeUndefined();
+        expect(result.status, `${name}: ${result.stderr}`).toBe(0);
+      }
+    },
+  );
+
   it('accepts the complete publication and migration contract', () => {
     // arrange
     const workflows = sources();

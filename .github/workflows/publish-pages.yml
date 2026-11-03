@@ -103,14 +103,14 @@ jobs:
             if jq -e '.assets[] | select(.name == "symphony-pages-history.json")' "$RUNNER_TEMP/pages-history-release.json" > /dev/null; then
               gh release download "$history_tag" --repo "$GITHUB_REPOSITORY" --pattern symphony-pages-history.json --dir out/history-existing
               node --input-type=module <<'NODE'
-              import { readFileSync } from 'node:fs';
-              const previous = JSON.parse(readFileSync('out/history-existing/symphony-pages-history.json', 'utf8'));
-              const next = JSON.parse(readFileSync('out/symphony-pages-history.json', 'utf8'));
-              const files = new Map(next.files.map((file) => [file.path, file.data]));
-              if (previous.schemaVersion !== 1 || !Array.isArray(previous.files) || previous.files.some((file) => files.get(file.path) !== file.data)) {
-                throw new Error('Migration must preserve every previously archived byte.');
-              }
-              NODE
+          import { readFileSync } from 'node:fs';
+          const previous = JSON.parse(readFileSync('out/history-existing/symphony-pages-history.json', 'utf8'));
+          const next = JSON.parse(readFileSync('out/symphony-pages-history.json', 'utf8'));
+          const files = new Map(next.files.map((file) => [file.path, file.data]));
+          if (previous.schemaVersion !== 1 || !Array.isArray(previous.files) || previous.files.some((file) => files.get(file.path) !== file.data)) {
+            throw new Error('Migration must preserve every previously archived byte.');
+          }
+          NODE
             fi
             gh release upload "$history_tag" out/symphony-pages-history.json --repo "$GITHUB_REPOSITORY" --clobber
             gh release download "$history_tag" --repo "$GITHUB_REPOSITORY" --pattern symphony-pages-history.json --dir out/history-verified
