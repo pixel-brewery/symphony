@@ -162,7 +162,7 @@ export class StorageGovernor {
         filesystemPressure !== 'critical' &&
         workspaces.every((workspace) => workspace.pressure !== 'critical') &&
         localCi.pressure !== 'critical';
-      return {
+      const status = {
         measuredAt: new Date().toISOString(),
         measured,
         writable,
@@ -176,6 +176,10 @@ export class StorageGovernor {
         },
         workspaces,
         filesystem: { availableBytes, reserveBytes, pressure: filesystemPressure },
+      } satisfies Omit<IStorageStatus, 'localCiAdmission'>;
+      return {
+        ...status,
+        localCiAdmission: localCiAdmission(status, settings.localCi.resourcePreset),
       };
     } catch (cause) {
       const error = cause instanceof Error ? cause.message : 'Storage measurement failed.';
@@ -210,6 +214,7 @@ export class StorageGovernor {
           unavailableUsage(`workspace:${workspace.id}`, workspace.displayName, workspace.id),
         ),
         filesystem: { availableBytes: 0, reserveBytes, pressure: 'critical' },
+        localCiAdmission: { state: 'unknown', reason: 'measurement-failed', reserveBytes },
         error,
       };
     }
@@ -239,34 +244,13 @@ export class StorageGovernor {
       options.workload ?? (options.localCi ? 'local-ci' : undefined),
       options.requiredBytes,
     );
-    assertUsage(status.global, requirements.globalBytes);
-    if (
-      status.filesystem.availableBytes - requirements.globalBytes <
-      status.filesystem.reserveBytes
-    ) {
-      throw new Error(
-        `Storage safety stop: the Mac must keep at least ${formatGiB(status.filesystem.reserveBytes)} free.`,
-      );
-    }
     // A detailed segment inventory may take minutes in managed worktrees containing hundreds of
-    // thousands of dependency files. Admission must not wait for it: the filesystem check above
-    // is live, and requirements reserve the workload's complete bounded growth before any write.
-    // Quota checks below use the last completed allocation when one exists and the configured
+    // thousands of dependency files. Admission must not wait for it: the first admission check
+    // uses live filesystem availability and reserves complete bounded growth before any write.
+    // Quota checks use the last completed allocation when one exists and the configured
     // capacity boundary on a first launch. The completed inventory is persisted for later starts.
-    if (requirements.localCiBytes) assertUsage(status.localCi, requirements.localCiBytes);
-    if (options.workspaceId) {
-      const workspace = status.workspaces.find(
-        (candidate) => candidate.workspaceId === options.workspaceId,
-      );
-      if (!workspace) throw new Error(`Unknown workspace: ${options.workspaceId}`);
-      assertUsage(workspace, requirements.workspaceBytes);
-    } else {
-      const blockedWorkspace = status.workspaces.find(
-        (workspace) =>
-          workspace.allocatedBytes + requirements.workspaceBytes > workspace.limitBytes,
-      );
-      if (blockedWorkspace) assertUsage(blockedWorkspace, requirements.workspaceBytes);
-    }
+    const block = storageAdmissionBlock(status, requirements, options.workspaceId);
+    if (block) throw new Error(block.message);
     return status;
   }
 
@@ -382,7 +366,7 @@ interface ICapacityRequirements {
 }
 
 function capacityRequirements(
-  status: IStorageStatus,
+  status: Pick<IStorageStatus, 'localCiCapacity' | 'localCi'>,
   resourcePreset: LocalCiResourcePresetName,
   workload: 'analysis' | 'implementation' | 'local-ci' | undefined,
   requestedBytes = 0,
@@ -411,6 +395,80 @@ function capacityRequirements(
     workspaceBytes,
     localCiBytes: localCiGrowthBytes,
   };
+}
+
+interface IStorageAdmissionBlock {
+  readonly reason: Extract<IStorageStatus['localCiAdmission'], { state: 'blocked' }>['reason'];
+  readonly message: string;
+  readonly workspaceId?: string;
+}
+
+function localCiAdmission(
+  status: Omit<IStorageStatus, 'localCiAdmission'>,
+  resourcePreset: LocalCiResourcePresetName,
+): IStorageStatus['localCiAdmission'] {
+  const requirements = capacityRequirements(status, resourcePreset, 'local-ci');
+  const budget = {
+    availableBytes: status.filesystem.availableBytes,
+    reserveBytes: status.filesystem.reserveBytes,
+    requiredGrowthBytes: requirements.globalBytes,
+    shortfallBytes: Math.max(
+      0,
+      status.filesystem.reserveBytes + requirements.globalBytes - status.filesystem.availableBytes,
+    ),
+  };
+  const block = storageAdmissionBlock(status, requirements);
+  if (block?.reason === 'filesystem-reserve') {
+    return { state: 'blocked', reason: block.reason, ...budget };
+  }
+  if (!status.measured) {
+    return { state: 'unknown', reason: 'allocation-pending', ...budget, shortfallBytes: 0 };
+  }
+  if (block) {
+    return {
+      state: 'blocked',
+      reason: block.reason,
+      ...budget,
+      ...(block.workspaceId ? { workspaceId: block.workspaceId } : {}),
+    };
+  }
+  return { state: 'permitted', ...budget, shortfallBytes: 0 };
+}
+
+function storageAdmissionBlock(
+  status: Pick<IStorageStatus, 'filesystem' | 'global' | 'localCi' | 'workspaces'>,
+  requirements: ICapacityRequirements,
+  workspaceId?: string,
+): IStorageAdmissionBlock | undefined {
+  if (
+    status.filesystem.availableBytes - requirements.globalBytes <
+    status.filesystem.reserveBytes
+  ) {
+    return {
+      reason: 'filesystem-reserve',
+      message: `Storage safety stop: the Mac must keep at least ${formatGiB(status.filesystem.reserveBytes)} free.`,
+    };
+  }
+  const globalBlock = storageLimitBlock(status.global, requirements.globalBytes, 'managed-limit');
+  if (globalBlock) return globalBlock;
+  if (requirements.localCiBytes) {
+    const localCiBlock = storageLimitBlock(
+      status.localCi,
+      requirements.localCiBytes,
+      'local-ci-limit',
+    );
+    if (localCiBlock) return localCiBlock;
+  }
+  const workspace = workspaceId
+    ? status.workspaces.find((candidate) => candidate.workspaceId === workspaceId)
+    : status.workspaces.find(
+        (candidate) =>
+          candidate.allocatedBytes + requirements.workspaceBytes > candidate.limitBytes,
+      );
+  if (workspaceId && !workspace) throw new Error(`Unknown workspace: ${workspaceId}`);
+  return workspace
+    ? storageLimitBlock(workspace, requirements.workspaceBytes, 'workspace-limit')
+    : undefined;
 }
 
 const LOCAL_CI_OVERHEAD_GIB = 2;
@@ -683,13 +741,19 @@ function unavailableUsage(id: string, label: string, workspaceId?: string): ISto
   };
 }
 
-function assertUsage(value: IStorageUsage, requiredBytes: number): void {
+function storageLimitBlock(
+  value: IStorageUsage,
+  requiredBytes: number,
+  reason: IStorageAdmissionBlock['reason'],
+): IStorageAdmissionBlock | undefined {
   if (value.pressure !== 'critical' && value.allocatedBytes + requiredBytes <= value.limitBytes) {
     return;
   }
-  throw new Error(
-    `Storage safety stop: ${value.label} uses ${formatGiB(value.allocatedBytes)} of its ${formatGiB(value.limitBytes)} limit.`,
-  );
+  return {
+    reason,
+    message: `Storage safety stop: ${value.label} uses ${formatGiB(value.allocatedBytes)} of its ${formatGiB(value.limitBytes)} limit.`,
+    ...(value.workspaceId ? { workspaceId: value.workspaceId } : {}),
+  };
 }
 
 function freeSpacePressure(availableBytes: number, reserveBytes: number): StoragePressure {

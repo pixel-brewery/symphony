@@ -4,6 +4,30 @@
 
 The private reference checkout is supplied locally through `SYMPHONY_REFERENCE_ROOT`. Its identity and resolved path are intentionally withheld. Scope-specific source revisions, paths, Adopt/Adapt/Differ decisions and executed evidence below retain their original meaning; historical checks do not imply current verification of every route.
 
+## 2026-11-02 Local-CI storage refusal notifications
+
+**Adapt — explain desktop storage admission through the existing notification surface.**
+`StoragePressureNotificationSource` projects the orchestrator's confirmed local-CI admission
+decision into the existing `INotificationSource` contract. `NotificationCentre` keeps the problem
+under **Needs attention**, and `NotificationService.showError` supplies the existing Mosaik error
+toast when a newly confirmed block needs attention. The source reuses the notification centre's
+`connect` lifecycle, shared refresh and window-owned cleanup pattern; it does not add a View,
+layout, control, independent storage policy or CI execution path. **Review storage** uses the
+existing settings command to open System storage or the affected workspace's Administration.
+The complete behavior and deduplication contract are in
+[Notifications and tray](../notifications-and-tray/README.md#speicherzulassung-und-sofortige-local-ci-meldung).
+
+**Evidence limit:** the owner-provided `SYMPHONY_REFERENCE_ROOT` environment variable was absent,
+so the exact private-reference comparison remains unavailable. This entry records the inspected
+Symphony notification owners and their existing desktop adaptation; it does not claim upstream
+visual parity. Executed evidence is the 19-case notification-source suite, the complete
+`yarn verify` gate and four focused real Electron journeys (local-CI storage refusal and recovery,
+notification centre, storage breakdown and local-CI settings). The new journey verifies the
+closed-bell toast, confirmed IPC budget, persistent problem, settings navigation and recovery
+with an isolated profile. Its screenshot is `output/playwright/local-ci-storage-warning.png`.
+The installed application, full Electron suite and platform packaging were not changed or
+verified by these focused journeys.
+
 ## 2026-10-31 Settings in the main window and resizable panes
 
 A confirmed product decision of 2026-10-31 retires the separate Settings window: Settings opens in

@@ -3,6 +3,9 @@
 import { z } from 'zod';
 import { storagePressureSchema } from './StoragePressureSchema';
 import { storageUsageSchema } from './StorageUsageSchema';
+
+// #endregion
+
 const resolvedLocalCiPresetSchema = z.object({
   resources: z.object({
     cpus: z.number().int().nonnegative(),
@@ -14,7 +17,34 @@ const resolvedLocalCiPresetSchema = z.object({
   unavailableReason: z.string().min(1).optional(),
 });
 
-// #endregion
+const localCiAdmissionBudgetSchema = z.object({
+  availableBytes: z.number().int().nonnegative(),
+  reserveBytes: z.number().int().nonnegative(),
+  requiredGrowthBytes: z.number().int().nonnegative(),
+  shortfallBytes: z.number().int().nonnegative(),
+});
+
+const localCiAdmissionSchema = z.union([
+  localCiAdmissionBudgetSchema.extend({
+    state: z.literal('permitted'),
+    shortfallBytes: z.literal(0),
+  }),
+  localCiAdmissionBudgetSchema.extend({
+    state: z.literal('blocked'),
+    reason: z.enum(['filesystem-reserve', 'managed-limit', 'local-ci-limit', 'workspace-limit']),
+    workspaceId: z.string().min(1).optional(),
+  }),
+  localCiAdmissionBudgetSchema.extend({
+    state: z.literal('unknown'),
+    reason: z.literal('allocation-pending'),
+    shortfallBytes: z.literal(0),
+  }),
+  z.object({
+    state: z.literal('unknown'),
+    reason: z.literal('measurement-failed'),
+    reserveBytes: z.number().int().nonnegative(),
+  }),
+]);
 
 export const storageStatusSchema = z.object({
   measuredAt: z.iso.datetime(),
@@ -33,6 +63,7 @@ export const storageStatusSchema = z.object({
       custom: resolvedLocalCiPresetSchema,
     }),
   }),
+  localCiAdmission: localCiAdmissionSchema,
   workspaces: z.array(storageUsageSchema).readonly(),
   filesystem: z.object({
     availableBytes: z.number().int().nonnegative(),

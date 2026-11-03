@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createDefaultApplicationSettings } from '@symphony/configuration-composition';
 import { resolveLocalCiResourcePreset } from '@symphony/domain-ci';
 import { workspaceStorageDirectoryName } from '@symphony/persistence-core';
+import { storageStatusSchema } from '@symphony/ipc-contracts-platform';
 import { StorageGovernor } from './';
 
 // #endregion
@@ -14,6 +15,7 @@ import { StorageGovernor } from './';
 const temporaryDirectories: string[] = [];
 
 const TEST_AVAILABLE_FILESYSTEM_BYTES = 100 * 1024 ** 3;
+const GIB = 1024 ** 3;
 
 // Removing the 11,000-file tree of the oversized-tree case takes longer than the default hook
 // timeout on Windows runners.
@@ -142,6 +144,167 @@ describe('StorageGovernor', () => {
     ).toThrow('Storage safety stop');
   });
 
+  it('reports the live reserve refusal before inherited global pressure and recovers without changing the reserve', () => {
+    // arrange
+    const root = temporaryDirectory();
+    const defaults = createDefaultApplicationSettings(root);
+    const settings = {
+      ...defaults,
+      runtime: { ...defaults.runtime, minimumFreeDiskGiB: 200, managedStorageLimitGiB: 1_000 },
+      localCi: {
+        ...defaults.localCi,
+        resourcePreset: 'custom' as const,
+        customResources: { cpus: 2, memoryGiB: 4, diskGiB: 12, cacheGiB: 4 },
+      },
+    };
+    let availableBytes = 199 * GIB;
+    const governor = new StorageGovernor({
+      configurationRoot: join(root, '.symphony'),
+      settings: () => settings,
+      availableFilesystemBytes: () => availableBytes,
+    });
+
+    // act
+    const blocked = governor.report();
+
+    // assert
+    expect(blocked.global.pressure).toBe('critical');
+    expect(blocked.global.usagePercent).toBeLessThan(1);
+    expect(storageStatusSchema.parse(blocked).localCiAdmission).toEqual({
+      state: 'blocked',
+      reason: 'filesystem-reserve',
+      availableBytes: 199 * GIB,
+      reserveBytes: 200 * GIB,
+      requiredGrowthBytes: 18 * GIB,
+      shortfallBytes: 19 * GIB,
+    });
+    expect(() => governor.assertWritable({ workload: 'local-ci' })).toThrow(
+      'Storage safety stop: the Mac must keep at least 200.0 GB free.',
+    );
+
+    availableBytes = 210 * GIB;
+    const growthBlocked = governor.report();
+    expect(growthBlocked.writable).toBe(true);
+    expect(growthBlocked.localCiAdmission).toMatchObject({
+      state: 'blocked',
+      reason: 'filesystem-reserve',
+      requiredGrowthBytes: 18 * GIB,
+      shortfallBytes: 8 * GIB,
+    });
+    expect(() => governor.assertWritable({ workload: 'local-ci' })).toThrow(
+      'the Mac must keep at least 200.0 GB free',
+    );
+
+    availableBytes = 218 * GIB;
+    const recovered = governor.assertWritable({ workload: 'local-ci' });
+    expect(storageStatusSchema.parse(recovered).localCiAdmission).toEqual({
+      state: 'permitted',
+      availableBytes: 218 * GIB,
+      reserveBytes: 200 * GIB,
+      requiredGrowthBytes: 18 * GIB,
+      shortfallBytes: 0,
+    });
+    expect(settings.runtime.minimumFreeDiskGiB).toBe(200);
+  });
+
+  it.each([
+    {
+      reason: 'managed-limit',
+      managedLimitGiB: 10,
+      localCiLimitGiB: 32,
+      workspaceLimitGiB: 20,
+      label: 'Application storage',
+    },
+    {
+      reason: 'local-ci-limit',
+      managedLimitGiB: 100,
+      localCiLimitGiB: 10,
+      workspaceLimitGiB: 20,
+      label: 'Local GitHub Actions',
+    },
+    {
+      reason: 'workspace-limit',
+      managedLimitGiB: 100,
+      localCiLimitGiB: 32,
+      workspaceLimitGiB: 0.25,
+      label: 'Personal',
+    },
+  ] as const)('keeps the $reason refusal distinct from a Mac free-space deficit', (testCase) => {
+    // arrange
+    const root = temporaryDirectory();
+    const defaults = createDefaultApplicationSettings(root);
+    const settings = {
+      ...defaults,
+      runtime: {
+        ...defaults.runtime,
+        minimumFreeDiskGiB: 200,
+        managedStorageLimitGiB: testCase.managedLimitGiB,
+      },
+      localCi: {
+        ...defaults.localCi,
+        storageLimitGiB: testCase.localCiLimitGiB,
+        resourcePreset: 'custom' as const,
+        customResources: { cpus: 2, memoryGiB: 4, diskGiB: 12, cacheGiB: 4 },
+      },
+      workspaces: defaults.workspaces.map((workspace) => ({
+        ...workspace,
+        storageLimitGiB: testCase.workspaceLimitGiB,
+      })),
+    };
+    const governor = new StorageGovernor({
+      configurationRoot: join(root, '.symphony'),
+      settings: () => settings,
+      availableFilesystemBytes: () => 300 * GIB,
+    });
+
+    // act
+    const status = governor.report();
+
+    // assert
+    expect(storageStatusSchema.parse(status).localCiAdmission).toEqual({
+      state: 'blocked',
+      reason: testCase.reason,
+      availableBytes: 300 * GIB,
+      reserveBytes: 200 * GIB,
+      requiredGrowthBytes: 18 * GIB,
+      shortfallBytes: 0,
+      ...(testCase.reason === 'workspace-limit' ? { workspaceId: 'personal' } : {}),
+    });
+    expect(() => governor.assertWritable({ workload: 'local-ci' })).toThrow(
+      `Storage safety stop: ${testCase.label}`,
+    );
+  });
+
+  it('does not invent free-space or growth evidence when storage measurement fails', () => {
+    // arrange
+    const root = temporaryDirectory();
+    const defaults = createDefaultApplicationSettings(root);
+    const settings = {
+      ...defaults,
+      runtime: { ...defaults.runtime, minimumFreeDiskGiB: 200 },
+    };
+    const governor = new StorageGovernor({
+      configurationRoot: join(root, '.symphony'),
+      settings: () => settings,
+      availableFilesystemBytes: () => {
+        throw new Error('Volume is unavailable.');
+      },
+    });
+
+    // act
+    const status = governor.report();
+
+    // assert
+    expect(storageStatusSchema.parse(status).localCiAdmission).toEqual({
+      state: 'unknown',
+      reason: 'measurement-failed',
+      reserveBytes: 200 * GIB,
+    });
+    expect(() => governor.assertWritable({ workload: 'local-ci' })).toThrow(
+      'Storage measurement failed; new disk writes are blocked. Volume is unavailable.',
+    );
+  });
+
   it('defers analysis before it consumes the implementation and local-build reserve', () => {
     // arrange
     const root = temporaryDirectory();
@@ -172,7 +335,17 @@ describe('StorageGovernor', () => {
 
   it('keeps reporting immediately on an oversized tree and measures it in the background', async () => {
     const root = temporaryDirectory();
-    const defaults = createDefaultApplicationSettings(root);
+    const initial = createDefaultApplicationSettings(root);
+    const defaults = {
+      ...initial,
+      runtime: { ...initial.runtime, minimumFreeDiskGiB: 200 },
+      localCi: {
+        ...initial.localCi,
+        resourcePreset: 'custom' as const,
+        customResources: { cpus: 2, memoryGiB: 4, diskGiB: 12, cacheGiB: 4 },
+      },
+    };
+    let availableBytes = 300 * GIB;
     mkdirSync(join(root, '.symphony'), { recursive: true });
     const workspaceRoot = join(
       defaults.runtime.workspaceRoot,
@@ -188,7 +361,7 @@ describe('StorageGovernor', () => {
     const governor = new StorageGovernor({
       configurationRoot: join(root, '.symphony'),
       settings: () => defaults,
-      availableFilesystemBytes: () => TEST_AVAILABLE_FILESYSTEM_BYTES,
+      availableFilesystemBytes: () => availableBytes,
     });
 
     // Past the inline entry budget the first report must not walk the tree synchronously: it
@@ -199,7 +372,31 @@ describe('StorageGovernor', () => {
     expect(first.error).toBeUndefined();
     expect(first.measured).toBe(false);
     expect(first.global.allocatedBytes).toBe(0);
+    expect(storageStatusSchema.parse(first).localCiAdmission).toEqual({
+      state: 'unknown',
+      reason: 'allocation-pending',
+      availableBytes: 300 * GIB,
+      reserveBytes: 200 * GIB,
+      requiredGrowthBytes: 18 * GIB,
+      shortfallBytes: 0,
+    });
     expect(() => governor.assertWritable({ workload: 'local-ci' })).not.toThrow();
+
+    availableBytes = 199 * GIB;
+    const reserveBlocked = governor.report();
+    expect(reserveBlocked.measured).toBe(false);
+    expect(storageStatusSchema.parse(reserveBlocked).localCiAdmission).toEqual({
+      state: 'blocked',
+      reason: 'filesystem-reserve',
+      availableBytes: 199 * GIB,
+      reserveBytes: 200 * GIB,
+      requiredGrowthBytes: 18 * GIB,
+      shortfallBytes: 19 * GIB,
+    });
+    expect(() => governor.assertWritable({ workload: 'local-ci' })).toThrow(
+      'the Mac must keep at least 200.0 GB free',
+    );
+    availableBytes = 300 * GIB;
 
     const measured = await eventually(() => {
       const report = governor.report();
@@ -208,6 +405,7 @@ describe('StorageGovernor', () => {
     });
     expect(measured.allocatedBytes).toBeGreaterThan(11_000);
     expect(governor.report().measured).toBe(true);
+    expect(governor.report().localCiAdmission.state).toBe('permitted');
 
     // Inside the TTL the cached measurement is served without another walk.
     writeFileSync(join(workspaceRoot, 'late-addition.bin'), Buffer.alloc(1024 * 1024));
@@ -218,7 +416,7 @@ describe('StorageGovernor', () => {
     const restartedGovernor = new StorageGovernor({
       configurationRoot: join(root, '.symphony'),
       settings: () => defaults,
-      availableFilesystemBytes: () => TEST_AVAILABLE_FILESYSTEM_BYTES,
+      availableFilesystemBytes: () => availableBytes,
     });
     expect(restartedGovernor.report().measured).toBe(true);
     // Writing and walking 11,000 files takes about 40 s on Windows runners.
@@ -318,6 +516,52 @@ describe('StorageGovernor', () => {
     governor.invalidate();
 
     expect(governor.report().localCi.allocatedBytes).toBeLessThan(before);
+  });
+
+  it('reserves only remaining local-CI growth when an existing runner allocation is measured', () => {
+    // arrange
+    const root = temporaryDirectory();
+    const defaults = createDefaultApplicationSettings(root);
+    const settings = {
+      ...defaults,
+      localCi: {
+        ...defaults.localCi,
+        resourcePreset: 'custom' as const,
+        customResources: { cpus: 2, memoryGiB: 4, diskGiB: 12, cacheGiB: 4 },
+      },
+    };
+    writeBytes(
+      join(settings.runtime.workspaceRoot, 'local-ci', 'lima', 'sci-01', 'disk'),
+      4 * 1024 * 1024,
+    );
+    let availableBytes = TEST_AVAILABLE_FILESYSTEM_BYTES;
+    const governor = new StorageGovernor({
+      configurationRoot: join(root, '.symphony'),
+      settings: () => settings,
+      availableFilesystemBytes: () => availableBytes,
+    });
+    const before = governor.report();
+    availableBytes = before.filesystem.reserveBytes + 18 * GIB - before.localCi.allocatedBytes;
+
+    // act
+    const status = governor.assertWritable({ workload: 'local-ci' });
+
+    // assert
+    expect(status.localCi.allocatedBytes).toBeGreaterThan(0);
+    expect(storageStatusSchema.parse(status).localCiAdmission).toMatchObject({
+      state: 'permitted',
+      requiredGrowthBytes: 18 * GIB - status.localCi.allocatedBytes,
+      shortfallBytes: 0,
+    });
+    availableBytes -= 1;
+    expect(governor.report().localCiAdmission).toMatchObject({
+      state: 'blocked',
+      reason: 'filesystem-reserve',
+      shortfallBytes: 1,
+    });
+    expect(() => governor.assertWritable({ workload: 'local-ci' })).toThrow(
+      'the Mac must keep at least',
+    );
   });
 
   it('reports a workspace as critical once physical allocation reaches 95 percent', () => {
