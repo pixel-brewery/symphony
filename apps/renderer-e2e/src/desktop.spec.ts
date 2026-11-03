@@ -1534,13 +1534,30 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
       .evaluate((element) => (element as HTMLElement & { label?: string }).label ?? '');
     await page.getByTestId('navigate-back').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
-    // While the implementation runs the card rests in `In progress` and stays pinned; its branch
-    // is shown on the work-item screen, not on the card.
+    // The card rests in `In progress`; its branch is shown on the work-item screen. Navigation
+    // may outlast the implementation, so read status and pin in one browser turn to avoid
+    // racing a correct unpin when the execution finishes between separate assertions.
     await Promise.all([
       expect(
         page.getByTestId('board-column-progress').getByTestId(`board-item-${selectedWorkItemId}`),
       ).toBeAttached(),
-      expect(page.getByTestId(`board-item-${selectedWorkItemId}`)).toHaveJSProperty('pinned', true),
+      expect
+        .poll(() =>
+          page
+            .getByTestId(`board-item-status-${selectedWorkItemId}`)
+            .evaluate((status, workItemId) => {
+              const label = (status as HTMLElement & { label?: string }).label;
+              const card = status.closest<HTMLElement & { pinned: boolean }>(
+                `[test-id="board-item-${workItemId}"]`,
+              );
+              return (
+                typeof label === 'string' &&
+                label.length > 0 &&
+                card?.pinned === label.endsWith(' running')
+              );
+            }, selectedWorkItemId),
+        )
+        .toBe(true),
     ]);
     await expect(page.getByTestId(`board-item-branch-${selectedWorkItemId}`)).toHaveCount(0);
     await expect
