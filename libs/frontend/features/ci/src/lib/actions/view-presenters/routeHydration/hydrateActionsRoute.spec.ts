@@ -20,7 +20,7 @@ describe('hydrateActionsRoute', () => {
     const catalogueStarted = new Promise<void>((resolve) => {
       startedCatalogue = resolve;
     });
-    const refresh = vi.fn(async (_includeWorkflowCatalog?: boolean) => {
+    const refresh = vi.fn<(includeWorkflowCatalog?: boolean) => Promise<void>>(async () => {
       startedCatalogue();
       await catalogue;
     });
