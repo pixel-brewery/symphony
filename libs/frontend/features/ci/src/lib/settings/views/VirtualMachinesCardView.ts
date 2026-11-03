@@ -20,7 +20,7 @@ import {
   SettingsRowComponent,
 } from '@symphony/frontend-setting';
 import { StorageSizePipe } from '@symphony/frontend-ui';
-import type { ILocalCiResourceLimits } from '@symphony/domain-ci';
+import { localCiResourceMinimums, type ILocalCiResourceLimits } from '@symphony/domain-ci';
 import { LocalCiInstanceDetailsPipe } from '../pipes/LocalCiInstanceDetailsPipe';
 import { LocalCiInstanceLabelPipe } from '../pipes/LocalCiInstanceLabelPipe';
 import { LocalCiPresetDetailsPipe } from '../pipes/LocalCiPresetDetailsPipe';
@@ -93,7 +93,13 @@ export class VirtualMachinesCardView extends View<VirtualMachinesCardViewPresent
     readonly minimum: number;
   }[] = [
     { key: 'cpus', testId: 'cpus', label: 'CPUs', unit: ' CPUs', minimum: 2 },
-    { key: 'memoryGiB', testId: 'memory', label: 'Memory', unit: ' GB', minimum: 8 },
+    {
+      key: 'memoryGiB',
+      testId: 'memory',
+      label: 'Memory',
+      unit: ' GB',
+      minimum: localCiResourceMinimums.memoryGiB,
+    },
     { key: 'diskGiB', testId: 'disk', label: 'Virtual disk', unit: ' GB', minimum: 8 },
     { key: 'cacheGiB', testId: 'cache', label: 'Shared cache', unit: ' GB', minimum: 1 },
   ];

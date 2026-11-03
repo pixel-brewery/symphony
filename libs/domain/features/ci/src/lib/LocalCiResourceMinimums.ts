@@ -6,7 +6,7 @@ import type { ILocalCiResourceLimits } from './ILocalCiResourceLimits';
 
 export const localCiResourceMinimums: Readonly<ILocalCiResourceLimits> = {
   cpus: 2,
-  memoryGiB: 8,
+  memoryGiB: 4,
   diskGiB: 8,
   cacheGiB: 1,
 };
