@@ -445,4 +445,4 @@ routes, credentials and settings. Mobile uses the same locally packaged PNGs and
 shared Symphony `AgentFigureComponent` as Desktop, including offscreen and reduced-motion
 handling. The desktop employee editor owns appearance changes; the phone remains
 a scoped companion. The Memphis theme and locally packaged Space Grotesk fonts
-are shared with Desktop. See [production orbit](production-orbit.md).
+are shared with Desktop. See [production orbit](orbit/README.md).

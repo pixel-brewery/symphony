@@ -4,7 +4,7 @@ Stand: 2026-10-09. Die Recherche nach der erneuten Rückmeldung des Nutzers ist
 inzwischen Grundlage der **integrierten 3D-Ansicht im Originalprojekt Symphony**.
 Dieses Dokument bewahrt die damaligen Befunde, Technikvergleiche und Entwurfsoptionen.
 Das tatsächlich umgesetzte Verhalten und seine Prüfzuständigkeiten stehen in
-[Production orbit](production-orbit.md). Es gibt weiterhin keinen vergleichenden
+[Production orbit](orbit/README.md). Es gibt weiterhin keinen vergleichenden
 Engine-Benchmark oder ein gemessenes Bildratenversprechen.
 
 Produktkorrektur vom 10.10.2026: Im Orbit werden vorerst keine Mitarbeiter
@@ -303,7 +303,7 @@ einen allgemeinen internen HTTP-Server oder eine notwendige Cloud-Laufzeit.
 ## Ursprünglicher Engineeringplan innerhalb der vorhandenen Architektur
 
 Die folgenden Entwurfsoptionen begründeten die Umsetzung. Das aktuelle
-Produktverhalten ist oben und in `production-orbit.md` festgehalten; zusätzliche
+Produktverhalten ist oben und in `orbit/README.md` festgehalten; zusätzliche
 Qualitätsmodi, Bloom und Geometrie-LOD sind keine zugesicherten Produktfunktionen.
 
 ### Daten und Zuständigkeiten

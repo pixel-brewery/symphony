@@ -17,7 +17,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Bereichsregistrierung und Suchbeiträge der drei Bereiche; Karten **Storage**, **Developer tools**, **Virtual machines**, **Updates**, **Sleep**; **Mobile access**; **Color theme** und der Appearance-Slot mit **Navigation** (Arcade).
-- Nicht enthalten: die gemeinsame Mechanik der Einstellungen ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)), CLI-Erkennung und -Installation ([Entwicklerwerkzeuge](../developer-tools/README.md)), Updatezustände, Download und Installation ([Anwendungsupdates](../application-updates/README.md)), Ausführung und Isolation der lokalen Runner ([Managed Local CI](../managed-local-ci.md)), das Kopplungs- und Sitzungsprotokoll des Telefons ([Mobile companion phase 1](../mobile-companion-phase-1.md)), die Arcade-Spiele ([Arcade](../arcade/README.md)) und die Workspace-eigene Speichergrenze in **Administration** ([Workspaces](../workspaces/README.md)).
+- Nicht enthalten: die gemeinsame Mechanik der Einstellungen ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)), CLI-Erkennung und -Installation ([Entwicklerwerkzeuge](../developer-tools/README.md)), Updatezustände, Download und Installation ([Anwendungsupdates](../application-updates/README.md)), Ausführung und Isolation der lokalen Runner ([Managed Local CI](../actions/managed-local-ci.md)), das Kopplungs- und Sitzungsprotokoll des Telefons ([Mobile companion phase 1](../mobile-companion-phase-1.md)), die Arcade-Spiele ([Arcade](../arcade/README.md)) und die Workspace-eigene Speichergrenze in **Administration** ([Workspaces](../workspaces/README.md)).
 
 ## Verantwortungsgrenzen
 
@@ -163,7 +163,7 @@ Die Karte zeigt die sechs Werkzeuge `homebrew`, `git`, `github-cli`, `codex`, `c
 - Als liegengeblieben gilt eine Maschine, die weder `keptWarm` noch `busy` noch `running` ist; ab einer solchen Maschine erscheint ein Warnhinweis. Bei `localCi.pressure === 'critical'` erscheint `Local runner writes are blocked`.
 - Alerts: `remove-local-ci-instance-confirmation` vor `removeLocalCiInstance(name)`, `clear-local-ci-data-confirmation` vor `clearLocalCiData()`. **Refresh machines** lädt die Liste mit erzwungener Aktualisierung.
 
-Fixe Profilgrenzen, Kapazitätsreserven und die Laufzeitprüfung einer gespeicherten Custom-Konfiguration beschreibt [Managed Local CI](../managed-local-ci.md).
+Fixe Profilgrenzen, Kapazitätsreserven und die Laufzeitprüfung einer gespeicherten Custom-Konfiguration beschreibt [Managed Local CI](../actions/managed-local-ci.md).
 
 ## Updates
 
@@ -238,4 +238,4 @@ Renderer-Regeln: Der Schalter ist ein `createImmediateSetting` über `enabled` u
 
 - [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [System: dieser Mac](../../project/system/README.md), [Mobile access](../../project/system/mobile-access.md), [Appearance](../../project/system/appearance.md)
-- [Entwicklerwerkzeuge](../developer-tools/README.md), [Anwendungsupdates](../application-updates/README.md), [Managed Local CI](../managed-local-ci.md), [Mobile companion phase 1](../mobile-companion-phase-1.md)
+- [Entwicklerwerkzeuge](../developer-tools/README.md), [Anwendungsupdates](../application-updates/README.md), [Managed Local CI](../actions/managed-local-ci.md), [Mobile companion phase 1](../mobile-companion-phase-1.md)

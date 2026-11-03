@@ -4,6 +4,8 @@
 
 Der Actions-Bildschirm (`/main/actions`, CI-Feature) projiziert GitHub-Actions-Läufe, lokale Runner-Ausführungen und agentische Diagnosen auf eine Übersicht aller Läufe und eine Workflow-Ansicht. Er besitzt keine eigene Persistenz; alle Daten stammen aus dem Orchestrations-Snapshot und den bestehenden CI-Anfragen.
 
+Der vollständige Laufzeitvertrag für Runner, Freigaben, automatische Übernahme und Wiederholung steht unter [Managed local CI](managed-local-ci.md). Manuelle Befehle bleiben auf die im Hauptfenster ausgewählten Workspaces begrenzt. Die Hintergrundübernahme prüft stattdessen die dauerhafte Freigabe eines aktivierten Workspace für lokale CI; die Ansicht eines anderen Workspace entzieht diese Freigabe nicht.
+
 ## Implementierter Stand
 
 ### Zuständigkeiten
@@ -103,6 +105,97 @@ Die agentische Auslieferung kennzeichnet jede Ausführung, die sie für einen fe
 ### Fehlerbehandlung
 
 `remoteData.state !== 'current'` zeigt `actions-stale-data` mit letzter erfolgreicher Aktualisierung, bei `rate-limited` mit `retryAt`, und `Retry`. Fehler der Befehle meldet `CiStore` als Benachrichtigung.
+
+### Hintergrundabfrage mehrerer CI-Anbindungen
+
+`GitHubCloudProvider.listRuns('operational')` liest die bestehenden aktivierten
+GitHub-Actions-Bindungen unabhängig von der Auswahl im Hauptfenster. Die agentische
+Automation benötigt diese Liste, bevor sie ihre Freigaben je Workspace und
+Repository auf die Läufe anwendet. Ein gewöhnlicher Lesefehler einer einzelnen
+Bindung, etwa ein nicht mehr verfügbares Repository mit HTTP 404, darf deshalb
+erfolgreich gelesene Läufe anderer Bindungen nicht verwerfen.
+
+Dieser operative Aufruf und die automatische lokale Laufentdeckung sammeln die
+Ergebnisse der einzelnen Bindungen mit `Promise.allSettled`. Eine Bindung umfasst ihren bisherigen Abruf der jüngsten
+50 Läufe und deren Projektion. Erfolgreiche Ergebnisse werden in Bindungsreihenfolge
+zusammengeführt; ein erfolgreich gelesenes Repository ohne Läufe zählt als Erfolg.
+Fehlt die zugeordnete Repository- oder GitHub-Verbindung, entsteht wie bisher kein
+Abruf und damit auch kein erfolgreicher Leseversuch. Scheitern alle tatsächlichen
+Leseversuche, wird der erste Fehler in Bindungsreihenfolge weitergegeben. Es gibt
+keinen neuen Wiederholungs- oder Persistenzpfad.
+
+Anfragelimits (`RemoteProviderRateLimitError`), ein veränderter Projektionsbereich
+(`RemoteProjectionScopeChangedError`) und Abbrüche (`AbortError` oder `ABORT_ERR`)
+bleiben Fehler des gesamten Aufrufs, auch wenn andere Bindungen lesbar waren.
+Diese Prüfung folgt auch verschachtelten `Error.cause`-Ketten mit Zyklenschutz.
+Bereits gestartete Anfragen laufen bis zu ihrem Ergebnis; es wird keine neue
+Abbruchsteuerung eingeführt. Die vorhandene Kontoregelung begrenzt weiterhin die
+GitHub-Anfragen.
+
+Für jeden gewöhnlichen Bindungsfehler erhält der optionale interne Rückruf
+`reportReadFailure` die Workspace-, CI-Bindungs- und Repository-Bindungskennung
+sowie einen neu erzeugten generischen Fehler mit optionalem HTTP-Status. Rohe
+Provider-Ausgaben werden nicht weitergereicht. Die Orchestrator-Komposition
+schreibt dies als strukturiertes Ereignis `github.ci-run-read.failed` in das
+bestehende Protokoll. Dieser Rückruf erzeugt keine neue UI-Meldung und keine
+Snapshot-Felder.
+
+Der Standardaufruf `listRuns()` beziehungsweise `listRuns('selected')` behält
+seine strenge Fehlerbehandlung für die ausgewählten Workspaces. Sein vorhandener
+Projektionscache und die Anzeige veralteter Daten ändern sich nicht; operative
+Teilergebnisse werden nicht in diesen Cache geschrieben. Der separate Abruf
+`listManagedLocalRunCandidates()` verwendet dieselbe Fehlerisolation ausschließlich
+für aktivierte Workspaces mit `localCiEnabled: true`. Auch die anschließende
+Prüfung wartender Jobs gibt globale Unterbrechungen weiter, statt einen
+unterbrochenen Abruf als leeren Kandidatenbestand zu behandeln. Freigaben für
+agentische Diagnose, Reparatur und lokale Runner gelten weiterhin unverändert.
+
+Die Implementierung liegt in `GitHubCloudProvider` und dessen Optionen; die
+Protokollanbindung liegt in `apps/orchestrator/src/main.ts`, der operative
+Verbraucher in `AutomationService.processAgenticDeliveries`. Die benachbarte
+Provider-Spezifikation muss einen isolierten Repository-Fehler mit gesunden
+Läufen, einen leeren erfolgreichen Abruf, ausschließlich fehlgeschlagene Abrufe,
+die strenge ausgewählte Ansicht, globale Unterbrechungen und die bereinigte
+Bindungsdiagnose abdecken. Bestehende Konfigurationen, IPC-Schemas und gespeicherte
+Projektionen benötigen keine Migration.
+
+### Fehlerursachen vor dem ersten Job-Schritt
+
+Ein GitHub-Lauf kann fehlschlagen, bevor ein Runner einen Schritt ausführt. Der
+Job liefert dann keine Schritte und unter Umständen kein abrufbares
+Ausführungsprotokoll. Beim Lesen seiner Details bleibt ein vorhandenes
+Fehlerprotokoll vorrangig. Fehlt es, liest der GitHub-Adapter für höchstens fünf
+Jobs mit `conclusion: failure`, leerer Schrittliste und Check-Run-Verweis die erste
+Seite mit höchstens 100 Check-Run-Annotationen je Job. Nur nicht leere Meldungen
+mit `annotation_level: failure` zählen; Warnungen und Hinweise werden verworfen.
+Jobname, optionaler Annotationstitel und Meldung bilden je eine Zeile des
+bestehenden Felds `failureLog`. Die vorhandene Begrenzung auf 64.000 Zeichen und
+Zugangsdatenbereinigung gelten auch für diesen Ersatzinhalt. Der Actions-Bildschirm
+nutzt ihn über seinen vorhandenen Protokollauszug; der IPC-Vertrag erhält kein
+zusätzliches Feld.
+
+Scheitert der normale Abruf des Fehlerprotokolls, verwendet auch der bestehende
+streambare Protokollabruf mit `kind: failure` dieses Detailergebnis als Ersatz.
+Für `kind: output` bleibt ein gescheiterter Protokollabruf ein Fehler. Die
+bestehenden geordneten Chunks von höchstens 60.000 Zeichen und der auf zehn
+Fehlerprotokolle begrenzte Cache bleiben erhalten; es entsteht kein eigener
+Darstellungs- oder Speicherpfad für Annotationen.
+
+Der Adapter extrahiert aus dem Check-Run-Verweis nur die numerische Kennung und
+rekonstruiert die Anfrage unter dem bereits autorisierten Repository und Host.
+Er ruft keine vom Job gelieferte URL direkt auf. Die Annotationen verwenden den
+bestehenden Anfrageregler des GitHub-Kontos. Ein fehlgeschlagener Abruf verwirft
+die Job-Projektion nicht; bei einem Anfragelimit werden keine weiteren
+Annotationen gelesen. Ohne geeignete Meldung bleibt das Fehlerprotokoll wie zuvor
+nicht verfügbar. Dieser Leseweg startet keinen erneuten Workflow-Lauf und ändert
+keine Actions-Budgets, Berechtigungen oder Repository-Dateien.
+
+`GitHubCloudProvider.getRunDetails` und `getRunLogChunk` besitzen diesen Ersatzpfad. Seine benachbarte
+Spezifikation muss vorhandene Fehlerprotokolle, Jobs mit Schritten, die Grenzen
+von fünf Jobs und 100 Annotationen, das Verwerfen anderer Meldungsstufen,
+Zugangsdatenbereinigung, unbrauchbare Check-Verweise sowie fehlschlagende und
+limitierte Annotationen sowie den Fehlerprotokoll-Stream abdecken. Die Darstellung und die Auswahl der letzten
+zwölf nicht leeren Protokollzeilen bleiben in der vorhandenen Actions-Projektion.
 
 ## Migrationsverträge und offene Punkte
 

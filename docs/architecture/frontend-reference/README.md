@@ -2436,7 +2436,7 @@ AgentFigureComponent, as explicitly requested by the user. None of the new Views
 Mosaik parts. The existing typed task, process, Actions and settings commands are reused.
 
 Electron evidence and the final verification results are recorded in
-[production orbit architecture](../production-orbit.md).
+[production orbit architecture](../orbit/README.md).
 
 **Adapt — Memphis content bounds and explicit drill-downs.** The shared PageToolbar
 uses Tailwind's `empty:hidden` geometry to suppress a projected group with no actions.
@@ -2808,7 +2808,7 @@ offscreen pause, cleanup and a useful WebGL fallback remain renderer concerns.
 The obsolete `projectSpatialScene` and the retired 2D Orbit projection are
 removed; the later route consolidation retires the 2D workflow canvas. Product UI copy
 remains English in its owning templates. The current implementation and
-verification ownership are recorded in [production orbit](../production-orbit.md).
+verification ownership are recorded in [production orbit](../orbit/README.md).
 
 **Differ — Orbit without employees (2026-10-10).** The exact references re-audited
 are private upstream application's `libs/frontend/features/explorer/src/views/ExplorerView.html` and

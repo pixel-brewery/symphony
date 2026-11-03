@@ -9,6 +9,7 @@ export interface IGitHubWorkflowJobsResponse {
     readonly started_at?: string;
     readonly completed_at?: string | null;
     readonly html_url?: string;
+    readonly check_run_url?: string;
     readonly steps?: readonly {
       readonly number?: number;
       readonly name?: string;

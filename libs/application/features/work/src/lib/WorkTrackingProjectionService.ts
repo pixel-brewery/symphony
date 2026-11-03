@@ -40,6 +40,21 @@ export class WorkTrackingProjectionService {
   // #region Methods
 
   /**
+   * Reads known item identities for correlations without waiting for a provider refresh.
+   *
+   * @returns The selected scope's latest cached items, or an empty collection when unavailable.
+   * @public
+   */
+  public cachedWorkItems(): readonly IWorkItem[] {
+    const scope = this.scope().workTracking;
+    const projection =
+      this._workTrackingProjectionScope === scope
+        ? this._workTrackingProjection
+        : this.loadWorkTracking(scope);
+    return projection?.workItems ?? [];
+  }
+
+  /**
    * Loads the operational work items.
    *
    * @public

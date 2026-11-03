@@ -16,5 +16,5 @@ analysis role without an imported skill package or a deployment configuration.
 GitHub is the first evidence and deployment adapter. Publication, installation and deployment
 are distinct evidence kinds; ticket inclusion requires a recorded pull-request relationship
 and proven revision ancestry. Commands use the existing typed desktop boundary. Definition
-and job graphs are read at the actual run revision. See [production orbit architecture](../architecture/production-orbit.md)
+and job graphs are read at the actual run revision. See [production orbit architecture](../architecture/orbit/README.md)
 for workflow inputs, channel pointers, installation receipts and unknown-response handling.

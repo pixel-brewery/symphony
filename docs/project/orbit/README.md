@@ -29,6 +29,8 @@ Rechts liegen bei mehreren Repositories die Projektauswahl (**Project**) und dan
 - **Refresh evidence**: ruft die Auslieferungsnachweise neu ab; während eines Abrufs gesperrt.
 - **Delivery destinations in Settings**: öffnet die Einstellungen bei den Auslieferungszielen des gezeigten Projekts, ohne ein Ziel zu bearbeiten.
 
+Für den Auslieferungsstand ist keine vorherige Aktualisierung von Board oder Actions nötig. Bei einem langen Auslieferungsverlauf kann der Abruf bis zu zwei Minuten dauern. Erst das Ergebnis entscheidet, ob eine Version bestätigt ist; ein noch laufender Abruf ist kein Verbindungsfehler.
+
 ### Diagramm
 
 - **Mitte**: das Production-Ziel als Himmelskörper, standardmäßig die Sonne, beschriftet mit **Production**. Den Körper wählst du beim Production-Ziel in den Einstellungen. Unter der Beschriftung steht die bestätigte Version mit Datum (etwa `v2026.10.3 · confirmed Oct 30`), sonst `No confirmed version` oder `No destination configured`.
@@ -79,6 +81,8 @@ Der Inspektor eines Work Items zeigt Titel, Kennzeichen, Board-Spalte und `Work 
 - jede Bestätigung als `<Ziel> · <Version> · <Art>` oder **No delivery of this ticket is currently confirmed.** Eine Arbeitsstufe bedeutet nie eine Auslieferung; nur ein Nachweis eines Ziels zählt.
 - die Pull Requests seiner Ausführungen (öffnen GitHub) und die zugehörigen Workflow-Läufe (öffnen den Lauf in [Actions](../actions/README.md)).
 
+Die Zuordnung einer Auslieferung zu Work Items verwendet die bereits bekannten Work Items der gewählten Workspaces. Sind noch keine passenden Work Items geladen, kann Orbit die Version eines Ziels bestätigen, ohne ihr Work Items zuzuordnen. Aktualisiere in diesem Fall zuerst das Board und rufe danach die Nachweise erneut ab. Allein die bestätigte Version eines Ziels bestätigt keine Auslieferung eines Work Items.
+
 ## Ziele und Auslieferung
 
 Der Inspektor eines Ziels nennt Projekt, Art, `Destination: …` und gegebenenfalls den verknüpften Workflow. Er zeigt `Confirmed version: …` mit Revision und Zeitpunkt oder **No current delivery is confirmed.** Konnte der Stand nicht geprüft werden, steht dort `Last confirmed version: …` und der Hinweis **This delivery status could not be verified. Refresh the evidence before relying on it.** Darunter folgen die Nachweise des Ziels, das neueste zuerst, mit ihren Work Items und **View evidence**.
@@ -105,7 +109,8 @@ Ein gestarteter Lauf bestätigt keine Auslieferung; erst der Nachweis des Ziels 
 
 ## Sonder- und Fehlerfälle
 
-- **Nachweise nicht abrufbar:** Oben im Inspektor erscheint **Delivery evidence could not be refreshed. Check the GitHub account and retry.** Die eingerichteten Ziele bleiben sichtbar, ihr Stand gilt als nicht geprüft, und **Evidence collected** zeigt `—`. **Refresh evidence** versucht es erneut. Fehler einzelner Ziele erscheinen als eigene Hinweise.
+- **Nachweise nicht abrufbar:** Oben im Inspektor erscheint **Delivery evidence could not be refreshed. Check the GitHub account and retry.** Die eingerichteten Ziele bleiben sichtbar, ihr Stand gilt als nicht geprüft, und **Evidence collected** zeigt `—`. **Refresh evidence** versucht es erneut.
+- **Nachweise eines einzelnen Ziels nicht abrufbar:** Symphony zeigt den Fehler beim betroffenen Ziel; sein Stand gilt als nicht geprüft. Andere Ziele werden weiter geprüft und können eine bestätigte Version zeigen.
 - **Laufende Starts nicht abrufbar:** Symphony warnt **Delivery operations could not be refreshed. Retry before starting another deployment.**
 - **Projekt- oder Workspace-Wechsel:** Orbit verwirft die Auswahl und ruft die Nachweise des neuen Projekts ab; eine späte Antwort für das vorige Projekt ändert nichts mehr.
 - **Vorbereitung oder Start scheitert:** Symphony meldet **Unable to prepare delivery.** beziehungsweise **Delivery was not started.** mit dem Grund; **Reconcile** meldet bei einem Fehler **Unable to reconcile delivery.**

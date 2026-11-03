@@ -18,7 +18,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Bereichsbeitrag und Suchindex, Darstellung, Presenter, Entwurfsspeicher mit Speicherwarteschlange, das Leitermodell (Stufen, Abhängigkeiten, Ableitung), der Laufzeitvertrag der bearbeiteten Schlüssel mit Standardwerten und Validierung, die Rückfrage zum Aufräumen und die unmittelbaren Folgen eines Speicherns im Orchestrator.
-- Nicht enthalten: die Speichergrenzen (`managedStorageLimitGiB`, `minimumFreeDiskGiB`, Grenze von Local GitHub Actions), die dasselbe Feature im Bereich `system` beiträgt ([System](../system/README.md)); virtuelle Maschinen ([System](../system/README.md)); die Zustimmung je Repository `agenticDeliveryEnabled` an der CI-Anbindung ([Workspaces](../workspaces/README.md)); die Orchestrierungsschleifen selbst ([Agentic Delivery](../agentic-delivery.md), [Autonome Ausführung](../autonomous-execution.md), [Remote-Automatisierung](../remote-automation.md), [Managed Local CI](../managed-local-ci.md)).
+- Nicht enthalten: die Speichergrenzen (`managedStorageLimitGiB`, `minimumFreeDiskGiB`, Grenze von Local GitHub Actions), die dasselbe Feature im Bereich `system` beiträgt ([System](../system/README.md)); virtuelle Maschinen ([System](../system/README.md)); die Zustimmung je Repository `agenticDeliveryEnabled` an der CI-Anbindung ([Workspaces](../workspaces/README.md)); die Orchestrierungsschleifen selbst ([Agentic Delivery](../agentic-delivery.md), [Autonome Ausführung](../autonomous-execution.md), [Remote-Automatisierung](../remote-automation.md), [Managed Local CI](../actions/managed-local-ci.md)).
 
 ## Verantwortungsgrenzen
 
@@ -249,7 +249,7 @@ Der Bereich selbst ist unter `Automation` auffindbar. Statische Einträge (ohne 
 - [Agentic Delivery](../agentic-delivery.md)
 - [Autonome Ausführung](../autonomous-execution.md)
 - [Remote-Automatisierung](../remote-automation.md)
-- [Managed Local CI](../managed-local-ci.md)
+- [Managed Local CI](../actions/managed-local-ci.md)
 - [Pull-Request-Bildschirm](../pull-requests/README.md)
 - [Actions-Bildschirm](../actions/README.md)
 - [System](../system/README.md)

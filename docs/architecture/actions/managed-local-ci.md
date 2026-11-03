@@ -1,10 +1,42 @@
 # Managed local CI
 
+**Dokumentstatus:** Implementierter Ist-Stand
+
 Symphony can execute a queued GitHub Actions workflow on the operator's Mac without consuming GitHub-hosted runner minutes. GitHub remains the workflow scheduler and check reporter; Symphony supplies one repository-scoped self-hosted runner inside a disposable Linux VM.
 
 ## Ownership
 
 Symphony owns the runtime. Local GitHub Actions are a Workspace decision: the operator enables them per Workspace under Settings → the Workspace → **Local GitHub Actions**, together with the guest image that Workspace reproduces and the setup script each of its repositories runs. These apply as soon as they change (a setup script when its editor loses focus); a failed save reports `Unable to save settings.` and shows the stored value again. The same switch enables explicit **Run locally** actions and authorizes a running Symphony instance to pick up queued GitHub jobs whose current attempt requests all managed-local labels. Symphony checks for the oldest eligible job at startup and every 30 seconds while its single local-run slot is free; ordinary GitHub-hosted jobs are never claimed. The machine those runs boot is host-owned and configured once under Settings → System → **Virtual machines**, where one bounded resource preset is chosen. On the first local run Symphony downloads the pinned Lima release for the host architecture, verifies its SHA-256 digest, and stores it under `<managed-workspace-root>/local-ci`. Every execution creates a fresh Apple Virtualization VM from a pinned Ubuntu 24.04 cloud image, installs the pinned workflow-scoped GitHub Actions runner, registers it for one repository and one workflow-run label, supervises it until every job in the workflow is terminal, removes its GitHub registration, and deletes the VM. The Ubuntu image, Lima version, runner version, resource policy, and checksums are release-owned Symphony configuration. They do not belong in a target repository.
+
+### Workspace authorization and automatic takeover
+
+The visible workspace selection is a manual-command boundary, not the lifetime
+of a saved local-CI approval. Explicit local starts use the selected scope by
+default. They may resolve only runs whose enabled GitHub Actions binding belongs
+to a currently selected workspace. Background takeover uses a separate internal
+operational scope: both candidate discovery and the eventual start require an
+enabled workspace with `localCiEnabled: true`, regardless of the current view.
+Changing the selected workspace must not strand an already approved queued run.
+
+Both scopes require an enabled repository, an enabled `github-actions` CI binding,
+and its GitHub connection to belong to that same workspace. The run identifier
+must carry that binding's prefix and an exact numeric provider-run suffix. A
+disabled workspace or one without local-CI approval is not eligible for an
+operational start. These checks precede runner registration and VM provisioning;
+invalid ownership or scope must cause no token request or runner start. The
+operational flag is supplied only by the background takeover composition, never
+accepted as an extra renderer IPC input. The application still applies its shared
+single-run slot, storage admission, abort supervision and normal run/job checks.
+
+A handled GitHub run and attempt remains handled even when local setup failed.
+Fixing settings or restarting the application does not erase that audit evidence
+or automatically replay the same attempt. The operator can select the owning
+workspace and explicitly request **Rerun locally** after correcting the cause;
+this creates a new local execution through the existing manual path. Enabling
+local CI does not rewrite a workflow's `runs-on` declaration, grant runner
+permissions, or convert a hosted-runner budget failure into a local run.
+
+### Runtime resources
 
 The three fixed profiles are policy ceilings, not fictional machine capacities: **Compact** is capped at 4 CPUs, 8 GiB memory, a 12 GiB virtual disk, and a 4 GiB action cache; **Balanced** at 6 CPUs, 12 GiB memory, a 20 GiB disk, and an 8 GiB cache; **Performance** at 8 CPUs, 16 GiB memory, a 30 GiB disk, and a 12 GiB cache. **Custom** exposes independent Mosaik sliders for all four values. Selecting it for the first time copies the currently selected fixed profile, so an operator can increase only the resource that constrains a workflow while preserving the other three values.
 
@@ -14,9 +46,23 @@ Memory-constrained Custom configurations keep their selected RAM ceiling. When m
 
 Every Lima-owned path is rooted below `<managed-workspace-root>/local-ci`: `lima` owns instances, `home` replaces the operator HOME, `cache/lima-downloads` is the XDG cache for tools that honor it, and `tmp` replaces the host temporary directory. On macOS, Go's user-cache resolution intentionally ignores XDG and derives Lima's image-download cache as `<managed-workspace-root>/local-ci/home/Library/Caches/lima`; changing HOME is therefore the decisive containment control. A short verified `/tmp/symphony-lima-<digest>` symlink exists only to keep Lima's Unix socket path below the macOS limit; it points back to the managed `lima` directory and owns no storage. Symphony never relies on `~/Library/Caches/lima` or another ambient Lima lifecycle.
 
-Settings › System › **Storage** exposes the physical allocated size of Local GitHub Actions and a separate hard limit, defaulting to 32 GiB; the **Virtual machines** card in the same section owns only the runner resources and machine list ([System settings](system/README.md)). The orchestrator checks that limit and the configured minimum free Mac reserve before startup and every second while a runner is active. Reaching either boundary aborts the runner and destroys its VM. Physical block allocation is used rather than a sparse disk image's advertised virtual capacity.
+Settings › System › **Storage** exposes the physical allocated size of Local GitHub Actions and a separate hard limit, defaulting to 32 GiB; the **Virtual machines** card in the same section owns only the runner resources and machine list ([System settings](../system/README.md)). The orchestrator checks that limit and the configured minimum free Mac reserve before startup and every second while a runner is active. Reaching either boundary aborts the runner and destroys its VM. Physical block allocation is used rather than a sparse disk image's advertised virtual capacity.
 
 Storage admission protects delivery before backlog analysis. Starting analysis or implementation must leave the selected VM disk, Actions cache, two-GiB runner overhead, and an eight-GiB implementation-worktree reserve available under the filesystem, application, workspace, and Local GitHub Actions limits. A local run reserves its remaining selected VM and cache growth instead of the former fixed 512-MiB write allowance. The live filesystem-availability check and complete bounded workload reservation remain synchronous; they do not wait for a recursive allocation inventory. Large managed trees are categorized cooperatively in the background, and the last completed physical-block inventory is atomically cached for immediate reuse after restart. On a first launch, configured quota capacity and the live free-space reserve gate admission while that detail pass finishes. The five-second storage watchdog first releases inactive failed or cancelled analysis worktrees, whose durable summaries remain persisted; it never selects implementation or revision worktrees that may contain recoverable source changes. If the reserve still shrinks while analysis is active, only those analysis executions are cancelled. The existing critical-pressure stop remains the final boundary for every writer, including an active build.
+
+## Storage refusal and retry
+
+Before claiming or preparing a local run, the orchestrator applies the same governor-owned storage decision exposed by `storage.status.get.localCiAdmission`. The exact permitted/blocked/unknown union, remaining-growth budget, reserve-first failure priority and pending-inventory semantics are defined in [System storage admission](../system/README.md#lokale-ci-speicherfreigabe). The projection is read-only and preserves the configured reserve, including a saved value such as 200 GiB. It never lowers that value to make a run start.
+
+A storage refusal occurs before a local execution ID, active runner, setup diagnostics or terminal execution record is created. It neither claims a runner nor consumes the GitHub run attempt, and it does not turn a queued GitHub check into a local failure or success. Automatic takeover can therefore select that same still-eligible queued attempt again on its next 30-second reconciliation after space becomes available and the local slot is free. This differs from a terminal setup failure after admission, whose recorded execution prevents repeated handling of the same attempt. The existing [notification centre](../notifications-and-tray/README.md) owns the actionable explanation and the route to storage settings.
+
+## CI polling failure isolation
+
+Operational polling and automatic managed-run discovery isolate ordinary read failures per enabled CI binding. Each read obtains the latest 50 provider runs and their job projection. Fresh results from healthy bindings remain eligible for observation and oldest-first local takeover; failed bindings contribute no cached candidates. An empty successful read counts as success. A binding without a matching repository or GitHub connection causes no provider read and does not count as a successful read. If every attempted read fails, polling rejects with the first original failure in binding order instead of reporting a successful empty result. No applicable bindings is a legitimate empty result. Each subsequent poll reads the current configuration, so correcting a repository binding restores it without recreating the provider.
+
+Rate-limit, projection-scope-change and cancellation failures interrupt the whole read even when another binding succeeds. Classification follows nested error causes with cycle protection; the same rule applies while reconciling queued jobs. Ordinary binding diagnostics contain only workspace, CI-binding and repository-binding identifiers plus a new generic failure message with an optional HTTP status. Raw CLI output and its cause chain are not passed to the structured logger. The exact internal error classifications and observation contract are defined in [Actions background polling](README.md#hintergrundabfrage-mehrerer-ci-anbindungen). Existing account request governance remains authoritative; already-started reads settle through the existing transport, without a new cancellation or retry mechanism.
+
+Selected-view CI refreshes remain strict: any failed selected binding rejects the complete read, allowing the existing projection owner to retain matching cached evidence and mark it stale or unavailable. Partial operational results never replace that display projection or mark it current.
 
 ## Guest image configuration
 
@@ -93,6 +139,30 @@ tar -xzf "$archive" actionlint
 ```
 
 The GitHub credential connected to Symphony must be allowed to create and remove repository self-hosted runners in addition to reading and rerunning Actions workflows. Branch protection requires no exception and should not be weakened.
+
+## Implementation and acceptance
+
+| Responsibility                                                                          | Current owner                                                                |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Oldest eligible attempt, single-slot admission and handled-attempt suppression          | `apps/orchestrator/src/local-ci-takeover/LocalCiTakeoverService.ts`          |
+| Explicit operational scope for automatic starts                                         | `apps/orchestrator/src/main.ts`                                              |
+| Shared start, persistence, storage and abort lifecycle                                  | `apps/orchestrator/src/features/ci/createManagedLocalCiRequests.ts`          |
+| Provider-neutral optional `selected` or `operational` execution scope                   | `libs/application/features/ci/src/lib/ports/IContinuousIntegrationPort.ts`   |
+| Candidate filtering, matching repository/account ownership, scope and job authorization | `libs/providers/github/src/lib/github-cloud-provider/GitHubCloudProvider.ts` |
+
+The adjacent provider, request and takeover specifications must prove that an
+approved non-selected workspace can be taken over automatically while a manual
+start outside the selected scope is refused. Disabled workspaces, missing
+local-CI approval, disabled bindings and mismatched repository or account ownership
+must remain refused before registration. A historical failed setup for the same
+run and attempt must remain suppressed by the automatic loop. Existing runner
+labels, terminal cleanup and explicit retry semantics remain unchanged.
+
+The optional internal scope parameter defaults to `selected`, so existing manual
+callers retain their contract. This change requires no configuration or database
+migration and must preserve recorded local executions. Rolling it back restores
+the former view-dependent takeover limitation; it does not undo a provider run or
+delete its audit evidence.
 
 ## Current constraints
 

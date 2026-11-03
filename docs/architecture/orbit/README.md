@@ -1,14 +1,16 @@
-# Production orbit and employees
+# Production orbit
+
+**Dokumentstatus:** Implementierter Ist-Stand
 
 Symphony's initial route is Overview (`/main/home`). Overview and Orbit have
 separate sidebar entries: Overview leads the sidebar, Orbit closes its `Delivery`
 group after Inbox, Board, Pull requests and Actions
-([window chrome and navigation](window-and-navigation/README.md)). The product
-behaviour of the Orbit screen is described in [Orbit](../project/orbit/README.md).
+([window chrome and navigation](../window-and-navigation/README.md)). The product
+behaviour of the Orbit screen is described in [Orbit](../../project/orbit/README.md).
 Settings is a route of the main window whose navigation replaces the sidebar destinations
 while it is open; project setup has no sidebar entry, and `/main/setup` opens the
 `Build your project team` sheet in Settings
-([Settings in the main window](window-and-navigation/settings.md#einrichtung-als-sheet)). Dedicated Stages and
+([Settings in the main window](../window-and-navigation/settings.md#einrichtung-als-sheet)). Dedicated Stages and
 Employees views are retired: `/main/stages` redirects to Board and `/main/team`
 redirects to `/main/settings`. Orbit has
 no duplicate route toolbar, setup control or lower ticket catalogue. The former
@@ -367,18 +369,124 @@ remains confined to Orbit and is not added to the Mobile entry point.
 
 ## Delivery evidence and GitHub workflows
 
-The first delivery adapter reads GitHub Deployments/statuses, releases and
+The delivery adapter reads GitHub Deployments/statuses, releases and
 configured channel pointers. Environment deployment, release publication and
 installation are different evidence kinds. An installation requires a successful
 deployment receipt with `payload.symphony.kind: installation`; publishing a
 release alone is insufficient.
 
+### Refresh scope, ordering and limits
+
+`delivery.refresh` is a read-only request. Its repository and account scope comes
+from enabled GitHub repository bindings in the saved, selected workspace scope,
+not from an unchecked repository identifier supplied by the renderer. The result
+contains configured and discovered targets, evidence, a refresh timestamp and
+errors correlated to a target or repository. The validated response accepts at
+most 100 targets and 10,000 evidence entries. Refreshing evidence neither starts
+a workflow nor changes a deployment, release, installation or authentication grant.
+
+The delivery handler obtains only the two local inputs required for correlation:
+known work-item identities in the current work-tracking scope and the current
+execution records. It then calls the delivery provider directly. It does not
+assemble or await the complete orchestration snapshot, refresh work-tracking,
+pull-request or CI projections, probe health, or reconcile delivery-group
+projections before reading evidence. A slow or in-flight update of those
+independent projections is not a prerequisite of this request.
+
+The canonical work-tracking owner provides this synchronous cached read. It uses
+its in-memory projection only when its scope key matches the current scope;
+otherwise it reads the existing persisted projection for that exact scope. A
+missing or unreadable persisted entry yields an empty item collection. This path
+neither starts a provider refresh nor waits for one already running. It may use
+stale cached items as candidate identities for delivery correlation, but they do
+not authorize execution, change work readiness, assert a fresh Board state, or
+prove delivery. The same work-tracking instance serves the normal orchestration
+projection and this narrow read; there is no second delivery-owned item cache.
+With no matching cached items, environment and release evidence still loads,
+while its work-item links remain empty until the Board is refreshed and evidence
+is read again.
+
+For each repository, deployment-history pages are read sequentially, 100 records
+per page, up to ten pages. A full tenth page produces a repository-scoped
+history-limit warning; the scan does not silently extend beyond 1,000 records.
+Previously unconfigured environments are discovered from those records, while
+only configured destinations become Orbit bodies. Installation destinations
+reject records without the explicit installation payload before reading status.
+
+Current deployment-status reads run in batches of at most four. Each batch settles
+before its results are reduced in the original provider-history order, regardless
+of the HTTP completion order. The existing account request governor also limits
+actual network concurrency to four across overlapping refreshes and other calls
+that share that governor. Replacing the transport must preserve this shared limit
+and provider-reported rate-limit blocking; a separate ungoverned request pool is
+not equivalent.
+
+Per environment, successfully read status responses count toward the recent
+history window, including responses whose deployment state is failed, pending or
+inactive. The scan retains receipts until it has read at least twenty and found
+an active `success`. Once both conditions hold, older receipts are skipped. If no
+active success occurs in the newest twenty, it retains the additional older
+receipts through that success or the repository's 1,000-record bound; twenty
+failed, pending or inactive receipts cannot hide an older active success.
+Already-started reads in a batch may finish after this window becomes complete,
+but reduction still applies the retention rule. Missing status entries become
+`pending`; `success`, `inactive`, `in_progress`, and `failure` or `error` map to
+`succeeded`, `inactive`, `in-progress`, and `failed`, respectively.
+
+Electron gives `delivery.refresh` a finite 120,000-millisecond response budget.
+Other ordinary requests keep 35,000 milliseconds; the separate existing
+long-running workflow requests keep their own lifecycle. This budget permits a
+bounded history scan without treating every response after 35 seconds as a
+connection failure. It is not a promise that a slow or unavailable provider will
+finish. The renderer rejects late responses after scope changes or disposal.
+This read path adds no transport-cancellation or automatic retry contract;
+already-started batch requests settle through the existing transport lifecycle.
+
+### Partial failures and recovery
+
+A deployment-status read failure marks its environment unreadable for this
+refresh, records an error against that destination, and skips its remaining older
+receipts. Other environments and configured release channels continue. Evidence
+already collected before the failure remains in the returned snapshot; an error
+keeps the affected target unverified rather than asserting that those partial
+receipts prove its current version. A failure while listing deployments or reading
+repository-level release data remains repository-scoped and preserves evidence
+already collected for that repository. Other repositories continue normally.
+
+The provider error asks the operator to check the GitHub account and repository
+permissions, then refresh. It does not claim a specific authentication cause from
+the absence of a response. Configured targets remain available for correction,
+and **Refresh evidence** performs another read without dispatching deployment
+commands. A failed HTTP read is never replaced by a guessed successful status.
+
 Ticket inclusion requires a recorded ticket-to-PR relationship and the PR's
 actual head or merged revision. Exact SHA equality or GitHub's ancestor comparison
 proves inclusion. Branch names, ticket text and timestamps do not prove delivery.
+Before reading a recorded pull request, the adapter intersects that execution's
+work-item identifiers with the cached identities in the current scope. It skips
+relationships with no remaining identifiers, so obsolete execution history cannot
+trigger pull-request and ancestry reads that could never produce an item link.
+For the retained relationships, GitHub still supplies the actual pull-request
+head or merge revision and the ancestor comparison. Those comparison reads also
+run in governed batches of at most four, preserve relationship order and reuse
+the existing repository/commit/revision-keyed ancestry cache. A comparison failure
+does not prove inclusion. Filtering candidate identities therefore avoids
+unnecessary reads without substituting cached Board data for provider evidence.
 The latest successful evidence remains current after a failed attempt; explicit
 inactive evidence retires it. Older versions delivered again are new receipts.
 Reads are bounded and report unavailable provider evidence.
+
+The current implementation map is:
+
+| Responsibility                                                                  | Current owner                                                                    |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Narrow evidence-refresh composition and current execution inputs                | `apps/orchestrator/src/features/delivery/provideDeliveryOrchestratorFeature.ts`  |
+| Scope-isolated cached candidate work items                                      | `libs/application/features/work/src/lib/WorkTrackingProjectionService.ts`        |
+| Deployment history, status batches, environment failures and evidence reduction | `libs/providers/github/src/lib/github-cloud-provider/GitHubDeliveryAdapter.ts`   |
+| Shared account concurrency and rate-limit admission                             | `libs/providers/github/src/lib/github-request-governor/GitHubRequestGovernor.ts` |
+| Finite desktop response budget                                                  | `apps/desktop/src/orchestratorRequestTimeoutMilliseconds.ts`                     |
+| Validated snapshot shape                                                        | `libs/ipc-contracts/features/delivery/src/lib/DeliverySnapshotSchema.ts`         |
+| Scope invalidation and observable refresh states                                | `libs/frontend/features/home/src/lib/view-presenters/OrbitViewPresenter.ts`      |
 
 For release channels, `.symphony/release-channels.json` at the repository's default
 revision explicitly maps channel names to published tags:
@@ -459,12 +567,35 @@ employee identities remain available in workspace settings, retired routes redir
 scheme changes preserve the scene and camera. A running analysis remains active
 when switching from its Board process drawer to Orbit without employee figures.
 
+Evidence-reader regressions must cover a large multi-environment history with
+four concurrent status reads, deterministic evidence order under out-of-order
+completion, an active success older than twenty unsuccessful receipts, and one
+unreadable environment while another environment and release channel still load.
+The desktop deadline regression must distinguish the two-minute evidence read
+from ordinary requests and the existing long-running workflow operations. These
+contracts are owned by the adjacent `GitHubDeliveryAdapter.spec.ts`,
+`GitHubRequestGovernor.spec.ts`, and
+`orchestratorRequestTimeoutMilliseconds.spec.ts` specifications. No persisted
+configuration or evidence-schema migration is required by this read-scheduling
+change; target identities and historical receipts retain their existing meanings.
+
+The focused-input regression contract also requires a delivery refresh to reach
+the provider without awaiting work tracking, pull-request, CI or health refreshes.
+Cached candidate reads must isolate workspace and source scopes, accept a stale
+same-scope cache only as identity context, return no identities after an unreadable
+or missing cache, and remain synchronous during an in-flight provider refresh.
+An execution whose item identifiers are absent from that context must cause no
+pull-request or ancestry request and no fabricated links. These boundaries are
+covered at the adjacent work-tracking, delivery-handler and delivery-adapter
+specifications; they do not change execution admission or the public snapshot
+response schema.
+
 Electron journeys use deterministic provider/CLI fixtures. They verify the
 packaged process boundary and UI behavior, not a live external production deploy
 or a real-account five-minute onboarding benchmark. The required handoff gates
 are `yarn agents:check`, `yarn verify`, `yarn e2e` and `yarn forge:package`.
 Intentional reference differences are recorded in
-[the private upstream application reference contract](frontend-reference/README.md).
+[the private upstream application reference contract](../frontend-reference/README.md).
 
 The original-project integration passed those four gates on 2026-10-09. That full
 Electron suite reported 38 passed and two existing skips: native activation in
@@ -488,10 +619,10 @@ No external production deployment or comparative frame-rate result is implied.
 
 For a current repeatable acceptance run, install the locked dependencies, run
 `yarn build`, then `yarn e2e` and `yarn forge:package`. The tracked
-[Orbit redesign journey](../../apps/renderer-e2e/src/orbit-redesign.spec.ts) and
-[appearance journey](../../apps/renderer-e2e/src/orbit-appearance.spec.ts) define
+[Orbit redesign journey](../../../apps/renderer-e2e/src/orbit-redesign.spec.ts) and
+[appearance journey](../../../apps/renderer-e2e/src/orbit-appearance.spec.ts) define
 the actual deterministic scene, interactions and screenshot outputs; the
-[Playwright configuration](../../apps/renderer-e2e/playwright.config.ts) owns the
+[Playwright configuration](../../../apps/renderer-e2e/playwright.config.ts) owns the
 isolated runtime fixtures. Review the newly generated captures and the current
 packaged application using the stated viewport/zoom criteria, with test-owned
 configuration. Keep optional reports local unless separately reviewed for

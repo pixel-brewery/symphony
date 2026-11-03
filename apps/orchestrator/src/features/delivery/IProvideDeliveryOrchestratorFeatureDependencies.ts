@@ -7,7 +7,7 @@ import {
   type SimulatedPullRequestAuthoring,
 } from '@symphony/providers-simulated';
 import { type DeliveryService } from '@symphony/application-delivery';
-import { type OrchestrationSnapshotService } from '../../snapshot/OrchestrationSnapshotService';
+import { type WorkTrackingProjectionService } from '@symphony/application-work';
 // #endregion
 
 /**
@@ -17,7 +17,7 @@ import { type OrchestrationSnapshotService } from '../../snapshot/OrchestrationS
  */
 export interface IProvideDeliveryOrchestratorFeatureDependencies {
   readonly settingsState: Readonly<Pick<OrchestratorSettingsState, 'current'>>;
-  readonly service: Pick<AnalyzerService, 'publishPullRequest'>;
+  readonly service: Pick<AnalyzerService, 'publishPullRequest' | 'executionState'>;
   readonly github: Pick<
     GitHubCloudProvider,
     | 'listBranches'
@@ -29,7 +29,7 @@ export interface IProvideDeliveryOrchestratorFeatureDependencies {
   readonly simulatedPullRequestDelivery:
     Pick<SimulatedPullRequestDelivery, 'updateListedPullRequestBranch'> | undefined;
   readonly deliveryService: Pick<DeliveryService, 'preview' | 'start' | 'list' | 'reconcile'>;
-  readonly snapshotService: Pick<OrchestrationSnapshotService, 'snapshot'>;
+  readonly workTrackingProjection: Pick<WorkTrackingProjectionService, 'cachedWorkItems'>;
   readonly simulatedPullRequestBranches: SimulatedPullRequestAuthoring['listBranches'];
   readonly simulatedPullRequestComparison: SimulatedPullRequestAuthoring['compareBranches'];
   readonly simulatedPullRequestCreation: SimulatedPullRequestAuthoring['createPullRequest'];

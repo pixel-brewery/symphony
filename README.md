@@ -108,7 +108,7 @@ release configuration for a later support expansion.
 - **Delivery.** GitHub deployment evidence, explicit release channels and installation
   receipts remain distinct. Revision-bound workflow graphs, declared dispatch inputs and
   environment reviews use typed operations and durable submission journals. See
-  [production orbit](docs/architecture/production-orbit.md) for setup and workflow requirements.
+  [production orbit](docs/architecture/orbit/README.md) for setup and workflow requirements.
   Pull requests, GitHub Actions runs, and check results are tracked next to
   the work item that produced them, with local verification and a managed local CI option.
 - **Autonomy, off by default.** When deliberately enabled, the supervised background

@@ -16,7 +16,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Werkzeugleistenbeitrag, Segmente, Tabelle, Inspektor, Kontextmenü, Filtermenü, Sheet zum Anlegen, Adressparameter, Fehler- und Leerzustände.
-- Nicht enthalten: das Laden und Überlagern der Pull-Request-Projektion im Orchestrator, die Agentic-Delivery-Schleife ([Agentic Delivery](../agentic-delivery.md)), lokale CI ([Managed Local CI](../managed-local-ci.md)) und der Fensterrahmen ([Fensterrahmen und Navigation](../window-and-navigation/README.md)).
+- Nicht enthalten: das Laden und Überlagern der Pull-Request-Projektion im Orchestrator, die Agentic-Delivery-Schleife ([Agentic Delivery](../agentic-delivery.md)), lokale CI ([Managed Local CI](../actions/managed-local-ci.md)) und der Fensterrahmen ([Fensterrahmen und Navigation](../window-and-navigation/README.md)).
 
 ## Verantwortungsgrenzen
 

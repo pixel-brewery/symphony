@@ -3,12 +3,17 @@
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  RemoteProjectionScopeChangedError,
+  RemoteProviderRateLimitError,
+} from '@symphony/application-core';
 import { createDefaultApplicationSettings } from '@symphony/configuration-composition';
 import type { IApplicationSettings } from '@symphony/configuration-composition';
 import type { IExecutionRecord } from '@symphony/domain-execution';
 import type { IWorkItem } from '@symphony/domain-work';
 import { GitHubCloudProvider } from './GitHubCloudProvider';
+import type { IGitHubCloudProviderOptions } from './IGitHubCloudProviderOptions';
 import { GitHubRateLimitError } from '../github-request-governor/GitHubRateLimitError';
 
 // #endregion
@@ -1132,6 +1137,174 @@ describe('GitHubCloudProvider workflow catalog', () => {
   });
 });
 
+describe('GitHubCloudProvider operational Actions reads', () => {
+  it.each([false, true])(
+    'retains healthy operational reads when their run list is empty: %s',
+    async (empty) => {
+      // arrange
+      const settings = operationalReadSettings();
+      const reportReadFailure =
+        vi.fn<NonNullable<IGitHubCloudProviderOptions['reportReadFailure']>>();
+      const requests: string[] = [];
+      const provider = new GitHubCloudProvider({
+        settings: () => settings,
+        token: async () => 'test-token',
+        reportReadFailure,
+        execute: async (_command, arguments_) => {
+          const path = arguments_.at(-1) ?? '';
+          requests.push(path);
+          if (path.startsWith('repos/unavailable/project/')) {
+            throw new Error(
+              'gh: Not Found (HTTP 404) ghp_12345678901234567890 /tmp/private-cli-output',
+            );
+          }
+          return JSON.stringify({
+            workflow_runs: empty
+              ? []
+              : [{ id: 203, name: 'PR Quality', status: 'completed', conclusion: 'success' }],
+          });
+        },
+      });
+
+      // act
+      const runs = await provider.listRuns('operational');
+
+      // assert
+      expect(runs).toEqual(
+        empty ? [] : [expect.objectContaining({ id: 'ci-1:203', workspaceId: 'personal' })],
+      );
+      expect(requests).toHaveLength(2);
+      expect(reportReadFailure).toHaveBeenCalledExactlyOnceWith(
+        {
+          workspaceId: 'unavailable',
+          ciBindingId: 'ci-unavailable',
+          repositoryBindingId: 'repository-unavailable',
+        },
+        expect.any(Error),
+      );
+      const diagnostic = reportReadFailure.mock.calls[0]?.[1];
+      expect(diagnostic?.message).toBe('GitHub Actions run listing failed (HTTP 404).');
+      expect(diagnostic?.cause).toBeUndefined();
+    },
+  );
+
+  it('keeps selected run listing strict for an inaccessible selected repository', async () => {
+    // arrange
+    const defaults = operationalReadSettings();
+    const settings = {
+      ...defaults,
+      activeViewScope: { ...defaults.activeViewScope, workspaceIds: ['unavailable'] },
+    };
+    const reportReadFailure = vi.fn();
+    const requests: string[] = [];
+    const provider = new GitHubCloudProvider({
+      settings: () => settings,
+      token: async () => 'test-token',
+      reportReadFailure,
+      execute: async (_command, arguments_) => {
+        requests.push(arguments_.at(-1) ?? '');
+        throw new Error('gh: Not Found (HTTP 404)');
+      },
+    });
+
+    // act
+    const operation = provider.listRuns();
+
+    // assert
+    await expect(operation).rejects.toThrow('Not Found (HTTP 404)');
+    expect(requests).toEqual(['repos/unavailable/project/actions/runs?per_page=50']);
+    expect(reportReadFailure).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])(
+    'rejects an all-failed operational scan with an unresolved binding: %s',
+    async (unresolved) => {
+      // arrange
+      const defaults = deliverySettings('/tmp/symphony-operational-failure');
+      const settings = {
+        ...defaults,
+        ciBindings: [
+          ...defaults.ciBindings,
+          ...(unresolved
+            ? [{ ...defaults.ciBindings[0]!, id: 'unresolved', repositoryBindingId: 'missing' }]
+            : []),
+        ],
+      };
+      const reportReadFailure = vi.fn();
+      const provider = new GitHubCloudProvider({
+        settings: () => settings,
+        token: async () => 'test-token',
+        reportReadFailure,
+        execute: async () => {
+          throw new Error('gh: Not Found (HTTP 404)');
+        },
+      });
+
+      // act
+      const operation = provider.listRuns('operational');
+
+      // assert
+      await expect(operation).rejects.toThrow('Not Found (HTTP 404)');
+      expect(reportReadFailure).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('returns an empty operational list without requesting a source when none are bound', async () => {
+    // arrange
+    const defaults = deliverySettings('/tmp/symphony-operational-no-bindings');
+    const execute = vi.fn();
+    const provider = new GitHubCloudProvider({
+      settings: () => ({ ...defaults, ciBindings: [] }),
+      execute,
+    });
+
+    // act
+    const runs = await provider.listRuns('operational');
+
+    // assert
+    expect(runs).toEqual([]);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it.each(['github-rate-limit', 'provider-rate-limit', 'scope-change', 'abort', 'abort-code'])(
+    'propagates %s interruptions despite a healthy operational source',
+    async (interruption) => {
+      // arrange
+      const cause =
+        interruption === 'github-rate-limit'
+          ? new GitHubRateLimitError('Request budget exhausted.', '2026-10-31T14:00:00Z')
+          : interruption === 'provider-rate-limit'
+            ? new RemoteProviderRateLimitError('Request budget exhausted.')
+            : interruption === 'scope-change'
+              ? new RemoteProjectionScopeChangedError('Projection scope changed.')
+              : interruption === 'abort'
+                ? new DOMException('Request aborted.', 'AbortError')
+                : Object.assign(new Error('Request aborted.'), { code: 'ABORT_ERR' });
+      const reportReadFailure = vi.fn();
+      const provider = new GitHubCloudProvider({
+        settings: operationalReadSettings,
+        token: async () => 'test-token',
+        reportReadFailure,
+        execute: async (_command, arguments_) => {
+          if (arguments_.at(-1)?.startsWith('repos/unavailable/project/')) throw cause;
+          return JSON.stringify({ workflow_runs: [] });
+        },
+      });
+
+      // act
+      const failure = await provider.listRuns('operational').then(
+        () => undefined,
+        (error: unknown) => error,
+      );
+
+      // assert
+      expect(failure).toBeInstanceOf(Error);
+      expect(failure === cause || (failure instanceof Error && failure.cause === cause)).toBe(true);
+      expect(reportReadFailure).not.toHaveBeenCalled();
+    },
+  );
+});
+
 describe('GitHubCloudProvider request budget', () => {
   it('uses REST response headers to block polling until the provider reset time', async () => {
     // arrange
@@ -1610,6 +1783,116 @@ describe('GitHubCloudProvider Action details', () => {
     });
   });
 
+  it('explains jobs rejected before startup through failed check annotations when no logs exist', async () => {
+    // arrange
+    const settings = deliverySettings('/tmp/symphony-action-startup-annotation');
+    const requests: string[] = [];
+    const provider = new GitHubCloudProvider({
+      settings: () => settings,
+      token: async () => 'test-token',
+      execute: async (_command, arguments_) => {
+        const path = arguments_.at(-1) ?? '';
+        requests.push(path);
+        if (path.endsWith('/actions/runs/203/jobs?filter=all&per_page=100')) {
+          return JSON.stringify({
+            jobs: [
+              {
+                id: 44,
+                name: 'check',
+                status: 'completed',
+                conclusion: 'failure',
+                check_run_url: 'https://api.github.com/repos/example/platform/check-runs/88',
+                steps: [],
+              },
+            ],
+          });
+        }
+        if (path.endsWith('/actions/runs/203'))
+          return JSON.stringify({ id: 203, status: 'completed', conclusion: 'failure' });
+        if (path.endsWith('/pending_deployments')) return '[]';
+        if (path.endsWith('/check-runs/88/annotations?per_page=100')) {
+          return JSON.stringify([
+            {
+              annotation_level: 'failure',
+              title: '',
+              message:
+                'The job was not started because an Actions budget is preventing further use.\nAuthorization: Bearer ghp_12345678901234567890',
+            },
+            {
+              annotation_level: 'notice',
+              message: 'The runner image will migrate to a new Ubuntu release.',
+            },
+          ]);
+        }
+        throw new Error('gh: logs not found (HTTP 404)');
+      },
+    });
+
+    // act
+    const details = await provider.getRunDetails('ci-1:203');
+    const chunk = await provider.getRunLogChunk('ci-1:203', 'failure', 0);
+
+    // assert
+    expect(details).toMatchObject({
+      jobs: [{ id: 'ci-1:203:job:44', name: 'check', status: 'failed', steps: [] }],
+      failureLog:
+        'check: The job was not started because an Actions budget is preventing further use.\nAuthorization: Bearer [redacted]',
+    });
+    expect(details.failureLog).not.toContain('Ubuntu');
+    expect(chunk).toMatchObject({ content: details.failureLog, complete: true });
+    expect(requests).toContain('repos/example/platform/check-runs/88/annotations?per_page=100');
+  });
+
+  it('bounds startup annotations and preserves job details when one check cannot be read', async () => {
+    // arrange
+    const settings = deliverySettings('/tmp/symphony-action-startup-annotation-bounds');
+    const annotationRequests: string[] = [];
+    const provider = new GitHubCloudProvider({
+      settings: () => settings,
+      token: async () => 'test-token',
+      execute: async (_command, arguments_) => {
+        const path = arguments_.at(-1) ?? '';
+        if (path.endsWith('/actions/runs/203/jobs?filter=all&per_page=100')) {
+          return JSON.stringify({
+            jobs: Array.from({ length: 8 }, (_value, index) => ({
+              id: index + 1,
+              name: `Check ${index + 1}`,
+              status: 'completed',
+              conclusion: 'failure',
+              check_run_url: `https://api.github.com/repos/example/platform/check-runs/${index + 1}`,
+              steps: [],
+            })),
+          });
+        }
+        if (path.endsWith('/actions/runs/203'))
+          return JSON.stringify({ id: 203, status: 'completed', conclusion: 'failure' });
+        if (path.endsWith('/pending_deployments')) return '[]';
+        if (path.includes('/annotations?')) {
+          annotationRequests.push(path);
+          if (path.includes('/check-runs/1/')) throw new Error('gh: HTTP 403');
+          return JSON.stringify([
+            ...Array.from({ length: 100 }, () => ({
+              annotation_level: 'failure',
+              message: `Runner policy: ${'x'.repeat(2_000)}`,
+            })),
+            { annotation_level: 'failure', message: 'Annotation beyond the requested page limit' },
+          ]);
+        }
+        throw new Error('gh: logs not found (HTTP 404)');
+      },
+    });
+
+    // act
+    const details = await provider.getRunDetails('ci-1:203');
+
+    // assert
+    expect(details.jobs).toHaveLength(8);
+    expect(annotationRequests).toHaveLength(5);
+    expect(details.failureLog).toContain('Runner policy');
+    expect(details.failureLog?.length).toBeLessThanOrEqual(64_000);
+    expect(details.failureLog).not.toContain('Annotation beyond the requested page limit');
+  });
+
   it('prioritizes actionable diagnostics when failed workflow output exceeds the persisted limit', async () => {
     // arrange
     const settings = deliverySettings('/tmp/symphony-action-details-large-failure');
@@ -1679,7 +1962,233 @@ describe('GitHubCloudProvider Action details', () => {
   });
 });
 
+describe('GitHubCloudProvider CI binding isolation', () => {
+  it.each(['operational', 'managed'] as const)(
+    'preserves healthy queued runs during %s polling when another enabled workspace returns 404',
+    async (scope) => {
+      // arrange
+      const settings = ciPollingSettings();
+      const failures: Array<{
+        workspaceId: string;
+        ciBindingId: string;
+        repositoryBindingId: string;
+        cause: unknown;
+      }> = [];
+      const provider = new GitHubCloudProvider({
+        settings: () => settings,
+        token: async () => 'test-token',
+        execute: async (_command, arguments_) => ciPollingOutput(arguments_.at(-1) ?? ''),
+        reportReadFailure: (binding, cause) =>
+          failures.push({
+            workspaceId: binding.workspaceId,
+            ciBindingId: binding.ciBindingId,
+            repositoryBindingId: binding.repositoryBindingId,
+            cause,
+          }),
+      });
+
+      // act
+      const runs = await (scope === 'managed'
+        ? provider.listManagedLocalRunCandidates()
+        : provider.listRuns('operational'));
+
+      // assert
+      expect(runs.map((run) => run.id)).toEqual(
+        scope === 'managed' ? ['ci-1:203', 'ci-1:204'] : ['ci-1:204', 'ci-1:203'],
+      );
+      expect(failures).toEqual([
+        {
+          workspaceId: 'other',
+          ciBindingId: 'ci-other',
+          repositoryBindingId: 'repository-other',
+          cause: expect.objectContaining({ message: expect.stringContaining('HTTP 404') }),
+        },
+      ]);
+    },
+  );
+
+  it.each(['operational', 'managed'] as const)(
+    'rejects %s polling and reports every binding when all reads fail',
+    async (scope) => {
+      // arrange
+      const settings = ciPollingSettings();
+      const failures: string[] = [];
+      const provider = new GitHubCloudProvider({
+        settings: () => settings,
+        token: async () => 'test-token',
+        execute: async () => {
+          throw new Error('gh: Not Found (HTTP 404)');
+        },
+        reportReadFailure: (binding) => {
+          failures.push(binding.ciBindingId);
+        },
+      });
+
+      // act
+      const poll =
+        scope === 'managed'
+          ? provider.listManagedLocalRunCandidates()
+          : provider.listRuns('operational');
+
+      // assert
+      await expect(poll).rejects.toThrow('HTTP 404');
+      expect(failures).toEqual(['ci-1', 'ci-other']);
+    },
+  );
+
+  it.each([
+    {
+      scenario: 'rate-limit',
+      cause: new RemoteProviderRateLimitError('Request budget exhausted.'),
+    },
+    {
+      scenario: 'scope-change',
+      cause: new RemoteProjectionScopeChangedError('Projection scope changed.'),
+    },
+    {
+      scenario: 'abort',
+      cause: Object.assign(new Error('Request aborted.'), { code: 'ABORT_ERR' }),
+    },
+  ])('propagates $scenario interruptions from queued-job reconciliation', async ({ cause }) => {
+    // arrange
+    const reports = vi.fn();
+    const providers = ['operational', 'managed'].map((scope) => ({
+      scope,
+      provider: new GitHubCloudProvider({
+        settings: ciPollingSettings,
+        token: async () => 'test-token',
+        reportReadFailure: reports,
+        execute: async (_command, arguments_) => {
+          const path = arguments_.at(-1) ?? '';
+          if (path.startsWith('repos/unavailable/project/')) {
+            if (path.endsWith('/actions/runs?per_page=50')) {
+              return JSON.stringify({ workflow_runs: [{ id: 202, status: 'queued' }] });
+            }
+            throw cause;
+          }
+          return ciPollingOutput(path);
+        },
+      }),
+    }));
+
+    // act
+    const failures = await Promise.all(
+      providers.map(({ scope, provider }) =>
+        (scope === 'managed'
+          ? provider.listManagedLocalRunCandidates()
+          : provider.listRuns('operational')
+        ).then(
+          () => undefined,
+          (failure: unknown) => failure,
+        ),
+      ),
+    );
+
+    // assert
+    expect(failures).toHaveLength(2);
+    for (const failure of failures) {
+      expect(failure).toBeInstanceOf(Error);
+      expect(failure === cause || (failure instanceof Error && failure.cause === cause)).toBe(true);
+    }
+    expect(reports).not.toHaveBeenCalled();
+  });
+
+  it('observes a corrected binding on the next poll and restores oldest-first candidate ordering', async () => {
+    // arrange
+    let settings = ciPollingSettings();
+    const failures: string[] = [];
+    const provider = new GitHubCloudProvider({
+      settings: () => settings,
+      token: async () => 'test-token',
+      execute: async (_command, arguments_) => ciPollingOutput(arguments_.at(-1) ?? ''),
+      reportReadFailure: (binding) => {
+        failures.push(binding.ciBindingId);
+      },
+    });
+    await provider.listManagedLocalRunCandidates();
+    settings = {
+      ...settings,
+      repositoryBindings: settings.repositoryBindings.map((binding) =>
+        binding.id === 'repository-other'
+          ? { ...binding, owner: 'example', name: 'recovered' }
+          : binding,
+      ),
+    };
+
+    // act
+    const candidates = await provider.listManagedLocalRunCandidates();
+
+    // assert
+    expect(candidates.map((run) => run.id)).toEqual(['ci-other:202', 'ci-1:203', 'ci-1:204']);
+    expect(failures).toEqual(['ci-other']);
+  });
+});
+
 describe('GitHubCloudProvider managed local Actions runner', () => {
+  it.each<{
+    readonly scenario: string;
+    readonly scope?: 'selected' | 'operational';
+    readonly enabled: boolean;
+    readonly localCiEnabled: boolean;
+  }>([
+    {
+      scenario: 'keeps manual local starts inside the selected workspace',
+      enabled: true,
+      localCiEnabled: true,
+    },
+    {
+      scenario: 'refuses operational local starts for disabled workspaces',
+      scope: 'operational',
+      enabled: false,
+      localCiEnabled: true,
+    },
+    {
+      scenario: 'refuses operational local starts without local-CI approval',
+      scope: 'operational',
+      enabled: true,
+      localCiEnabled: false,
+    },
+  ])('$scenario', async ({ scope, enabled, localCiEnabled }) => {
+    // arrange
+    const defaults = deliverySettings('/tmp/symphony-local-ci-authorization');
+    const settings: IApplicationSettings = {
+      ...defaults,
+      activeViewScope: { ...defaults.activeViewScope, workspaceIds: ['other-workspace'] },
+      workspaces: defaults.workspaces.flatMap((workspace) => [
+        { ...workspace, enabled, localCiEnabled },
+        {
+          ...workspace,
+          id: 'other-workspace',
+          displayName: 'Other workspace',
+          enabled: true,
+          localCiEnabled: false,
+        },
+      ]),
+    };
+    let requests = 0;
+    const provider = new GitHubCloudProvider({
+      settings: () => settings,
+      token: async () => 'test-token',
+      execute: async () => {
+        requests += 1;
+        throw new Error('A denied local start must not call GitHub.');
+      },
+    });
+
+    // act
+    const execution = provider.runLocally(
+      'ci-1:203',
+      'local-ci-denied',
+      '/tmp/symphony-local-ci-authorization/runtime',
+      new AbortController().signal,
+      scope,
+    );
+
+    // assert
+    await expect(execution).rejects.toThrow('Refresh the GitHub Actions run before changing it');
+    expect(requests).toBe(0);
+  });
+
   it('finds the oldest queued run whose current jobs request the managed local runner', async () => {
     // arrange
     const defaults = deliverySettings('/tmp/symphony-local-ci-candidate');
@@ -2231,10 +2740,16 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
     readonly responses: readonly (string | Error | undefined)[];
     readonly error?: string;
     readonly interruption?: 'cancel' | 'exit';
+    readonly scope?: 'operational';
   }>([
     {
       scenario: 'binds a disposable runner to one workflow run and records the terminal revision',
       responses: [],
+    },
+    {
+      scenario: 'runs an enabled local-CI workspace while a different workspace is selected',
+      responses: [],
+      scope: 'operational',
     },
     {
       scenario:
@@ -2302,11 +2817,25 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
       responses: ['error connecting to api.github.com'],
       interruption: 'cancel',
     },
-  ])('$scenario', async ({ responses, error, interruption }) => {
+  ])('$scenario', async ({ responses, error, interruption, scope }) => {
     // arrange
     const defaults = deliverySettings('/tmp/symphony-local-ci');
     const settings: IApplicationSettings = {
       ...defaults,
+      ...(scope === 'operational'
+        ? {
+            activeViewScope: { ...defaults.activeViewScope, workspaceIds: ['other-workspace'] },
+            workspaces: defaults.workspaces.flatMap((workspace) => [
+              { ...workspace, localCiEnabled: true },
+              {
+                ...workspace,
+                id: 'other-workspace',
+                displayName: 'Other workspace',
+                localCiEnabled: false,
+              },
+            ]),
+          }
+        : {}),
       localCi: {
         reuseVirtualMachine: false,
         resourcePreset: 'custom',
@@ -2432,12 +2961,13 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
     });
 
     // act
-    await provider.listRuns();
+    await provider.listRuns(scope);
     const execution = provider.runLocally(
       'ci-1:203',
       'local-ci-execution-1',
       '/tmp/symphony-local-ci/runtime',
       controller.signal,
+      scope,
     );
 
     // assert
@@ -2900,6 +3430,123 @@ describe('GitHubCloudProvider revision-bound actions', () => {
     },
   );
 });
+
+function operationalReadSettings(): IApplicationSettings {
+  const settings = deliverySettings('/tmp/symphony-operational-actions');
+  return {
+    ...settings,
+    workspaces: [
+      ...settings.workspaces,
+      { ...settings.workspaces[0]!, id: 'unavailable', displayName: 'Unavailable' },
+    ],
+    connections: [
+      ...settings.connections,
+      {
+        id: 'github-unavailable',
+        workspaceId: 'unavailable',
+        kind: 'github',
+        displayName: 'Unavailable GitHub',
+        hostname: 'github.com',
+        gitProtocol: 'https',
+      },
+    ],
+    repositoryBindings: [
+      ...settings.repositoryBindings,
+      {
+        ...settings.repositoryBindings[0]!,
+        id: 'repository-unavailable',
+        workspaceId: 'unavailable',
+        sourceControlConnectionId: 'github-unavailable',
+        owner: 'unavailable',
+        name: 'project',
+      },
+    ],
+    ciBindings: [
+      ...settings.ciBindings,
+      {
+        ...settings.ciBindings[0]!,
+        id: 'ci-unavailable',
+        workspaceId: 'unavailable',
+        repositoryBindingId: 'repository-unavailable',
+        sourceControlConnectionId: 'github-unavailable',
+      },
+    ],
+  };
+}
+
+function ciPollingSettings(): IApplicationSettings {
+  const defaults = deliverySettings('/tmp/symphony-ci-binding-isolation');
+  return {
+    ...defaults,
+    activeViewScope: { ...defaults.activeViewScope, workspaceIds: ['personal', 'other'] },
+    workspaces: defaults.workspaces.flatMap((workspace) => [
+      { ...workspace, localCiEnabled: true },
+      { ...workspace, id: 'other', displayName: 'Other', localCiEnabled: true },
+    ]),
+    connections: [
+      ...defaults.connections,
+      {
+        id: 'github-other',
+        workspaceId: 'other',
+        kind: 'github',
+        displayName: 'Other GitHub',
+        hostname: 'github.com',
+        gitProtocol: 'https',
+      },
+    ],
+    repositoryBindings: [
+      ...defaults.repositoryBindings,
+      {
+        ...defaults.repositoryBindings[0]!,
+        id: 'repository-other',
+        workspaceId: 'other',
+        sourceControlConnectionId: 'github-other',
+        owner: 'unavailable',
+        name: 'project',
+      },
+    ],
+    ciBindings: [
+      ...defaults.ciBindings,
+      {
+        ...defaults.ciBindings[0]!,
+        id: 'ci-other',
+        workspaceId: 'other',
+        repositoryBindingId: 'repository-other',
+        sourceControlConnectionId: 'github-other',
+      },
+    ],
+  };
+}
+
+function ciPollingOutput(path: string): string {
+  if (path.startsWith('repos/unavailable/project/')) throw new Error('gh: Not Found (HTTP 404)');
+  const recovered = path.startsWith('repos/example/recovered/');
+  if (!recovered && !path.startsWith('repos/example/platform/'))
+    throw new Error(`Unexpected GitHub path: ${path}`);
+  if (path.endsWith('/actions/runs?per_page=50')) {
+    return JSON.stringify({
+      workflow_runs: (recovered ? [202] : [204, 203]).map((id) => ({
+        id,
+        name: 'PR Quality',
+        status: 'queued',
+        run_attempt: 1,
+        created_at: `2026-08-17T10:0${id - 202}:00.000Z`,
+      })),
+    });
+  }
+  const runId = /\/actions\/runs\/(\d+)\/jobs\?filter=all&per_page=100$/.exec(path)?.[1];
+  if (runId)
+    return JSON.stringify({
+      jobs: [
+        {
+          run_attempt: 1,
+          status: 'queued',
+          labels: ['self-hosted', 'Linux', 'symphony-local-ci', `symphony-run-${runId}`],
+        },
+      ],
+    });
+  throw new Error(`Unexpected GitHub path: ${path}`);
+}
 
 function deliverySettings(workspacePath: string): IApplicationSettings {
   const settings = createDefaultApplicationSettings(workspacePath);

@@ -32,5 +32,6 @@ export interface IContinuousIntegrationPort {
     executionId: string,
     runtimeRoot: string,
     signal: AbortSignal,
+    scope?: 'selected' | 'operational',
   ): Promise<ILocalCiExecution>;
 }
