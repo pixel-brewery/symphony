@@ -3,10 +3,15 @@
 // #region Imports
 
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
+import {
+  applicationSettingsSchema,
+  createDefaultApplicationSettings,
+} from '@symphony/configuration-composition';
 import { AUTOMATION_PREPARATION } from '@symphony/frontend-core/automation';
 import { ConfigurationStore } from '@symphony/frontend-core/configuration';
-import { NotificationService } from '@symphony/frontend-notification';
+import { NotificationService, type INotificationMessage } from '@symphony/frontend-notification';
 import type { RequestPayload, ResponsePayload } from '@symphony/ipc-contracts-composition';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { IRepositoryRuntimeClient } from '../ports/IRepositoryRuntimeClient';
@@ -53,8 +58,13 @@ function arrange(
       return handler(payload);
     },
   };
+  const delivered = vi.fn<(notification: INotificationMessage, repeated?: boolean) => void>();
+  const dispatcher = new NotificationService([{ push: delivered }]);
   const notifications = {
-    showError: vi.fn(),
+    showError: vi.fn((title: string, content?: string, groupKey?: string) =>
+      dispatcher.showError(title, content, groupKey),
+    ),
+    resolveError: vi.fn((groupKey: string) => dispatcher.resolveError(groupKey)),
     showSuccess: vi.fn(() => {
       order.push('success');
     }),
@@ -63,13 +73,19 @@ function arrange(
   const refreshSettings = vi.fn(async () => {
     order.push('settings');
   });
+  const settings = signal(
+    applicationSettingsSchema.parse(createDefaultApplicationSettings('/repositories')),
+  );
   TestBed.configureTestingModule({
     providers: [
       RepositoryRuntimeStore,
       { provide: REPOSITORY_RUNTIME_CLIENT, useValue: client },
       {
         provide: ConfigurationStore,
-        useValue: { refreshSettings } satisfies Pick<ConfigurationStore, 'refreshSettings'>,
+        useValue: { refreshSettings, settings } satisfies Pick<
+          ConfigurationStore,
+          'refreshSettings' | 'settings'
+        >,
       },
       {
         provide: AUTOMATION_PREPARATION,
@@ -81,13 +97,182 @@ function arrange(
       { provide: NotificationService, useValue: notifications },
     ],
   });
-  return { store: TestBed.inject(RepositoryRuntimeStore), refreshSettings, notifications };
+  return {
+    store: TestBed.inject(RepositoryRuntimeStore),
+    refreshSettings,
+    notifications,
+    settings,
+    delivered,
+  };
 }
 
 describe('RepositoryRuntimeStore', () => {
   beforeAll(() => TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting()));
   afterEach(() => TestBed.resetTestingModule());
   afterAll(() => TestBed.resetTestEnvironment());
+
+  it('keeps healthy statuses and surfaces the failed binding when a read-only inspection partly fails', async () => {
+    // arrange
+    const failed: Status = {
+      ...status('repository-a'),
+      displayName: 'Broken checkout',
+      preparation: {
+        state: 'unprepared',
+        inspectionError: 'fatal: not a git repository',
+      },
+    };
+    const healthy = status('repository-b');
+    const { store, notifications } = arrange({
+      'repositories.runtime.list': async () => [failed, healthy],
+    });
+
+    // act
+    const inspected = await store.refreshRepositoryRuntime();
+
+    // assert
+    expect(inspected).toBe(false);
+    expect(store.repositoryRuntimeStatuses()).toEqual([failed, healthy]);
+    expect(notifications.showError).toHaveBeenCalledExactlyOnceWith(
+      'Unable to inspect the local repository.',
+      'Personal › Broken checkout: fatal: not a git repository',
+      JSON.stringify(['repository-inspection', 'personal', 'repository-a']),
+    );
+    expect(notifications.showSuccess).not.toHaveBeenCalled();
+  });
+
+  it('replaces a failed binding with recovered state without losing other repository statuses', async () => {
+    // arrange
+    const previous: Status = {
+      ...status('repository-a'),
+      preparation: { state: 'unprepared', inspectionError: 'Temporary inspection failure.' },
+    };
+    const recovered = status('repository-a');
+    const healthy = status('repository-b');
+    const { store, notifications } = arrange({
+      'repositories.runtime.list': async () => [recovered],
+    });
+    store.applyRepositoryRuntimeStatuses([previous, healthy]);
+
+    // act
+    const inspected = await store.refreshRepositoryRuntime('repository-a');
+
+    // assert
+    expect(inspected).toBe(true);
+    expect(store.repositoryRuntimeStatus('repository-a')).toBe(recovered);
+    expect(store.repositoryRuntimeStatus('repository-b')).toBe(healthy);
+    expect(notifications.resolveError).toHaveBeenCalledWith(
+      JSON.stringify(['repository-inspection', 'personal', 'repository-a']),
+    );
+    expect(notifications.showError).not.toHaveBeenCalled();
+  });
+
+  it('scopes failures to their own workspace even when other workspaces are selected', async () => {
+    // arrange
+    const first: Status = {
+      ...status('repository-a'),
+      displayName: 'Example',
+      preparation: { state: 'unprepared', inspectionError: 'invalid Git' },
+    };
+    const second: Status = { ...first, repositoryBindingId: 'repository-b', workspaceId: 'team' };
+    const { store, notifications, settings } = arrange({
+      'repositories.runtime.list': async () => [first, second],
+    });
+    const personal = settings().workspaces[0];
+    if (!personal) throw new Error('Missing fixture workspace.');
+    settings.update((current) => ({
+      ...current,
+      workspaces: [...current.workspaces, { ...personal, id: 'team', displayName: 'Team' }],
+    }));
+
+    // act
+    await store.refreshRepositoryRuntime();
+
+    // assert
+    expect(notifications.showError).toHaveBeenNthCalledWith(
+      1,
+      'Unable to inspect the local repository.',
+      'Personal › Example: invalid Git',
+      JSON.stringify(['repository-inspection', 'personal', 'repository-a']),
+    );
+    expect(notifications.showError).toHaveBeenNthCalledWith(
+      2,
+      'Unable to inspect the local repository.',
+      'Team › Example: invalid Git',
+      JSON.stringify(['repository-inspection', 'team', 'repository-b']),
+    );
+  });
+
+  it('keeps resource error groups distinct when identifiers contain separators', async () => {
+    // arrange
+    const first: Status = {
+      ...status('c'),
+      workspaceId: 'a:b',
+      preparation: { state: 'unprepared', inspectionError: 'invalid Git' },
+    };
+    const second: Status = { ...first, workspaceId: 'a', repositoryBindingId: 'b:c' };
+    const { store, notifications } = arrange({
+      'repositories.runtime.list': async () => [first, second],
+    });
+
+    // act
+    await store.refreshRepositoryRuntime();
+
+    // assert
+    const keys = notifications.showError.mock.calls.map((call) => call[2]);
+    expect(keys).toEqual([
+      JSON.stringify(['repository-inspection', 'a:b', 'c']),
+      JSON.stringify(['repository-inspection', 'a', 'b:c']),
+    ]);
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it('retains the last confirmed statuses when the repository transport itself fails', async () => {
+    // arrange
+    const previous = status('repository-a');
+    const { store, notifications } = arrange({
+      'repositories.runtime.list': async () => {
+        throw new Error('Repository status request is unavailable.');
+      },
+    });
+    store.applyRepositoryRuntimeStatuses([previous]);
+
+    // act
+    const inspected = await store.refreshRepositoryRuntime();
+
+    // assert
+    expect(inspected).toBe(false);
+    expect(store.repositoryRuntimeStatuses()).toEqual([previous]);
+    expect(notifications.showError).toHaveBeenCalledExactlyOnceWith(
+      'Unable to refresh local repository statuses.',
+      'All configured workspaces: Repository status request is unavailable.',
+      JSON.stringify(['repository-status-refresh', null]),
+    );
+  });
+
+  it.each(['refresh', 'silent'] as const)(
+    'notifies a targeted transport failure again after a successful full %s confirms its recovery',
+    async (recovery) => {
+      // arrange
+      const confirmed = status('repository-a');
+      const { store, delivered } = arrange({
+        'repositories.runtime.list': async ({ repositoryBindingId }) => {
+          if (repositoryBindingId) throw new Error('Repository transport is unavailable.');
+          return [confirmed];
+        },
+      });
+      await store.refreshRepositoryRuntime('repository-a');
+
+      // act
+      if (recovery === 'refresh') await store.refreshRepositoryRuntime();
+      else store.applyRepositoryRuntimeStatuses([confirmed]);
+      await store.refreshRepositoryRuntime('repository-a');
+
+      // assert
+      expect(delivered).toHaveBeenCalledTimes(2);
+      expect(delivered.mock.calls.map((call) => call[1])).toEqual([undefined, undefined]);
+      expect(store.repositoryRuntimeStatus('repository-a')).toBe(confirmed);
+    },
+  );
 
   it('shares one guard across preparation, verification planning and execution while retaining reconciliation order', async () => {
     // arrange

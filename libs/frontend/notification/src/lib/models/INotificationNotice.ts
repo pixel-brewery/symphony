@@ -43,7 +43,23 @@ export interface INotificationNotice {
   readonly content: string;
 
   /**
-   * When the toast was shown, in epoch milliseconds.
+   * Resource-scoped error group, when the owner supplied one.
+   *
+   * @public
+   * @readonly
+   */
+  readonly groupKey?: string;
+
+  /**
+   * Number of matching errors combined in this notice, or one for an ungrouped message.
+   *
+   * @public
+   * @readonly
+   */
+  readonly occurrences: number;
+
+  /**
+   * Most recent occurrence, in epoch milliseconds.
    *
    * @public
    * @readonly

@@ -7,11 +7,14 @@ import { NOTIFICATION_INTERCEPTORS } from '../provider/NotificationInterceptors'
 
 // #endregion
 
+const MAXIMUM_ERROR_GROUPS = 50;
+
 @Injectable()
 export class NotificationService {
   // #region Fields
 
   private readonly _interceptors: readonly INotificationInterceptor[];
+  private readonly _errorGroups = new Map<string, string>();
 
   // #endregion
 
@@ -63,10 +66,21 @@ export class NotificationService {
    *
    * @param title - Title.
    * @param content - Content.
+   * @param groupKey - Stable owner and resource identifier for a persistent error.
    * @public
    */
-  public showError(title: string, content = ''): void {
-    this.push({ kind: 'error', title, content });
+  public showError(title: string, content = '', groupKey?: string): void {
+    this.push({ kind: 'error', title, content, ...(groupKey ? { groupKey } : {}) });
+  }
+
+  /**
+   * Allows an owned error to notify again after its owner confirms recovery.
+   *
+   * @param groupKey - The recovered owner and resource identifier.
+   * @public
+   */
+  public resolveError(groupKey: string): void {
+    this._errorGroups.delete(groupKey);
   }
 
   /**
@@ -87,7 +101,21 @@ export class NotificationService {
    * @public
    */
   public push(notification: INotificationMessage): void {
-    for (const interceptor of this._interceptors) interceptor.push(notification);
+    let repeated = false;
+    if (notification.kind === 'error' && notification.groupKey) {
+      const fingerprint = JSON.stringify([notification.title, notification.content]);
+      repeated = this._errorGroups.get(notification.groupKey) === fingerprint;
+      this._errorGroups.delete(notification.groupKey);
+      this._errorGroups.set(notification.groupKey, fingerprint);
+      if (this._errorGroups.size > MAXIMUM_ERROR_GROUPS) {
+        const oldest = this._errorGroups.keys().next().value;
+        if (oldest !== undefined) this._errorGroups.delete(oldest);
+      }
+    }
+    for (const interceptor of this._interceptors) {
+      if (repeated) interceptor.push(notification, true);
+      else interceptor.push(notification);
+    }
   }
 
   // #endregion

@@ -84,4 +84,50 @@ describe('NotificationHistory', () => {
     expect(history.notices().some((notice) => notice.title === 'Yesterday')).toBe(false);
     expect(history.notices()[0]?.title).toBe('Notice 54');
   });
+
+  it('combines matching errors with the latest time without re-marking a read notice unread', () => {
+    // arrange
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 3, 6, 20));
+    const history = arrange(false);
+    const message = {
+      kind: 'error',
+      title: 'Inspection failed',
+      content: 'Example: invalid Git',
+    } as const;
+    history.push(message);
+    const id = history.notices()[0]?.id;
+    history.markAllAsRead();
+    vi.setSystemTime(new Date(2026, 10, 3, 6, 21));
+
+    // act
+    history.push(message);
+
+    // assert
+    expect(history.notices()).toHaveLength(1);
+    expect(history.notices()[0]).toMatchObject({
+      id,
+      occurrences: 2,
+      occurredAt: new Date(2026, 10, 3, 6, 21).getTime(),
+      read: true,
+    });
+    expect(history.unreadCount()).toBe(0);
+  });
+
+  it('keeps distinct resource scopes, diagnostics and non-error operations separate', () => {
+    // arrange
+    const history = arrange();
+    const error = { kind: 'error', title: 'Inspection failed', content: 'invalid Git' } as const;
+
+    // act
+    history.push({ ...error, groupKey: 'workspace-one:repo' });
+    history.push({ ...error, groupKey: 'workspace-two:repo' });
+    history.push({ ...error, groupKey: 'workspace-one:repo', content: 'access denied' });
+    history.push({ kind: 'success', title: 'Saved', content: '' });
+    history.push({ kind: 'success', title: 'Saved', content: '' });
+
+    // assert
+    expect(history.notices()).toHaveLength(5);
+    expect(history.notices().map((notice) => notice.occurrences)).toEqual([1, 1, 1, 1, 1]);
+  });
 });

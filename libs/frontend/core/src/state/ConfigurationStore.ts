@@ -83,13 +83,10 @@ export class ConfigurationStore extends OrchestrationOperation {
     try {
       await this.refreshSettings();
       const repositoriesOwner = this._injector.get(REPOSITORY_RUNTIME_OPERATIONS, null);
-      const [, repositories] = await Promise.all([
+      await Promise.all([
         this.refreshProviderConnections(),
-        repositoriesOwner
-          ? this._client.request('repositories.runtime.list', {})
-          : Promise.resolve(undefined),
+        repositoriesOwner?.refreshRepositoryRuntime(),
       ]);
-      if (repositories) repositoriesOwner?.applyRepositoryRuntimeStatuses(repositories);
       this._injector.get(AUTOMATION_PREPARATION, null)?.notifyUnpreparedAutomaticExecution();
     } catch (cause) {
       this.showError(cause, 'Unable to load application configuration.');

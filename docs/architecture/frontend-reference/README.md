@@ -3176,3 +3176,9 @@ render failures leave Mosaik's text fallback. A bounded render cache and Angular
 AsyncPipe prevent repeated drawing and stale asynchronous display. These
 workspace-specific persistence and fallback rules are documented in
 [Workspaces](../workspaces/README.md#workspace-symbol-und-farbe).
+
+## 2026-11-03 Repository inspection errors and grouped notices
+
+The exact read-only private upstream application notification service, notification manager and toast interceptor were inspected. Symphony **adopts** their existing dispatcher → interceptor → public Mosaik toast composition. The desktop-specific **Adapt** adds a caller-owned resource key to persistent errors: an unchanged repository-inspection failure displays one toast per unresolved episode, while the day's history groups identical kind/title/content/resource combinations into one counted row. A changed cause or a confirmed recovery permits a new toast; independent operation failures retain their feedback. The resource key encodes workspace and repository identifiers as a tuple, so valid separator characters cannot collide.
+
+Repository inspection is a per-binding result. One broken local checkout cannot discard healthy repository statuses. The owning notification source supplies an actionable current problem with workspace/repository context and opens that repository's settings through the existing renderer route. This adapts the reference's application-level notification composition to Symphony's local repository lifecycle; the upstream source does not own Git metadata recovery. Preparation and execution continue to reject corrupt Git state without repairing or replacing user files.

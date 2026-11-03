@@ -36,9 +36,11 @@ export class ToastNotificationInterceptor implements INotificationInterceptor {
    * Pushes.
    *
    * @param notification - Notification.
+   * @param repeated - Whether the same owned error remains unresolved.
    * @public
    */
-  public push(notification: INotificationMessage): void {
+  public push(notification: INotificationMessage, repeated = false): void {
+    if (repeated) return;
     const toast = this._toastService.show({
       header: notification.title,
       content: notification.content,

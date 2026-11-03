@@ -178,6 +178,14 @@
               [wrap]="true"
               [text]="(notice.content ? notice.content + ' · ' : '') + (notice.occurredAt | date: 'HH:mm')"
             />
+            @if (notice.occurrences > 1) {
+            <mosaik-text
+              [attr.test-id]="'notification-notice-occurrences-' + notice.id"
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="notice.occurrences + ' occurrences'"
+            />
+            }
           </div>
           @if (!notice.read) {
           <mosaik-dot
