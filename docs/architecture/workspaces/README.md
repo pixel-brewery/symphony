@@ -18,7 +18,7 @@ Garantien:
 ## Geltungsbereich und Nicht-Ziele
 
 - Enthalten: Abschnittsregistrierung, Workspace-Verzeichnis, Workspace-Sheet, Export, Import und Löschen, Administration, die Workspace-Seite der lokalen GitHub Actions sowie die Vertiefungen [Connected services](connected-services.md) und [Repositories und Auslieferungsziele](repositories-and-destinations.md).
-- Nicht enthalten: die gemeinsame Mechanik der Einstellungen mit Seitenleiste, Suche, Sheets, Alert-Sheets, Sofortspeichern und Abgleich zwischen Renderer-Fenstern ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)); der Bereich `team` ([AI-Team](../ai-team/README.md)); das Speicherbild und die virtuellen Maschinen dieses Mac ([System](../system/README.md)); die Laufzeit lokaler CI ([Managed Local CI](../managed-local-ci.md)); die Teams-Feedback-Aufnahme im Hintergrund ([Teams-Feedback-Intake](teams-feedback-intake.md)); Isolation und Ausführungsgrenzen eines Workspace ([Workspace-Modell](../workspace-model.md)); Auslieferungsnachweise im Orbit ([Production orbit](../production-orbit.md)).
+- Nicht enthalten: die gemeinsame Mechanik der Einstellungen mit Seitenleiste, Suche, Sheets, Alert-Sheets, Sofortspeichern und Abgleich zwischen Renderer-Fenstern ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)); der Bereich `team` ([AI-Team](../ai-team/README.md)); das Speicherbild und die virtuellen Maschinen dieses Mac ([System](../system/README.md)); die Laufzeit lokaler CI ([Managed Local CI](../actions/managed-local-ci.md)); die Teams-Feedback-Aufnahme im Hintergrund ([Teams-Feedback-Intake](teams-feedback-intake.md)); Isolation und Ausführungsgrenzen eines Workspace ([Workspace-Modell](../workspace-model.md)); Auslieferungsnachweise im Orbit ([Production orbit](../orbit/README.md)).
 
 ## Verantwortungsgrenzen
 
@@ -275,4 +275,4 @@ Der Bereich `local-ci` teilt sich den Presenter mit der Karte **Virtual machines
 - [Repositories und Auslieferungsziele](repositories-and-destinations.md)
 - [Einstellungen im Hauptfenster](../window-and-navigation/settings.md)
 - [Workspace-Modell](../workspace-model.md)
-- [Managed Local CI](../managed-local-ci.md)
+- [Managed Local CI](../actions/managed-local-ci.md)

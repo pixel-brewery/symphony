@@ -30,4 +30,12 @@ describe('orchestratorRequestTimeoutMilliseconds', () => {
     // assert
     expect(actual).toBe(35_000);
   });
+
+  it('gives bounded deployment-history reads a finite budget beyond ordinary control requests', () => {
+    // act
+    const actual = orchestratorRequestTimeoutMilliseconds('delivery.refresh');
+
+    // assert
+    expect(actual).toBe(120_000);
+  });
 });

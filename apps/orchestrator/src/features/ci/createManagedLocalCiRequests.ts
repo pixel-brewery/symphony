@@ -70,6 +70,7 @@ export function createManagedLocalCiRequests(
 
   async function startLocalCiRun(
     run: Pick<ICiRun, 'id' | 'runAttempt'>,
+    scope: 'selected' | 'operational' = 'selected',
   ): Promise<ILocalCiExecution> {
     storageGovernor.assertWritable({ workload: 'local-ci' });
     assertLocalCiEnabled(github.runWorkspaceId(run.id));
@@ -98,6 +99,7 @@ export function createManagedLocalCiRequests(
           executionId,
           localCiRuntimeRoot(),
           controller.signal,
+          scope,
         );
       } catch (cause) {
         if (!localCiSetupDiagnostics.has(run.id)) throw cause;

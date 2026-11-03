@@ -1,6 +1,10 @@
 // #region Imports
 
 import { createHash } from 'node:crypto';
+import {
+  RemoteProjectionScopeChangedError,
+  RemoteProviderRateLimitError,
+} from '@symphony/application-core';
 import type { IDeliveryLaunchPlan } from '@symphony/domain-delivery';
 import { GitHubDeliveryAdapter } from './GitHubDeliveryAdapter';
 import type { IDeliverySnapshot } from '@symphony/domain-delivery';
@@ -231,6 +235,10 @@ const GITHUB_COMPARISON_COMMIT_LIMIT = 20;
 const GITHUB_RUN_CANCEL_CHECKS = 150;
 
 const GITHUB_RUN_STATUS_RETRIES = 5;
+
+const GITHUB_FAILED_JOB_ANNOTATION_LIMIT = 5;
+
+const GITHUB_CHECK_RUN_ANNOTATIONS_PER_PAGE = 100;
 
 const GITHUB_RUN_FORCE_CANCEL_FIRST_CHECK = 5;
 
@@ -814,6 +822,7 @@ export class GitHubCloudProvider
     return this.listRunsForWorkspaces(
       settings,
       scope === 'operational' ? undefined : selectedWorkspaceIds,
+      scope === 'operational',
     );
   }
 
@@ -826,11 +835,11 @@ export class GitHubCloudProvider
     const settings = this._options.settings();
     const enabledWorkspaceIds = new Set(
       settings.workspaces
-        .filter((workspace) => workspace.localCiEnabled)
+        .filter((workspace) => workspace.enabled && workspace.localCiEnabled)
         .map((workspace) => workspace.id),
     );
     if (!enabledWorkspaceIds.size) return [];
-    const runs = await this.listRunsForWorkspaces(settings, enabledWorkspaceIds);
+    const runs = await this.listRunsForWorkspaces(settings, enabledWorkspaceIds, true);
     return runs
       .filter(
         (run) =>
@@ -1103,6 +1112,7 @@ export class GitHubCloudProvider
         .catch(() => undefined),
     ]);
     const localDiagnostics = activeDiagnostics ?? this._localRunnerDiagnostics.get(runId);
+    const failureDetails = failureLog ?? (await this.failedJobAnnotations(target, jobs));
     return {
       runId,
       ...(workflowGraph ? { workflowGraph } : {}),
@@ -1137,7 +1147,7 @@ export class GitHubCloudProvider
         };
       }),
       ...(logOutput ? { logOutput } : {}),
-      ...(failureLog ? { failureLog } : {}),
+      ...(failureDetails ? { failureLog: failureDetails } : {}),
       ...(localDiagnostics ? { localDiagnostics } : {}),
     };
   }
@@ -1177,7 +1187,12 @@ export class GitHubCloudProvider
           ],
           this.githubEnvironment(token),
           'Unable to read GitHub Actions output',
-        ),
+        ).catch(async (cause: unknown) => {
+          if (kind !== 'failure') throw cause;
+          const details = await this.getRunDetails(runId);
+          if (!details.failureLog) throw cause;
+          return details.failureLog;
+        }),
       );
     if (kind === 'failure') {
       this._completedRunLogs.set(cacheKey, redacted);
@@ -1227,6 +1242,7 @@ export class GitHubCloudProvider
    * @param executionId - Execution id.
    * @param runtimeRoot - Runtime root.
    * @param signal - Signal.
+   * @param scope - Selected workspace for manual runs, or enabled local-CI workspaces for takeover.
    * @public
    */
   public async runLocally(
@@ -1234,8 +1250,9 @@ export class GitHubCloudProvider
     executionId: string,
     runtimeRoot: string,
     signal: AbortSignal,
+    scope: 'selected' | 'operational' = 'selected',
   ): Promise<ILocalCiExecution> {
-    const target = this.requireRunTarget(runId);
+    const target = this.requireRunTarget(runId, scope);
     if (!this._options.localRunner) {
       throw new Error('Managed local CI is unavailable on this installation.');
     }
@@ -1668,6 +1685,7 @@ export class GitHubCloudProvider
   private async listRunsForWorkspaces(
     settings: IApplicationSettings,
     workspaceIds?: ReadonlySet<string>,
+    isolateReadFailures = false,
   ): Promise<readonly ICiRun[]> {
     const bindings = settings.ciBindings.filter(
       (binding) =>
@@ -1675,33 +1693,68 @@ export class GitHubCloudProvider
         binding.provider === 'github-actions' &&
         (workspaceIds === undefined || workspaceIds.has(binding.workspaceId)),
     );
-    const results = await Promise.all(
-      bindings.map(async (binding): Promise<readonly ICiRun[]> => {
-        const repository = settings.repositoryBindings.find(
-          (candidate) =>
-            candidate.id === binding.repositoryBindingId &&
-            candidate.workspaceId === binding.workspaceId,
-        );
-        const connection = settings.connections.find(
-          (candidate): candidate is Extract<ProviderConnection, { kind: 'github' }> =>
-            candidate.kind === 'github' &&
-            candidate.id === binding.sourceControlConnectionId &&
-            candidate.workspaceId === binding.workspaceId,
-        );
-        if (!repository || !connection) return [];
-        const response = await this.api<IGitHubWorkflowRunsResponse>(
-          connection,
-          `repos/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.name)}/actions/runs?per_page=50`,
-          'GET',
-        );
-        return Promise.all(
-          (response.workflow_runs ?? []).map((run) =>
-            this.projectRun(binding, repository, connection, run),
-          ),
-        );
-      }),
-    );
-    return results.flat();
+    const reads = bindings.map(async (binding): Promise<readonly ICiRun[] | undefined> => {
+      const repository = settings.repositoryBindings.find(
+        (candidate) =>
+          candidate.id === binding.repositoryBindingId &&
+          candidate.workspaceId === binding.workspaceId,
+      );
+      const connection = settings.connections.find(
+        (candidate): candidate is Extract<ProviderConnection, { kind: 'github' }> =>
+          candidate.kind === 'github' &&
+          candidate.id === binding.sourceControlConnectionId &&
+          candidate.workspaceId === binding.workspaceId,
+      );
+      if (!repository || !connection) return undefined;
+      const response = await this.api<IGitHubWorkflowRunsResponse>(
+        connection,
+        `repos/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.name)}/actions/runs?per_page=50`,
+        'GET',
+      );
+      return Promise.all(
+        (response.workflow_runs ?? []).map((run) =>
+          this.projectRun(binding, repository, connection, run),
+        ),
+      );
+    });
+    if (!isolateReadFailures) {
+      return (await Promise.all(reads)).flatMap((runs) => runs ?? []);
+    }
+
+    const results = await Promise.allSettled(reads);
+    for (const result of results) {
+      if (result.status === 'rejected' && isRunListInterruption(result.reason)) {
+        throw result.reason;
+      }
+    }
+    const runs: ICiRun[] = [];
+    let successfulReads = 0;
+    let firstFailure: { readonly cause: unknown } | undefined;
+    for (const [index, result] of results.entries()) {
+      if (result.status === 'fulfilled') {
+        if (result.value !== undefined) {
+          successfulReads += 1;
+          runs.push(...result.value);
+        }
+        continue;
+      }
+      firstFailure ??= { cause: result.reason };
+      const binding = bindings[index]!;
+      const status =
+        result.reason instanceof Error
+          ? /\bHTTP(?:\/\S+)?\s+(\d{3})\b/iu.exec(result.reason.message)?.[1]
+          : undefined;
+      this._options.reportReadFailure?.(
+        {
+          workspaceId: binding.workspaceId,
+          ciBindingId: binding.id,
+          repositoryBindingId: binding.repositoryBindingId,
+        },
+        new Error(`GitHub Actions run listing failed${status ? ` (HTTP ${status})` : ''}.`),
+      );
+    }
+    if (successfulReads === 0 && firstFailure) throw firstFailure.cause;
+    return runs;
   }
 
   private async requireWorkflowTarget(workflowId: string): Promise<IWorkflowTarget> {
@@ -2040,7 +2093,7 @@ export class GitHubCloudProvider
         managedLocal: this.hasManagedLocalJobs(jobs, `symphony-run-${target.runId}`),
       };
     } catch (cause) {
-      if (cause instanceof GitHubRateLimitError) throw cause;
+      if (isRunListInterruption(cause)) throw cause;
       return { status: 'queued', managedLocal: false };
     }
   }
@@ -2199,6 +2252,53 @@ export class GitHubCloudProvider
     return boundedRedactedFailureLog(output);
   }
 
+  private async failedJobAnnotations(
+    target: IRunTarget,
+    jobs: readonly NonNullable<IGitHubWorkflowJobsResponse['jobs']>[number][],
+  ): Promise<string | undefined> {
+    const candidates = jobs
+      .filter((job) => job.conclusion === 'failure' && !job.steps?.length && job.check_run_url)
+      .slice(0, GITHUB_FAILED_JOB_ANNOTATION_LIMIT);
+    const messages: string[] = [];
+    for (const job of candidates) {
+      const checkRunId = /\/check-runs\/(\d+)$/u.exec(job.check_run_url ?? '')?.[1];
+      if (!checkRunId) continue;
+      let annotations: readonly {
+        readonly annotation_level?: string;
+        readonly title?: string;
+        readonly message?: string;
+      }[];
+      try {
+        annotations = await this.api(
+          target.connection,
+          `${this.repositoryPath(target.repository)}/check-runs/${checkRunId}/annotations?per_page=${GITHUB_CHECK_RUN_ANNOTATIONS_PER_PAGE}`,
+          'GET',
+        );
+      } catch (cause) {
+        if (cause instanceof GitHubRateLimitError) break;
+        continue;
+      }
+      if (!Array.isArray(annotations)) continue;
+      for (const annotation of annotations.slice(0, GITHUB_CHECK_RUN_ANNOTATIONS_PER_PAGE)) {
+        if (!annotation || typeof annotation !== 'object') continue;
+        if (annotation.annotation_level !== 'failure' || typeof annotation.message !== 'string')
+          continue;
+        const message = annotation.message.trim();
+        if (!message) continue;
+        messages.push(
+          [
+            job.name?.trim(),
+            typeof annotation.title === 'string' ? annotation.title.trim() : undefined,
+            message,
+          ]
+            .filter(Boolean)
+            .join(': '),
+        );
+      }
+    }
+    return boundedRedactedFailureLog(messages.join('\n'));
+  }
+
   private async mutateRun(runId: string, action: 'cancel' | 'rerun'): Promise<void> {
     const target = this.requireRunTarget(runId);
     const settings = this._options.settings();
@@ -2273,14 +2373,22 @@ export class GitHubCloudProvider
     }
   }
 
-  private requireRunTarget(runId: string): IRunTarget {
+  private requireRunTarget(
+    runId: string,
+    scope: 'selected' | 'operational' = 'selected',
+  ): IRunTarget {
     const settings = this._options.settings();
     const binding = settings.ciBindings.find(
       (item) =>
         item.enabled &&
         item.provider === 'github-actions' &&
         runId.startsWith(`${item.id}:`) &&
-        settings.activeViewScope.workspaceIds.includes(item.workspaceId),
+        (scope === 'selected'
+          ? settings.activeViewScope.workspaceIds.includes(item.workspaceId)
+          : settings.workspaces.some(
+              (workspace) =>
+                workspace.id === item.workspaceId && workspace.enabled && workspace.localCiEnabled,
+            )),
     );
     const repository = settings.repositoryBindings.find(
       (item) =>
@@ -3084,6 +3192,24 @@ export class GitHubCloudProvider
   }
 
   // #endregion
+}
+
+function isRunListInterruption(cause: unknown): boolean {
+  const observed = new Set<Error>();
+  let current = cause;
+  while (current instanceof Error && !observed.has(current)) {
+    if (
+      current instanceof RemoteProviderRateLimitError ||
+      current instanceof RemoteProjectionScopeChangedError ||
+      current.name === 'AbortError' ||
+      ('code' in current && current.code === 'ABORT_ERR')
+    ) {
+      return true;
+    }
+    observed.add(current);
+    current = current.cause;
+  }
+  return false;
 }
 
 function isTransientRunStatusFailure(cause: unknown): boolean {

@@ -115,6 +115,110 @@ describe('WorkTrackingProjectionService work-item details', () => {
     });
   }
 
+  it('reads stale cached identities without starting or awaiting a provider refresh', async () => {
+    // arrange
+    const cached = {
+      version: 1 as const,
+      workspaceIds: ['workspace-1'],
+      workItems: [item],
+      projectFields: [],
+      boardColumns: [],
+      refreshedAt: '2026-08-01T09:00:00.000Z',
+    };
+    vi.mocked(repository.loadWorkTracking).mockReturnValue(cached);
+    let finishRead!: (workItems: readonly IWorkItem[]) => void;
+    const tracker = createTracker([]);
+    tracker.listWorkItems = vi.fn(
+      () => new Promise<readonly IWorkItem[]>((resolve) => (finishRead = resolve)),
+    );
+    const service = createService(tracker);
+    const pending = service.loadProjection(true);
+
+    // act
+    const identities = service.cachedWorkItems();
+    finishRead([movedItem]);
+    await pending;
+
+    // assert
+    expect(identities).toEqual([item]);
+    expect(tracker.listWorkItems).toHaveBeenCalledOnce();
+  });
+
+  it('uses the current in-memory projection for correlations without reloading storage', async () => {
+    // arrange
+    const tracker = createTracker([movedItem]);
+    const service = createService(tracker);
+    await service.loadProjection(true);
+    vi.mocked(repository.loadWorkTracking).mockClear();
+
+    // act
+    const identities = service.cachedWorkItems();
+
+    // assert
+    expect(identities).toEqual([movedItem]);
+    expect(repository.loadWorkTracking).not.toHaveBeenCalled();
+    expect(tracker.listWorkItems).toHaveBeenCalledOnce();
+  });
+
+  it('returns no correlation identities when the scoped cache cannot be read', () => {
+    // arrange
+    const cause = new Error('The cached projection is unavailable.');
+    vi.mocked(repository.loadWorkTracking).mockImplementation(() => {
+      throw cause;
+    });
+    const tracker = createTracker([item]);
+    const reportPersistenceFailure = vi.fn();
+    const service = new WorkTrackingProjectionService({
+      tracker,
+      repository,
+      clock: { now: () => '2026-08-19T10:00:00.000Z' },
+      scope: () => ({ workspaceIds: ['workspace-1'], workTracking: 'workspace-1' }),
+      reportPersistenceFailure,
+    });
+
+    // act
+    const identities = service.cachedWorkItems();
+
+    // assert
+    expect(identities).toEqual([]);
+    expect(reportPersistenceFailure).toHaveBeenCalledExactlyOnceWith('work-items', 'load', cause);
+    expect(tracker.listWorkItems).not.toHaveBeenCalled();
+  });
+
+  it('never substitutes another scope when the selected scope has no cached identities', async () => {
+    // arrange
+    let activeScope = 'workspace-1';
+    vi.mocked(repository.loadWorkTracking).mockImplementation((scope) =>
+      scope === 'workspace-1'
+        ? {
+            version: 1,
+            workspaceIds: ['workspace-1'],
+            workItems: [item],
+            projectFields: [],
+            boardColumns: [],
+            refreshedAt: '2026-08-01T09:00:00.000Z',
+          }
+        : undefined,
+    );
+    const tracker = createTracker([]);
+    const service = new WorkTrackingProjectionService({
+      tracker,
+      repository,
+      clock: { now: () => '2026-08-19T10:00:00.000Z' },
+      scope: () => ({ workspaceIds: [activeScope], workTracking: activeScope }),
+    });
+    await service.loadProjection();
+    activeScope = 'workspace-2';
+
+    // act
+    const identities = service.cachedWorkItems();
+
+    // assert
+    expect(identities).toEqual([]);
+    expect(repository.loadWorkTracking).toHaveBeenLastCalledWith('workspace-2');
+    expect(tracker.listWorkItems).not.toHaveBeenCalled();
+  });
+
   it('reports the column the item is in now while reusing the stored body', async () => {
     // A GitHub Project column is stored beside the issue, so moving the item leaves the issue
     // timestamp untouched: the stored detail still validates while naming the previous column.

@@ -114,6 +114,7 @@ import { SkillPackageService, sha256SkillText } from '@symphony/providers-filesy
 import { StorageGovernor } from './storage-governor';
 import { AzureDevOpsCredentialBroker } from './AzureDevOpsCredentialBroker';
 import { LocalCiTakeoverService } from './local-ci-takeover/LocalCiTakeoverService';
+import { safeError } from './logging/safeError';
 import { OrchestrationSnapshotService } from './snapshot/OrchestrationSnapshotService';
 import { createWorkspacePaths } from './features/workspace/createWorkspacePaths';
 import { createAiProfilePaths } from './features/ai/createAiProfilePaths';
@@ -596,6 +597,12 @@ const github = new GitHubCloudProvider({
   settings: () => settingsState.current,
   token: githubCredentials.readGitHubConnectionToken,
   governor: githubRequestGovernor,
+  reportReadFailure: (source, cause) =>
+    logger.error({
+      event: 'github.ci-run-read.failed',
+      ...source,
+      error: safeError(cause),
+    }),
   localRunner: managedLocalCiRunner,
   localCiGuest: (repositoryBindingId, signal) =>
     localCiRequests.resolveManagedGuest(repositoryBindingId, signal),
@@ -793,12 +800,13 @@ const remoteProjectionDependencies = {
     }),
 };
 
+const workTrackingProjection = new WorkTrackingProjectionService({
+  ...remoteProjectionDependencies,
+  tracker,
+  repository: new SqliteWorkTrackingProjectionRepository(remoteProjectionCache),
+});
 const remoteProjectionQueries = new RemoteProjectionService({
-  workTracking: new WorkTrackingProjectionService({
-    ...remoteProjectionDependencies,
-    tracker,
-    repository: new SqliteWorkTrackingProjectionRepository(remoteProjectionCache),
-  }),
+  workTracking: workTrackingProjection,
   pullRequests: new PullRequestProjectionService({
     ...remoteProjectionDependencies,
     pullRequests: pullRequestCollection,
@@ -884,7 +892,7 @@ const deliveryFeature = provideDeliveryOrchestratorFeature({
   github: github,
   simulatedPullRequestDelivery: simulatedPullRequestDelivery,
   deliveryService: deliveryService,
-  snapshotService: snapshotService,
+  workTrackingProjection: workTrackingProjection,
 
   simulatedPullRequestBranches: (...args) => simulatedAuthoring.listBranches(...args),
   simulatedPullRequestComparison: (...args) => simulatedAuthoring.compareBranches(...args),
@@ -1033,7 +1041,7 @@ const localCiTakeover = new LocalCiTakeoverService(
   github,
   () => localCiRequests.busy(),
   () => runtimeRepositories.localCi.listLocalCiExecutions(),
-  (run) => localCiRequests.startLocalCiRun(run),
+  (run) => localCiRequests.startLocalCiRun(run, 'operational'),
   (cause) =>
     logger.error({
       event: 'local-ci.takeover.failed',

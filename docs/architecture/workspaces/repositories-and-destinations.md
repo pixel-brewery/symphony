@@ -153,6 +153,6 @@ Das Orbit sendet `target` als konfigurierte Id, `new` für ein nicht konfigurier
 ## Verwandte Dokumentation
 
 - [Workspaces in den Einstellungen](README.md)
-- [Production orbit](../production-orbit.md)
+- [Production orbit](../orbit/README.md)
 - [Workspace-Modell](../workspace-model.md)
 - [Lokale Repository-Verifikation](../local-repository-verification.md)

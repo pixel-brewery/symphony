@@ -8,7 +8,9 @@ Im Bereich **Local GitHub Actions** entscheidest du, ob die GitHub-Actions-Workf
 
 Der Schalter gilt sofort. Scheitert das Speichern, zeigt er wieder den gespeicherten Stand. Solange ein lokaler Lauf ausgeführt wird, ist er gesperrt.
 
-Die automatische Übernahme berücksichtigt nur Workspaces mit eingeschalteten lokalen Läufen, unabhängig von der Workspace-Auswahl im Hauptfenster. Eine nicht erreichbare GitHub-Anbindung eines Workspace mit ausgeschalteten lokalen Läufen hält die Übernahme für andere freigegebene Workspaces nicht auf.
+Die automatische Übernahme berücksichtigt nur aktivierte Workspaces mit eingeschalteten lokalen Läufen, unabhängig von der Workspace-Auswahl im Hauptfenster. Auch wenn du gerade in einem anderen Workspace arbeitest, darf Symphony einen dafür markierten wartenden Lauf übernehmen. Ist ein einzelnes Repository nicht erreichbar, berücksichtigt Symphony weiterhin die frisch gelesenen Läufe der anderen freigegebenen Repositorys. Scheitern sämtliche Abfragen oder wird der Abruf wegen eines Anfragelimits, eines Wechsels des abgefragten Workspace-Bereichs oder eines Abbruchs unterbrochen, bleibt der Abruf fehlgeschlagen. Fehlende Nachweise gelten nicht als erfolgreiche Prüfung. Eine korrigierte Repository-Anbindung wird beim nächsten Durchlauf erneut gelesen.
+
+Ein bereits protokollierter Übernahmeversuch wird nach einem Einrichtungsfehler nicht automatisch für denselben GitHub-Lauf und Versuch wiederholt. Behebe zuerst die Ursache, wähle dann den Workspace aus und starte den Lauf in [Actions](../actions/README.md) ausdrücklich mit **Rerun locally** erneut. Das Einschalten lokaler Läufe ändert die Runner-Auswahl des GitHub-Workflows nicht; Jobs müssen für den lokalen Runner von Symphony vorbereitet sein. Die nachfolgende Speicherablehnung geschieht bereits vor einem solchen protokollierten Versuch.
 
 ## Wenn Speicher den Start verhindert
 

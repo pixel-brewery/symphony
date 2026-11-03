@@ -30,10 +30,14 @@ function localCiFixture(cleanupFails = false) {
   };
   const saved: ILocalCiExecution[] = [];
   let finish: ((execution: ILocalCiExecution) => void) | undefined;
-  const runLocally: ICreateManagedLocalCiRequestsDependencies['github']['runLocally'] = () =>
-    new Promise<ILocalCiExecution>((resolve) => {
-      finish = resolve;
-    });
+  const runLocally = vi
+    .fn<ICreateManagedLocalCiRequestsDependencies['github']['runLocally']>()
+    .mockImplementation(
+      () =>
+        new Promise<ILocalCiExecution>((resolve) => {
+          finish = resolve;
+        }),
+    );
   const dependencies: ICreateManagedLocalCiRequestsDependencies = {
     logger: { info: vi.fn(), error: vi.fn() },
     storageGovernor: { assertWritable: () => undefined, invalidate: () => undefined },
@@ -84,6 +88,7 @@ function localCiFixture(cleanupFails = false) {
   };
   return {
     requests: createManagedLocalCiRequests(dependencies),
+    runLocally,
     saved,
     workspaceId: first.id,
     finish: (execution: ILocalCiExecution) => {
@@ -94,47 +99,54 @@ function localCiFixture(cleanupFails = false) {
 }
 
 describe('createManagedLocalCiRequests', () => {
-  it('keeps one run owner and refuses cleanup and overlap until cancellation completes', async () => {
-    // arrange
-    const fixture = localCiFixture();
-    const pending = fixture.requests.startLocalCiRun({ id: 'ci-binding:1', runAttempt: 2 });
-    await vi.waitFor(() => {
-      expect(fixture.requests.diagnostics().size).toBe(0);
-    });
-    const admitted = fixture.requests.activeRuns().get('ci-binding:1');
-    const cancel = fixture.requests.handlers.find(
-      (handler) => handler.method === 'ci.local.cancel',
-    );
-    const cleanup = fixture.requests.handlers.find(
-      (handler) => handler.method === 'ci.local.cleanup',
-    );
-    if (!cancel || !cleanup || !admitted) throw new Error('Local CI lifecycle missing');
-    // act
-    await expect(fixture.requests.startLocalCiRun({ id: 'ci-binding:2' })).rejects.toThrow(
-      'already running locally',
-    );
-    await expect(cleanup.execute({}, () => undefined)).rejects.toThrow(
-      'Stop the active local CI run',
-    );
-    await cancel.execute({ runId: 'ci-binding:1' }, () => undefined);
-    // assert
-    expect(admitted.controller.signal.aborted).toBe(true);
-    expect(fixture.requests.busy()).toBe(true);
-    fixture.finish({
-      id: 'local-ci-1',
-      workspaceId: fixture.workspaceId,
-      repositoryBindingId: 'repository',
-      ciRunId: 'ci-binding:1',
-      runAttempt: 2,
-      state: 'cancelled',
-      startedAt: '2026-10-30T08:00:00.000Z',
-      finishedAt: '2026-10-30T08:01:00.000Z',
-    });
-    await expect(pending).resolves.toMatchObject({ state: 'cancelled', runAttempt: 2 });
-    expect(fixture.saved).toHaveLength(1);
-    expect(fixture.requests.activeRuns().size).toBe(0);
-    expect(fixture.requests.busy()).toBe(false);
-  });
+  it.each(['selected', 'operational', undefined] as const)(
+    'keeps the %s run scope (selected by default) and refuses overlap until cancellation completes',
+    async (scope) => {
+      // arrange
+      const fixture = localCiFixture();
+      const pending = fixture.requests.startLocalCiRun(
+        { id: 'ci-binding:1', runAttempt: 2 },
+        scope,
+      );
+      await vi.waitFor(() => {
+        expect(fixture.requests.diagnostics().size).toBe(0);
+      });
+      const admitted = fixture.requests.activeRuns().get('ci-binding:1');
+      const cancel = fixture.requests.handlers.find(
+        (handler) => handler.method === 'ci.local.cancel',
+      );
+      const cleanup = fixture.requests.handlers.find(
+        (handler) => handler.method === 'ci.local.cleanup',
+      );
+      if (!cancel || !cleanup || !admitted) throw new Error('Local CI lifecycle missing');
+      // act
+      await expect(fixture.requests.startLocalCiRun({ id: 'ci-binding:2' })).rejects.toThrow(
+        'already running locally',
+      );
+      await expect(cleanup.execute({}, () => undefined)).rejects.toThrow(
+        'Stop the active local CI run',
+      );
+      await cancel.execute({ runId: 'ci-binding:1' }, () => undefined);
+      // assert
+      expect(admitted.controller.signal.aborted).toBe(true);
+      expect(fixture.runLocally.mock.calls[0]?.[4]).toBe(scope ?? 'selected');
+      expect(fixture.requests.busy()).toBe(true);
+      fixture.finish({
+        id: 'local-ci-1',
+        workspaceId: fixture.workspaceId,
+        repositoryBindingId: 'repository',
+        ciRunId: 'ci-binding:1',
+        runAttempt: 2,
+        state: 'cancelled',
+        startedAt: '2026-10-30T08:00:00.000Z',
+        finishedAt: '2026-10-30T08:01:00.000Z',
+      });
+      await expect(pending).resolves.toMatchObject({ state: 'cancelled', runAttempt: 2 });
+      expect(fixture.saved).toHaveLength(1);
+      expect(fixture.requests.activeRuns().size).toBe(0);
+      expect(fixture.requests.busy()).toBe(false);
+    },
+  );
 
   it('retains terminal setup-failure evidence and releases the operation after cleanup fails', async () => {
     // arrange

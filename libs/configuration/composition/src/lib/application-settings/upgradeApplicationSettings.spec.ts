@@ -252,21 +252,33 @@ describe('upgradeApplicationSettings', () => {
     expect(upgraded.workspaces[0]?.localCiEnabled).toBe(false);
   });
 
-  it('raises an unsafe legacy custom runner memory limit to the supported floor', () => {
-    // arrange
-    const defaults = createDefaultApplicationSettings('/Users/operator');
+  it.each([
+    { memoryGiB: 2, expectedMemoryGiB: 4 },
+    { memoryGiB: 4, expectedMemoryGiB: 4 },
+    { memoryGiB: 8, expectedMemoryGiB: 8 },
+  ])(
+    'normalizes $memoryGiB GiB of custom runner memory without changing valid limits or disk resources',
+    ({ memoryGiB, expectedMemoryGiB }) => {
+      // arrange
+      const defaults = createDefaultApplicationSettings('/Users/operator');
 
-    // act
-    const upgraded = upgradeApplicationSettings({
-      ...defaults,
-      localCi: {
-        ...defaults.localCi,
-        resourcePreset: 'custom',
-        customResources: { cpus: 4, memoryGiB: 2, diskGiB: 24, cacheGiB: 4 },
-      },
-    });
+      // act
+      const upgraded = upgradeApplicationSettings({
+        ...defaults,
+        localCi: {
+          ...defaults.localCi,
+          resourcePreset: 'custom',
+          customResources: { cpus: 4, memoryGiB, diskGiB: 24, cacheGiB: 4 },
+        },
+      });
 
-    // assert
-    expect(upgraded.localCi.customResources?.memoryGiB).toBe(8);
-  });
+      // assert
+      expect(upgraded.localCi.customResources).toEqual({
+        cpus: 4,
+        memoryGiB: expectedMemoryGiB,
+        diskGiB: 24,
+        cacheGiB: 4,
+      });
+    },
+  );
 });

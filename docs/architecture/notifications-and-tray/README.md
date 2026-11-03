@@ -85,7 +85,7 @@ Ein gebundener Effekt beobachtet Zustands- und Einstellungsänderungen. Ein neue
 
 Verwaltete Kontingentmeldungen verwenden für ihre Darstellung das genaue Verhältnis `allocatedBytes / max(1, limitBytes)` mit den bestehenden Grenzen 60/80/95 Prozent, nicht den gerundeten `usagePercent` oder den durch die Mac-Reserve erhöhten globalen Druck. Die generische Reserve-Meldung lautet bei kritischem Druck **This Mac has reached its free-space reserve**, nicht „kein freier Speicher“. Eine fehlgeschlagene Messung erzeugt keine generische Null-Byte-Aussage. Die bestehende Review-Aktion, Benachrichtigungszentrale und Mosaik-Toast-Darstellung bleiben die einzigen Oberflächen; es entstehen keine weiteren Views oder Steuerelemente.
 
-Die angrenzende `StoragePressureNotificationSource.spec.ts` deckt Reservefehler während ausstehender Inventur, alle Kontingentgründe, korrekte Review-Ziele, unbekannte Messwerte, tatsächliche statt gerundete Kontingentbelegung, deaktivierte Workspaces, Erholung, Toast-Deduplizierung sowie gemeinsame Abrufe, Wiederholung und Zerstörung ab. Der Backend-Vertrag und die Ressourcenberechnung bleiben in [System](../system/README.md) und [Managed Local CI](../managed-local-ci.md).
+Die angrenzende `StoragePressureNotificationSource.spec.ts` deckt Reservefehler während ausstehender Inventur, alle Kontingentgründe, korrekte Review-Ziele, unbekannte Messwerte, tatsächliche statt gerundete Kontingentbelegung, deaktivierte Workspaces, Erholung, Toast-Deduplizierung sowie gemeinsame Abrufe, Wiederholung und Zerstörung ab. Der Backend-Vertrag und die Ressourcenberechnung bleiben in [System](../system/README.md) und [Managed Local CI](../actions/managed-local-ci.md).
 
 ### Fehlergruppen und bestätigte Erholung
 

@@ -13,7 +13,7 @@
 ## Voraussetzungen
 
 - Der Workspace hat ein GitHub-Repository mit einer aktiven GitHub-Actions-Bindung.
-- Für **Run locally** und **Rerun locally** muss **Local GitHub Actions** für den Workspace in den Einstellungen eingeschaltet sein. Der lokale Runner führt immer nur einen Lauf gleichzeitig aus.
+- Für **Run locally** und **Rerun locally** muss **Local GitHub Actions** für den Workspace in den Einstellungen eingeschaltet sein. Die Jobs des Workflows müssen für den lokalen Runner von Symphony vorbereitet sein; der Schalter allein wandelt einen GitHub-gehosteten Job nicht in einen lokalen Lauf um. Der lokale Runner führt immer nur einen Lauf gleichzeitig aus.
 - **Fix with AI** setzt voraus, dass der Lauf einen Pull Request von Symphony geprüft hat und dass **Fix failed checks** in **Settings › Automation** mindestens auf **Repair** steht.
 
 ## Aufbau
@@ -40,12 +40,20 @@ Statuspunkt und Workflow-Name liegen in derselben Auswahlfläche. Ein Klick auf 
 - Ein Klick auf eine Zeile in **History** öffnet den Workflow mit diesem Lauf. Läufe ohne bekannten Workflow öffnen direkt ihr Protokoll.
 - In der Lauftabelle eines Workflows wählt ein Klick (oder die Eingabetaste) den Lauf, dessen Schritte darunter stehen. Ohne Auswahl zeigt Symphony den jüngsten abgeschlossenen Lauf.
 - **Run on GitHub** öffnet ein Formular für Branch oder Revision und die Eingaben des Workflows; **Start workflow** startet den Lauf.
+- Eine automatische lokale Übernahme kann auch in einem anderen aktivierten und freigegebenen Workspace stattfinden. Zum ausdrücklichen lokalen Start oder Wiederholen wählst du den Workspace des Laufs aus. Ein bereits protokollierter Übernahmeversuch wird nach einem Einrichtungsfehler für denselben GitHub-Lauf und Versuch nicht automatisch wiederholt; **Rerun locally** startet nach Beheben der Ursache einen neuen lokalen Versuch. Eine [Speicherablehnung vor der Einrichtung](../workspaces/local-github-actions.md#wenn-speicher-den-start-verhindert) bleibt dagegen für eine spätere automatische Übernahme geeignet.
 - **Stop** beendet einen laufenden Lauf auf GitHub oder auf dem lokalen Runner, je nachdem, wo er gerade läuft. Ein lokaler Start, für den GitHub noch keinen Lauf angelegt hat, lässt sich erst danach stoppen.
 - **Show older runs** blendet jeweils zehn weitere abgeschlossene Läufe ein. Symphony kennt die jüngsten Läufe, die GitHub je Repository liefert.
 
 ## Diagnose und Reparatur
 
 Bei einem fehlgeschlagenen Lauf zeigt **Diagnosis** die Diagnose, die Symphony für Pull Requests aus eigener Arbeit automatisch erstellt, sobald **Fix failed checks** mindestens auf **Diagnose** steht. Läuft die Diagnose noch, steht dort `An agent is diagnosing this failure.`; gibt es keine, nennt Symphony den fehlgeschlagenen Schritt. Hat Symphony eine Reparatur gestartet, zeigt ein Abzeichen `Repairing`, `Repaired` oder `Repair failed`.
+
+Für die automatische Diagnose liest Symphony die GitHub-Anbindungen getrennt.
+Eine nicht erreichbare Anbindung hält die Prüfung anderer erreichbarer und
+freigegebener Repositorys nicht auf. Scheitern alle tatsächlich abgefragten
+Anbindungen oder erreicht GitHub sein Anfragelimit, bleibt der Abruf fehlgeschlagen.
+Die Actions-Ansicht meldet weiterhin, wenn die Daten des gewählten Workspace nicht
+aktuell sind.
 
 **Fix with AI** startet eine Überarbeitung des Pull Requests, den der Lauf geprüft hat. Der Agent erhält den Workflow, die fehlgeschlagenen Schritte und den Protokollauszug als Rückmeldung. Ist das nicht möglich, steht der Grund unter den Schaltflächen:
 
@@ -72,5 +80,6 @@ Bei einem fehlgeschlagenen Lauf zeigt **Diagnosis** die Diagnose, die Symphony f
 - Läuft nichts, zeigt **Running now** `Nothing is running`; ohne abgeschlossene Läufe zeigt **History** `No finished runs yet`. Mit aktivem Filter nennen beide, dass kein Lauf dem Filter entspricht.
 - Ohne Workflows und Läufe zeigt Actions `No Actions workflows`.
 - Liefert GitHub die Jobs eines Laufs nicht, steht unter dem Lauf `Steps unavailable`; **View log** und **Open in GitHub** bleiben verfügbar.
+- Hat ein fehlgeschlagener Job keine Schritte und kein lesbares Fehlerprotokoll, übernimmt Symphony als Fehler markierte Meldungen seines GitHub-Checks in den Protokollauszug. So bleibt beispielsweise ein von GitHub verweigerter Start wegen eines Actions-Budgets erkennbar. Das Anzeigen dieser Ursache ändert weder das Budget noch die Runner-Auswahl des Workflows.
 
 Das Laufpanel der Seitenleiste zeigt unter **Actions** die laufenden Läufe ebenfalls an; siehe [Hauptfenster und Navigation](../window-and-navigation/README.md).

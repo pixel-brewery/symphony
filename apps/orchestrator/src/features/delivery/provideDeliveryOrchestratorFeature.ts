@@ -18,7 +18,7 @@ export function provideDeliveryOrchestratorFeature(
     github,
     simulatedPullRequestDelivery,
     deliveryService,
-    snapshotService,
+    workTrackingProjection,
     simulatedPullRequestBranches,
     simulatedPullRequestComparison,
     simulatedPullRequestCreation,
@@ -155,8 +155,9 @@ export function provideDeliveryOrchestratorFeature(
       deliveryRequestSchemas['delivery.refresh'],
       deliveryResponseSchemas['delivery.refresh'],
       async () => {
-        const snapshot = await snapshotService.snapshot();
-        return github.readDelivery(snapshot.workItems, snapshot.executions);
+        const workItems = workTrackingProjection.cachedWorkItems();
+        const { executions } = service.executionState();
+        return github.readDelivery(workItems, executions);
       },
     ),
   ]);

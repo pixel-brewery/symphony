@@ -12,6 +12,8 @@ import type { IGitHubDeliveryTransport } from './IGitHubDeliveryTransport';
 
 // #endregion
 
+const DELIVERY_READ_BATCH_SIZE = 4;
+
 /** Reads provider evidence and proves inclusion against the actual delivered revision. */
 export class GitHubDeliveryAdapter {
   // #region Fields
@@ -74,15 +76,20 @@ export class GitHubDeliveryAdapter {
         }
         // Fetch current PR state once for each evidenced relationship, including squash merges.
         const relationships = new Map<string, string[]>();
+        const itemIds = new Set(items.map((item) => item.id));
         for (const execution of executions) {
           if (
             !execution.pullRequest ||
             !execution.bindingSnapshot?.repositoryBindingIds.includes(repository.id)
           )
             continue;
+          const workIds = (execution.workItemIds ?? [execution.workItemId]).filter((id) =>
+            itemIds.has(id),
+          );
+          if (!workIds.length) continue;
           const key = String(execution.pullRequest.number);
           const ids = relationships.get(key) ?? [];
-          ids.push(...(execution.workItemIds ?? [execution.workItemId]));
+          ids.push(...workIds);
           relationships.set(key, ids);
         }
         const revisions = new Map<string, string[]>();
@@ -93,106 +100,150 @@ export class GitHubDeliveryAdapter {
             head?: { sha?: string };
           }>(repository.id, `pulls/${number}`, 'GET');
           const revision = pr.merged ? pr.merge_commit_sha : pr.head?.sha;
-          if (revision)
-            revisions.set(revision, [
-              ...(revisions.get(revision) ?? []),
-              ...workIds.filter((id) => items.some((item) => item.id === id)),
-            ]);
+          if (revision) revisions.set(revision, [...(revisions.get(revision) ?? []), ...workIds]);
         }
         const included = async (revision: string): Promise<readonly string[]> => {
           const ids: string[] = [];
-          for (const [commit, workIds] of revisions) {
-            const key = `${repository.id}:${commit}:${revision}`;
-            let contains = this._ancestry.get(key);
-            if (contains === undefined) {
-              contains =
-                commit === revision ||
-                (await this._transport
-                  .request<{ status: string }>(
-                    repository.id,
-                    `compare/${encodeURIComponent(commit)}...${encodeURIComponent(revision)}`,
-                    'GET',
-                  )
-                  .then(
-                    (comparison) =>
-                      comparison.status === 'ahead' || comparison.status === 'identical',
-                  )
-                  .catch(() => false));
-              this._ancestry.set(key, contains);
-            }
-            if (contains) ids.push(...workIds);
+          const relationships = [...revisions];
+          for (let offset = 0; offset < relationships.length; offset += DELIVERY_READ_BATCH_SIZE) {
+            const matches = await Promise.all(
+              relationships
+                .slice(offset, offset + DELIVERY_READ_BATCH_SIZE)
+                .map(async ([commit, workIds]) => {
+                  const key = `${repository.id}:${commit}:${revision}`;
+                  let contains = this._ancestry.get(key);
+                  if (contains === undefined) {
+                    contains =
+                      commit === revision ||
+                      (await this._transport
+                        .request<{ status: string }>(
+                          repository.id,
+                          `compare/${encodeURIComponent(commit)}...${encodeURIComponent(revision)}`,
+                          'GET',
+                        )
+                        .then(
+                          (comparison) =>
+                            comparison.status === 'ahead' || comparison.status === 'identical',
+                        )
+                        .catch(() => false));
+                    this._ancestry.set(key, contains);
+                  }
+                  return contains ? workIds : [];
+                }),
+            );
+            ids.push(...matches.flat());
           }
           return [...new Set(ids)];
         };
         // Keep recent history, but continue past failed attempts until an active successful receipt is found.
         const perEnvironment = new Map<string, number>();
         const confirmedEnvironments = new Set<string>();
-        for (const record of records) {
-          const count = perEnvironment.get(record.environment) ?? 0;
-          if (count >= 20 && confirmedEnvironments.has(record.environment)) continue;
-          perEnvironment.set(record.environment, count + 1);
-          let target = targets.find(
-            (candidate) =>
-              candidate.repositoryBindingId === repository.id &&
-              (candidate.kind === 'environment' || candidate.kind === 'installation') &&
-              candidate.environment === record.environment,
+        const failedEnvironments = new Set<string>();
+        for (let offset = 0; offset < records.length; offset += DELIVERY_READ_BATCH_SIZE) {
+          const batch = records
+            .slice(offset, offset + DELIVERY_READ_BATCH_SIZE)
+            .flatMap((record) => {
+              const count = perEnvironment.get(record.environment) ?? 0;
+              if (
+                failedEnvironments.has(record.environment) ||
+                (count >= 20 && confirmedEnvironments.has(record.environment))
+              )
+                return [];
+              let target = targets.find(
+                (candidate) =>
+                  candidate.repositoryBindingId === repository.id &&
+                  (candidate.kind === 'environment' || candidate.kind === 'installation') &&
+                  candidate.environment === record.environment,
+              );
+              if (!target) {
+                target = {
+                  id: `${repository.id}:environment:${record.environment}`,
+                  workspaceId: repository.workspaceId,
+                  repositoryBindingId: repository.id,
+                  displayName: record.environment,
+                  environment: record.environment,
+                  kind: 'environment',
+                  production: record.production_environment === true,
+                };
+                targets.push(target);
+              }
+              if (
+                target.kind === 'installation' &&
+                record.payload?.symphony?.kind !== 'installation'
+              ) {
+                errors.push({
+                  targetId: target.id,
+                  message:
+                    'This destination has no explicit installation receipt. Its deployment is not treated as an installation.',
+                });
+                return [];
+              }
+              return [{ record, target }];
+            });
+          // The account-scoped transport governor also caps concurrent workspace refreshes.
+          const reads = await Promise.all(
+            batch.map(async (entry) => {
+              try {
+                const statuses = await this._transport.request<
+                  readonly {
+                    state: string;
+                    created_at: string;
+                    environment_url?: string;
+                    log_url?: string;
+                  }[]
+                >(repository.id, `deployments/${entry.record.id}/statuses?per_page=1`, 'GET');
+                return { ...entry, failed: false as const, statuses };
+              } catch {
+                return { ...entry, failed: true as const };
+              }
+            }),
           );
-          if (!target) {
-            target = {
-              id: `${repository.id}:environment:${record.environment}`,
+          for (const read of reads) {
+            const { record, target } = read;
+            const count = perEnvironment.get(record.environment) ?? 0;
+            if (
+              failedEnvironments.has(record.environment) ||
+              (count >= 20 && confirmedEnvironments.has(record.environment))
+            )
+              continue;
+            if (read.failed) {
+              failedEnvironments.add(record.environment);
+              errors.push({
+                targetId: target.id,
+                message: `Unable to read delivery evidence for ${repository.owner}/${repository.name}. Check the GitHub account and repository permissions, then refresh.`,
+              });
+              continue;
+            }
+            perEnvironment.set(record.environment, count + 1);
+            const status = read.statuses[0];
+            const state =
+              status?.state === 'success'
+                ? 'succeeded'
+                : status?.state === 'inactive'
+                  ? 'inactive'
+                  : status?.state === 'in_progress'
+                    ? 'in-progress'
+                    : status?.state === 'failure' || status?.state === 'error'
+                      ? 'failed'
+                      : 'pending';
+            if (state === 'succeeded') confirmedEnvironments.add(record.environment);
+            evidence.push({
+              id: `${repository.id}:deployment:${record.id}`,
+              targetId: target.id,
               workspaceId: repository.workspaceId,
               repositoryBindingId: repository.id,
-              displayName: record.environment,
-              environment: record.environment,
-              kind: 'environment',
-              production: record.production_environment === true,
-            };
-            targets.push(target);
-          }
-          if (target.kind === 'installation' && record.payload?.symphony?.kind !== 'installation') {
-            errors.push({
-              targetId: target.id,
-              message:
-                'This destination has no explicit installation receipt. Its deployment is not treated as an installation.',
+              kind: target.kind === 'installation' ? 'installation' : 'deployment',
+              revision: record.sha,
+              version: record.payload?.symphony?.version ?? record.ref,
+              state,
+              deployedAt: record.created_at,
+              observedAt: status?.created_at ?? record.created_at,
+              ...(status?.environment_url || status?.log_url
+                ? { externalUrl: status.environment_url || status.log_url }
+                : {}),
+              workItemIds: state === 'succeeded' ? await included(record.sha) : [],
             });
-            continue;
           }
-          const statuses = await this._transport.request<
-            readonly {
-              state: string;
-              created_at: string;
-              environment_url?: string;
-              log_url?: string;
-            }[]
-          >(repository.id, `deployments/${record.id}/statuses?per_page=1`, 'GET');
-          const status = statuses[0];
-          const state =
-            status?.state === 'success'
-              ? 'succeeded'
-              : status?.state === 'inactive'
-                ? 'inactive'
-                : status?.state === 'in_progress'
-                  ? 'in-progress'
-                  : status?.state === 'failure' || status?.state === 'error'
-                    ? 'failed'
-                    : 'pending';
-          if (state === 'succeeded') confirmedEnvironments.add(record.environment);
-          evidence.push({
-            id: `${repository.id}:deployment:${record.id}`,
-            targetId: target.id,
-            workspaceId: repository.workspaceId,
-            repositoryBindingId: repository.id,
-            kind: target.kind === 'installation' ? 'installation' : 'deployment',
-            revision: record.sha,
-            version: record.payload?.symphony?.version ?? record.ref,
-            state,
-            deployedAt: record.created_at,
-            observedAt: status?.created_at ?? record.created_at,
-            ...(status?.environment_url || status?.log_url
-              ? { externalUrl: status.environment_url || status.log_url }
-              : {}),
-            workItemIds: state === 'succeeded' ? await included(record.sha) : [],
-          });
         }
         const channels = targets.filter(
           (target) =>

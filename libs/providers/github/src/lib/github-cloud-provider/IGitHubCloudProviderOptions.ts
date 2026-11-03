@@ -20,6 +20,20 @@ export interface IGitHubCloudProviderOptions {
   ) => Promise<string>;
   readonly now?: () => Date;
   readonly governor?: GitHubRequestGovernor;
+  /**
+   * Reports one isolated operational read failure using source IDs and a safe diagnostic.
+   *
+   * @public
+   * @readonly
+   */
+  readonly reportReadFailure?: (
+    source: {
+      readonly workspaceId: string;
+      readonly ciBindingId: string;
+      readonly repositoryBindingId: string;
+    },
+    cause: Error,
+  ) => void;
   readonly localRunner?: IGithubLocalRunner;
   readonly localRunnerPollMilliseconds?: number;
   readonly localCiHostCapacity?: (runtimeRoot: string) => ILocalCiHostCapacity;

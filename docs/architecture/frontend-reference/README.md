@@ -2436,7 +2436,7 @@ AgentFigureComponent, as explicitly requested by the user. None of the new Views
 Mosaik parts. The existing typed task, process, Actions and settings commands are reused.
 
 Electron evidence and the final verification results are recorded in
-[production orbit architecture](../production-orbit.md).
+[production orbit architecture](../orbit/README.md).
 
 **Adapt — Memphis content bounds and explicit drill-downs.** The shared PageToolbar
 uses Tailwind's `empty:hidden` geometry to suppress a projected group with no actions.
@@ -2808,7 +2808,7 @@ offscreen pause, cleanup and a useful WebGL fallback remain renderer concerns.
 The obsolete `projectSpatialScene` and the retired 2D Orbit projection are
 removed; the later route consolidation retires the 2D workflow canvas. Product UI copy
 remains English in its owning templates. The current implementation and
-verification ownership are recorded in [production orbit](../production-orbit.md).
+verification ownership are recorded in [production orbit](../orbit/README.md).
 
 **Differ — Orbit without employees (2026-10-10).** The exact references re-audited
 are private upstream application's `libs/frontend/features/explorer/src/views/ExplorerView.html` and
@@ -3198,3 +3198,9 @@ Workflow status dots **adopt** the public Button icon slot so the dot and name b
 The exact read-only private upstream application `patterns-and-practices/presenters/behaviors/Hydratable.ts` was re-inspected. Symphony **adopts** its lifecycle: initial presentation waits for the owning hydration operation to settle. The Actions route **adapts** that operation to the existing typed desktop CI request: after application initialization, it explicitly asks for workflow definitions and runs so a cold projection includes workflows without runs. No Mosaik component, layout, copy or theme contract changes.
 
 The existing application projection owner retains request sharing, scope checks and cached-data recovery. A catalogue-inclusive request arriving during a runs-only read waits and then performs one shared catalogue-inclusive read; another runs-only read cannot satisfy that requirement. Routine run polling remains narrow. This is a desktop CI data-acquisition adaptation; the inspected reference does not own a GitHub Actions catalogue.
+
+## 2026-11-03 Shared local-runner memory minimum
+
+**Adapt:** the desktop-owned VM policy supplies one 4-GiB memory minimum to configuration validation, capacity-clamped preset eligibility, settings upgrade, start admission and the existing Memory slider. The View binds the public Mosaik Slider `min` input to that domain value through its existing resource definition. Fixed-profile memory ceilings remain 8/12/16 GiB; saved Custom values below 4 GiB are raised to 4 GiB, while valid 4-GiB and 8-GiB choices and their independent disk/cache values remain unchanged. There is no new component, template, layout, style or UI-copy decision.
+
+The public Mosaik Slider `min`, `max` and `value` inputs were inspected. The exact private-reference comparison could not run because `SYMPHONY_REFERENCE_ROOT` was absent in the source review environment. This entry records the shared domain-boundary adaptation and its source/configuration checks; it does not claim a new private-source comparison or Electron visual acceptance. The current policy and migration contract are in [Managed local CI](../actions/managed-local-ci.md#runtime-resources).
