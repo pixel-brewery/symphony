@@ -1,0 +1,218 @@
+name: Publish Symphony Downloads
+
+on:
+  workflow_call:
+    inputs:
+      stable-version:
+        description: Explicit Stable selection already verified by the calling release workflow
+        required: false
+        default: ''
+        type: string
+      advance-canary:
+        description: Allow a verified new release to advance the legacy Canary selection
+        required: false
+        default: false
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      stable-version:
+        description: Expected verified Stable version; leave empty to preserve legacy channel choices during migration
+        required: false
+        default: ''
+        type: string
+      advance-canary:
+        description: Allow migration to advance Canary to the newest verified public release
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-pages.yml
+      - resources/download-page/**
+      - resources/icons/png/app/symphony-192.png
+      - tools/*Download*.mjs
+      - tools/*Pages*.mjs
+      - tools/VerifyPublishedReleaseAssets.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build, deploy and verify public downloads
+    if: github.repository_id == '1440122208' && github.repository == 'pixel-brewery/symphony' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: desktop-update-publication
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.15.0
+
+      - name: Validate the public repository and update origin
+        id: origin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONFIGURED_BASE_URL: ${{ vars.SYMPHONY_UPDATE_BASE_URL }}
+        run: |
+          set -euo pipefail
+          gh api repositories/1440122208 --jq 'select(.id == 1440122208 and .full_name == "pixel-brewery/symphony" and .private == false and .default_branch == "main") | .full_name' | grep -Fx "$GITHUB_REPOSITORY"
+          gh api "repos/${GITHUB_REPOSITORY}/pages" > "$RUNNER_TEMP/pages-configuration.json"
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from 'node:fs';
+          const pages = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/pages-configuration.json`, 'utf8'));
+          const baseUrl = (process.env.CONFIGURED_BASE_URL || 'https://pixel-brewery.github.io/symphony').replace(/\/+$/u, '');
+          const parsed = new URL(baseUrl);
+          if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search || parsed.hash || pages.html_url?.replace(/\/+$/u, '') !== baseUrl) {
+            throw new Error('The update origin must match this public repository\'s configured HTTPS Pages URL.');
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, `base-url=${baseUrl}\n`);
+          NODE
+
+      # This runs only while the former branch still exists. Store exact historical
+      # bytes durably before changing hosting or removing any Git reference.
+      - name: Preserve the former Pages history in GitHub Releases
+        id: migration
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin refs/heads/gh-pages > "$RUNNER_TEMP/pages-branch.txt"; then
+            git fetch --no-tags origin refs/heads/gh-pages
+            origin_commit="$(git rev-parse FETCH_HEAD)"
+            mkdir -p out/pages-migration out/pages-prior out/history-existing out/history-verified
+            git archive "$origin_commit" releases | tar -xf - -C out/pages-migration
+            git archive "$origin_commit" channels | tar -xf - -C out/pages-prior
+            node tools/PreparePagesHistory.mjs
+            gh api "repos/${GITHUB_REPOSITORY}/releases/latest" > "$RUNNER_TEMP/pages-history-release.json"
+            history_tag="$(jq -r '.tag_name' "$RUNNER_TEMP/pages-history-release.json")"
+            if jq -e '.assets[] | select(.name == "symphony-pages-history.json")' "$RUNNER_TEMP/pages-history-release.json" > /dev/null; then
+              gh release download "$history_tag" --repo "$GITHUB_REPOSITORY" --pattern symphony-pages-history.json --dir out/history-existing
+              node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const previous = JSON.parse(readFileSync('out/history-existing/symphony-pages-history.json', 'utf8'));
+          const next = JSON.parse(readFileSync('out/symphony-pages-history.json', 'utf8'));
+          const files = new Map(next.files.map((file) => [file.path, file.data]));
+          if (previous.schemaVersion !== 1 || !Array.isArray(previous.files) || previous.files.some((file) => files.get(file.path) !== file.data)) {
+            throw new Error('Migration must preserve every previously archived byte.');
+          }
+          NODE
+            fi
+            gh release upload "$history_tag" out/symphony-pages-history.json --repo "$GITHUB_REPOSITORY" --clobber
+            gh release download "$history_tag" --repo "$GITHUB_REPOSITORY" --pattern symphony-pages-history.json --dir out/history-verified
+            cmp out/symphony-pages-history.json out/history-verified/symphony-pages-history.json
+            echo "origin-commit=$origin_commit" >> "$GITHUB_OUTPUT"
+          else
+            result=$?
+            if [ "$result" -ne 2 ]; then exit "$result"; fi
+          fi
+
+      - name: Preserve the selected legacy Stable release
+        if: steps.migration.outputs.origin-commit != '' && inputs.stable-version == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { writeFileSync, readFileSync } from 'node:fs';
+          const versions = new Set(['darwin', 'win32', 'linux'].map((platform) => {
+            const feed = JSON.parse(readFileSync(`out/pages-prior/channels/stable/${platform}/arm64/installer.json`, 'utf8'));
+            if (feed.schemaVersion !== 1 || feed.platform !== platform || feed.architecture !== 'arm64' || !/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/u.test(feed.version)) {
+              throw new Error('The former Stable feeds have an invalid selection.');
+            }
+            return feed.version;
+          }));
+          if (versions.size !== 1) throw new Error('The former Stable feeds disagree across platforms.');
+          writeFileSync('out/legacy-stable.txt', [...versions][0]);
+          NODE
+          stable_version="$(cat out/legacy-stable.txt)"
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${stable_version}" > out/legacy-stable-release.json
+          node tools/VerifyPublishedReleaseAssets.mjs "out/pages-migration/releases/${stable_version}/manifest.json" out/legacy-stable-release.json
+          gh release edit "v${stable_version}" --repo "$GITHUB_REPOSITORY" --latest=true
+
+      - name: Reconstruct immutable version metadata from Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/CollectDownloadMetadata.mjs
+
+      - name: Build the download page and installer feeds
+        run: node tools/BuildDownloadSite.mjs
+
+      - name: Verify the requested channel selection
+        env:
+          EXPECTED_STABLE_VERSION: ${{ inputs.stable-version }}
+          ADVANCE_CANARY: ${{ inputs.advance-canary }}
+          MIGRATED_COMMIT: ${{ steps.migration.outputs.origin-commit }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const catalog = JSON.parse(readFileSync('out/pages-source/catalog.json', 'utf8'));
+          const expected = process.env.EXPECTED_STABLE_VERSION;
+          if (expected && (!/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/u.test(expected) || catalog.stable !== expected)) {
+            throw new Error('GitHub Latest must match the explicitly requested Stable version.');
+          }
+          NODE
+          if [ -n "$MIGRATED_COMMIT" ] && [ -z "$EXPECTED_STABLE_VERSION" ]; then
+            diff -r out/pages-prior/channels out/pages/channels
+          elif [ -n "$MIGRATED_COMMIT" ] && [ "$ADVANCE_CANARY" != true ]; then
+            diff -r out/pages-prior/channels/canary out/pages/channels/canary
+          fi
+
+      - name: Require Actions as the Pages publishing source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          build_type="$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq .build_type)"
+          if [ "$build_type" != workflow ]; then
+            echo 'A repository administrator must select GitHub Actions as the Pages source before deployment.' >&2
+            exit 1
+          fi
+
+      - name: Upload the complete Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: out/pages
+          retention-days: 7
+
+      - name: Deploy the complete download site
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+      - name: Verify every published page, feed and historical file
+        env:
+          SYMPHONY_UPDATE_BASE_URL: ${{ steps.origin.outputs.base-url }}
+        run: node tools/VerifyPagesDeployment.mjs
+
+      # The preceding verification is mandatory. A concurrently changed branch is
+      # retained for another migration rather than deleting unarchived history.
+      - name: Remove the migrated publication branch
+        if: steps.migration.outputs.origin-commit != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MIGRATED_COMMIT: ${{ steps.migration.outputs.origin-commit }}
+        run: |
+          set -euo pipefail
+          current_commit="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/gh-pages" --jq .object.sha)"
+          if [ "$current_commit" != "$MIGRATED_COMMIT" ]; then
+            echo 'The former Pages branch changed; preserve it and rerun migration.' >&2
+            exit 1
+          fi
+          auth_header="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::${auth_header}"
+          git -c "http.${GITHUB_SERVER_URL}/.extraheader=AUTHORIZATION: basic ${auth_header}" push --force-with-lease="refs/heads/gh-pages:${MIGRATED_COMMIT}" origin :refs/heads/gh-pages

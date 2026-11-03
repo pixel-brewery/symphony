@@ -1,0 +1,24 @@
+name: Refresh Downloads After Release Changes
+
+on:
+  release:
+    types: [published, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    name: Request a rebuild from trusted main
+    if: github.repository_id == '1440122208' && github.repository == 'pixel-brewery/symphony' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      # Ignore release-provided source refs and data. Deployment always executes
+      # the reviewed workflow on main, with metadata validation before publication.
+      - name: Refresh the public download site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish-pages.yml --ref main --repo "$GITHUB_REPOSITORY"
