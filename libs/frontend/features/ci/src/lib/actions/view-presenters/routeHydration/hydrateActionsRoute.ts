@@ -6,8 +6,8 @@
  */
 export async function hydrateActionsRoute(store: {
   initialize(): Promise<void>;
-  refreshContinuousIntegrationRuns(): Promise<void>;
+  refreshContinuousIntegrationRuns(includeWorkflowCatalog?: boolean): Promise<void>;
 }): Promise<void> {
   await store.initialize();
-  await store.refreshContinuousIntegrationRuns();
+  await store.refreshContinuousIntegrationRuns(true);
 }

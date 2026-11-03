@@ -18,6 +18,8 @@
 
 ## Aufbau
 
+Beim Öffnen lädt Actions die Workflow-Liste zusammen mit den aktuellen Läufen. Auch ohne zuvor gespeicherte Daten erscheinen dadurch Workflows ohne bisherige Läufe. **Refresh** und **Retry** lesen ebenfalls beides neu; die automatische Aktualisierung der Läufe behält die vorhandene Workflow-Liste bei. Schlägt eine Aktualisierung fehl, bleiben zuletzt erfolgreich geladene Daten mit einem Hinweis verfügbar.
+
 | Bereich            | Inhalt                                                                                                                                                                                                                                                                                  |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Werkzeugleiste     | Titel **Actions**, darunter Repository, Anzahl laufender und fehlschlagender Workflows (`example/project · 2 running · 1 failing`); rechts Filter und **Refresh**                                                                                                                       |

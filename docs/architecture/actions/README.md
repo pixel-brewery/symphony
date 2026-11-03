@@ -19,6 +19,14 @@ Der Actions-Bildschirm (`/main/actions`, CI-Feature) projiziert GitHub-Actions-L
 
 Eingaben: `CiStore` (`runs`, `workflows`, `remoteData`, `localCiRunningRunId`, `localCiStartedAt`, `continuousIntegrationRunsBusy`, `localCiEnabledFor`) und der Port `CI_ACTION_CONTEXT` (Snapshot-Felder `localCiExecutions`, `executions`; Einstellungen `repositoryBindings`, `agentProfiles`, `runtime.agenticDelivery`). `ICiAgentExecution` ist eine strukturelle Teilmenge der Ausführungsdatensätze, damit das CI-Feature nicht vom Execution-Feature abhängt. `EXECUTION_OPERATIONS` wird optional injiziert.
 
+### Initiales Laden und überlappende Aktualisierungen
+
+Der Einstieg in Actions wartet auf die bestehende Anwendungsinitialisierung und fordert anschließend mit `ci.runs.refresh` und `includeWorkflowCatalog: true` Workflow-Definitionen und Läufe an. Der Hydratable-Ladezustand endet erst nach dieser Anfrage. Die Definitionen liefern auch Workflows ohne Läufe sowie deren Dispatch-Fähigkeiten. Manuelles `Refresh` und `Retry` nutzen dieselbe inklusive Anfrage; gewöhnliche Laufaktualisierungen behalten die gespeicherten Definitionen bei.
+
+Ein gemeinsamer Projektionsbesitzer verwaltet je aktiver Scope-Kennung die laufende Provideranfrage und merkt, ob sie den Katalog einschließt. Eine Laufanfrage darf eine laufende inklusive Anfrage teilen. Eine inklusive Anfrage darf dagegen keine reine Laufanfrage als Erfüllung ihres Katalogbedarfs behandeln: Sie wartet deren Abschluss ab und startet danach einen vollständigen Read. Mehrere wartende inklusive Aufrufer teilen diesen nachfolgenden Read. Ein bereits laufender vollständiger Read wird im selben Scope von beiden Anfragearten geteilt.
+
+Nach dem Warten wird der aktuelle Scope erneut bestimmt. Ein Read des vorherigen Scopes darf keine Projektion für den neu gewählten Scope speichern. Erfolgreiche Laufaktualisierungen speichern neue Läufe zusammen mit dem bisherigen Katalog; schlägt der anschließende Katalog-Read fehl, bleibt genau diese zuletzt gespeicherte Projektion mit dem bestehenden Fehler-/Veraltetstatus verfügbar. Ohne gespeicherte Projektion liefert die vorhandene Fehlerbehandlung leere Daten und den Fehlerstatus. Diese Reihenfolge ändert keine Provider-Timeouts, Wiederholungsregeln oder Pollingintervalle. Der aktuelle Besitzer ist `ContinuousIntegrationProjectionService`; der Route-Einstieg bleibt bei `hydrateActionsRoute` und `ActionsViewPresenter`.
+
 ### Höhenvertrag, Scrollen und Workflow-Auswahl
 
 Die Actions-Route erhält eine begrenzte verfügbare Höhe aus der Fensterkomposition. Jeder beteiligte Flex-/Grid-Elterncontainer erlaubt mit Mindesthöhe null das Schrumpfen seiner Kinder und begrenzt äußeren Überlauf. Der Bildschirm darf durch zusätzliche Zeilen oder langen Text nicht höher als sein zugewiesener Bereich werden. Die Werkzeugleiste gehört weiterhin zum festen Fensterkopf. Der optionale Hinweis auf veraltete Daten, der Ansichtskopf und die Dispatch-Aktionen stehen außerhalb der jeweiligen Inhalts-Scroller.
@@ -107,6 +115,7 @@ Die agentische Auslieferung kennzeichnet jede Ausführung, die sie für einen fe
 ## Abnahme
 
 - `/main/actions` öffnet `All runs`; `actions-running` listet alle aktiven Zeilen, `actions-history` die abgeschlossenen, neueste zuerst.
+- Ein Einstieg ohne gespeicherten Katalog liest Workflow-Definitionen. Trifft er auf einen laufenden reinen Lauf-Read, folgt genau ein von inklusiven Aufrufern geteilter Katalog-Read. Ein Fehler erhält die zuletzt gespeicherten Läufe und Definitionen; ein Scope-Wechsel speichert keine alten Daten unter dem neuen Scope.
 - Ein Workflow-Klick setzt `?workflow=`; Back führt zu `All runs` zurück.
 - `?run=` öffnet den Drawer und wählt Workflow und Lauf.
 - Filter, Suche und `?status=` grenzen alle Listen ein.
