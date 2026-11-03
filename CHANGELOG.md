@@ -1,3 +1,13 @@
+## 0.1.26 (2026-11-03)
+
+### 🩹 Fixes
+
+- **storage:** explain blocked local CI starts ([01edd2e](https://github.com/pixel-brewery/symphony/commit/01edd2e))
+
+### ❤️ Thank You
+
+- RueDeRennes @RueDeRennes
+
 ## 0.1.25 (2026-11-02)
 
 This was a version bump only, there were no code changes.
