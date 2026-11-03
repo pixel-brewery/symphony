@@ -1,0 +1,51 @@
+SYMPHONY - INSTALL AND FIRST LAUNCH
+
+You do not need an Apple Developer account or a paid certificate to install Symphony.
+This build has an ad-hoc bundle seal and is not notarized by Apple. macOS may ask
+you to approve this copy of Symphony before its first launch.
+
+1. Drag Symphony.app onto Applications in this disk image. Wait for the copy to finish.
+2. Open Applications in Finder and double-click Symphony there.
+3. If macOS blocks the launch because the developer cannot be verified, click Done.
+4. Open System Settings > Privacy & Security. Scroll down to the Security section.
+5. Find the message about Symphony and click Open Anyway. Approve Symphony only;
+   leave the general security settings unchanged.
+6. Confirm with Open and authenticate if macOS asks. You can then launch this copy
+   normally from Applications.
+
+Open Anyway appears only after a blocked launch and is available for a limited time.
+If you do not see it, try step 2 again, dismiss the message with Done, and return
+to Privacy & Security. A managed Mac may restrict this option; ask its administrator.
+If macOS reports malware or an altered download, check the download and Apple's
+guidance instead of following these approval steps.
+
+Apple's instructions:
+https://support.apple.com/102445
+
+
+SYMPHONY - INSTALLATION UND ERSTER START
+
+Du brauchst kein Apple-Developer-Konto und kein kostenpflichtiges Zertifikat.
+Dieser Build hat eine Ad-hoc-Signatur und ist nicht von Apple beglaubigt. macOS
+kann deshalb vor dem ersten Start eine Freigabe dieser Symphony-Kopie verlangen.
+
+1. Ziehe Symphony.app auf Applications (Programme) in diesem Disk-Image.
+   Warte, bis der Kopiervorgang abgeschlossen ist.
+2. Öffne Programme im Finder und starte Symphony dort per Doppelklick.
+3. Blockiert macOS den Start, weil der Entwickler nicht verifiziert werden kann,
+   wähle Fertig.
+4. Öffne Systemeinstellungen > Datenschutz & Sicherheit und scrolle zu Sicherheit.
+5. Suche den Hinweis zu Symphony und wähle Dennoch öffnen. Gib nur Symphony frei;
+   die allgemeinen Sicherheitseinstellungen bleiben unverändert.
+6. Bestätige mit Öffnen und authentifiziere dich, falls macOS danach fragt.
+   Danach kannst du diese Kopie normal aus Programme starten.
+
+Dennoch öffnen erscheint erst nach einem blockierten Start und nur für begrenzte
+Zeit. Fehlt die Taste, wiederhole Schritt 2, schließe den Hinweis mit Fertig und
+öffne Datenschutz & Sicherheit erneut. Bei einem verwalteten Mac kann diese Option
+gesperrt sein; frage die Administration. Meldet macOS Schadsoftware oder einen
+veränderten Download, prüfe den Download und Apples Hinweise, statt diese Freigabe
+vorzunehmen.
+
+Apples Anleitung:
+https://support.apple.com/de-de/102445

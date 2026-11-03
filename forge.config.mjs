@@ -1,4 +1,5 @@
-// forge.config.mjs
+// #region Imports
+
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerDMG } from '@electron-forge/maker-dmg';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
@@ -9,11 +10,17 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// #endregion
+
 const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 const executableName = 'Symphony';
 const iconRoot = resolve(repositoryRoot, 'resources/icons');
 const iconBase = resolve(iconRoot, 'symphony');
 const windowsIcon = resolve(iconRoot, 'symphony.ico');
+const macosFirstLaunchGuide = resolve(
+  repositoryRoot,
+  'resources/macos/Read me first - Open Symphony.txt',
+);
 const speechHelperApp = resolve(
   repositoryRoot,
   'node_modules/electron-native-speech-backend-macos/bin/SpeechHelper.app',
@@ -61,6 +68,14 @@ export default {
       title: 'Symphony',
       icon: `${iconBase}.icns`,
       format: 'UDZO',
+      contents: ({ appPath }) => [
+        { x: 320, y: 120, type: 'file', path: macosFirstLaunchGuide },
+        { x: 192, y: 344, type: 'file', path: appPath },
+        { x: 448, y: 344, type: 'link', path: '/Applications' },
+      ],
+      additionalDMGOptions: {
+        window: { size: { width: 658, height: 498 } },
+      },
     })),
     new MakerDeb({
       options: {

@@ -4,5 +4,5 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["tools/**/*.ts", "vitest.config.ts"]
+  "include": ["tools/**/*.ts", "vitest.config.ts", "forge.config.spec.ts"]
 }

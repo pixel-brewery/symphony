@@ -7,6 +7,6 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['apps/desktop/src/**/*.spec.ts', 'tools/**/*.spec.ts'],
+    include: ['apps/desktop/src/**/*.spec.ts', 'tools/**/*.spec.ts', 'forge.config.spec.ts'],
   },
 });

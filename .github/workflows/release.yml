@@ -542,7 +542,14 @@ jobs:
             echo
             echo "These builds have no publisher certificate: macOS uses an ad-hoc bundle seal and is not notarized; Windows and Debian installers are unsigned. Gatekeeper or SmartScreen may require an explicit approval. Review the public source and verify the release-manifest SHA-256 values. Download and run at your own discretion. The MIT license supplies the software as-is, without warranty."
             echo
-            echo "On macOS, copy Symphony to Applications, try to open it once, then allow it under System Settings > Privacy & Security > Open Anyway. If macOS still reports the checksum-verified app as damaged, remove only its download quarantine with \`xattr -dr com.apple.quarantine /Applications/Symphony.app\`."
+            echo "### macOS first launch — no Apple Developer membership required"
+            echo
+            echo "1. Open the DMG and read \`Read me first - Open Symphony.txt\`. Drag Symphony to Applications."
+            echo "2. Open Symphony from Applications once. If macOS blocks it, choose Done."
+            echo "3. Open System Settings > Privacy & Security, scroll to Security, and choose Open Anyway (German: Dennoch öffnen). Confirm Open."
+            echo "4. Open Symphony normally from Applications afterwards. If Open Anyway is missing, attempt to open Symphony again and return to Privacy & Security."
+            echo
+            echo "This is an explicit approval for Symphony. No Apple Developer account, paid certificate, or global security change is required."
             echo
             echo "Source and release downloads are public at https://github.com/pixel-brewery/symphony."
             echo
