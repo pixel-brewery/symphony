@@ -4,6 +4,7 @@
 
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import {
   applicationSettingsSchema,
@@ -34,18 +35,25 @@ function status(repositoryBindingId: string, prepared: boolean): Status {
   };
 }
 
-function arrange(automatic: readonly string[] = []) {
+function arrange(
+  automatic: readonly string[] = [],
+  repositoryId = 'example',
+  workspaceId = 'personal',
+) {
   const defaults = applicationSettingsSchema.parse(createDefaultApplicationSettings('/repos'));
   const repository = (id: string, enabled = true) => ({
     id,
-    workspaceId: 'personal',
+    workspaceId,
     displayName: id,
     enabled,
   });
   const settings = {
     ...defaults,
+    workspaces: defaults.workspaces.map((workspace) =>
+      workspace.id === 'personal' ? { ...workspace, id: workspaceId } : workspace,
+    ),
     repositoryBindings: [
-      repository('example'),
+      repository(repositoryId),
       repository('example-mobile'),
       repository('archived', false),
     ],
@@ -59,16 +67,18 @@ function arrange(automatic: readonly string[] = []) {
   };
   const client = {
     request: vi.fn(async () => [
-      status('example', true),
+      status(repositoryId, true),
       status('example-mobile', false),
       status('archived', false),
     ]),
   };
+  const router = { navigate: vi.fn(async () => true) };
   TestBed.configureTestingModule({
     providers: [
       RepositoryPreparationNotificationSource,
       { provide: RepositoryRuntimeStore, useValue: runtime },
       { provide: REPOSITORY_RUNTIME_CLIENT, useValue: client },
+      { provide: Router, useValue: router },
       { provide: ConfigurationStore, useValue: { settings: signal(settings) } },
       {
         provide: AUTOMATION_PREPARATION,
@@ -79,7 +89,12 @@ function arrange(automatic: readonly string[] = []) {
       },
     ],
   });
-  return { source: TestBed.inject(RepositoryPreparationNotificationSource), runtime, client };
+  return {
+    source: TestBed.inject(RepositoryPreparationNotificationSource),
+    runtime,
+    client,
+    router,
+  };
 }
 
 describe('RepositoryPreparationNotificationSource', () => {
@@ -140,5 +155,67 @@ describe('RepositoryPreparationNotificationSource', () => {
     // assert
     expect(runtime.applyRepositoryRuntimeStatuses).toHaveBeenCalledOnce();
     expect(source.items()).toHaveLength(1);
+  });
+
+  it('keeps a failed inspection actionable in its workspace instead of attempting preparation', async () => {
+    // arrange
+    const { source, runtime, router } = arrange();
+    runtime.applyRepositoryRuntimeStatuses([
+      {
+        ...status('example', false),
+        preparation: { state: 'unprepared', inspectionError: 'fatal: not a git repository' },
+      },
+      status('example-mobile', true),
+    ]);
+
+    // act
+    const items = source.items();
+    await source.perform('repository-preparation:example', 'prepare');
+    await source.perform('repository-preparation:example', 'open-repository');
+
+    // assert
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      severity: 'error',
+      title: 'example cannot be inspected locally',
+      location: ['Personal', 'Repositories'],
+      scope: { kind: 'workspace', workspaceId: 'personal', name: 'Personal' },
+      detail: expect.stringContaining('fatal: not a git repository'),
+      actions: [expect.objectContaining({ id: 'open-repository' })],
+    });
+    expect(runtime.prepareRepository).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledExactlyOnceWith(['/main/settings'], {
+      queryParams: { workspace: 'personal', section: 'repositories', repository: 'example' },
+    });
+
+    // act
+    runtime.applyRepositoryRuntimeStatuses([status('example', true)]);
+
+    // assert
+    expect(source.items()).toEqual([]);
+  });
+
+  it('opens valid domain identifiers containing separators without native parameter narrowing', async () => {
+    // arrange
+    const { source, runtime, router } = arrange([], 'repository:example', 'workspace:example');
+    runtime.applyRepositoryRuntimeStatuses([
+      {
+        ...status('repository:example', false),
+        workspaceId: 'workspace:example',
+        preparation: { state: 'unprepared', inspectionError: 'invalid Git' },
+      },
+    ]);
+
+    // act
+    await source.perform('repository-preparation:repository:example', 'open-repository');
+
+    // assert
+    expect(router.navigate).toHaveBeenCalledExactlyOnceWith(['/main/settings'], {
+      queryParams: {
+        workspace: 'workspace:example',
+        section: 'repositories',
+        repository: 'repository:example',
+      },
+    });
   });
 });

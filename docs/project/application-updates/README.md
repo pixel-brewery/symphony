@@ -20,6 +20,18 @@ Nach jeder vollständig veröffentlichten Version und nach einer neuen Stable-Au
 
 Wähle den Installer für dein Betriebssystem und prüfe vor dem Start bei Bedarf seine SHA-256-Prüfsumme. Der Download allein installiert nichts: Unter macOS öffnest du das Disk-Image und ersetzt Symphony im Ordner **Programme**; unter Windows startest du das Setup; unter Linux installierst du das Debian-Paket. Die Hinweise zur Signierung und mögliche Bestätigungen des Betriebssystems gelten auch für diese manuellen Downloads. Intel- beziehungsweise x64-Installer werden derzeit nicht angeboten.
 
+## macOS: installieren und erstmals öffnen
+
+Das Disk-Image zeigt oberhalb von Symphony und dem Programme-Ziel die Datei **Read me first - Open Symphony.txt**. Sie erklärt den ersten Start auf Deutsch und Englisch. Dafür brauchst du kein Apple-Developer-Konto und kein kostenpflichtiges Zertifikat.
+
+1. Ziehe **Symphony.app** auf **Applications (Programme)** und warte, bis der Kopiervorgang abgeschlossen ist.
+2. Öffne **Programme** im Finder und starte Symphony dort per Doppelklick.
+3. Blockiert macOS den Start wegen eines nicht verifizierten Entwicklers, wähle **Fertig**.
+4. Öffne **Systemeinstellungen → Datenschutz & Sicherheit**, scrolle zu **Sicherheit** und wähle beim Hinweis zu Symphony **Dennoch öffnen**.
+5. Bestätige mit **Öffnen** und authentifiziere dich, falls macOS danach fragt. Danach lässt sich diese Symphony-Kopie normal starten.
+
+**Dennoch öffnen** erscheint erst nach einem blockierten Start und nur für begrenzte Zeit. Fehlt die Taste, versuche erneut Schritt 2 und kehre danach zu den Systemeinstellungen zurück. Ein verwalteter Mac kann die Ausnahme untersagen. Die Anleitung führt keine Befehle aus und verändert keine allgemeinen Sicherheitseinstellungen. Den Ablauf für diese einzelne App beschreibt [Apple](https://support.apple.com/de-de/102445).
+
 ## Neue Versionen finden
 
 Symphony prüft etwa 15 Sekunden nach dem Start, danach stündlich sowie nach dem Aufwachen oder Entsperren des Rechners auf Updates. Ist eine neuere Version verfügbar, erscheint rechts in der [Statusleiste](../window-and-navigation/README.md#statusleiste) neben `Symphony v<Version>` eine Downloadschaltfläche mit dem Downloadsymbol. Ihr Hinweistext lautet `Download Symphony <Version>`. Dieselbe Aktion bietet auf macOS das Menüleisten-Menü (**Download update** mit der Versionsnummer). **Settings → System → Updates** zeigt nur den Zustand; Download und Neustart gehören der Statusleiste. Ohne verfügbares Update zeigt die Statusleiste keine Updateschaltfläche.

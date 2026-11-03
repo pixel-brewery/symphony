@@ -29,6 +29,12 @@ Die Liste enthält die `repositoryBindings` des Workspace. Der Zustand stammt au
 
 Der Laufzeitspeicher führt höchstens eine Repository-Operation zugleich (`repositoryRuntimeBusy`); währenddessen sind Vorbereiten, Aktualisieren und **Edit** gesperrt.
 
+Die schreibgeschützte Statusliste isoliert Fehler je Bindung und erhält Reihenfolge und gesunde Ergebnisse. Ohne `repositoryBindingId` umfasst der Abruf sämtliche konfigurierten Bindungen über Workspace-Grenzen hinweg; eine unbekannte ausdrücklich angeforderte Id bleibt ein Fehler. Eine nicht lesbare vorhandene Arbeitskopie ergibt für genau diese Bindung `preparation: { state: 'unprepared', inspectionError }`. `inspectionError` ist optional, nicht leer und höchstens 2.000 Zeichen lang. Fehlermeldungen werden auf diese Grenze gekürzt; leere oder nicht als `Error` vorliegende Ursachen erhalten `Local repository inspection failed.`. Ein nicht vorhandener Ordner bleibt dagegen `unprepared` ohne erfundene Diagnose. Die Liste klont, repariert und verändert keine Repository-Metadaten und speichert keine Pfade oder Freigaben.
+
+Die Konfigurationshydrierung lädt zuerst Einstellungen und anschließend Kontoverbindungen und Repository-Zustände unabhängig voneinander. Der Laufzeitspeicher übernimmt auch eine teilweise erfolgreiche Liste und liefert bei Inspektionsfehlern `false`; eine gesunde Bindung bleibt nutzbar. Ein Transportfehler erhält die zuletzt bestätigte Liste. Die Fehleranzeige unterscheidet **Unable to inspect the local repository.** mit `<Workspace> › <Repository>` von **Unable to refresh local repository statuses.** mit dem angeforderten Repository beziehungsweise **All configured workspaces**. Workspace- und Board-Wechsel speichern ebenfalls Einstellungen und können deshalb den globalen Abruf auslösen.
+
+Jeder Inspektionsfehler hat einen stabilen Meldungsschlüssel aus einem JSON-Tupel von Fehlerart, Workspace-Id und Repository-Id. Unveränderte Fehler werden über den vorhandenen Benachrichtigungsdienst zusammengefasst; ein bestätigter erfolgreicher Statusabruf dieser Bindung löscht ihre Fehlerepisode. Ein geänderter Fehler oder ein Fehler nach Erholung darf wieder eine Einblendung auslösen. Stille Aktualisierungen der Mitteilungsquelle übernehmen dieselben Statusdaten ohne zusätzliche Fehlertoasts. Einen vollständigen Abruftransportfehler behandelt ein eigener Schlüssel, den ein erfolgreicher Abruf wieder auflöst. Der genaue Gruppenvertrag steht unter [Mitteilungszentrale](../notifications-and-tray/README.md).
+
 ### Vorbereiten (`repositories.prepare`)
 
 1. Der Orchestrator prüft, dass das Kontingent des Workspace beschreibbar ist, sonst Abbruch mit einem Speicherstopp.
@@ -37,6 +43,8 @@ Der Laufzeitspeicher führt höchstens eine Repository-Operation zugleich (`repo
 4. Ein geänderter Pfad wird am Repository gespeichert. Der Renderer übernimmt den Status, lädt die Einstellungen neu, meldet `Repository prepared locally.` und benachrichtigt die Automatisierung über nicht vorbereitete Repositories für automatische Ausführungen.
 
 Die Mitteilungsquelle `repository-preparation` liefert für jedes eingeschaltete, nicht vorbereitete Repository eines aktivierten Workspace einen Eintrag (`<Name> is not prepared locally`, Ort `[Workspace, 'Repositories']`) mit der Aktion **Prepare locally**.
+
+Mit `inspectionError` wird derselbe beständige Eintrag stattdessen ein Fehler (`<Name> cannot be inspected locally`) mit Diagnose und **Open repository settings**. Die Aktion navigiert über den vorhandenen Renderer-Router nach `/main/settings` mit den Query-Parametern `workspace`, `section: 'repositories'` und `repository` zum betroffenen Editor. Die Ids bleiben unverändert und werden vom Router als Query-Werte kodiert; die engere native `settings.open`-Parameterallowlist ist an dieser lokalen Navigation nicht beteiligt. Sie führt weder Vorbereitung noch Reparatur aus. `repositories.prepare`, Verifikationsplanung/-ausführung und Agentenzulassung behalten ihre strenge Git-Prüfung: Ein Inspektionsfehler berechtigt keine schreibende Arbeit und wird nicht als bloß fehlender Checkout behandelt.
 
 ### Sheet `repository`
 

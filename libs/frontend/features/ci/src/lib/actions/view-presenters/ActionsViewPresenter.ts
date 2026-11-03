@@ -748,7 +748,8 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
   public override onHydrate(): Promise<void> {
     return hydrateActionsRoute({
       initialize: () => this._bootstrap.initialize(),
-      refreshContinuousIntegrationRuns: () => this._ci.refreshContinuousIntegrationRuns(),
+      refreshContinuousIntegrationRuns: (includeWorkflowCatalog) =>
+        this._ci.refreshContinuousIntegrationRuns(includeWorkflowCatalog),
     });
   }
 

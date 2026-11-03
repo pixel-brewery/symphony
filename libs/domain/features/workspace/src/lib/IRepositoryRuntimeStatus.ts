@@ -10,7 +10,11 @@ export interface IRepositoryRuntimeStatus {
   displayName: string;
   repositoryIdentity: string;
   preparation:
-    | { state: 'unprepared' }
+    | {
+        state: 'unprepared';
+        /** Read-only inspection failed; this is not confirmation that the folder is absent. */
+        inspectionError?: string;
+      }
     | { state: 'prepared'; path: string; revision: string; managed: boolean };
   trust: {
     state: 'restricted' | 'trusted';

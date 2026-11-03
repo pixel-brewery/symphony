@@ -2,6 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { RepositoryRuntimeService } from './RepositoryRuntimeService';
+import type { IRepositoryAcquisitionPort } from './ports/IRepositoryAcquisitionPort';
 import type { IRepositoryTrustRepository } from './ports/IRepositoryTrustRepository';
 import type { IVerificationRepository } from '@symphony/application-ci';
 import type { IApplicationSettings } from '@symphony/configuration-composition';
@@ -36,7 +37,10 @@ const prepared: IPreparedRepository = {
   managed: true,
 };
 
-function fixture(steps?: readonly IVerificationStep[]) {
+function fixture(
+  steps?: readonly IVerificationStep[],
+  repositoryBindings: readonly IRepositoryBinding[] = [repository],
+) {
   let settings: IApplicationSettings = {
     ...createDefaultApplicationSettings('/tmp'),
     workspaces: [
@@ -51,11 +55,21 @@ function fixture(steps?: readonly IVerificationStep[]) {
         localCiEnabled: false,
       },
     ],
-    repositoryBindings: [repository],
+    repositoryBindings: [...repositoryBindings],
   };
   const grants = new Map<string, IRepositoryTrustGrant>();
   const plans = new Map<string, IVerificationPlan>();
   const runs: IVerificationRun[] = [];
+  const inspect = vi.fn<IRepositoryAcquisitionPort['inspect']>(async () => prepared);
+  const prepare = vi.fn<IRepositoryAcquisitionPort['prepare']>(async () => prepared);
+  const saveRepositoryPath = vi.fn(async (repositoryBindingId: string, path: string) => {
+    settings = {
+      ...settings,
+      repositoryBindings: settings.repositoryBindings.map((candidate) =>
+        candidate.id === repositoryBindingId ? { ...candidate, localPath: path } : candidate,
+      ),
+    };
+  });
   let sequence = 0;
   const executor = vi.fn(async () => [
     {
@@ -77,20 +91,10 @@ function fixture(steps?: readonly IVerificationStep[]) {
   };
   const service = new RepositoryRuntimeService({
     settings: () => settings,
-    saveRepositoryPath: async (repositoryBindingId, path) => {
-      settings = {
-        ...settings,
-        repositoryBindings: settings.repositoryBindings.map((candidate) =>
-          candidate.id === repositoryBindingId ? { ...candidate, localPath: path } : candidate,
-        ),
-      };
-    },
+    saveRepositoryPath,
     managedRepositoryRoot: () => '/managed',
     verificationRuntimeRoot: () => '/runtime',
-    acquisition: {
-      inspect: async () => prepared,
-      prepare: async () => prepared,
-    },
+    acquisition: { inspect, prepare },
     verificationWorkspace: {
       prepareVerification: async () => '/worktree',
       release: async () => true,
@@ -120,10 +124,144 @@ function fixture(steps?: readonly IVerificationStep[]) {
     clock: { now: () => '2026-08-13T10:00:00.000Z' },
     ids: { next: (prefix) => `${prefix}-${++sequence}` },
   });
-  return { service, grants, plans, runs, executor };
+  return { service, grants, plans, runs, executor, inspect, prepare, saveRepositoryPath };
 }
 
 describe('RepositoryRuntimeService', () => {
+  it('retains healthy and absent bindings when one local Git inspection fails without repairing any repository', async () => {
+    // arrange
+    const invalid = { ...repository, id: 'invalid', displayName: 'Invalid', localPath: '/broken' };
+    const absent = { ...repository, id: 'absent', displayName: 'Absent', localPath: '' };
+    const test = fixture(undefined, [invalid, repository, absent]);
+    test.inspect.mockImplementation(async (binding) => {
+      if (binding.id === invalid.id) throw new Error('fatal: not a git repository');
+      return binding.id === absent.id ? undefined : prepared;
+    });
+
+    // act
+    const statuses = await test.service.statuses();
+
+    // assert
+    expect(statuses.map((status) => status.repositoryBindingId)).toEqual([
+      'invalid',
+      'repository-1',
+      'absent',
+    ]);
+    expect(statuses[0]).toMatchObject({
+      displayName: 'Invalid',
+      preparation: {
+        state: 'unprepared',
+        inspectionError: 'fatal: not a git repository',
+      },
+      trust: { state: 'restricted', capabilities: [] },
+    });
+    expect(statuses[1]?.preparation).toEqual({
+      state: 'prepared',
+      path: prepared.path,
+      revision: prepared.revision,
+      managed: true,
+    });
+    expect(statuses[2]?.preparation).toEqual({ state: 'unprepared' });
+    expect(test.inspect).toHaveBeenCalledTimes(3);
+    expect(test.prepare).not.toHaveBeenCalled();
+    expect(test.saveRepositoryPath).not.toHaveBeenCalled();
+    expect(test.grants.size).toBe(0);
+    expect(test.plans.size).toBe(0);
+    expect(test.runs).toEqual([]);
+    expect(test.executor).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: 'oversized errors', cause: new Error('x'.repeat(3_000)), expected: 'x'.repeat(2_000) },
+    {
+      label: 'empty errors',
+      cause: new Error('   '),
+      expected: 'Local repository inspection failed.',
+    },
+    {
+      label: 'unknown failures',
+      cause: { stderr: 'untrusted failure object' },
+      expected: 'Local repository inspection failed.',
+    },
+  ])(
+    'bounds inspection diagnostics for $label without serializing arbitrary failures',
+    async ({ cause, expected }) => {
+      // arrange
+      const test = fixture();
+      test.inspect.mockRejectedValue(cause);
+
+      // act
+      const statuses = await test.service.statuses('repository-1');
+
+      // assert
+      expect(statuses[0]?.preparation).toEqual({
+        state: 'unprepared',
+        inspectionError: expected,
+      });
+    },
+  );
+
+  it('clears a transient inspection diagnostic when the same binding becomes readable again', async () => {
+    // arrange
+    const test = fixture();
+    test.inspect.mockRejectedValueOnce(new Error('fatal: not a git repository'));
+    await test.service.statuses('repository-1');
+
+    // act
+    const statuses = await test.service.statuses('repository-1');
+
+    // assert
+    expect(statuses[0]?.preparation).toEqual({
+      state: 'prepared',
+      path: prepared.path,
+      revision: prepared.revision,
+      managed: true,
+    });
+  });
+
+  it('still rejects unknown binding identifiers rather than returning a successful empty result', async () => {
+    // arrange
+    const test = fixture();
+
+    // act
+    const result = test.service.statuses('unknown');
+
+    // assert
+    await expect(result).rejects.toThrow('Unknown repository binding: unknown');
+    expect(test.inspect).not.toHaveBeenCalled();
+  });
+
+  it('keeps preparation, verification and agent admission fail-closed after an inspection error', async () => {
+    // arrange
+    const test = fixture();
+    const signal = new AbortController().signal;
+    const plan = await test.service.createVerificationPlan('repository-1', signal);
+    test.inspect.mockRejectedValue(new Error('fatal: not a git repository'));
+
+    // act
+    const statuses = await test.service.statuses('repository-1');
+
+    // assert
+    expect(statuses[0]?.preparation.state).toBe('unprepared');
+    await expect(test.service.prepare('repository-1', signal)).rejects.toThrow(
+      'not a git repository',
+    );
+    await expect(test.service.createVerificationPlan('repository-1', signal)).rejects.toThrow(
+      'not a git repository',
+    );
+    await expect(
+      test.service.runVerification('repository-1', plan.id, 'repository', signal),
+    ).rejects.toThrow('not a git repository');
+    await expect(test.service.authorizeAgentExecution(workItem(), undefined)).rejects.toThrow(
+      'not a git repository',
+    );
+    expect(test.saveRepositoryPath).not.toHaveBeenCalled();
+    expect(test.grants.size).toBe(0);
+    expect(test.plans.size).toBe(1);
+    expect(test.runs).toEqual([]);
+    expect(test.executor).not.toHaveBeenCalled();
+  });
+
   it('keeps a prepared repository restricted until a local approval is recorded', async () => {
     // act
     // arrange

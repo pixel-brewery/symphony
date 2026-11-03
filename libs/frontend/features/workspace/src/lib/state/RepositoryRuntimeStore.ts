@@ -84,9 +84,10 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
     @Inject(REPOSITORY_RUNTIME_CLIENT)
     private readonly _client: IRepositoryRuntimeClient = inject(REPOSITORY_RUNTIME_CLIENT),
     @Inject(ConfigurationStore)
-    private readonly _configuration: Pick<ConfigurationStore, 'refreshSettings'> = inject(
+    private readonly _configuration: Pick<
       ConfigurationStore,
-    ),
+      'refreshSettings' | 'settings'
+    > = inject(ConfigurationStore),
     @Optional()
     @Inject(AUTOMATION_PREPARATION)
     private readonly _preparation: IAutomationPreparation | null = inject(AUTOMATION_PREPARATION, {
@@ -95,7 +96,7 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
     @Inject(NotificationService)
     private readonly _notifications: Pick<
       NotificationService,
-      'showError' | 'showSuccess' | 'showWarning'
+      'showError' | 'showSuccess' | 'showWarning' | 'resolveError'
     > = inject(NotificationService),
   ) {}
 
@@ -112,6 +113,11 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
     statuses: ResponsePayload<'repositories.runtime.list'>,
   ): void {
     this._repositoryRuntimeStatuses.set(statuses);
+    this._notifications.resolveError(this.refreshErrorKey());
+    for (const status of statuses) {
+      this._notifications.resolveError(this.refreshErrorKey(status.repositoryBindingId));
+      this.resolveInspectionError(status);
+    }
   }
 
   /**
@@ -137,11 +143,34 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
       const statuses = await this._client.request('repositories.runtime.list', {
         repositoryBindingId,
       });
-      if (!repositoryBindingId) this._repositoryRuntimeStatuses.set(statuses);
+      this._notifications.resolveError(this.refreshErrorKey(repositoryBindingId));
+      if (!repositoryBindingId) this.applyRepositoryRuntimeStatuses(statuses);
       else if (statuses[0]) this.upsertRepositoryRuntimeStatus(statuses[0]);
-      return true;
+      let inspected = true;
+      for (const status of statuses) {
+        if (status.preparation.state !== 'unprepared' || !status.preparation.inspectionError) {
+          continue;
+        }
+        inspected = false;
+        this._notifications.showError(
+          'Unable to inspect the local repository.',
+          `${this.workspaceName(status.workspaceId)} › ${status.displayName}: ${operatorErrorMessage(status.preparation.inspectionError)}`,
+          this.inspectionErrorKey(status),
+        );
+      }
+      return inspected;
     } catch (cause) {
-      this.showError(cause, 'Unable to inspect the local repository.');
+      const repository = this._configuration
+        .settings()
+        ?.repositoryBindings.find((candidate) => candidate.id === repositoryBindingId);
+      const context = repository
+        ? `${this.workspaceName(repository.workspaceId)} › ${repository.displayName}`
+        : 'All configured workspaces';
+      this._notifications.showError(
+        'Unable to refresh local repository statuses.',
+        `${context}: ${operatorErrorMessage(cause)}`,
+        this.refreshErrorKey(repositoryBindingId),
+      );
       return false;
     }
   }
@@ -255,6 +284,31 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
       ),
       status,
     ]);
+    this.resolveInspectionError(status);
+  }
+
+  private resolveInspectionError(status: ResponsePayload<'repositories.prepare'>): void {
+    if (status.preparation.state === 'unprepared' && status.preparation.inspectionError) return;
+    this._notifications.resolveError(this.inspectionErrorKey(status));
+  }
+
+  private inspectionErrorKey(status: ResponsePayload<'repositories.prepare'>): string {
+    return JSON.stringify([
+      'repository-inspection',
+      status.workspaceId,
+      status.repositoryBindingId,
+    ]);
+  }
+
+  private refreshErrorKey(repositoryBindingId?: string): string {
+    return JSON.stringify(['repository-status-refresh', repositoryBindingId ?? null]);
+  }
+
+  private workspaceName(workspaceId: string): string {
+    return (
+      this._configuration.settings()?.workspaces.find((workspace) => workspace.id === workspaceId)
+        ?.displayName ?? workspaceId
+    );
   }
 
   private showError(cause: unknown, fallback: string): void {

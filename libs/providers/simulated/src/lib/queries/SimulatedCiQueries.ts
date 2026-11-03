@@ -91,6 +91,7 @@ export class SimulatedCiQueries {
    */
   public continuousIntegration() {
     const now = new Date().toISOString();
+    const layoutFixture = process.env['SYMPHONY_SIMULATED_CI_LAYOUT_FIXTURE'] === '1';
     const selectedWorkspaceIds = new Set(this._settings().activeViewScope.workspaceIds);
     const bindings = this._settings().ciBindings.filter(
       (binding) =>
@@ -136,9 +137,11 @@ export class SimulatedCiQueries {
           workspaceId: binding.workspaceId,
           ciBindingId: binding.id,
           repositoryBindingId: repository.id,
-          name: 'Cache Maintenance',
+          name: layoutFixture
+            ? 'Cache Maintenance with a deliberately long workflow name for layout inspection'
+            : 'Cache Maintenance',
           path: '.github/workflows/cache.yml',
-          state: 'active' as const,
+          state: layoutFixture ? ('disabled' as const) : ('active' as const),
           defaultBranch: repository.defaultBranch,
           supportsManualDispatch: false,
           externalUrl: `https://${repository.host}/${repository.owner}/${repository.name}/actions/workflows/cache.yml`,
@@ -150,10 +153,19 @@ export class SimulatedCiQueries {
         (candidate) => candidate.id === workflow.repositoryBindingId,
       );
       if (!repository) return [];
-      const startedAt = new Date(Date.now() - (index + 1) * 11 * 60_000).toISOString();
-      return [
-        {
-          id: `${workflow.ciBindingId}:${7_000 + index}`,
+      return Array.from({ length: layoutFixture ? 24 : 1 }, (_, historyIndex) => {
+        const providerRunId = 7_000 + index + historyIndex * ciWorkflows.length;
+        const startedAt = new Date(
+          Date.now() - (index + 1) * 11 * 60_000 - historyIndex * 60_000,
+        ).toISOString();
+        const status =
+          layoutFixture && index === 1 && historyIndex === 0
+            ? ('failed' as const)
+            : index === 1 && historyIndex === 0
+              ? ('queued' as const)
+              : ('succeeded' as const);
+        return {
+          id: `${workflow.ciBindingId}:${providerRunId}`,
           workspaceId: workflow.workspaceId,
           ciBindingId: workflow.ciBindingId,
           repositoryBindingId: workflow.repositoryBindingId,
@@ -162,18 +174,18 @@ export class SimulatedCiQueries {
           title: index === 0 ? 'Improve pull request quality checks' : workflow.name,
           event: index === 0 ? 'pull_request' : 'workflow_dispatch',
           actor: 'local-developer',
-          runNumber: 350 - index,
-          status: index === 1 ? ('queued' as const) : ('succeeded' as const),
+          runNumber: 350 - index - historyIndex,
+          status,
           branch: repository.defaultBranch,
-          revision: `simulated-${index + 1}`,
-          externalUrl: `https://${repository.host}/${repository.owner}/${repository.name}/actions/runs/${7_000 + index}`,
+          revision: `simulated-${index + 1}${historyIndex ? '-' + historyIndex : ''}`,
+          externalUrl: `https://${repository.host}/${repository.owner}/${repository.name}/actions/runs/${providerRunId}`,
           startedAt,
-          ...(index === 1
+          ...(status === 'queued'
             ? {}
             : { finishedAt: new Date(Date.parse(startedAt) + 45_000).toISOString() }),
           runAttempt: 1,
-        },
-      ];
+        };
+      });
     });
     return {
       ciWorkflows,
@@ -232,6 +244,18 @@ export class SimulatedCiQueries {
       1,
       Math.min(200, Number(process.env['SYMPHONY_SIMULATED_CI_JOB_COUNT']) || 1),
     );
+    const failed =
+      process.env['SYMPHONY_SIMULATED_CI_LAYOUT_FIXTURE'] === '1' &&
+      this.continuousIntegration().ciRuns.some(
+        (run) => run.id === runId && run.status === 'failed',
+      );
+    const failureLog = failed
+      ? Array.from(
+          { length: 40 },
+          (_, index) =>
+            `Verification output ${index + 1}: expected a successful check, received a failed assertion.`,
+        ).join('\n')
+      : undefined;
     const definitions = Array.from({ length: count }, (_, index) => ({
       id: index === 0 ? 'quality' : `job-${index}`,
       name: index === 0 ? 'PR Quality' : `Parallel verification ${index}`,
@@ -240,7 +264,8 @@ export class SimulatedCiQueries {
     }));
     return {
       runId,
-      logOutput: 'Typecheck and test completed successfully.',
+      logOutput: failureLog ?? 'Typecheck and test completed successfully.',
+      ...(failureLog ? { failureLog } : {}),
       localDiagnostics: 'Resources\nCPUs: 4\nMem: 8Gi\nSwap: 4Gi',
       workflowGraph: {
         revision: 'fixture-ci-revision',
@@ -253,7 +278,7 @@ export class SimulatedCiQueries {
           id: `${runId}:job:quality`,
           workflowJobId: 'quality',
           name: 'PR Quality',
-          status: 'succeeded' as const,
+          status: failed ? ('failed' as const) : ('succeeded' as const),
           startedAt: '2026-08-15T06:00:00.000Z',
           finishedAt: '2026-08-15T06:05:00.000Z',
           steps: [
@@ -265,7 +290,7 @@ export class SimulatedCiQueries {
             {
               id: `${runId}:job:quality:step:test`,
               name: 'Typecheck and test',
-              status: 'succeeded' as const,
+              status: failed ? ('failed' as const) : ('succeeded' as const),
             },
           ],
         },

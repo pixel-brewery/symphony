@@ -100,26 +100,42 @@
       <mosaik-skeleton [width]="row % 2 ? '6.5rem' : '8rem'" [height]="'14px'" [shimmer]="true" />
     </div>
     } } @else { @for (entry of presenter.workflowEntries(); track entry.workflow.id) {
-    <div class="flex min-w-0 items-center pl-1">
-      <mosaik-dot
-        class="flex-none"
-        role="img"
-        [attr.test-id]="'actions-workflow-health-' + entry.workflow.id"
-        [attr.aria-label]="(entry.health | workflowHealthPresentation).label"
-        [variant]="(entry.health | workflowHealthPresentation).variant"
-        [size]="'small'"
-      />
-      <mosaik-button
-        class="min-w-0 flex-1"
-        [attr.test-id]="'actions-workflow-' + entry.workflow.id"
-        [label]="entry.workflow.name"
-        [fit]="'width'"
-        [horizontalContentAlignment]="'left'"
-        [appearance]="presenter.selectedWorkflowId() === entry.workflow.id ? 'soft' : 'plain'"
-        [attr.aria-current]="presenter.selectedWorkflowId() === entry.workflow.id ? 'page' : null"
-        [mosaikTooltip]="entry.workflow.state === 'disabled' ? 'Disabled on GitHub' : ''"
-        (click)="presenter.selectWorkflowCommand.execute(entry.workflow.id)"
-      />
+    <div class="flex min-w-0">
+      <mosaik-tooltip
+        [attr.test-id]="'actions-workflow-tooltip-' + entry.workflow.id"
+        [content]="entry.workflow.name + (entry.workflow.state === 'disabled' ? ' · Disabled on GitHub' : '')"
+        [placement]="'right'"
+        [attr.trigger]="'hover focus'"
+      >
+        <mosaik-button
+          class="min-w-0 flex-1"
+          [attr.test-id]="'actions-workflow-' + entry.workflow.id"
+          [label]="entry.workflow.name"
+          [attr.aria-label]="entry.workflow.name + ' · ' + (entry.health | workflowHealthPresentation).label
+          + (entry.workflow.state === 'disabled' ? ' · Disabled on GitHub' : '')"
+          [fit]="'width'"
+          [horizontalContentAlignment]="'left'"
+          [appearance]="presenter.selectedWorkflowId() === entry.workflow.id ? 'soft' : 'plain'"
+          [attr.aria-current]="presenter.selectedWorkflowId() === entry.workflow.id ? 'page' : null"
+          (click)="presenter.selectWorkflowCommand.execute(entry.workflow.id)"
+        >
+          <mosaik-dot
+            slot="icon"
+            class="flex-none"
+            role="img"
+            [attr.test-id]="'actions-workflow-health-' + entry.workflow.id"
+            [attr.aria-label]="(entry.health | workflowHealthPresentation).label"
+            [variant]="(entry.health | workflowHealthPresentation).variant"
+            [size]="'small'"
+          />
+          <mosaik-text
+            slot="label"
+            class="min-w-0 flex-1"
+            [truncate]="true"
+            [text]="entry.workflow.name"
+          />
+        </mosaik-button>
+      </mosaik-tooltip>
     </div>
     } @empty {
     <mosaik-text
@@ -135,10 +151,10 @@
 
   <div
     slot="end"
-    class="flex h-full min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain"
+    class="flex h-full min-h-0 min-w-0 flex-col overflow-clip"
     test-id="actions-content"
   >
-    <div class="flex min-w-0 flex-col gap-2.5 px-3.5 py-3">
+    <div class="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-clip px-3.5 py-3">
       @if (!presenter.isHydrating()) { @if (presenter.remoteData(); as remoteData) { @if
       (remoteData.state !== 'current') {
       <mosaik-banner
