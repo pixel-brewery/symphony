@@ -1,24 +1,19 @@
 {
   "schemaVersion": 1,
+  "language": "en",
   "project": {
     "name": "Symphony",
     "slug": "symphony",
     "website": "https://github.com/pixel-brewery/symphony",
     "repository": "https://github.com/pixel-brewery/symphony"
   },
-  "description": {
-    "en": "Symphony brings your project board, coding agents and delivery work into one desktop workspace. Isolated Git worktrees and resumable agent runs keep implementation organized, with pull requests and verification results alongside each task.",
-    "de": "Symphony vereint Projektboard, KI-Entwicklungsagenten und Auslieferung in einem Desktop-Arbeitsplatz. Isolierte Git-Worktrees und fortsetzbare Agentenläufe halten die Umsetzung übersichtlich, mit Pull Requests und Prüfergebnissen direkt bei der jeweiligen Aufgabe."
-  },
+  "description": "Symphony brings your project board, coding agents and delivery work into one desktop workspace. Isolated Git worktrees and resumable agent runs keep implementation organized, with pull requests and verification results alongside each task.",
   "image": {
     "file": "project-card.webp",
     "format": "webp",
     "width": 960,
     "height": 540,
-    "alt": {
-      "en": "Symphony's red posthorn beside branching delivery tracks and reviewed task tiles.",
-      "de": "Symphonys rotes Posthorn neben verzweigten Arbeitswegen und geprüften Aufgabenkacheln."
-    }
+    "alt": "Symphony's red posthorn beside branching delivery tracks and reviewed task tiles."
   },
   "artwork": {
     "kind": "illustration",
