@@ -1,603 +1,641 @@
-@let now = presenter.now(); @let capacity = presenter.capacity(); @let update =
-presenter.updates.state(); @let attention = presenter.notifications.items(); @let decisions =
-presenter.inbox?.decisionCount() ?? 0;
-<main
-  #panel
-  part="menu-bar-panel"
-  class="flex max-h-dvh w-full flex-col overflow-y-auto overscroll-contain p-0.5"
-  test-id="menu-bar-panel"
-  [attr.data-status]="presenter.menuBarStatus()"
->
-  <header
-    class="flex flex-none items-center gap-[10px] pt-1 pr-[6px] pb-[6px] pl-[10px]"
-    test-id="menu-bar-header"
+<ng-container *mosaikTranslate="let tr">
+  @let now = presenter.now(); @let capacity = presenter.capacity(); @let update =
+  presenter.updates.state(); @let attention = presenter.notifications.items(); @let decisions =
+  presenter.inbox?.decisionCount() ?? 0;
+  <main
+    #panel
+    part="menu-bar-panel"
+    class="flex max-h-dvh w-full flex-col overflow-y-auto overscroll-contain p-0.5"
+    test-id="menu-bar-panel"
+    [attr.data-status]="presenter.menuBarStatus()"
   >
-    <img class="block h-[30px] w-[30px] flex-none" src="icons/symphony.svg" alt="" />
-    <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-      <mosaik-text part="menu-bar-title" [mosaikTypography]="'subtitle2'" [text]="'Symphony'" />
-      <mosaik-text
-        test-id="menu-bar-status-line"
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="(presenter.runningCount()
+    <header
+      class="flex flex-none items-center gap-[10px] pt-1 pr-[6px] pb-[6px] pl-[10px]"
+      test-id="menu-bar-header"
+    >
+      <img class="block h-[30px] w-[30px] flex-none" src="icons/symphony.svg" alt="" />
+      <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+        <mosaik-text part="menu-bar-title" [mosaikTypography]="'subtitle2'" [text]="'Symphony'" />
+        <mosaik-text
+          test-id="menu-bar-status-line"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="(presenter.runningCount()
           ? presenter.runningCount() + ' running'
           : presenter.menuBarStatus() === 'failed'
             ? 'Latest run failed'
             : 'Nothing running') + (presenter.activeWorkspace() ? ' · ' + presenter.activeWorkspace()?.displayName : '')"
+        />
+      </div>
+      <mosaik-button
+        class="flex-none"
+        test-id="menu-bar-header-open"
+        [iconName]="'open'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [attr.aria-label]="tr('loc.symphony.open.symphony.d5e8ef')"
+        [mosaikTooltip]="tr('loc.symphony.open.symphony.d5e8ef')"
+        [command]="{ click: presenter.openSymphonyCommand }"
       />
-    </div>
-    <mosaik-button
-      class="flex-none"
-      test-id="menu-bar-header-open"
-      [iconName]="'open'"
-      [iconSize]="'small'"
-      [appearance]="'plain'"
-      [attr.aria-label]="'Open Symphony'"
-      [mosaikTooltip]="'Open Symphony'"
-      [command]="{ click: presenter.openSymphonyCommand }"
-    />
-    <mosaik-button
-      class="flex-none"
-      test-id="menu-bar-header-settings"
-      [iconName]="'settings'"
-      [iconSize]="'small'"
-      [appearance]="'plain'"
-      [attr.aria-label]="'Settings'"
-      [mosaikTooltip]="'Settings'"
-      [command]="{ click: presenter.openSettingsCommand }"
-    />
-  </header>
+      <mosaik-button
+        class="flex-none"
+        test-id="menu-bar-header-settings"
+        [iconName]="'settings'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [attr.aria-label]="tr('loc.symphony.settings.74a883')"
+        [mosaikTooltip]="tr('loc.symphony.settings.74a883')"
+        [command]="{ click: presenter.openSettingsCommand }"
+      />
+    </header>
 
-  @if (presenter.executionAvailable || presenter.ciAvailable || presenter.autonomyAvailable) {
-  <mosaik-divider class="mx-0.5 my-[6px]" />
+    @if (presenter.executionAvailable || presenter.ciAvailable || presenter.autonomyAvailable) {
+    <mosaik-divider class="mx-0.5 my-[6px]" />
 
-  <section class="flex flex-none flex-col" test-id="menu-bar-runs" aria-label="Current runs">
-    @if (presenter.executionAvailable && presenter.ciAvailable) {
-    <div class="px-[6px] py-0.5">
-      <mosaik-segment
-        class="w-full"
-        aria-label="Runs"
-        test-id="menu-bar-run-segment"
-        [appearance]="'soft'"
-      >
-        <mosaik-segment-item
-          class="flex-1"
-          test-id="menu-bar-run-segment-agents"
-          [label]="presenter.activeAgentCount() ? 'Agents · ' + presenter.activeAgentCount() : 'Agents'"
-          [isChecked]="presenter.selectedRunView() === 'agents'"
-          (checked)="presenter.selectRunViewCommand.execute('agents')"
-        />
-        <mosaik-segment-item
-          class="flex-1"
-          test-id="menu-bar-run-segment-actions"
-          [label]="presenter.activeActionRunCount() ? 'Actions · ' + presenter.activeActionRunCount() : 'Actions'"
-          [isChecked]="presenter.selectedRunView() === 'actions'"
-          (checked)="presenter.selectRunViewCommand.execute('actions')"
-        />
-      </mosaik-segment>
-    </div>
-    } @if (presenter.executionAvailable && (presenter.selectedRunView() === 'agents' ||
-    !presenter.ciAvailable)) {
-    <div class="flex flex-col" test-id="menu-bar-agent-runs">
-      @for (agent of presenter.agentRows(); track agent.id) {
-      <div
-        class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
-        [attr.test-id]="'menu-bar-agent-' + agent.id"
-      >
-        <mosaik-image
-          class="h-[28px] w-[28px] flex-none"
-          [src]="agent.id | agentAvatarSource: agent.appearance"
-          [alt]="''"
-          [width]="'28px'"
-          [height]="'28px'"
-          [fit]="'contain'"
-        />
-        <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-          <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="agent.name" />
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [truncate]="true"
-            [text]="agent.state === 'completed'
-              ? 'Idle · ' + (agent.role | agentFinishedWorkLabel) + (agent.workItemKey ? ' ' + agent.workItemKey : '') + (agent.updatedAt ? ' ' + (agent.updatedAt | relativeTime: now : 'ago') : '')
+    <section
+      class="flex flex-none flex-col"
+      test-id="menu-bar-runs"
+      [attr.aria-label]="tr('loc.symphony.current.runs.0d831f')"
+    >
+      @if (presenter.executionAvailable && presenter.ciAvailable) {
+      <div class="px-[6px] py-0.5">
+        <mosaik-segment
+          class="w-full"
+          [attr.aria-label]="tr('loc.symphony.runs.848f54')"
+          test-id="menu-bar-run-segment"
+          [appearance]="'soft'"
+        >
+          <mosaik-segment-item
+            class="flex-1"
+            test-id="menu-bar-run-segment-agents"
+            [label]="presenter.activeAgentCount() ? tr('loc.symphony.agents.aac78d', [presenter.activeAgentCount()]) : tr('loc.symphony.agents.279b44')"
+            [isChecked]="presenter.selectedRunView() === 'agents'"
+            (checked)="presenter.selectRunViewCommand.execute('agents')"
+          />
+          <mosaik-segment-item
+            class="flex-1"
+            test-id="menu-bar-run-segment-actions"
+            [label]="presenter.activeActionRunCount() ? tr('loc.symphony.actions.ce12f1', [presenter.activeActionRunCount()]) : tr('loc.symphony.actions.ff8059')"
+            [isChecked]="presenter.selectedRunView() === 'actions'"
+            (checked)="presenter.selectRunViewCommand.execute('actions')"
+          />
+        </mosaik-segment>
+      </div>
+      } @if (presenter.executionAvailable && (presenter.selectedRunView() === 'agents' ||
+      !presenter.ciAvailable)) {
+      <div class="flex flex-col" test-id="menu-bar-agent-runs">
+        @for (agent of presenter.agentRows(); track agent.id) {
+        <div
+          class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
+          [attr.test-id]="'menu-bar-agent-' + agent.id"
+        >
+          <mosaik-image
+            class="h-[28px] w-[28px] flex-none"
+            [src]="agent.id | agentAvatarSource: agent.appearance"
+            [alt]="''"
+            [width]="'28px'"
+            [height]="'28px'"
+            [fit]="'contain'"
+          />
+          <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="agent.name" />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="agent.state === 'completed'
+              ? tr('loc.symphony.idle.5918e1', [(agent.role | agentFinishedWorkLabel), (agent.workItemKey ? ' ' + agent.workItemKey : ''), (agent.updatedAt ? ' ' + (agent.updatedAt | relativeTime: now : 'ago') : '')])
               : (agent.state | agentActivityLabel: agent.role) + (agent.workItemKey ? ' ' + agent.workItemKey : '') + (agent.workItemTitle ? ' · ' + agent.workItemTitle : '')"
-          />
-        </div>
-        @if (agent.state === 'working') {
-        <mosaik-progress-ring
-          class="flex-none"
-          role="img"
-          aria-label="Running"
-          [isIndeterminate]="true"
-          [variant]="'neutral'"
-          [radius]="8"
-          [thickness]="2"
-        />
-        } @else { @let icon = agent.state | agentActivityIcon;
-        <mosaik-icon
-          class="flex-none"
-          role="img"
-          [attr.aria-label]="icon.label"
-          [icon]="icon.icon"
-          [size]="'small'"
-          [variant]="icon.variant"
-        />
-        } @if (agent.executionId; as executionId) { @if
-        (presenter.pausableExecutionIds().has(executionId)) {
-        <mosaik-button
-          class="flex-none"
-          [appearance]="'plain'"
-          [iconName]="'pause'"
-          [iconSize]="'small'"
-          [disabled]="presenter.executionBusy() !== undefined"
-          [attr.test-id]="'menu-bar-pause-' + executionId"
-          [attr.aria-label]="'Pause ' + agent.name"
-          [mosaikTooltip]="'Pause'"
-          [command]="{ click: presenter.pauseExecutionCommand }"
-          [commandParameter]="executionId"
-        />
-        } @else if (presenter.resumableExecutionIds().has(executionId)) {
-        <mosaik-button
-          class="flex-none"
-          [appearance]="'plain'"
-          [iconName]="'play'"
-          [iconSize]="'small'"
-          [disabled]="presenter.executionBusy() !== undefined"
-          [attr.test-id]="'menu-bar-resume-' + executionId"
-          [attr.aria-label]="'Resume ' + agent.name"
-          [mosaikTooltip]="'Resume'"
-          [command]="{ click: presenter.resumeExecutionCommand }"
-          [commandParameter]="executionId"
-        />
-        } }
-      </div>
-      } @empty {
-      <div
-        class="flex flex-col items-center gap-0.5 px-[10px] pt-[14px] pb-[10px]"
-        test-id="menu-bar-agent-runs-empty"
-      >
-        <mosaik-icon aria-hidden="true" [icon]="'checkCircle'" [size]="'small'" />
-        <mosaik-text [mosaikTypography]="'body2'" [text]="'No agent is working'" />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [text]="'Runs appear here as soon as one starts.'"
-        />
-      </div>
-      }
-    </div>
-    } @else if (presenter.ciAvailable) {
-    <div class="flex flex-col" test-id="menu-bar-actions-runs">
-      @if (presenter.actionsError(); as actionsError) {
-      <div
-        class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
-        test-id="menu-bar-actions-error"
-      >
-        <span class="flex w-[28px] flex-none justify-center">
-          <mosaik-icon
-            aria-hidden="true"
-            [icon]="'errorCircle'"
-            [size]="'small'"
-            [variant]="'danger'"
-          />
-        </span>
-        <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-          <mosaik-text
-            [mosaikTypography]="'subtitle2'"
-            [truncate]="true"
-            [text]="'Actions unavailable'"
-          />
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [truncate]="true"
-            [text]="actionsError"
-          />
-        </div>
-      </div>
-      } @for (run of presenter.actionRows(); track run.id) {
-      <div
-        class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
-        [attr.test-id]="'menu-bar-action-run-' + run.id"
-      >
-        <span class="flex w-[28px] flex-none justify-center">
-          @if (run.active) {
+            />
+          </div>
+          @if (agent.state === 'working') {
           <mosaik-progress-ring
+            class="flex-none"
             role="img"
-            aria-label="Running"
+            [attr.aria-label]="tr('loc.symphony.running.f4ccae')"
             [isIndeterminate]="true"
             [variant]="'neutral'"
             [radius]="8"
             [thickness]="2"
           />
-          } @else { @let icon = run.state | railRunStatePresentation;
+          } @else { @let icon = agent.state | agentActivityIcon;
           <mosaik-icon
+            class="flex-none"
             role="img"
-            [attr.aria-label]="run.statusLabel"
+            [attr.aria-label]="icon.label"
             [icon]="icon.icon"
             [size]="'small'"
             [variant]="icon.variant"
           />
-          }
-        </span>
+          } @if (agent.executionId; as executionId) { @if
+          (presenter.pausableExecutionIds().has(executionId)) {
+          <mosaik-button
+            class="flex-none"
+            [appearance]="'plain'"
+            [iconName]="'pause'"
+            [iconSize]="'small'"
+            [disabled]="presenter.executionBusy() !== undefined"
+            [attr.test-id]="'menu-bar-pause-' + executionId"
+            [attr.aria-label]="tr('loc.symphony.pause.23266c', [agent.name])"
+            [mosaikTooltip]="tr('loc.symphony.pause.858e4b')"
+            [command]="{ click: presenter.pauseExecutionCommand }"
+            [commandParameter]="executionId"
+          />
+          } @else if (presenter.resumableExecutionIds().has(executionId)) {
+          <mosaik-button
+            class="flex-none"
+            [appearance]="'plain'"
+            [iconName]="'play'"
+            [iconSize]="'small'"
+            [disabled]="presenter.executionBusy() !== undefined"
+            [attr.test-id]="'menu-bar-resume-' + executionId"
+            [attr.aria-label]="tr('loc.symphony.resume.3f06b5', [agent.name])"
+            [mosaikTooltip]="tr('loc.symphony.resume.d640c7')"
+            [command]="{ click: presenter.resumeExecutionCommand }"
+            [commandParameter]="executionId"
+          />
+          } }
+        </div>
+        } @empty {
+        <div
+          class="flex flex-col items-center gap-0.5 px-[10px] pt-[14px] pb-[10px]"
+          test-id="menu-bar-agent-runs-empty"
+        >
+          <mosaik-icon aria-hidden="true" [icon]="'checkCircle'" [size]="'small'" />
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [text]="tr('loc.symphony.no.agent.is.working.d21574')"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [text]="tr('loc.symphony.runs.appear.here.as.soon.as.one.starts.ddc704')"
+          />
+        </div>
+        }
+      </div>
+      } @else if (presenter.ciAvailable) {
+      <div class="flex flex-col" test-id="menu-bar-actions-runs">
+        @if (presenter.actionsError(); as actionsError) {
+        <div
+          class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
+          test-id="menu-bar-actions-error"
+        >
+          <span class="flex w-[28px] flex-none justify-center">
+            <mosaik-icon
+              aria-hidden="true"
+              [icon]="'errorCircle'"
+              [size]="'small'"
+              [variant]="'danger'"
+            />
+          </span>
+          <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+            <mosaik-text
+              [mosaikTypography]="'subtitle2'"
+              [truncate]="true"
+              [text]="tr('loc.symphony.actions.unavailable.de0a76')"
+            />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="actionsError"
+            />
+          </div>
+        </div>
+        } @for (run of presenter.actionRows(); track run.id) {
+        <div
+          class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
+          [attr.test-id]="'menu-bar-action-run-' + run.id"
+        >
+          <span class="flex w-[28px] flex-none justify-center">
+            @if (run.active) {
+            <mosaik-progress-ring
+              role="img"
+              [attr.aria-label]="tr('loc.symphony.running.f4ccae')"
+              [isIndeterminate]="true"
+              [variant]="'neutral'"
+              [radius]="8"
+              [thickness]="2"
+            />
+            } @else { @let icon = run.state | railRunStatePresentation;
+            <mosaik-icon
+              role="img"
+              [attr.aria-label]="run.statusLabel"
+              [icon]="icon.icon"
+              [size]="'small'"
+              [variant]="icon.variant"
+            />
+            }
+          </span>
+          <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+            <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="run.title" />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [truncate]="true"
+              [text]="run.sourceLabel + ' · ' + (run.active ? 'running' : (run.statusLabel | lowercase)) + (run.active || run.state === 'queued' ? ' ' + (run.startedAt | relativeTime: now : 'compact') : '') + ' · ' + run.message"
+            />
+          </div>
+          <mosaik-button
+            class="flex-none"
+            [attr.test-id]="'menu-bar-open-run-' + run.id"
+            [iconName]="'open'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [attr.aria-label]="tr('loc.symphony.open.e71b40', [run.title])"
+            [mosaikTooltip]="tr('loc.symphony.open.run.95fe73')"
+            [command]="{ click: presenter.openRunCommand }"
+            [commandParameter]="run"
+          />
+        </div>
+        } @empty { @if (!presenter.actionsError()) {
+        <div
+          class="flex flex-col items-center gap-0.5 px-[10px] pt-[14px] pb-[10px]"
+          test-id="menu-bar-actions-runs-empty"
+        >
+          <mosaik-icon aria-hidden="true" [icon]="'checkCircle'" [size]="'small'" />
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [text]="tr('loc.symphony.no.action.is.running.428527')"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [text]="tr('loc.symphony.runs.appear.here.as.soon.as.one.starts.ddc704')"
+          />
+        </div>
+        } }
+        <div class="flex justify-center px-0.5 py-[2px]">
+          <mosaik-button
+            test-id="menu-bar-all-runs"
+            [label]="tr('loc.symphony.all.runs.in.symphony.72918c')"
+            [iconName]="'chevronRight'"
+            [iconSize]="'small'"
+            [iconPosition]="'after'"
+            [appearance]="'plain'"
+            [command]="{ click: presenter.openAllRunsCommand }"
+          />
+        </div>
+      </div>
+      } @if (presenter.autonomyAvailable) {
+      <section
+        class="flex flex-col gap-[6px] px-[10px] pt-[6px] pb-0.5"
+        test-id="menu-bar-capacity"
+      >
+        <div class="flex items-baseline gap-[6px]">
+          <mosaik-text
+            class="flex-1"
+            [mosaikTypography]="'body2'"
+            [text]="tr('loc.symphony.execution.slots.77d9a4')"
+          />
+          <mosaik-text
+            test-id="menu-bar-slots-in-use"
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [text]="tr('loc.symphony.of.in.use.5d3ce6', [capacity.active, capacity.maximum])"
+          />
+        </div>
+        <!-- One segment per slot; the Angular wrapper does not forward `segments`, the attribute does. -->
+        <mosaik-progress-bar
+          role="img"
+          [attr.aria-label]="tr('loc.symphony.of.execution.slots.in.use.133c6d', [capacity.active, capacity.maximum])"
+          [attr.segments]="capacity.maximum"
+          [min]="0"
+          [max]="capacity.maximum"
+          [value]="capacity.active"
+          [thickness]="'6px'"
+          [variant]="'primary'"
+        />
+        @if (presenter.queuedSteps().length; as queued) {
+        <div class="flex min-w-0 items-start gap-0.5" test-id="menu-bar-queued-steps">
+          <mosaik-icon
+            class="flex-none"
+            aria-hidden="true"
+            [icon]="'warning'"
+            [size]="'small'"
+            [variant]="'warning'"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="queued === 1
+            ? tr('loc.symphony.one.step.waits.for.the.next.free.slot.fbb71d')
+            : tr('loc.symphony.steps.wait.for.the.next.free.slots.d5fe8a', [queued])"
+          />
+        </div>
+        } @else if (capacity.active === 0) {
+        <mosaik-text
+          test-id="menu-bar-free-slots"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [text]="capacity.maximum === 1 ? tr('loc.symphony.one.slot.is.free.82fdf7') : tr('loc.symphony.slots.are.free.dc49b7', [capacity.maximum])"
+        />
+        }
+      </section>
+      }
+    </section>
+    } @if (decisions || attention.length) {
+    <mosaik-divider class="mx-0.5 my-[6px]" />
+    <section
+      class="flex flex-none flex-col"
+      test-id="menu-bar-needs-you"
+      [attr.aria-label]="tr('loc.symphony.needs.you.74b6ab')"
+    >
+      <mosaik-text
+        class="px-[10px] pt-1 pb-[2px]"
+        [mosaikTypography]="'overline'"
+        [variant]="'neutral'"
+        [text]="tr('loc.symphony.needs.you.74b6ab')"
+      />
+      @if (decisions) {
+      <div
+        class="flex min-w-0 cursor-pointer items-center gap-[10px] px-[10px] py-[6px]"
+        role="button"
+        tabindex="0"
+        test-id="menu-bar-inbox"
+        [attr.aria-label]="tr('loc.symphony.inbox.77dfa0', [decisions, (decisions === 1 ? tr('loc.symphony.decision.86ae35') : tr('loc.symphony.decisions.3183d3'))])"
+        (click)="presenter.openInboxCommand.execute()"
+        (keydown.enter)="presenter.openInboxCommand.execute()"
+      >
+        <mosaik-icon class="flex-none" aria-hidden="true" [icon]="'info'" [size]="'small'" />
         <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-          <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="run.title" />
+          <mosaik-text
+            [mosaikTypography]="'subtitle2'"
+            [truncate]="true"
+            [text]="tr('loc.symphony.inbox.94835e')"
+          />
           <mosaik-text
             [mosaikTypography]="'caption'"
             [variant]="'neutral'"
             [truncate]="true"
-            [text]="run.sourceLabel + ' · ' + (run.active ? 'running' : (run.statusLabel | lowercase)) + (run.active || run.state === 'queued' ? ' ' + (run.startedAt | relativeTime: now : 'compact') : '') + ' · ' + run.message"
+            [text]="(presenter.inbox?.firstDecisionTitle() ?? '') + (decisions > 1 ? ' · and ' + (decisions - 1) + ' more' : '')"
           />
         </div>
-        <mosaik-button
+        <mosaik-badge
           class="flex-none"
-          [attr.test-id]="'menu-bar-open-run-' + run.id"
-          [iconName]="'open'"
-          [iconSize]="'small'"
-          [appearance]="'plain'"
-          [attr.aria-label]="'Open ' + run.title"
-          [mosaikTooltip]="'Open run'"
-          [command]="{ click: presenter.openRunCommand }"
-          [commandParameter]="run"
+          aria-hidden="true"
+          [label]="'' + decisions"
+          [variant]="'danger'"
+          [appearance]="'solid'"
+          [size]="'small'"
         />
+        <mosaik-icon class="flex-none" aria-hidden="true" [icon]="'chevronRight'" [size]="'tiny'" />
       </div>
-      } @empty { @if (!presenter.actionsError()) {
+      } @if (attention[0]; as first) { @let icon = first.severity | notificationIcon;
       <div
-        class="flex flex-col items-center gap-0.5 px-[10px] pt-[14px] pb-[10px]"
-        test-id="menu-bar-actions-runs-empty"
+        class="flex min-w-0 cursor-pointer items-center gap-[10px] px-[10px] py-[6px]"
+        role="button"
+        tabindex="0"
+        test-id="menu-bar-notifications"
+        [attr.aria-label]="tr('loc.symphony.notifications.attention.3b56c7', [attention.length, (attention.length === 1 ? tr('loc.symphony.needs.266d1c') : tr('loc.symphony.need.be8dff'))])"
+        (click)="presenter.openNotificationsCommand.execute()"
+        (keydown.enter)="presenter.openNotificationsCommand.execute()"
       >
-        <mosaik-icon aria-hidden="true" [icon]="'checkCircle'" [size]="'small'" />
-        <mosaik-text [mosaikTypography]="'body2'" [text]="'No action is running'" />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [text]="'Runs appear here as soon as one starts.'"
-        />
-      </div>
-      } }
-      <div class="flex justify-center px-0.5 py-[2px]">
-        <mosaik-button
-          test-id="menu-bar-all-runs"
-          [label]="'All runs in Symphony'"
-          [iconName]="'chevronRight'"
-          [iconSize]="'small'"
-          [iconPosition]="'after'"
-          [appearance]="'plain'"
-          [command]="{ click: presenter.openAllRunsCommand }"
-        />
-      </div>
-    </div>
-    } @if (presenter.autonomyAvailable) {
-    <section class="flex flex-col gap-[6px] px-[10px] pt-[6px] pb-0.5" test-id="menu-bar-capacity">
-      <div class="flex items-baseline gap-[6px]">
-        <mosaik-text class="flex-1" [mosaikTypography]="'body2'" [text]="'Execution slots'" />
-        <mosaik-text
-          test-id="menu-bar-slots-in-use"
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [text]="capacity.active + ' of ' + capacity.maximum + ' in use'"
-        />
-      </div>
-      <!-- One segment per slot; the Angular wrapper does not forward `segments`, the attribute does. -->
-      <mosaik-progress-bar
-        role="img"
-        [attr.aria-label]="capacity.active + ' of ' + capacity.maximum + ' execution slots in use'"
-        [attr.segments]="capacity.maximum"
-        [min]="0"
-        [max]="capacity.maximum"
-        [value]="capacity.active"
-        [thickness]="'6px'"
-        [variant]="'primary'"
-      />
-      @if (presenter.queuedSteps().length; as queued) {
-      <div class="flex min-w-0 items-start gap-0.5" test-id="menu-bar-queued-steps">
         <mosaik-icon
           class="flex-none"
           aria-hidden="true"
-          [icon]="'warning'"
+          [icon]="icon.icon"
           [size]="'small'"
-          [variant]="'warning'"
+          [variant]="icon.variant"
         />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [wrap]="true"
-          [text]="queued === 1
-            ? 'One step waits for the next free slot.'
-            : queued + ' steps wait for the next free slots.'"
+        <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+          <mosaik-text
+            [mosaikTypography]="'subtitle2'"
+            [truncate]="true"
+            [text]="tr('loc.symphony.notifications.788011')"
+          />
+          <mosaik-text
+            test-id="menu-bar-notifications-first"
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="first.title + (attention.length > 1 ? ' · and ' + (attention.length - 1) + ' more' : '')"
+          />
+        </div>
+        <mosaik-badge
+          class="flex-none"
+          aria-hidden="true"
+          test-id="menu-bar-notifications-count"
+          [label]="'' + attention.length"
+          [variant]="'danger'"
+          [appearance]="'solid'"
+          [size]="'small'"
         />
+        <mosaik-icon class="flex-none" aria-hidden="true" [icon]="'chevronRight'" [size]="'tiny'" />
       </div>
-      } @else if (capacity.active === 0) {
-      <mosaik-text
-        test-id="menu-bar-free-slots"
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [text]="capacity.maximum === 1 ? 'One slot is free.' : capacity.maximum + ' slots are free.'"
-      />
       }
     </section>
     }
-  </section>
-  } @if (decisions || attention.length) {
-  <mosaik-divider class="mx-0.5 my-[6px]" />
-  <section class="flex flex-none flex-col" test-id="menu-bar-needs-you" aria-label="Needs you">
-    <mosaik-text
-      class="px-[10px] pt-1 pb-[2px]"
-      [mosaikTypography]="'overline'"
-      [variant]="'neutral'"
-      [text]="'Needs you'"
-    />
-    @if (decisions) {
-    <div
-      class="flex min-w-0 cursor-pointer items-center gap-[10px] px-[10px] py-[6px]"
-      role="button"
-      tabindex="0"
-      test-id="menu-bar-inbox"
-      [attr.aria-label]="'Inbox, ' + decisions + (decisions === 1 ? ' decision' : ' decisions')"
-      (click)="presenter.openInboxCommand.execute()"
-      (keydown.enter)="presenter.openInboxCommand.execute()"
-    >
-      <mosaik-icon class="flex-none" aria-hidden="true" [icon]="'info'" [size]="'small'" />
-      <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-        <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="'Inbox'" />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [truncate]="true"
-          [text]="(presenter.inbox?.firstDecisionTitle() ?? '') + (decisions > 1 ? ' · and ' + (decisions - 1) + ' more' : '')"
-        />
-      </div>
-      <mosaik-badge
-        class="flex-none"
-        aria-hidden="true"
-        [label]="'' + decisions"
-        [variant]="'danger'"
-        [appearance]="'solid'"
-        [size]="'small'"
-      />
-      <mosaik-icon class="flex-none" aria-hidden="true" [icon]="'chevronRight'" [size]="'tiny'" />
-    </div>
-    } @if (attention[0]; as first) { @let icon = first.severity | notificationIcon;
-    <div
-      class="flex min-w-0 cursor-pointer items-center gap-[10px] px-[10px] py-[6px]"
-      role="button"
-      tabindex="0"
-      test-id="menu-bar-notifications"
-      [attr.aria-label]="'Notifications, ' + attention.length + (attention.length === 1 ? ' needs' : ' need') + ' attention'"
-      (click)="presenter.openNotificationsCommand.execute()"
-      (keydown.enter)="presenter.openNotificationsCommand.execute()"
-    >
-      <mosaik-icon
-        class="flex-none"
-        aria-hidden="true"
-        [icon]="icon.icon"
-        [size]="'small'"
-        [variant]="icon.variant"
-      />
-      <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-        <mosaik-text [mosaikTypography]="'subtitle2'" [truncate]="true" [text]="'Notifications'" />
-        <mosaik-text
-          test-id="menu-bar-notifications-first"
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [truncate]="true"
-          [text]="first.title + (attention.length > 1 ? ' · and ' + (attention.length - 1) + ' more' : '')"
-        />
-      </div>
-      <mosaik-badge
-        class="flex-none"
-        aria-hidden="true"
-        test-id="menu-bar-notifications-count"
-        [label]="'' + attention.length"
-        [variant]="'danger'"
-        [appearance]="'solid'"
-        [size]="'small'"
-      />
-      <mosaik-icon class="flex-none" aria-hidden="true" [icon]="'chevronRight'" [size]="'tiny'" />
-    </div>
-    }
-  </section>
-  }
 
-  <mosaik-divider class="mx-0.5 my-[6px]" />
+    <mosaik-divider class="mx-0.5 my-[6px]" />
 
-  <section class="flex flex-none flex-col" test-id="menu-bar-settings-rows">
-    @if (presenter.autonomyAvailable) {
-    <div
-      class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
-      test-id="menu-bar-autonomy"
-    >
-      <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-        <mosaik-text [mosaikTypography]="'body2'" [text]="'Autonomous work'" />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [wrap]="true"
-          [text]="presenter.autonomy() | autonomyNextCycleLabel: now"
-        />
-      </div>
-      <mosaik-toggle-switch
-        class="flex-none"
-        aria-label="Autonomous work"
-        test-id="menu-bar-autonomy-toggle"
-        [variant]="'primary'"
-        [isChecked]="capacity.enabled"
-        [disabled]="presenter.autonomyBusy()"
-        [command]="{
+    <section class="flex flex-none flex-col" test-id="menu-bar-settings-rows">
+      @if (presenter.autonomyAvailable) {
+      <div
+        class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
+        test-id="menu-bar-autonomy"
+      >
+        <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [text]="tr('loc.symphony.autonomous.work.05a89b')"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="presenter.autonomy() | autonomyNextCycleLabel: now"
+          />
+        </div>
+        <mosaik-toggle-switch
+          class="flex-none"
+          [attr.aria-label]="tr('loc.symphony.autonomous.work.05a89b')"
+          test-id="menu-bar-autonomy-toggle"
+          [variant]="'primary'"
+          [isChecked]="capacity.enabled"
+          [disabled]="presenter.autonomyBusy()"
+          [command]="{
           checked: presenter.enableAutonomyCommand,
           unchecked: presenter.disableAutonomyCommand
         }"
-      />
-    </div>
-    } @if (update?.kind === 'available' || update?.kind === 'downloading' || update?.kind ===
-    'ready') {
-    <div
-      class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
-      test-id="menu-bar-update-row"
-    >
-      @if (update?.kind === 'downloading') {
-      <span class="flex h-[20px] w-[20px] flex-none items-center justify-center">
-        <mosaik-progress-ring
-          role="img"
-          aria-label="Update download"
-          [variant]="'primary'"
-          [radius]="9"
-          [thickness]="2"
-          [min]="0"
-          [max]="100"
-          [value]="update?.kind === 'downloading' ? (update.progress ?? 0) * 100 : 0"
-          [isIndeterminate]="update?.kind === 'downloading' && update.progress === undefined"
         />
-      </span>
-      } @else {
-      <mosaik-icon
-        class="flex-none"
-        aria-hidden="true"
-        [icon]="update?.kind === 'ready' ? 'sync' : 'download'"
-        [size]="'small'"
-      />
-      }
-      <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-        <mosaik-text
-          [mosaikTypography]="'body2'"
-          [text]="update?.kind === 'ready'
-            ? 'Update ready'
+      </div>
+      } @if (update?.kind === 'available' || update?.kind === 'downloading' || update?.kind ===
+      'ready') {
+      <div
+        class="flex min-w-0 items-center gap-[10px] px-[10px] py-[6px]"
+        test-id="menu-bar-update-row"
+      >
+        @if (update?.kind === 'downloading') {
+        <span class="flex h-[20px] w-[20px] flex-none items-center justify-center">
+          <mosaik-progress-ring
+            role="img"
+            [attr.aria-label]="tr('loc.symphony.update.download.1c20b4')"
+            [variant]="'primary'"
+            [radius]="9"
+            [thickness]="2"
+            [min]="0"
+            [max]="100"
+            [value]="update?.kind === 'downloading' ? (update.progress ?? 0) * 100 : 0"
+            [isIndeterminate]="update?.kind === 'downloading' && update.progress === undefined"
+          />
+        </span>
+        } @else {
+        <mosaik-icon
+          class="flex-none"
+          aria-hidden="true"
+          [icon]="update?.kind === 'ready' ? 'sync' : 'download'"
+          [size]="'small'"
+        />
+        }
+        <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [text]="update?.kind === 'ready'
+            ? tr('loc.symphony.update.ready.46570c')
             : update?.kind === 'downloading'
-              ? 'Downloading update'
-              : 'Update available'"
-        />
+              ? tr('loc.symphony.downloading.update.014368')
+              : tr('loc.symphony.update.available.ff8b55')"
+          />
+          @if (update?.kind === 'available') {
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="tr('loc.symphony.symphony.you.have.66df54', [update.targetVersion, update.currentVersion])"
+          />
+          } @else if (update?.kind === 'downloading') {
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="(update.targetVersion ? 'Symphony ' + update.targetVersion : 'Symphony') + (update.progress !== undefined ? ' · ' + (update.progress * 100 | number: '1.0-0') + '%' : '')"
+          />
+          } @else if (update?.kind === 'ready') {
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="tr('loc.symphony.symphony.2aed80', [update.targetVersion])"
+          />
+          }
+        </div>
         @if (update?.kind === 'available') {
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [wrap]="true"
-          [text]="'Symphony ' + update.targetVersion + ' · you have ' + update.currentVersion"
-        />
-        } @else if (update?.kind === 'downloading') {
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [wrap]="true"
-          [text]="(update.targetVersion ? 'Symphony ' + update.targetVersion : 'Symphony') + (update.progress !== undefined ? ' · ' + (update.progress * 100 | number: '1.0-0') + '%' : '')"
+        <mosaik-button
+          class="flex-none"
+          test-id="menu-bar-update"
+          [label]="tr('loc.symphony.download.d6eafe')"
+          [iconName]="'download'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          [isBusy]="presenter.updates.busy()"
+          [command]="{ click: presenter.updateSymphonyCommand }"
         />
         } @else if (update?.kind === 'ready') {
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [wrap]="true"
-          [text]="'Symphony ' + update.targetVersion"
+        <mosaik-button
+          class="flex-none"
+          test-id="menu-bar-update"
+          [label]="tr('loc.symphony.restart.to.update.451d3a')"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [isBusy]="presenter.updates.busy()"
+          [command]="{ click: presenter.updateSymphonyCommand }"
         />
         }
       </div>
-      @if (update?.kind === 'available') {
+      } @else {
       <mosaik-button
-        class="flex-none"
+        class="w-full"
         test-id="menu-bar-update"
-        [label]="'Download'"
-        [iconName]="'download'"
-        [iconSize]="'small'"
-        [appearance]="'outline'"
+        [label]="update | updateActionLabel"
+        [appearance]="'plain'"
+        [fit]="'width'"
+        [horizontalContentAlignment]="'left'"
         [isBusy]="presenter.updates.busy()"
-        [command]="{ click: presenter.updateSymphonyCommand }"
-      />
-      } @else if (update?.kind === 'ready') {
-      <mosaik-button
-        class="flex-none"
-        test-id="menu-bar-update"
-        [label]="'Restart to update'"
-        [appearance]="'solid'"
-        [variant]="'primary'"
-        [isBusy]="presenter.updates.busy()"
+        [disabled]="!presenter.updateSymphonyCommand.canExecute()"
         [command]="{ click: presenter.updateSymphonyCommand }"
       />
       }
-    </div>
-    } @else {
-    <mosaik-button
-      class="w-full"
-      test-id="menu-bar-update"
-      [label]="update | updateActionLabel"
-      [appearance]="'plain'"
-      [fit]="'width'"
-      [horizontalContentAlignment]="'left'"
-      [isBusy]="presenter.updates.busy()"
-      [disabled]="!presenter.updateSymphonyCommand.canExecute()"
-      [command]="{ click: presenter.updateSymphonyCommand }"
+    </section>
+
+    @if (presenter.error(); as error) {
+    <mosaik-text
+      class="px-[10px] py-0.5"
+      test-id="menu-bar-error"
+      [mosaikTypography]="'caption'"
+      [variant]="'danger'"
+      [wrap]="true"
+      [text]="error"
     />
     }
-  </section>
 
-  @if (presenter.error(); as error) {
-  <mosaik-text
-    class="px-[10px] py-0.5"
-    test-id="menu-bar-error"
-    [mosaikTypography]="'caption'"
-    [variant]="'danger'"
-    [wrap]="true"
-    [text]="error"
-  />
-  }
-
-  <mosaik-divider class="mx-0.5 my-[6px]" />
-
-  <nav class="flex flex-none flex-col" test-id="menu-bar-actions" aria-label="Symphony actions">
-    <div class="relative">
-      <mosaik-button
-        class="w-full"
-        test-id="menu-bar-open-symphony"
-        [label]="'Open Symphony'"
-        [appearance]="'plain'"
-        [fit]="'width'"
-        [horizontalContentAlignment]="'left'"
-        [command]="{ click: presenter.openSymphonyCommand }"
-      />
-      <span class="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2">
-        <mosaik-kbd [value]="['Meta', 'O']" [isCompact]="true" />
-      </span>
-    </div>
-    <div class="relative">
-      <mosaik-button
-        class="w-full"
-        test-id="menu-bar-new-work-item"
-        [label]="'New work item…'"
-        [appearance]="'plain'"
-        [fit]="'width'"
-        [horizontalContentAlignment]="'left'"
-        [command]="{ click: presenter.newWorkItemCommand }"
-      />
-      <span class="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2">
-        <mosaik-kbd [value]="['Meta', 'N']" [isCompact]="true" />
-      </span>
-    </div>
-    <div class="relative">
-      <mosaik-button
-        class="w-full"
-        test-id="menu-bar-open-settings"
-        [label]="'Settings…'"
-        [appearance]="'plain'"
-        [fit]="'width'"
-        [horizontalContentAlignment]="'left'"
-        [command]="{ click: presenter.openSettingsCommand }"
-      />
-      <span class="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2">
-        <mosaik-kbd [value]="['Meta', ',']" [isCompact]="true" />
-      </span>
-    </div>
     <mosaik-divider class="mx-0.5 my-[6px]" />
-    <div class="relative">
-      <mosaik-button
-        class="w-full"
-        test-id="menu-bar-quit"
-        [label]="'Quit Symphony'"
-        [appearance]="'plain'"
-        [fit]="'width'"
-        [horizontalContentAlignment]="'left'"
-        [command]="{ click: presenter.quitSymphonyCommand }"
-      />
-      <span class="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2">
-        <mosaik-kbd [value]="['Meta', 'Q']" [isCompact]="true" />
-      </span>
-    </div>
-  </nav>
-</main>
+
+    <nav
+      class="flex flex-none flex-col"
+      test-id="menu-bar-actions"
+      [attr.aria-label]="tr('loc.symphony.symphony.actions.e61752')"
+    >
+      <div class="relative">
+        <mosaik-button
+          class="w-full"
+          test-id="menu-bar-open-symphony"
+          [label]="tr('loc.symphony.open.symphony.d5e8ef')"
+          [appearance]="'plain'"
+          [fit]="'width'"
+          [horizontalContentAlignment]="'left'"
+          [command]="{ click: presenter.openSymphonyCommand }"
+        />
+        <span class="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2">
+          <mosaik-kbd [value]="['Meta', 'O']" [isCompact]="true" />
+        </span>
+      </div>
+      <div class="relative">
+        <mosaik-button
+          class="w-full"
+          test-id="menu-bar-new-work-item"
+          [label]="tr('loc.symphony.new.work.item.d52372')"
+          [appearance]="'plain'"
+          [fit]="'width'"
+          [horizontalContentAlignment]="'left'"
+          [command]="{ click: presenter.newWorkItemCommand }"
+        />
+        <span class="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2">
+          <mosaik-kbd [value]="['Meta', 'N']" [isCompact]="true" />
+        </span>
+      </div>
+      <div class="relative">
+        <mosaik-button
+          class="w-full"
+          test-id="menu-bar-open-settings"
+          [label]="tr('loc.symphony.settings.7a0408')"
+          [appearance]="'plain'"
+          [fit]="'width'"
+          [horizontalContentAlignment]="'left'"
+          [command]="{ click: presenter.openSettingsCommand }"
+        />
+        <span class="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2">
+          <mosaik-kbd [value]="['Meta', ',']" [isCompact]="true" />
+        </span>
+      </div>
+      <mosaik-divider class="mx-0.5 my-[6px]" />
+      <div class="relative">
+        <mosaik-button
+          class="w-full"
+          test-id="menu-bar-quit"
+          [label]="tr('loc.symphony.quit.symphony.ae85bb')"
+          [appearance]="'plain'"
+          [fit]="'width'"
+          [horizontalContentAlignment]="'left'"
+          [command]="{ click: presenter.quitSymphonyCommand }"
+        />
+        <span class="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2">
+          <mosaik-kbd [value]="['Meta', 'Q']" [isCompact]="true" />
+        </span>
+      </div>
+    </nav>
+  </main>
+</ng-container>

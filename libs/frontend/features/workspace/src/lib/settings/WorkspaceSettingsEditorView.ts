@@ -9,6 +9,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   DialogContentDirective,
@@ -39,6 +40,7 @@ import { WorkspaceSettingsEditorViewPresenter } from './WorkspaceSettingsEditorV
   selector: 'symphony-workspace-settings-editor-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AsyncPipe,
     AvatarComponent,
     ButtonComponent,

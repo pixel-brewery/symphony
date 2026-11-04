@@ -15,6 +15,8 @@ import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition
 import { AiStore } from '../state/AiStore';
 import { aiAccountRemovalBlockers, withoutAiAccount } from './ai-account-removal';
 import { aiAccountSignIn } from './aiAccountSignIn';
+import { translateLabel } from '@symphony/frontend-intl/labels';
+
 // #endregion
 type ProviderConnection = ApplicationSettingsDto['connections'][number];
 /** Owns AI account rows, optional connections and their existing removal workflow. @public */
@@ -160,14 +162,24 @@ export class AiConnectionsSettingsViewPresenter {
    */
   private resolveAiRuntimeSummary(runtime: 'codex' | 'claude' | 'opencode'): string {
     const health = this.store.runtimeHealth()?.agents[runtime];
-    const cli = !health ? ' · Checking CLI…' : health.available ? '' : ' · CLI not installed';
+    const cli = !health
+      ? translateLabel('loc.symphony.labels.checking.cli.36465af')
+      : health.available
+        ? ''
+        : translateLabel('loc.symphony.labels.cli.not.installed.3c0bf11');
     switch (runtime) {
       case 'codex':
-        return `ChatGPT subscription or OpenAI API key${cli}`;
+        return translateLabel(
+          'loc.symphony.labels.chatgpt.subscription.or.openai.api.key.86b18f7',
+          cli,
+        );
       case 'claude':
-        return `Claude subscription${cli}`;
+        return translateLabel('loc.symphony.labels.claude.subscription.7e92b6a', cli);
       case 'opencode':
-        return `Provider sign-ins stored by OpenCode${cli}`;
+        return translateLabel(
+          'loc.symphony.labels.provider.sign.ins.stored.by.opencode.68de4e1',
+          cli,
+        );
     }
   }
 
@@ -211,22 +223,35 @@ export class AiConnectionsSettingsViewPresenter {
     if (blockers.length) {
       void this._alerts.confirm({
         id: `remove-ai-account-blocked-${account.id}`,
-        header: 'This account is still in use',
-        message: `${blockers.join(', ')} ${blockers.length === 1 ? 'runs' : 'run'} on this account. Move ${blockers.length === 1 ? 'that agent' : 'those agents'} to another AI account first, then remove it.`,
+        header: translateLabel('loc.symphony.labels.this.account.is.still.in.use.3aef81b'),
+        get message() {
+          return blockers.length === 1
+            ? translateLabel(
+                'loc.symphony.labels.runs.on.this.account.move.that.agent.to.another.ai.a.56f37f3',
+                blockers.join(', '),
+              )
+            : translateLabel(
+                'loc.symphony.labels.run.on.this.account.move.those.agents.to.another.ai..4aa69fa',
+                blockers.join(', '),
+              );
+        },
         tone: 'warning',
-        confirmLabel: 'OK',
+        confirmLabel: translateLabel('loc.symphony.labels.ok.565339b'),
       });
       return;
     }
     void this._alerts
       .confirm({
         id: `remove-ai-account-${account.id}`,
-        header: `Remove ${account.displayName}?`,
-        message:
-          'Symphony signs the account out, deletes its isolated workspace data, and drops it from every backup route. Agents keep running on their other accounts.',
+        header: translateLabel('loc.symphony.labels.remove.9d64ce8', account.displayName),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.symphony.signs.the.account.out.deletes.its.isolated..c69dd43',
+          );
+        },
         tone: 'danger',
-        confirmLabel: 'Remove account',
-        cancelLabel: 'Keep account',
+        confirmLabel: translateLabel('loc.symphony.labels.remove.account.fd35618'),
+        cancelLabel: translateLabel('loc.symphony.labels.keep.account.9be7d99'),
         destructive: true,
       })
       .then((confirmed) => {

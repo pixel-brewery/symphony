@@ -1,6 +1,16 @@
+// @vitest-environment jsdom
+
 // #region Imports
 
+import {
+  computed,
+  destroyPlatform,
+  provideZonelessChangeDetection,
+  type ApplicationRef,
+} from '@angular/core';
+import { createApplication } from '@angular/platform-browser';
 import type { PullRequestState } from '@symphony/frontend-core/delivery';
+import { ApplicationLocalization, provideApplicationLocalization } from '@symphony/frontend-intl';
 import type { ICollectionListMenu, ICollectionListMenuOption } from '@symphony/frontend-ui';
 import { describe, expect, it } from 'vitest';
 import { type PullRequestBaseFilter, type PullRequestSort, resolvePullRequestListMenus } from './';
@@ -39,6 +49,56 @@ function optionAt(menu: ICollectionListMenu, index: number): ICollectionListMenu
 }
 
 describe('resolvePullRequestListMenus', () => {
+  it('binds imported dictionaries at application startup and invalidates cached menus on language changes', async () => {
+    // arrange
+    const retained = menus([], undefined, 'created-ascending', 'draft', 'behind');
+    expect(optionAt(retained.sortMenu, 0).label).toBe('Recently updated');
+    let app: ApplicationRef | undefined;
+    try {
+      app = await createApplication({
+        providers: [
+          provideZonelessChangeDetection(),
+          provideApplicationLocalization({
+            storage: { getItem: () => 'de', setItem: () => undefined },
+          }),
+        ],
+      });
+      const localization = app.injector.get(ApplicationLocalization);
+      const cached = computed(() => menus([], undefined, 'created-ascending', 'draft', 'behind'));
+      const german = cached();
+
+      // act
+      const importedSortLabel = optionAt(retained.sortMenu, 0).label;
+
+      // assert
+      expect(importedSortLabel).toBe('Kürzlich aktualisiert');
+      expect(optionAt(retained.baseMenu, 1).label).toBe('Zurückliegend');
+      expect(retained.authorMenu.subLabel).toBe('Alle Personen');
+      expect(german.sortMenu.options.map((option) => option.label)).toEqual([
+        'Kürzlich aktualisiert',
+        'Neueste',
+        'Älteste',
+      ]);
+
+      // act
+      localization.setLanguage('en');
+      const english = cached();
+
+      // assert
+      expect(english).not.toBe(german);
+      expect(english.sortMenu.options.map((option) => option.label)).toEqual([
+        'Recently updated',
+        'Newest',
+        'Oldest',
+      ]);
+      expect(optionAt(german.baseMenu, 1).label).toBe('Behind');
+      expect(retained.authorMenu.subLabel).toBe('Everyone');
+    } finally {
+      app?.destroy();
+      destroyPlatform();
+    }
+  });
+
   it('offers Everyone plus every author, checking the current selection', () => {
     // act
     // arrange

@@ -6,6 +6,7 @@ import {
   withSettingsViews,
   type SettingsFeatureKind,
 } from '@symphony/frontend-setting';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -26,43 +27,88 @@ export function withAutomationSettings(): readonly IFeature<SettingsFeatureKind>
           section: {
             scope: 'global',
             id: 'automation',
-            label: 'Automation',
-            description: 'How far the AI team may work on its own, in every workspace.',
+            get label() {
+              return translateLabel('loc.symphony.labels.automation.d909750');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.how.far.the.ai.team.may.work.on.its.own.in.every.wor.f806fe3',
+              );
+            },
             order: 20,
           },
           search: [
             {
               id: 'autonomous-execution',
-              label: 'Run autonomous work',
-              description:
-                'Analyze backlog items, implement Ready items, retry failed work, and synchronize pull-request status.',
-              group: 'Autonomous work',
+              get label() {
+                return translateLabel('loc.symphony.labels.run.autonomous.work.853ddd4');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.analyze.backlog.items.implement.ready.items.retry.fa.52342b9',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.autonomous.work.05a89b5');
+              },
             },
             {
               id: 'autonomous-work-interval',
-              label: 'Work interval (minutes)',
-              description: 'A new interval starts only work that fits the remaining slots.',
-              group: 'Autonomous work',
+              get label() {
+                return translateLabel('loc.symphony.labels.work.interval.minutes.689e6d7');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.a.new.interval.starts.only.work.that.fits.the.remain.b17e1b9',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.autonomous.work.05a89b5');
+              },
             },
             {
               id: 'max-parallel-executions',
-              label: 'Maximum parallel tasks',
-              description:
-                'Shared by manual and autonomous analysis, implementation and retries, application-wide.',
-              group: 'Autonomous work',
+              get label() {
+                return translateLabel('loc.symphony.labels.maximum.parallel.tasks.91913e0');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.shared.by.manual.and.autonomous.analysis.implementat.e93bb65',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.autonomous.work.05a89b5');
+              },
             },
             {
               id: 'conflict-serialization',
-              label: 'Serialize overlapping deliveries',
-              description:
-                'Hold back a solution whose predicted change surface overlaps a pull request still in flight until that delivery merges.',
-              group: 'Autonomous work',
+              get label() {
+                return translateLabel(
+                  'loc.symphony.labels.serialize.overlapping.deliveries.0aa97a9',
+                );
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.hold.back.a.solution.whose.predicted.change.surface..e408e36',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.autonomous.work.05a89b5');
+              },
             },
             {
               id: 'agentic-level',
-              label: 'Level',
-              description: 'Off, Watch, Diagnose, Repair, Full or Custom.',
-              group: 'Fix failed checks',
+              get label() {
+                return translateLabel('loc.symphony.labels.level.1709305');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.off.watch.diagnose.repair.full.or.custom.31f6c65',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.fix.failed.checks.3e89220');
+              },
               keywords: ['agentic delivery', 'ladder', 'ci repair'],
             },
             ...(
@@ -76,7 +122,13 @@ export function withAutomationSettings(): readonly IFeature<SettingsFeatureKind>
                 ['agentic-workflow-repair', 'Repair workflow failures'],
                 ['agentic-replacement-pr', 'Allow replacement pull requests'],
               ] as const
-            ).map(([id, label]) => ({ id, label, group: 'Fix failed checks' })),
+            ).map(([id, label]) => ({
+              id,
+              label,
+              get group() {
+                return translateLabel('loc.symphony.labels.fix.failed.checks.3e89220');
+              },
+            })),
             ...(
               [
                 ['agentic-diagnosis-token-budget', 'Diagnosis token budget'],
@@ -86,52 +138,110 @@ export function withAutomationSettings(): readonly IFeature<SettingsFeatureKind>
                 ['agentic-max-parallel-repairs', 'Maximum parallel repairs'],
                 ['agentic-cooldown', 'Cooldown (minutes)'],
               ] as const
-            ).map(([id, label]) => ({ id, label, group: 'Fix failed checks › Budgets' })),
+            ).map(([id, label]) => ({
+              id,
+              label,
+              get group() {
+                return translateLabel('loc.symphony.labels.fix.failed.checks.budgets.a574f18');
+              },
+            })),
             {
               id: 'review-feedback',
-              label: 'Listen for pull-request review feedback',
-              description: 'Allow assigned review-feedback skills to act on reviewer comments.',
-              group: 'Address reviews',
+              get label() {
+                return translateLabel(
+                  'loc.symphony.labels.listen.for.pull.request.review.feedback.3079f0c',
+                );
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.allow.assigned.review.feedback.skills.to.act.on.revi.a3a1b5f',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.address.reviews.9686886');
+              },
             },
             {
               id: 'github-commands',
-              label: 'Allow GitHub commands',
-              description:
-                'Run authorized comments in a configured GitHub issue and deliver successful implementation branches and pull requests.',
-              group: 'GitHub commands',
+              get label() {
+                return translateLabel('loc.symphony.labels.allow.github.commands.3676f46');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.run.authorized.comments.in.a.configured.github.issue.3e5436c',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.github.commands.25e8991');
+              },
               keywords: ['@symphony', '/symphony analyze', '/symphony fix', '/symphony retry'],
             },
             {
               id: 'workspace-root',
-              label: 'Managed root',
-              description: 'Where worktrees live.',
-              group: 'Execution',
+              get label() {
+                return translateLabel('loc.symphony.labels.managed.root.cd763c0');
+              },
+              get description() {
+                return translateLabel('loc.symphony.labels.where.worktrees.live.1bddb52');
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.execution.a45cd4b');
+              },
             },
             {
               id: 'board-refresh-interval',
-              label: 'Board refresh interval (minutes)',
-              group: 'Execution',
+              get label() {
+                return translateLabel('loc.symphony.labels.board.refresh.interval.minutes.17a4214');
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.execution.a45cd4b');
+              },
             },
             {
               id: 'retain-failed-workspaces',
-              label: 'Retain failed execution workspaces',
-              description:
-                'Keep failed worktrees for diagnosis instead of removing them after completion.',
-              group: 'Execution',
+              get label() {
+                return translateLabel(
+                  'loc.symphony.labels.retain.failed.execution.workspaces.8ff62aa',
+                );
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.keep.failed.worktrees.for.diagnosis.instead.of.remov.f14d4eb',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.execution.a45cd4b');
+              },
             },
             {
               id: 'verification-repair-attempts',
-              label: 'Verification repair attempts per run',
-              description:
-                'How often a run hands failing repository checks back to the agent before it fails.',
-              group: 'Execution',
+              get label() {
+                return translateLabel(
+                  'loc.symphony.labels.verification.repair.attempts.per.run.4771bee',
+                );
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.how.often.a.run.hands.failing.repository.checks.back.20b7ba3',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.execution.a45cd4b');
+              },
             },
             {
               id: 'clear-workspaces',
-              label: 'Clear inactive workspaces',
-              description:
-                'Running executions are preserved; uncommitted changes in inactive worktrees may be removed.',
-              group: 'Execution',
+              get label() {
+                return translateLabel('loc.symphony.labels.clear.inactive.workspaces.6142600');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.running.executions.are.preserved.uncommitted.changes.cf77531',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.execution.a45cd4b');
+              },
             },
           ],
           canActivate: (selection) =>
@@ -148,29 +258,59 @@ export function withAutomationSettings(): readonly IFeature<SettingsFeatureKind>
             scope: 'global',
             id: 'system',
             label: 'System',
-            description: 'This Mac: tools, storage, virtual machines, updates and sleep.',
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.this.mac.tools.storage.virtual.machines.updates.and..e89ed8d',
+              );
+            },
             order: 40,
           },
           search: [
             {
               id: 'managed-storage-limit',
-              label: 'Maximum managed storage (GB)',
-              description: 'All managed Symphony data on this Mac stops growing at this limit.',
-              group: 'Storage',
+              get label() {
+                return translateLabel('loc.symphony.labels.maximum.managed.storage.gb.04627fe');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.all.managed.symphony.data.on.this.mac.stops.growing..1dc301d',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.storage.a69c4de');
+              },
               keywords: ['disk', 'space', 'limit'],
             },
             {
               id: 'minimum-free-disk',
-              label: 'Minimum Mac free space (GB)',
-              description: 'Symphony stops writing before the Mac drops below this.',
-              group: 'Storage',
+              get label() {
+                return translateLabel('loc.symphony.labels.minimum.mac.free.space.gb.53454f7');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.symphony.stops.writing.before.the.mac.drops.below.th.08aae24',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.storage.a69c4de');
+              },
               keywords: ['disk', 'reserve'],
             },
             {
               id: 'local-ci-storage-limit',
-              label: 'Maximum Local GitHub Actions storage (GB)',
-              description: 'Base image, machine disks, actions/cache and runner tools.',
-              group: 'Storage',
+              get label() {
+                return translateLabel(
+                  'loc.symphony.labels.maximum.local.github.actions.storage.gb.fb08f09',
+                );
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.base.image.machine.disks.actions.cache.and.runner.to.e4f03fa',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.storage.a69c4de');
+              },
               keywords: ['runner', 'virtual machines', 'disk'],
             },
           ],

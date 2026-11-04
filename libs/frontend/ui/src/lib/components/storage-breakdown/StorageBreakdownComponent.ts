@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import {
+  TranslateDirective,
   DotComponent,
   SegmentBarComponent,
   SegmentBarItemComponent,
@@ -27,6 +28,7 @@ import { storageBreakdownEntries, storageBreakdownRemainder } from './storageBre
 @Component({
   selector: 'symphony-storage-breakdown',
   imports: [
+    TranslateDirective,
     DotComponent,
     SegmentBarComponent,
     SegmentBarItemComponent,

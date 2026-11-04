@@ -11,6 +11,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@symphony/frontend-intl/labels': resolve('libs/frontend/intl/src/labels.ts'),
+      '@symphony/frontend-intl': resolve('libs/frontend/intl/src/index.ts'),
       '@symphony/frontend-core/delivery': resolve('libs/frontend/core/src/delivery.ts'),
       '@symphony/frontend-notification/views': resolve('libs/frontend/notification/src/views.ts'),
       '@symphony/frontend-search/views': resolve('libs/frontend/search/src/views.ts'),

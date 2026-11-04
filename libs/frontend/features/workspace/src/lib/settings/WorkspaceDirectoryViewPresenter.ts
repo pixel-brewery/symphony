@@ -12,6 +12,7 @@ import { WORKSPACE_SETTINGS_CONTEXT } from '../ports/WorkspaceSettingsContextTok
 import { RepositoryRuntimeStore } from '../state/RepositoryRuntimeStore';
 import { WorkspaceStore } from '../state/WorkspaceStore';
 import type { IWorkspaceDirectoryEntry } from './IWorkspaceDirectoryEntry';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -138,19 +139,24 @@ export class WorkspaceDirectoryViewPresenter {
   private async importWorkspace(): Promise<void> {
     const result = await this._paths.selectPath({
       kind: 'file',
-      title: 'Choose Symphony workspace bundle',
+      get title() {
+        return translateLabel('loc.symphony.labels.choose.symphony.workspace.bundle.2f7a547');
+      },
       filters: [{ name: 'Symphony workspace bundle', extensions: ['json'] }],
     });
     const sourcePath = result.paths[0];
     if (result.canceled || !sourcePath) return;
     const confirmed = await this._alerts.confirm({
       id: 'workspace-import',
-      header: 'Import workspace configuration?',
-      message:
-        'A matching workspace is replaced with the portable configuration. Secrets, signed-in accounts, and local repository paths are never read from the bundle.',
+      header: translateLabel('loc.symphony.labels.import.workspace.configuration.1b09ef3'),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.a.matching.workspace.is.replaced.with.the.portable.c.bf63367',
+        );
+      },
       tone: 'info',
-      confirmLabel: 'Import workspace',
-      cancelLabel: 'Cancel',
+      confirmLabel: translateLabel('loc.symphony.labels.import.workspace.3775664'),
+      cancelLabel: translateLabel('loc.symphony.labels.cancel.19766ed'),
     });
     if (confirmed) await this.store.importWorkspace(sourcePath);
   }

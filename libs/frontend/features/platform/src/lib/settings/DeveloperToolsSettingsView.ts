@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   IconNameDirective,
@@ -30,6 +31,7 @@ import { DeveloperToolsSettingsViewPresenter } from './DeveloperToolsSettingsVie
   selector: 'symphony-developer-tools-settings',
   host: { class: 'flex min-w-0 flex-col gap-2' },
   imports: [
+    TranslateDirective,
     AvatarComponent,
     ButtonComponent,
     IconNameDirective,

@@ -8,6 +8,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   ButtonComponent,
@@ -31,6 +32,7 @@ import { DeliverySettingsViewPresenter } from './DeliverySettingsViewPresenter';
   selector: 'symphony-delivery-settings-card-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,

@@ -9,6 +9,7 @@ import {
 } from '@symphony/frontend-widget';
 import { WorkWidgetSource } from '../widgets/WorkWidgetSource';
 import { WorkHomeWidgetView } from '../widgets/views/WorkHomeWidgetView';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -20,7 +21,9 @@ export function withWorkWidgets(): IFeature<WidgetFeatureKind> {
       () => ({
         id: 'board',
         order: 10,
-        label: 'Board',
+        get label() {
+          return translateLabel('loc.symphony.labels.board.4816cbf');
+        },
         testId: 'home-category-board',
         tilesTestId: 'home-column-widgets',
         empty: 'Connect a workspace whose board has columns to see them here.',

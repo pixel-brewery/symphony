@@ -58,6 +58,7 @@ import {
 } from './workItemDetail';
 import { readEventText, readEventValue, WorkItemForm } from './workItemForm';
 import type { WorkflowInputMode } from './WorkflowInputMode';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -260,7 +261,7 @@ export class WorkItemViewPresenter extends Hydratable(ViewPresenter) {
       case 'github-projects':
         return 'Open in GitHub';
       default:
-        return 'Open work item';
+        return translateLabel('loc.symphony.labels.open.work.item.7b9d6c7');
     }
   });
 
@@ -1274,8 +1275,8 @@ export class WorkItemViewPresenter extends Hydratable(ViewPresenter) {
     const feedback = this.solutionPrompt().trim();
     if (this.requiresFeedback() && !feedback) {
       this._notifications.showWarning(
-        'Describe the requested changes.',
-        'Add feedback before starting an AI revision.',
+        translateLabel('loc.symphony.labels.describe.the.requested.changes.5df6932'),
+        translateLabel('loc.symphony.labels.add.feedback.before.starting.an.ai.revision.8ecbfc5'),
       );
       return;
     }

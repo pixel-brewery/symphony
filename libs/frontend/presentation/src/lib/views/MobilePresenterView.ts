@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import {
+  TranslateDirective,
   BusyStateComponent,
   ButtonComponent,
   MessageComponent,
@@ -20,6 +21,7 @@ import { MobilePresenterViewPresenter } from '../view-presenters/MobilePresenter
   selector: 'symphony-mobile-presenter-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BusyStateComponent,
     ButtonComponent,
     MessageComponent,

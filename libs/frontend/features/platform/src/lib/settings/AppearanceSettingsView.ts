@@ -2,7 +2,12 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
-import { ViewSlotOutletComponent } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  TranslateDirective,
+  SegmentComponent,
+  SegmentItemComponent,
+  ViewSlotOutletComponent,
+} from '@pixel-brewery/mosaik-elements-angular';
 import {
   SettingsGroupComponent,
   SettingsRowComponent,
@@ -22,6 +27,9 @@ import { ThemeSegmentView } from './ThemeSegmentView';
   selector: 'symphony-appearance-settings',
   host: { class: 'contents' },
   imports: [
+    TranslateDirective,
+    SegmentComponent,
+    SegmentItemComponent,
     SettingsGroupComponent,
     SettingsRowComponent,
     ThemeSegmentView,

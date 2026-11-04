@@ -1,182 +1,184 @@
-@if (presenter.workspace(); as item) {
-<div class="flex min-w-0 flex-col gap-3" [attr.test-id]="'workspace-card-' + item.id">
-  @if (presenter.section() === 'delivery') {
-  <symphony-settings-group
-    test-id="workspace-delivery-destinations"
-    [heading]="'Delivery destinations'"
-    [description]="'Choose which environments, release channels and installations appear in the orbit. Mark the destination that represents Production. A version is confirmed only by delivery evidence.'"
-    [framed]="!!presenter.deliveryRepositories().length"
-  >
-    <mosaik-button
-      slot="actions"
-      test-id="add-delivery-target"
-      [label]="'Add destination'"
-      [icon]="'add'"
-      [iconSize]="'small'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      [disabled]="presenter.configurationBusy() || !presenter.deliveryRepositories().length"
-      (click)="presenter.openDeliveryTargetCommand.execute()"
-    />
-    @if (presenter.deliveryRepositories().length) {
-    <symphony-settings-row [label]="'Project'">
-      <mosaik-select
-        class="w-[220px]"
-        test-id="delivery-settings-repository"
-        aria-label="Project"
-        [value]="presenter.deliveryRepository()?.id ?? ''"
-        (selectionChanged)="presenter.selectDeliveryRepositoryCommand.execute($event)"
-      >
-        @for (repository of presenter.deliveryRepositories(); track repository.id) {
-        <mosaik-select-item
-          [attr.test-id]="'delivery-settings-repository-' + repository.id"
-          [value]="repository.id"
-          [label]="repository.displayName"
-        />
-        }
-      </mosaik-select>
-    </symphony-settings-row>
-    @for (target of presenter.deliveryTargets(); track target.id) {
-    <symphony-settings-row
-      [attr.test-id]="'delivery-settings-target-' + target.id"
-      [label]="target.displayName"
-      [description]="(target.kind === 'release-channel' ? 'Release channel' : target.kind === 'installation' ? 'Installation' : 'Environment') + ' · ' + target.environment + (target.production ? ' · Production' : '')"
+<ng-container *mosaikTranslate="let tr">
+  @if (presenter.workspace(); as item) {
+  <div class="flex min-w-0 flex-col gap-3" [attr.test-id]="'workspace-card-' + item.id">
+    @if (presenter.section() === 'delivery') {
+    <symphony-settings-group
+      test-id="workspace-delivery-destinations"
+      [heading]="tr('loc.symphony.delivery.destinations.3629ca')"
+      [description]="tr('loc.symphony.choose.which.environments.release.channels.and.insta.d40fdb')"
+      [framed]="!!presenter.deliveryRepositories().length"
     >
-      @if (target.workflowId) {
-      <mosaik-text
-        slot="detail"
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="'Workflow: ' + target.workflowId"
-      />
-      } @if (target.production) {
-      <mosaik-badge
-        [attr.test-id]="'delivery-settings-target-production-' + target.id"
-        [label]="'Production'"
-        [appearance]="'soft'"
-        [variant]="'success'"
-        [size]="'small'"
-      />
-      }
       <mosaik-button
-        [attr.test-id]="'edit-delivery-target-' + target.id"
-        [label]="'Edit'"
-        [icon]="'edit'"
-        [iconSize]="'small'"
-        [appearance]="'plain'"
-        [disabled]="presenter.configurationBusy()"
-        (click)="presenter.openDeliveryTargetCommand.execute(target.id)"
-      />
-      <mosaik-button
-        [attr.test-id]="'remove-delivery-target-' + target.id"
-        [label]="'Remove'"
-        [appearance]="'plain'"
-        [variant]="'danger'"
-        [disabled]="presenter.configurationBusy()"
-        (click)="presenter.removeDeliveryTargetCommand.execute(target.id)"
-      />
-    </symphony-settings-row>
-    } } @else {
-    <symphony-settings-conditional [condition]="'Without a project'">
-      <div part="settings-group-rows" class="flex min-w-0 flex-col">
-        <symphony-settings-row
-          [label]="'Add a project under Repositories before configuring its destinations.'"
-        >
-          <mosaik-button
-            test-id="delivery-settings-open-repositories"
-            [label]="'Open repositories'"
-            [appearance]="'outline'"
-            (click)="presenter.selectWorkspaceSettingsSectionCommand.execute('repositories')"
-          />
-        </symphony-settings-row>
-      </div>
-    </symphony-settings-conditional>
-    }
-  </symphony-settings-group>
-  @if (presenter.deliveryRepositories().length && !presenter.deliveryTargets().length) {
-  <symphony-settings-conditional [condition]="'A project without destinations'">
-    <div part="settings-group-rows" class="flex min-w-0 flex-col">
-      <symphony-settings-row
-        test-id="delivery-settings-empty"
-        [label]="'No destinations are configured for this project. Add one and mark it as Production to configure the centre of the orbit.'"
-      />
-    </div>
-  </symphony-settings-conditional>
-  } } @if (presenter.section() === 'repositories') {
-  <symphony-settings-group
-    [heading]="'Repositories'"
-    [description]="'Add every source-code repository used by this workspace. Configured repositories are available to AI tasks.'"
-    [attr.test-id]="'workspace-repositories-' + item.id"
-  >
-    @for (repository of presenter.workspaceRepositories()(item.id); track repository.id) { @let
-    runtimeStatus = presenter.repositoryRuntimeStatus(repository.id);
-    <symphony-settings-row
-      [attr.test-id]="'local-repository-' + repository.id"
-      [label]="repository.displayName"
-      [description]="repository.owner + '/' + repository.name + ' · ' + (!repository.enabled ? 'Disabled' : !runtimeStatus || runtimeStatus.preparation.state === 'unprepared' ? 'Not prepared locally' : 'Prepared locally')"
-    >
-      <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'soft'" [icon]="'github'" />
-      @if (presenter.repositoryRuntimeAvailable && repository.enabled &&
-      !presenter.repositoryPrepared()(repository.id)) {
-      <mosaik-button
-        [attr.test-id]="'prepare-repository-' + repository.id"
-        [label]="'Prepare locally'"
-        [appearance]="'solid'"
-        [variant]="'primary'"
-        [isBusy]="presenter.repositoryRuntimeBusy() === repository.id"
-        [disabled]="!!presenter.repositoryRuntimeBusy()"
-        (click)="presenter.prepareRepositoryCommand.execute(repository)"
-      />
-      } @else if (presenter.repositoryRuntimeAvailable && repository.enabled &&
-      presenter.repositoryManaged()(repository.id)) {
-      <mosaik-button
-        [attr.test-id]="'refresh-repository-' + repository.id"
-        [label]="'Refresh'"
-        [icon]="'sync'"
-        [iconSize]="'small'"
-        [appearance]="'plain'"
-        [disabled]="!!presenter.repositoryRuntimeBusy()"
-        (click)="presenter.prepareRepositoryCommand.execute(repository)"
-      />
-      }
-      <mosaik-button
-        [attr.test-id]="'edit-repository-' + repository.id"
-        [label]="'Edit'"
-        [icon]="'edit'"
-        [iconSize]="'small'"
-        [appearance]="'plain'"
-        [disabled]="!!presenter.repositoryRuntimeBusy()"
-        (click)="presenter.openRepositoryCommand.execute([item.id, repository.id])"
-      />
-      <mosaik-button
-        [attr.test-id]="'remove-repository-' + repository.id"
-        [icon]="'delete'"
-        [iconSize]="'small'"
-        [appearance]="'plain'"
-        [variant]="'danger'"
-        [attr.aria-label]="'Remove repository: ' + repository.displayName"
-        [disabled]="presenter.configurationBusy()"
-        (click)="presenter.confirmRemoveRepositoryCommand.execute(repository)"
-      />
-    </symphony-settings-row>
-    }
-    <symphony-settings-row
-      [attr.test-id]="'add-repository-entry-' + item.id"
-      [label]="'Add repository'"
-      [description]="'Add another GitHub repository to this workspace'"
-    >
-      <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'outline'" [icon]="'add'" />
-      <mosaik-button
-        [attr.test-id]="'add-repository-' + item.id"
-        [label]="'Add repository'"
+        slot="actions"
+        test-id="add-delivery-target"
+        [label]="tr('loc.symphony.add.destination.48b7df')"
         [icon]="'add'"
         [iconSize]="'small'"
-        [appearance]="'outline'"
-        (click)="presenter.openRepositoryCommand.execute([item.id])"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [disabled]="presenter.configurationBusy() || !presenter.deliveryRepositories().length"
+        (click)="presenter.openDeliveryTargetCommand.execute()"
       />
-    </symphony-settings-row>
-  </symphony-settings-group>
+      @if (presenter.deliveryRepositories().length) {
+      <symphony-settings-row [label]="tr('loc.symphony.project.985959')">
+        <mosaik-select
+          class="w-[220px]"
+          test-id="delivery-settings-repository"
+          [attr.aria-label]="tr('loc.symphony.project.985959')"
+          [value]="presenter.deliveryRepository()?.id ?? ''"
+          (selectionChanged)="presenter.selectDeliveryRepositoryCommand.execute($event)"
+        >
+          @for (repository of presenter.deliveryRepositories(); track repository.id) {
+          <mosaik-select-item
+            [attr.test-id]="'delivery-settings-repository-' + repository.id"
+            [value]="repository.id"
+            [label]="repository.displayName"
+          />
+          }
+        </mosaik-select>
+      </symphony-settings-row>
+      @for (target of presenter.deliveryTargets(); track target.id) {
+      <symphony-settings-row
+        [attr.test-id]="'delivery-settings-target-' + target.id"
+        [label]="target.displayName"
+        [description]="(target.kind === 'release-channel' ? 'Release channel' : target.kind === 'installation' ? 'Installation' : 'Environment') + ' · ' + target.environment + (target.production ? ' · Production' : '')"
+      >
+        @if (target.workflowId) {
+        <mosaik-text
+          slot="detail"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.workflow.caecda', [target.workflowId])"
+        />
+        } @if (target.production) {
+        <mosaik-badge
+          [attr.test-id]="'delivery-settings-target-production-' + target.id"
+          [label]="tr('loc.symphony.production.13a7c6')"
+          [appearance]="'soft'"
+          [variant]="'success'"
+          [size]="'small'"
+        />
+        }
+        <mosaik-button
+          [attr.test-id]="'edit-delivery-target-' + target.id"
+          [label]="tr('loc.symphony.edit.464c4f')"
+          [icon]="'edit'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          [disabled]="presenter.configurationBusy()"
+          (click)="presenter.openDeliveryTargetCommand.execute(target.id)"
+        />
+        <mosaik-button
+          [attr.test-id]="'remove-delivery-target-' + target.id"
+          [label]="tr('loc.symphony.remove.c3812f')"
+          [appearance]="'plain'"
+          [variant]="'danger'"
+          [disabled]="presenter.configurationBusy()"
+          (click)="presenter.removeDeliveryTargetCommand.execute(target.id)"
+        />
+      </symphony-settings-row>
+      } } @else {
+      <symphony-settings-conditional [condition]="'Without a project'">
+        <div part="settings-group-rows" class="flex min-w-0 flex-col">
+          <symphony-settings-row
+            [label]="tr('loc.symphony.add.a.project.under.repositories.before.configuring.47f642')"
+          >
+            <mosaik-button
+              test-id="delivery-settings-open-repositories"
+              [label]="tr('loc.symphony.open.repositories.7c9d4e')"
+              [appearance]="'outline'"
+              (click)="presenter.selectWorkspaceSettingsSectionCommand.execute('repositories')"
+            />
+          </symphony-settings-row>
+        </div>
+      </symphony-settings-conditional>
+      }
+    </symphony-settings-group>
+    @if (presenter.deliveryRepositories().length && !presenter.deliveryTargets().length) {
+    <symphony-settings-conditional [condition]="'A project without destinations'">
+      <div part="settings-group-rows" class="flex min-w-0 flex-col">
+        <symphony-settings-row
+          test-id="delivery-settings-empty"
+          [label]="tr('loc.symphony.no.destinations.are.configured.for.this.project.add.41a1e4')"
+        />
+      </div>
+    </symphony-settings-conditional>
+    } } @if (presenter.section() === 'repositories') {
+    <symphony-settings-group
+      [heading]="tr('loc.symphony.repositories.1e32af')"
+      [description]="tr('loc.symphony.add.every.source.code.repository.used.by.this.worksp.be1a6a')"
+      [attr.test-id]="'workspace-repositories-' + item.id"
+    >
+      @for (repository of presenter.workspaceRepositories()(item.id); track repository.id) { @let
+      runtimeStatus = presenter.repositoryRuntimeStatus(repository.id);
+      <symphony-settings-row
+        [attr.test-id]="'local-repository-' + repository.id"
+        [label]="repository.displayName"
+        [description]="repository.owner + '/' + repository.name + ' · ' + (!repository.enabled ? 'Disabled' : !runtimeStatus || runtimeStatus.preparation.state === 'unprepared' ? 'Not prepared locally' : 'Prepared locally')"
+      >
+        <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'soft'" [icon]="'github'" />
+        @if (presenter.repositoryRuntimeAvailable && repository.enabled &&
+        !presenter.repositoryPrepared()(repository.id)) {
+        <mosaik-button
+          [attr.test-id]="'prepare-repository-' + repository.id"
+          [label]="tr('loc.symphony.prepare.locally.29498e')"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [isBusy]="presenter.repositoryRuntimeBusy() === repository.id"
+          [disabled]="!!presenter.repositoryRuntimeBusy()"
+          (click)="presenter.prepareRepositoryCommand.execute(repository)"
+        />
+        } @else if (presenter.repositoryRuntimeAvailable && repository.enabled &&
+        presenter.repositoryManaged()(repository.id)) {
+        <mosaik-button
+          [attr.test-id]="'refresh-repository-' + repository.id"
+          [label]="tr('loc.symphony.refresh.0e9161')"
+          [icon]="'sync'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          [disabled]="!!presenter.repositoryRuntimeBusy()"
+          (click)="presenter.prepareRepositoryCommand.execute(repository)"
+        />
+        }
+        <mosaik-button
+          [attr.test-id]="'edit-repository-' + repository.id"
+          [label]="tr('loc.symphony.edit.464c4f')"
+          [icon]="'edit'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          [disabled]="!!presenter.repositoryRuntimeBusy()"
+          (click)="presenter.openRepositoryCommand.execute([item.id, repository.id])"
+        />
+        <mosaik-button
+          [attr.test-id]="'remove-repository-' + repository.id"
+          [icon]="'delete'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          [variant]="'danger'"
+          [attr.aria-label]="tr('loc.symphony.remove.repository.f5a9e0', [repository.displayName])"
+          [disabled]="presenter.configurationBusy()"
+          (click)="presenter.confirmRemoveRepositoryCommand.execute(repository)"
+        />
+      </symphony-settings-row>
+      }
+      <symphony-settings-row
+        [attr.test-id]="'add-repository-entry-' + item.id"
+        [label]="tr('loc.symphony.add.repository.2eda4d')"
+        [description]="tr('loc.symphony.add.another.github.repository.to.this.workspace.2935c7')"
+      >
+        <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'outline'" [icon]="'add'" />
+        <mosaik-button
+          [attr.test-id]="'add-repository-' + item.id"
+          [label]="tr('loc.symphony.add.repository.2eda4d')"
+          [icon]="'add'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          (click)="presenter.openRepositoryCommand.execute([item.id])"
+        />
+      </symphony-settings-row>
+    </symphony-settings-group>
+    }
+  </div>
   }
-</div>
-}
+</ng-container>

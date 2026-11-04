@@ -1,8 +1,9 @@
 // #region Imports
 
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   BannerComponent,
   BannerHeaderComponent,
   BannerSubHeaderComponent,
@@ -41,6 +42,7 @@ import { ProcessDrawerViewPresenter } from '../../view-presenters/ProcessDrawerV
   selector: 'symphony-process-drawer-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BannerComponent,
     BannerHeaderComponent,
     BannerSubHeaderComponent,

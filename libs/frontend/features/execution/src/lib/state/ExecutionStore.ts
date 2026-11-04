@@ -25,6 +25,7 @@ import type { IExecutionSynchronization } from '../ports/IExecutionSynchronizati
 import { EXECUTION_SYNCHRONIZATION } from '../ports/ExecutionSynchronizationToken';
 import type { IExecutionClient } from '../ports/IExecutionClient';
 import { EXECUTION_CLIENT } from '../ports/ExecutionClientToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -140,7 +141,7 @@ export class ExecutionStore implements IExecutionOperations {
       if (executionApproval === 'repository') await this._runtime.refreshRepositoryRuntime();
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to start Analyzer.');
+      this.showError(cause, translateLabel('loc.symphony.labels.unable.to.start.analyzer.454a984'));
       return false;
     }
   }
@@ -177,7 +178,10 @@ export class ExecutionStore implements IExecutionOperations {
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to delegate this task.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.delegate.this.task.53bead9'),
+      );
       return false;
     }
   }
@@ -207,7 +211,10 @@ export class ExecutionStore implements IExecutionOperations {
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to review this goal.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.review.this.goal.45de3ec'),
+      );
       return false;
     }
   }
@@ -245,7 +252,10 @@ export class ExecutionStore implements IExecutionOperations {
       );
       return proposal;
     } catch (cause) {
-      this.showError(cause, 'Unable to assess these work items.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.assess.these.work.items.efcdeeb'),
+      );
       return undefined;
     }
   }
@@ -270,7 +280,10 @@ export class ExecutionStore implements IExecutionOperations {
       this.replaceDeliveryGroup(group);
       return group;
     } catch (cause) {
-      this.showError(cause, 'Unable to group these work items directly.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.group.these.work.items.directly.fd1f8f9'),
+      );
       return undefined;
     }
   }
@@ -295,7 +308,10 @@ export class ExecutionStore implements IExecutionOperations {
       this.replaceDeliveryGroup(group);
       return group;
     } catch (cause) {
-      this.showError(cause, 'Unable to group these work items.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.group.these.work.items.c745a99'),
+      );
       return undefined;
     }
   }
@@ -326,7 +342,10 @@ export class ExecutionStore implements IExecutionOperations {
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to reject the grouping proposal.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.reject.the.grouping.proposal.cfb2797'),
+      );
       return false;
     }
   }
@@ -343,7 +362,10 @@ export class ExecutionStore implements IExecutionOperations {
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to dissolve the delivery group.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.dissolve.the.delivery.group.c98c345'),
+      );
       return false;
     }
   }
@@ -361,7 +383,10 @@ export class ExecutionStore implements IExecutionOperations {
       await this._refresh.refresh();
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to align the delivery group.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.align.the.delivery.group.1a9212f'),
+      );
       return false;
     }
   }
@@ -404,7 +429,10 @@ export class ExecutionStore implements IExecutionOperations {
       await this._refresh.refresh();
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to record manual analysis.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.record.manual.analysis.120d141'),
+      );
       return false;
     }
   }
@@ -457,7 +485,7 @@ export class ExecutionStore implements IExecutionOperations {
       if (executionApproval === 'repository') await this._runtime.refreshRepositoryRuntime();
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to start Solver.');
+      this.showError(cause, translateLabel('loc.symphony.labels.unable.to.start.solver.7f8f6ad'));
       return false;
     }
   }
@@ -500,7 +528,10 @@ export class ExecutionStore implements IExecutionOperations {
       await this._refresh.refresh();
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to record manual implementation.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.record.manual.implementation.29047f6'),
+      );
       return false;
     }
   }
@@ -525,12 +556,18 @@ export class ExecutionStore implements IExecutionOperations {
           : snapshot,
       );
       this._notifications.showInfo(
-        'Removed from the queue.',
-        `${entry.workItemExternalId} no longer waits for an execution slot.`,
+        translateLabel('loc.symphony.labels.removed.from.the.queue.8274fe0'),
+        translateLabel(
+          'loc.symphony.labels.no.longer.waits.for.an.execution.slot.854fdfb',
+          entry.workItemExternalId,
+        ),
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to remove the queued step.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.remove.the.queued.step.d5be67b'),
+      );
       return false;
     }
   }
@@ -554,10 +591,16 @@ export class ExecutionStore implements IExecutionOperations {
             }
           : snapshot,
       );
-      this._notifications.showInfo('Execution cancelled.', 'The active agent was stopped.');
+      this._notifications.showInfo(
+        translateLabel('loc.symphony.labels.execution.cancelled.82cdad7'),
+        translateLabel('loc.symphony.labels.the.active.agent.was.stopped.7f25f8c'),
+      );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to cancel the execution.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.cancel.the.execution.c766fe7'),
+      );
       return false;
     }
   }
@@ -592,8 +635,11 @@ export class ExecutionStore implements IExecutionOperations {
         : snapshot,
     );
     this._notifications.showInfo(
-      'Queued for the next execution slot.',
-      `${entry.workItemExternalId} starts as soon as a run finishes.`,
+      translateLabel('loc.symphony.labels.queued.for.the.next.execution.slot.ff22e0d'),
+      translateLabel(
+        'loc.symphony.labels.starts.as.soon.as.a.run.finishes.2f912be',
+        entry.workItemExternalId,
+      ),
     );
   }
 

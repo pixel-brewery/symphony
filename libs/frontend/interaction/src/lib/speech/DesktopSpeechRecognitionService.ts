@@ -4,6 +4,7 @@ import { DestroyRef, Inject, inject, Injectable } from '@angular/core';
 import type { IDesktopApi, SpeechRecognitionEvent } from '@symphony/ipc-contracts-desktop';
 import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
 import { NotificationService } from '@symphony/frontend-notification';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -142,10 +143,12 @@ export class DesktopSpeechRecognitionService {
 
   private showFailure(code: Extract<SpeechRecognitionEvent, { kind: 'error' }>['code']): void {
     this._notifications.showError(
-      'Voice search could not start.',
+      translateLabel('loc.symphony.labels.voice.search.could.not.start.5b74987'),
       code === 'permission-denied'
-        ? 'Allow microphone access for Symphony in macOS System Settings and try again.'
-        : 'Check the microphone and try again.',
+        ? translateLabel(
+            'loc.symphony.labels.allow.microphone.access.for.symphony.in.macos.system.fe51886',
+          )
+        : translateLabel('loc.symphony.labels.check.the.microphone.and.try.again.f06c596'),
     );
   }
 

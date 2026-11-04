@@ -1,60 +1,87 @@
-<mosaik-page class="block min-h-full min-w-0" test-id="mobile-settings-view">
-  <mosaik-page-header [inset]="'all'" [text]="'Settings'" [subText]="'Mobile companion'" />
-  <mosaik-page-content [inset]="'all'">
-    <div class="grid gap-3">
-      <mosaik-card [appearance]="'soft'">
-        <mosaik-card-header
-          [text]="'Connection · ' + (presenter.snapshot()?.desktopName ?? 'Symphony Desktop')"
-          [subText]="presenter.connectionState() === 'connected' ? 'Connected on local Wi-Fi' : 'Connection interrupted'"
-        />
-        <mosaik-card-content>
-          <p class="mt-0">This phone is paired with the selected Symphony Desktop instance.</p>
-          @if (presenter.error()) {
-          <mosaik-hint [text]="presenter.error() ?? ''" />
-          }
-          <mosaik-button
-            [appearance]="'outline'"
-            [label]="'Reconnect'"
-            (click)="presenter.retryCommand.execute()"
+<ng-container *mosaikTranslate="let tr">
+  <mosaik-page class="block min-h-full min-w-0" test-id="mobile-settings-view">
+    <mosaik-page-header
+      [inset]="'all'"
+      [text]="tr('loc.symphony.settings.74a883')"
+      [subText]="tr('loc.symphony.mobile.companion.93fd90')"
+    />
+    <mosaik-page-content [inset]="'all'">
+      <div class="grid gap-3">
+        <mosaik-card [appearance]="'soft'">
+          <mosaik-card-header
+            [text]="tr('loc.symphony.connection.125ebe', [(presenter.snapshot()?.desktopName ?? tr('loc.symphony.symphony.desktop.353fe9'))])"
+            [subText]="presenter.connectionState() === 'connected' ? tr('loc.symphony.connected.on.local.wi.fi.de5748') : tr('loc.symphony.connection.interrupted.183383')"
           />
-        </mosaik-card-content>
-      </mosaik-card>
+          <mosaik-card-content>
+            <p class="mt-0">
+              {{ tr('loc.symphony.this.phone.is.paired.with.the.selected.symphony.desk.bf62eb') }}
+            </p>
+            @if (presenter.error()) {
+            <mosaik-hint [text]="presenter.error() ?? ''" />
+            }
+            <mosaik-button
+              [appearance]="'outline'"
+              [label]="tr('loc.symphony.reconnect.bf8a9e')"
+              (click)="presenter.retryCommand.execute()"
+            />
+          </mosaik-card-content>
+        </mosaik-card>
 
-      <mosaik-card test-id="mobile-theme-settings-card">
-        <mosaik-card-header
-          [text]="'Appearance'"
-          [subText]="'Choose light, dark, or follow this device.'"
-        />
-        <mosaik-card-content>
-          <mosaik-select
-            class="w-full"
-            test-id="mobile-theme-select"
-            [label]="'Theme'"
-            [value]="presenter.theme()"
-            [variant]="'primary'"
-            (selectionChanged)="presenter.updateThemeCommand.execute($event)"
-          >
-            <mosaik-select-item
-              test-id="mobile-theme-light"
-              [label]="'Light'"
-              [value]="'light'"
-              (click)="presenter.updateThemeCommand.execute('light')"
-            />
-            <mosaik-select-item
-              test-id="mobile-theme-dark"
-              [label]="'Dark'"
-              [value]="'dark'"
-              (click)="presenter.updateThemeCommand.execute('dark')"
-            />
-            <mosaik-select-item
-              test-id="mobile-theme-system"
-              [label]="'System'"
-              [value]="'system'"
-              (click)="presenter.updateThemeCommand.execute('system')"
-            />
-          </mosaik-select>
-        </mosaik-card-content>
-      </mosaik-card>
-    </div>
-  </mosaik-page-content>
-</mosaik-page>
+        <mosaik-card test-id="mobile-theme-settings-card">
+          <mosaik-card-header
+            [text]="tr('loc.symphony.appearance.3907fa')"
+            [subText]="tr('loc.symphony.choose.light.dark.or.follow.this.device.0e261b')"
+          />
+          <mosaik-card-content>
+            <mosaik-segment
+              class="mb-3"
+              test-id="mobile-language-select"
+              [appearance]="'soft'"
+              [attr.aria-label]="tr('loc.symphony.language.a4fe65')"
+            >
+              <mosaik-segment-item
+                test-id="mobile-language-en"
+                [label]="tr('loc.symphony.english.ba118b')"
+                [isChecked]="presenter.language() === 'en'"
+                (checked)="presenter.updateLanguageCommand.execute('en')"
+              />
+              <mosaik-segment-item
+                test-id="mobile-language-de"
+                [label]="tr('loc.symphony.deutsch.801cfe')"
+                [isChecked]="presenter.language() === 'de'"
+                (checked)="presenter.updateLanguageCommand.execute('de')"
+              />
+            </mosaik-segment>
+            <mosaik-select
+              class="w-full"
+              test-id="mobile-theme-select"
+              [label]="tr('loc.symphony.theme.efb52e')"
+              [value]="presenter.theme()"
+              [variant]="'primary'"
+              (selectionChanged)="presenter.updateThemeCommand.execute($event)"
+            >
+              <mosaik-select-item
+                test-id="mobile-theme-light"
+                [label]="tr('loc.symphony.light.dbcd5e')"
+                [value]="'light'"
+                (click)="presenter.updateThemeCommand.execute('light')"
+              />
+              <mosaik-select-item
+                test-id="mobile-theme-dark"
+                [label]="tr('loc.symphony.dark.60acc5')"
+                [value]="'dark'"
+                (click)="presenter.updateThemeCommand.execute('dark')"
+              />
+              <mosaik-select-item
+                test-id="mobile-theme-system"
+                [label]="tr('loc.symphony.system.6725e7')"
+                [value]="'system'"
+                (click)="presenter.updateThemeCommand.execute('system')"
+              />
+            </mosaik-select>
+          </mosaik-card-content>
+        </mosaik-card>
+      </div>
+    </mosaik-page-content>
+  </mosaik-page>
+</ng-container>

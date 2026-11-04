@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   IconNameDirective,
@@ -30,6 +31,7 @@ import { PresenterViewPresenter } from '../view-presenters/PresenterViewPresente
   selector: 'symphony-run-panel',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AgentActivityLabelPipe,
     AgentActivityVariantPipe,
     AvatarComponent,

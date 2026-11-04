@@ -9,6 +9,7 @@ import {
 } from '@symphony/frontend-widget';
 import { DeliveryWidgetSource } from '../widgets/DeliveryWidgetSource';
 import { DeliveryHomeWidgetView } from '../widgets/views/DeliveryHomeWidgetView';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -20,7 +21,9 @@ export function withDeliveryWidgets(): IFeature<WidgetFeatureKind> {
       () => ({
         id: 'pull-requests',
         order: 20,
-        label: 'Pull requests',
+        get label() {
+          return translateLabel('loc.symphony.labels.pull.requests.d9e3f26');
+        },
         testId: 'home-category-pull-requests',
         tilesTestId: 'home-pull-request-widgets',
         empty: 'No pull request in the selected workspaces yet.',

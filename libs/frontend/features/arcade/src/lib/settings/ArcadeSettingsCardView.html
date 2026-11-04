@@ -1,34 +1,36 @@
-<symphony-settings-group
-  test-id="arcade-settings-card"
-  [heading]="'Navigation'"
-  [description]="'Choose which optional destinations appear in Symphony.'"
->
-  <symphony-settings-row
-    [label]="'Show Arcade'"
-    [description]="'Add all ' + presenter.arcadeGameCount + ' bundled games to the main navigation.'"
+<ng-container *mosaikTranslate="let tr">
+  <symphony-settings-group
+    test-id="arcade-settings-card"
+    [heading]="tr('loc.symphony.navigation.3db65f')"
+    [description]="tr('loc.symphony.choose.which.optional.destinations.appear.in.symphon.b298cc')"
   >
-    <symphony-arcade-enabled-toggle />
-  </symphony-settings-row>
-  @if (presenter.arcadeEnabled()) {
-  <symphony-settings-row
-    test-id="arcade-god-mode"
-    [label]="'God mode'"
-    [description]="presenter.arcadeGodModeEnabled() ? 'God mode is active for this session.' : 'Press the keys in order. Progress resets after two seconds without a key.'"
-  >
-    <div
-      test-id="arcade-god-mode-sequence"
-      class="flex flex-wrap items-center justify-end gap-[6px]"
-      role="group"
-      aria-label="God mode key sequence"
+    <symphony-settings-row
+      [label]="tr('loc.symphony.show.arcade.b48bb7')"
+      [description]="tr('loc.symphony.add.all.bundled.games.to.the.main.navigation.19e123', [presenter.arcadeGameCount])"
     >
-      @for (key of presenter.arcadeGodModeSequence; track $index) {
-      <mosaik-kbd
-        [attr.test-id]="'arcade-god-mode-key-' + $index"
-        [value]="[key]"
-        [variant]="$index < presenter.arcadeGodModeProgress() ? 'success' : 'default'"
-      />
-      }
-    </div>
-  </symphony-settings-row>
-  }
-</symphony-settings-group>
+      <symphony-arcade-enabled-toggle />
+    </symphony-settings-row>
+    @if (presenter.arcadeEnabled()) {
+    <symphony-settings-row
+      test-id="arcade-god-mode"
+      [label]="tr('loc.symphony.god.mode.c2a056')"
+      [description]="presenter.arcadeGodModeEnabled() ? tr('loc.symphony.god.mode.is.active.for.this.session.0b0f66') : tr('loc.symphony.press.the.keys.in.order.progress.resets.after.two.se.d21638')"
+    >
+      <div
+        test-id="arcade-god-mode-sequence"
+        class="flex flex-wrap items-center justify-end gap-[6px]"
+        role="group"
+        [attr.aria-label]="tr('loc.symphony.god.mode.key.sequence.5c1af5')"
+      >
+        @for (key of presenter.arcadeGodModeSequence; track $index) {
+        <mosaik-kbd
+          [attr.test-id]="'arcade-god-mode-key-' + $index"
+          [value]="[key]"
+          [variant]="$index < presenter.arcadeGodModeProgress() ? 'success' : 'default'"
+        />
+        }
+      </div>
+    </symphony-settings-row>
+    }
+  </symphony-settings-group>
+</ng-container>

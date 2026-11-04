@@ -8,6 +8,7 @@ import type { IWorkflowClient } from '../ports/IWorkflowClient';
 import type { IWorkflowRefresh } from '../ports/IWorkflowRefresh';
 import { WORKFLOW_CLIENT } from '../ports/WorkflowClientToken';
 import { WORKFLOW_REFRESH } from '../ports/WorkflowRefreshToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -50,7 +51,10 @@ export class WorkflowStore implements IWorkflowOperations {
     try {
       return await this._client.request('workflow.get', { workItemId });
     } catch (cause) {
-      this.showError(cause, 'Unable to load the process state.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.the.process.state.b37533f'),
+      );
       return undefined;
     }
   }
@@ -74,7 +78,10 @@ export class WorkflowStore implements IWorkflowOperations {
       });
       await this._refresh.refresh();
     } catch (cause) {
-      this.showError(cause, 'Unable to record the decision.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.record.the.decision.9295704'),
+      );
     } finally {
       this._workflowBusy.set(false);
     }
@@ -106,7 +113,10 @@ export class WorkflowStore implements IWorkflowOperations {
       });
       await this._refresh.refresh();
     } catch (cause) {
-      this.showError(cause, 'Unable to record the answer.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.record.the.answer.f925a36'),
+      );
     } finally {
       this._workflowBusy.set(false);
     }

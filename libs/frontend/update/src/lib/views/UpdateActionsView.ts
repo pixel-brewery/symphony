@@ -1,7 +1,7 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
-import { ButtonComponent } from '@pixel-brewery/mosaik-elements-angular';
+import { TranslateDirective, ButtonComponent } from '@pixel-brewery/mosaik-elements-angular';
 import { UpdateSettingsCardViewPresenter } from '../view-presenters/UpdateSettingsCardViewPresenter';
 
 // #endregion
@@ -9,7 +9,7 @@ import { UpdateSettingsCardViewPresenter } from '../view-presenters/UpdateSettin
 @Component({
   selector: 'symphony-update-actions',
   host: { class: 'block' },
-  imports: [ButtonComponent],
+  imports: [TranslateDirective, ButtonComponent],
   templateUrl: './UpdateActionsView.html',
   styleUrl: './UpdateActionsView.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

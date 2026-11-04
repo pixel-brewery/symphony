@@ -1,273 +1,287 @@
-<!-- The authoring form opens as a sheet hanging below the window toolbar, like `New work item`. -->
-<ng-template mosaikDialogHeader>
-  @let repository = presenter.repository();
-  <mosaik-dialog-header slot="header" [text]="'New pull request'">
-    @if (repository) {
-    <mosaik-text
-      slot="subHeader"
-      part="technical-caption"
-      class="technical-value"
-      [text]="repository.owner + '/' + repository.name"
-      [variant]="'neutral'"
-      [truncate]="true"
-    />
-    } @else {
-    <mosaik-text
-      slot="subHeader"
-      [text]="'Choose the branches to merge, then describe the change'"
-      [mosaikTypography]="'caption'"
-      [variant]="'neutral'"
-      [truncate]="true"
-    />
-    }
-    <mosaik-dismiss
-      slot="suffix"
-      test-id="pull-request-create-header-close"
-      aria-label="Close"
-      (click)="presenter.closeCommand.execute()"
-    />
-  </mosaik-dialog-header>
-</ng-template>
+<ng-container *mosaikTranslate="let tr">
+  <!-- The authoring form opens as a sheet hanging below the window toolbar, like `New work item`. -->
+  <ng-template mosaikDialogHeader>
+    @let repository = presenter.repository();
+    <mosaik-dialog-header slot="header" [text]="tr('loc.symphony.new.pull.request.263c79')">
+      @if (repository) {
+      <mosaik-text
+        slot="subHeader"
+        part="technical-caption"
+        class="technical-value"
+        [text]="repository.owner + '/' + repository.name"
+        [variant]="'neutral'"
+        [truncate]="true"
+      />
+      } @else {
+      <mosaik-text
+        slot="subHeader"
+        [text]="tr('loc.symphony.choose.the.branches.to.merge.then.describe.the.chang.f47dd7')"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [truncate]="true"
+      />
+      }
+      <mosaik-dismiss
+        slot="suffix"
+        test-id="pull-request-create-header-close"
+        [attr.aria-label]="tr('loc.symphony.close.7d9eb7')"
+        (click)="presenter.closeCommand.execute()"
+      />
+    </mosaik-dialog-header>
+  </ng-template>
 
-<ng-template mosaikDialogContent>
-  <div
-    test-id="pull-request-create-drawer"
-    class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden"
-  >
-    <!-- While repositories and branches load, the form itself renders with its controls disabled:
+  <ng-template mosaikDialogContent>
+    <div
+      test-id="pull-request-create-drawer"
+      class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden"
+    >
+      <!-- While repositories and branches load, the form itself renders with its controls disabled:
          labels and headings are static, and only the comparison, which needs both branches, is a
          skeleton in the banner's place. -->
-    @if (!presenter.isHydrating() && !presenter.repositories().length) {
-    <mosaik-empty-state
-      test-id="pull-request-create-empty-state"
-      [iconName]="'branch'"
-      [header]="'No GitHub repository in this workspace view'"
-      [content]="'Connect a GitHub repository in Settings before opening a pull request.'"
-    />
-    } @else {
-    <form
-      class="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto"
-      [attr.test-id]="presenter.isHydrating() ? 'pull-request-create-loading-skeleton' : null"
-      [attr.aria-busy]="presenter.isHydrating()"
-    >
-      <section class="flex flex-col gap-2">
-        @if (presenter.repositories().length > 1) {
-        <mosaik-form-field [fieldState]="presenter.form.repositoryBindingId()">
-          <mosaik-select
-            test-id="pull-request-repository"
-            [formField]="presenter.form.repositoryBindingId"
-            [label]="'Repository'"
-            [required]="true"
-            (changed)="presenter.repositoryChangedCommand.execute()"
+      @if (!presenter.isHydrating() && !presenter.repositories().length) {
+      <mosaik-empty-state
+        test-id="pull-request-create-empty-state"
+        [iconName]="'branch'"
+        [header]="tr('loc.symphony.no.github.repository.in.this.workspace.view.722141')"
+        [content]="tr('loc.symphony.connect.a.github.repository.in.settings.before.openi.911ca4')"
+      />
+      } @else {
+      <form
+        class="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto"
+        [attr.test-id]="presenter.isHydrating() ? 'pull-request-create-loading-skeleton' : null"
+        [attr.aria-busy]="presenter.isHydrating()"
+      >
+        <section class="flex flex-col gap-2">
+          @if (presenter.repositories().length > 1) {
+          <mosaik-form-field [fieldState]="presenter.form.repositoryBindingId()">
+            <mosaik-select
+              test-id="pull-request-repository"
+              [formField]="presenter.form.repositoryBindingId"
+              [label]="tr('loc.symphony.repository.13d6ff')"
+              [required]="true"
+              (changed)="presenter.repositoryChangedCommand.execute()"
+            >
+              @for (repository of presenter.repositories(); track repository.id) {
+              <mosaik-select-item
+                [attr.test-id]="'pull-request-repository-' + repository.id"
+                [value]="repository.id"
+                [label]="repository.owner + '/' + repository.name"
+              />
+              }
+            </mosaik-select>
+          </mosaik-form-field>
+          }
+
+          <div
+            class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 max-[42rem]:grid-cols-1"
           >
-            @for (repository of presenter.repositories(); track repository.id) {
-            <mosaik-select-item
-              [attr.test-id]="'pull-request-repository-' + repository.id"
-              [value]="repository.id"
-              [label]="repository.owner + '/' + repository.name"
+            <mosaik-form-field [fieldState]="presenter.form.targetBranch()">
+              <mosaik-select
+                test-id="pull-request-base-branch"
+                [formField]="presenter.form.targetBranch"
+                [label]="tr('loc.symphony.base.cae662')"
+                [required]="true"
+                [disabled]="presenter.isHydrating() || presenter.branchesBusy()"
+                (changed)="presenter.branchChangedCommand.execute()"
+              >
+                @for (branch of presenter.branches(); track branch.name) {
+                <mosaik-select-item
+                  [attr.test-id]="'pull-request-base-branch-' + branch.name"
+                  [value]="branch.name"
+                  [label]="branch.name"
+                />
+                }
+              </mosaik-select>
+            </mosaik-form-field>
+            <mosaik-button
+              class="self-center max-[42rem]:justify-self-start"
+              test-id="pull-request-swap-branches"
+              [attr.aria-label]="tr('loc.symphony.swap.base.and.compare.27114b')"
+              [iconName]="'sync'"
+              [appearance]="'plain'"
+              [variant]="'primary'"
+              [disabled]="presenter.isHydrating() || presenter.branchesBusy()"
+              [mosaikTooltip]="tr('loc.symphony.swap.base.and.compare.27114b')"
+              (click)="presenter.swapBranchesCommand.execute()"
+            />
+            <mosaik-form-field [fieldState]="presenter.form.sourceBranch()">
+              <mosaik-select
+                test-id="pull-request-compare-branch"
+                [formField]="presenter.form.sourceBranch"
+                [label]="tr('loc.symphony.compare.124162')"
+                [required]="true"
+                [disabled]="presenter.isHydrating() || presenter.branchesBusy()"
+                (changed)="presenter.branchChangedCommand.execute()"
+              >
+                @for (branch of presenter.branches(); track branch.name) {
+                <mosaik-select-item
+                  [attr.test-id]="'pull-request-compare-branch-' + branch.name"
+                  [value]="branch.name"
+                  [label]="branch.name"
+                />
+                }
+              </mosaik-select>
+            </mosaik-form-field>
+          </div>
+
+          @if (presenter.isHydrating() || presenter.branchesBusy() || presenter.comparisonBusy()) {
+          <mosaik-skeleton
+            test-id="pull-request-comparison-skeleton"
+            [height]="'68px'"
+            [width]="'100%'"
+            [shimmer]="true"
+          />
+          <!-- A comparison usually lists commits: the collapsed section keeps its place. -->
+          <mosaik-expander
+            [header]="tr('loc.symphony.commits.d09648')"
+            [isExpanded]="false"
+            [disabled]="true"
+          >
+            <div slot="subHeader" class="flex h-2.5 items-center">
+              <mosaik-skeleton [width]="'16rem'" [height]="'12px'" [shimmer]="true" />
+            </div>
+          </mosaik-expander>
+          } @else if (presenter.comparison(); as comparison) { @let comparisonState = comparison |
+          pullRequestComparisonPresentation;
+          <mosaik-banner
+            test-id="pull-request-comparison"
+            [isOpen]="true"
+            [appearance]="'soft'"
+            [variant]="comparisonState.variant"
+            [iconName]="comparisonState.iconName"
+            [iconSize]="'small'"
+          >
+            <mosaik-banner-header [text]="comparisonState.header" />
+            <mosaik-banner-sub-header [text]="comparisonState.detail" />
+            @if (comparison.existingPullRequest; as existing) {
+            <mosaik-button
+              slot="actions"
+              test-id="pull-request-open-existing"
+              [label]="tr('loc.symphony.open.pr.a07640', [existing.number])"
+              [iconName]="'branch'"
+              [appearance]="'plain'"
+              (click)="presenter.openExistingPullRequestCommand.execute()"
             />
             }
-          </mosaik-select>
-        </mosaik-form-field>
-        }
-
-        <div
-          class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 max-[42rem]:grid-cols-1"
-        >
-          <mosaik-form-field [fieldState]="presenter.form.targetBranch()">
-            <mosaik-select
-              test-id="pull-request-base-branch"
-              [formField]="presenter.form.targetBranch"
-              [label]="'base'"
-              [required]="true"
-              [disabled]="presenter.isHydrating() || presenter.branchesBusy()"
-              (changed)="presenter.branchChangedCommand.execute()"
+          </mosaik-banner>
+          @if (comparison.commits.length) {
+          <mosaik-expander
+            test-id="pull-request-commits"
+            [header]="tr('loc.symphony.commits.d09648')"
+            [subHeader]="tr('loc.symphony.what.the.compare.branch.adds.on.top.of.0203ac', [comparison.targetBranch])"
+          >
+            <ul
+              class="m-0 flex list-none flex-col gap-2 p-0 pt-2"
+              [attr.aria-label]="tr('loc.symphony.commits.in.this.range.1612d6')"
             >
-              @for (branch of presenter.branches(); track branch.name) {
-              <mosaik-select-item
-                [attr.test-id]="'pull-request-base-branch-' + branch.name"
-                [value]="branch.name"
-                [label]="branch.name"
-              />
-              }
-            </mosaik-select>
-          </mosaik-form-field>
-          <mosaik-button
-            class="self-center max-[42rem]:justify-self-start"
-            test-id="pull-request-swap-branches"
-            aria-label="Swap base and compare"
-            [iconName]="'sync'"
-            [appearance]="'plain'"
-            [variant]="'primary'"
-            [disabled]="presenter.isHydrating() || presenter.branchesBusy()"
-            [mosaikTooltip]="'Swap base and compare'"
-            (click)="presenter.swapBranchesCommand.execute()"
-          />
-          <mosaik-form-field [fieldState]="presenter.form.sourceBranch()">
-            <mosaik-select
-              test-id="pull-request-compare-branch"
-              [formField]="presenter.form.sourceBranch"
-              [label]="'compare'"
-              [required]="true"
-              [disabled]="presenter.isHydrating() || presenter.branchesBusy()"
-              (changed)="presenter.branchChangedCommand.execute()"
-            >
-              @for (branch of presenter.branches(); track branch.name) {
-              <mosaik-select-item
-                [attr.test-id]="'pull-request-compare-branch-' + branch.name"
-                [value]="branch.name"
-                [label]="branch.name"
-              />
-              }
-            </mosaik-select>
-          </mosaik-form-field>
-        </div>
-
-        @if (presenter.isHydrating() || presenter.branchesBusy() || presenter.comparisonBusy()) {
-        <mosaik-skeleton
-          test-id="pull-request-comparison-skeleton"
-          [height]="'68px'"
-          [width]="'100%'"
-          [shimmer]="true"
-        />
-        <!-- A comparison usually lists commits: the collapsed section keeps its place. -->
-        <mosaik-expander [header]="'Commits'" [isExpanded]="false" [disabled]="true">
-          <div slot="subHeader" class="flex h-2.5 items-center">
-            <mosaik-skeleton [width]="'16rem'" [height]="'12px'" [shimmer]="true" />
-          </div>
-        </mosaik-expander>
-        } @else if (presenter.comparison(); as comparison) { @let comparisonState = comparison |
-        pullRequestComparisonPresentation;
-        <mosaik-banner
-          test-id="pull-request-comparison"
-          [isOpen]="true"
-          [appearance]="'soft'"
-          [variant]="comparisonState.variant"
-          [iconName]="comparisonState.iconName"
-          [iconSize]="'small'"
-        >
-          <mosaik-banner-header [text]="comparisonState.header" />
-          <mosaik-banner-sub-header [text]="comparisonState.detail" />
-          @if (comparison.existingPullRequest; as existing) {
-          <mosaik-button
-            slot="actions"
-            test-id="pull-request-open-existing"
-            [label]="'Open PR #' + existing.number"
-            [iconName]="'branch'"
-            [appearance]="'plain'"
-            (click)="presenter.openExistingPullRequestCommand.execute()"
-          />
-          }
-        </mosaik-banner>
-        @if (comparison.commits.length) {
-        <mosaik-expander
-          test-id="pull-request-commits"
-          [header]="'Commits'"
-          [subHeader]="'What the compare branch adds on top of ' + comparison.targetBranch"
-        >
-          <ul class="m-0 flex list-none flex-col gap-2 p-0 pt-2" aria-label="Commits in this range">
-            @for (commit of comparison.commits; track commit.revision) {
-            <li
-              class="flex min-w-0 items-start gap-2"
-              [attr.test-id]="'pull-request-commit-' + commit.revision"
-            >
-              <mosaik-icon
-                class="mt-1 flex-none"
-                [icon]="'branch'"
-                [appearance]="'plain'"
-                [variant]="'neutral'"
-                [size]="'small'"
-              />
-              <div class="flex min-w-0 flex-col">
-                <mosaik-text [text]="commit.title" [wrap]="true" />
-                <mosaik-hint
-                  [text]="
+              @for (commit of comparison.commits; track commit.revision) {
+              <li
+                class="flex min-w-0 items-start gap-2"
+                [attr.test-id]="'pull-request-commit-' + commit.revision"
+              >
+                <mosaik-icon
+                  class="mt-1 flex-none"
+                  [icon]="'branch'"
+                  [appearance]="'plain'"
+                  [variant]="'neutral'"
+                  [size]="'small'"
+                />
+                <div class="flex min-w-0 flex-col">
+                  <mosaik-text [text]="commit.title" [wrap]="true" />
+                  <mosaik-hint
+                    [text]="
                     (commit.revision | shortRevision) +
                     (commit.author ? ' · ' + commit.author : '') +
                     (commit.committedAt ? ' · ' + (commit.committedAt | date: 'medium') : '')
                   "
-                />
-              </div>
-            </li>
-            }
-          </ul>
-        </mosaik-expander>
-        } }
-      </section>
+                  />
+                </div>
+              </li>
+              }
+            </ul>
+          </mosaik-expander>
+          } }
+        </section>
 
-      <mosaik-divider />
+        <mosaik-divider />
 
-      <section class="flex flex-col gap-2">
-        <mosaik-text [text]="'Pull request'" [mosaikTypography]="'subtitle1'" />
-        <mosaik-form-field [fieldState]="presenter.form.title()">
-          <mosaik-textbox
-            test-id="pull-request-title"
-            [formField]="presenter.form.title"
-            [label]="'Title'"
-            [placeholder]="'Describe the change'"
-            [required]="true"
-            [disabled]="presenter.isHydrating()"
-            [maxlength]="250"
+        <section class="flex flex-col gap-2">
+          <mosaik-text
+            [text]="tr('loc.symphony.pull.request.f3dba6')"
+            [mosaikTypography]="'subtitle1'"
           />
-        </mosaik-form-field>
-        <mosaik-form-field [fieldState]="presenter.form.body()">
-          <mosaik-textbox
-            test-id="pull-request-body"
-            [formField]="presenter.form.body"
-            [label]="'Description'"
-            [placeholder]="'Explain the change in Markdown…'"
-            [multiline]="true"
-            [multilineRows]="5"
-            [resize]="'vertical'"
-            [maxlength]="60000"
-            [disabled]="presenter.isHydrating()"
-          />
-          <mosaik-hint [text]="'GitHub-flavored Markdown is rendered on the pull request.'" />
-        </mosaik-form-field>
-        @if (presenter.form.body().value()) {
-        <mosaik-card [appearance]="'outline'">
-          <mosaik-card-header [text]="'Markdown preview'" />
-          <mosaik-card-content>
-            <symphony-markdown
-              test-id="pull-request-body-preview"
-              [text]="presenter.form.body().value()"
+          <mosaik-form-field [fieldState]="presenter.form.title()">
+            <mosaik-textbox
+              test-id="pull-request-title"
+              [formField]="presenter.form.title"
+              [label]="tr('loc.symphony.title.7e8cd2')"
+              [placeholder]="tr('loc.symphony.describe.the.change.beaee3')"
+              [required]="true"
+              [disabled]="presenter.isHydrating()"
+              [maxlength]="250"
             />
-          </mosaik-card-content>
-        </mosaik-card>
-        }
-        <div class="flex min-w-0 items-center gap-1">
-          <mosaik-checkbox
-            test-id="pull-request-draft"
-            [label]="'Create as draft'"
-            [isChecked]="presenter.draft()"
-            (click)="presenter.toggleDraftCommand.execute()"
+          </mosaik-form-field>
+          <mosaik-form-field [fieldState]="presenter.form.body()">
+            <mosaik-textbox
+              test-id="pull-request-body"
+              [formField]="presenter.form.body"
+              [label]="tr('loc.symphony.description.526e00')"
+              [placeholder]="tr('loc.symphony.explain.the.change.in.markdown.377060')"
+              [multiline]="true"
+              [multilineRows]="5"
+              [resize]="'vertical'"
+              [maxlength]="60000"
+              [disabled]="presenter.isHydrating()"
+            />
+            <mosaik-hint
+              [text]="tr('loc.symphony.github.flavored.markdown.is.rendered.on.the.pull.req.c13419')"
+            />
+          </mosaik-form-field>
+          @if (presenter.form.body().value()) {
+          <mosaik-card [appearance]="'outline'">
+            <mosaik-card-header [text]="tr('loc.symphony.markdown.preview.c62183')" />
+            <mosaik-card-content>
+              <symphony-markdown
+                test-id="pull-request-body-preview"
+                [text]="presenter.form.body().value()"
+              />
+            </mosaik-card-content>
+          </mosaik-card>
+          }
+          <div class="flex min-w-0 items-center gap-1">
+            <mosaik-checkbox
+              test-id="pull-request-draft"
+              [label]="tr('loc.symphony.create.as.draft.e90b8f')"
+              [isChecked]="presenter.draft()"
+              (click)="presenter.toggleDraftCommand.execute()"
+            />
+          </div>
+          <mosaik-hint
+            [text]="tr('loc.symphony.a.draft.pull.request.cannot.be.merged.and.does.not.r.29747b')"
           />
-        </div>
-        <mosaik-hint
-          [text]="'A draft pull request cannot be merged and does not request reviews yet.'"
-        />
-      </section>
-    </form>
-    }
-  </div>
-</ng-template>
+        </section>
+      </form>
+      }
+    </div>
+  </ng-template>
 
-<ng-template mosaikDialogFooter>
-  <div part="sheet-footer" class="flex w-full min-w-0 items-center justify-end gap-1">
-    <mosaik-button
-      test-id="pull-request-create-cancel"
-      [label]="'Cancel'"
-      [appearance]="'plain'"
-      (click)="presenter.closeCommand.execute()"
-    />
-    <mosaik-button
-      test-id="pull-request-create-submit"
-      [label]="presenter.draft() ? 'Create draft pull request' : 'Create pull request'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      [isBusy]="presenter.isCreating()"
-      [disabled]="!presenter.canCreate()"
-      (click)="presenter.createCommand.execute()"
-    />
-  </div>
-</ng-template>
+  <ng-template mosaikDialogFooter>
+    <div part="sheet-footer" class="flex w-full min-w-0 items-center justify-end gap-1">
+      <mosaik-button
+        test-id="pull-request-create-cancel"
+        [label]="tr('loc.symphony.cancel.19766e')"
+        [appearance]="'plain'"
+        (click)="presenter.closeCommand.execute()"
+      />
+      <mosaik-button
+        test-id="pull-request-create-submit"
+        [label]="presenter.draft() ? tr('loc.symphony.create.draft.pull.request.78821a') : tr('loc.symphony.create.pull.request.71e2bc')"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.isCreating()"
+        [disabled]="!presenter.canCreate()"
+        (click)="presenter.createCommand.execute()"
+      />
+    </div>
+  </ng-template>
+</ng-container>

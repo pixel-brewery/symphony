@@ -1,3 +1,8 @@
+// #region Imports
+import { translateLabel } from '@symphony/frontend-intl/labels';
+
+// #endregion
+
 /** The twelve original Atari-2600 cartridge variations, in Game Select order. @public */
 export const BreakoutVariations = [
   {
@@ -11,7 +16,9 @@ export const BreakoutVariations = [
   },
   {
     id: 2,
-    label: 'Steerable Breakout',
+    get label() {
+      return translateLabel('loc.symphony.labels.steerable.breakout.2e38c07');
+    },
     steer: true,
     catchBall: false,
     invisible: false,
@@ -20,7 +27,9 @@ export const BreakoutVariations = [
   },
   {
     id: 3,
-    label: 'Catch Breakout',
+    get label() {
+      return translateLabel('loc.symphony.labels.catch.breakout.5f4dbe4');
+    },
     steer: false,
     catchBall: true,
     invisible: false,
@@ -29,7 +38,9 @@ export const BreakoutVariations = [
   },
   {
     id: 4,
-    label: 'Invisible Breakout',
+    get label() {
+      return translateLabel('loc.symphony.labels.invisible.breakout.d89c519');
+    },
     steer: false,
     catchBall: false,
     invisible: true,
@@ -38,7 +49,9 @@ export const BreakoutVariations = [
   },
   {
     id: 5,
-    label: 'Timed Breakout',
+    get label() {
+      return translateLabel('loc.symphony.labels.timed.breakout.f82f222');
+    },
     steer: false,
     catchBall: false,
     invisible: false,
@@ -47,7 +60,9 @@ export const BreakoutVariations = [
   },
   {
     id: 6,
-    label: 'Timed Steerable Breakout',
+    get label() {
+      return translateLabel('loc.symphony.labels.timed.steerable.breakout.b39af7b');
+    },
     steer: true,
     catchBall: false,
     invisible: false,
@@ -56,7 +71,9 @@ export const BreakoutVariations = [
   },
   {
     id: 7,
-    label: 'Timed Catch Breakout',
+    get label() {
+      return translateLabel('loc.symphony.labels.timed.catch.breakout.a0c484c');
+    },
     steer: false,
     catchBall: true,
     invisible: false,
@@ -65,7 +82,9 @@ export const BreakoutVariations = [
   },
   {
     id: 8,
-    label: 'Timed Invisible Breakout',
+    get label() {
+      return translateLabel('loc.symphony.labels.timed.invisible.breakout.192bdfa');
+    },
     steer: false,
     catchBall: false,
     invisible: true,
@@ -74,7 +93,9 @@ export const BreakoutVariations = [
   },
   {
     id: 9,
-    label: 'Breakthru',
+    get label() {
+      return translateLabel('loc.symphony.labels.breakthru.aef9502');
+    },
     steer: false,
     catchBall: false,
     invisible: false,
@@ -83,7 +104,9 @@ export const BreakoutVariations = [
   },
   {
     id: 10,
-    label: 'Steerable Breakthru',
+    get label() {
+      return translateLabel('loc.symphony.labels.steerable.breakthru.ae317fd');
+    },
     steer: true,
     catchBall: false,
     invisible: false,
@@ -92,7 +115,9 @@ export const BreakoutVariations = [
   },
   {
     id: 11,
-    label: 'Catch Breakthru',
+    get label() {
+      return translateLabel('loc.symphony.labels.catch.breakthru.422dd94');
+    },
     steer: false,
     catchBall: true,
     invisible: false,
@@ -101,7 +126,9 @@ export const BreakoutVariations = [
   },
   {
     id: 12,
-    label: 'Invisible Breakthru',
+    get label() {
+      return translateLabel('loc.symphony.labels.invisible.breakthru.3f2d45f');
+    },
     steer: false,
     catchBall: false,
     invisible: true,

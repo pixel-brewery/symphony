@@ -11,6 +11,7 @@ import { EVERYONE_OPTION_ID } from './EveryoneOptionId';
 import { SORT_LABELS } from './SortLabels';
 import { SORT_MENU_ID } from './SortMenuId';
 import { STATUS_MENU_ID } from './StatusMenuId';
+import { labelLocale, translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -21,17 +22,33 @@ export function resolveActionsListMenus(
   selectedStatus: ICiRun['status'] | undefined,
   sort: ActionsRunSort,
 ): readonly ICollectionListMenu[] {
+  // Locale remains an input to computed menu owners even when labels are read lazily.
+  labelLocale();
   return [
     {
       id: STATUS_MENU_ID,
-      label: 'Status',
-      subLabel: selectedStatus ? actionStatusLabel(selectedStatus) : 'All statuses',
+      get label() {
+        return translateLabel('loc.symphony.labels.status.920e413');
+      },
+      get subLabel() {
+        return selectedStatus
+          ? actionStatusLabel(selectedStatus)
+          : translateLabel('loc.symphony.labels.all.statuses.8ee5732');
+      },
       testId: 'actions-status-filter',
       options: [
-        { id: ALL_STATUSES_OPTION_ID, label: 'All statuses', checked: !selectedStatus },
+        {
+          id: ALL_STATUSES_OPTION_ID,
+          get label() {
+            return translateLabel('loc.symphony.labels.all.statuses.8ee5732');
+          },
+          checked: !selectedStatus,
+        },
         ...RUN_STATUSES.map((status) => ({
           id: status,
-          label: actionStatusLabel(status),
+          get label() {
+            return actionStatusLabel(status);
+          },
           checked: status === selectedStatus,
         })),
       ],
@@ -39,11 +56,21 @@ export function resolveActionsListMenus(
     {
       id: ACTOR_MENU_ID,
       // The visible wording matches the pull-request list's Author menu; the run's domain field stays `actor`.
-      label: 'Author',
-      subLabel: selectedActor ?? 'Everyone',
+      get label() {
+        return translateLabel('loc.symphony.labels.author.d95082a');
+      },
+      get subLabel() {
+        return selectedActor ?? translateLabel('loc.symphony.labels.everyone.da2e5dc');
+      },
       testId: 'actions-author-filter',
       options: [
-        { id: EVERYONE_OPTION_ID, label: 'Everyone', checked: !selectedActor },
+        {
+          id: EVERYONE_OPTION_ID,
+          get label() {
+            return translateLabel('loc.symphony.labels.everyone.da2e5dc');
+          },
+          checked: !selectedActor,
+        },
         ...actors.map((actor) => ({
           id: ACTOR_OPTION_PREFIX + actor,
           label: actor,
@@ -53,11 +80,15 @@ export function resolveActionsListMenus(
     },
     {
       id: SORT_MENU_ID,
-      label: 'Sort',
+      get label() {
+        return translateLabel('loc.symphony.labels.sort.bec6903');
+      },
       testId: 'actions-sort',
       options: (Object.keys(SORT_LABELS) as ActionsRunSort[]).map((id) => ({
         id,
-        label: SORT_LABELS[id],
+        get label() {
+          return SORT_LABELS[id];
+        },
         checked: id === sort,
       })),
     },

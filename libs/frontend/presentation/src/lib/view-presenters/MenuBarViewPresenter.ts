@@ -23,6 +23,7 @@ import { ExecutionControls } from '@symphony/frontend-feature-execution';
 import { NotificationCentre } from '@symphony/frontend-notification';
 import { DesktopUpdateStore } from '@symphony/frontend-update';
 import type { IMenuBarAgentRow } from './IMenuBarAgentRow';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -630,7 +631,9 @@ export class MenuBarViewPresenter {
       this.autonomy.set(await this._client.request('autonomy.set-enabled', { enabled }));
     } catch (cause) {
       this.error.set(
-        cause instanceof Error ? cause.message : 'Autonomous work could not be changed.',
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.autonomous.work.could.not.be.changed.0b96262'),
       );
     } finally {
       this.autonomyBusy.set(false);
@@ -676,7 +679,11 @@ export class MenuBarViewPresenter {
       ]);
     } catch (cause) {
       this.error.set(
-        cause instanceof Error ? cause.message : 'Symphony could not refresh the menu bar panel.',
+        cause instanceof Error
+          ? cause.message
+          : translateLabel(
+              'loc.symphony.labels.symphony.could.not.refresh.the.menu.bar.panel.f23ef16',
+            ),
       );
     } finally {
       this.loading.set(false);
@@ -709,7 +716,9 @@ export class MenuBarViewPresenter {
       refreshed = true;
     } catch (cause) {
       this.actionsError.set(
-        cause instanceof Error ? cause.message : 'Actions could not be refreshed.',
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.actions.could.not.be.refreshed.b23564c'),
       );
     } finally {
       if (refreshed) this.scheduleContinuousIntegrationRefresh();
@@ -750,7 +759,9 @@ export class MenuBarViewPresenter {
       await this.refreshRuntimeState();
     } catch (cause) {
       this.error.set(
-        cause instanceof Error ? cause.message : 'The execution could not be changed.',
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.the.execution.could.not.be.changed.47c7128'),
       );
     } finally {
       this.executionBusy.set(undefined);

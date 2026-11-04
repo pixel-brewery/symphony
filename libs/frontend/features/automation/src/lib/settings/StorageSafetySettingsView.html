@@ -1,113 +1,115 @@
-@let globalStorage = presenter.globalStorage(); @let filesystem = presenter.filesystemStorage();
-@let largest = presenter.largestWorkspace();
-<symphony-settings-group
-  test-id="storage-safety-card"
-  [level]="'section'"
-  [heading]="'Storage'"
-  [description]="'All managed Symphony data on this Mac, with the hard limits that stop new writes. Sparse virtual capacity is not counted.'"
->
-  <div test-id="global-storage-overview" class="flex min-w-0 flex-col gap-[10px] px-2 py-1.5">
-    <symphony-storage-breakdown
-      [usage]="globalStorage"
-      [measured]="presenter.storageMeasured()"
-      [limitGiB]="presenter.managedLimit.setting.value()"
-      [sizeTestId]="'global-storage-size'"
-      [barTestId]="'global-storage-progress'"
-    />
-  </div>
-  <symphony-settings-row
-    test-id="workspace-storage-shares"
-    [label]="'Managed workspaces'"
-    [description]="(presenter.workspaceShares() | storageShareSummary) + ' · each limit is set in the workspace’s Administration'"
+<ng-container *mosaikTranslate="let tr">
+  @let globalStorage = presenter.globalStorage(); @let filesystem = presenter.filesystemStorage();
+  @let largest = presenter.largestWorkspace();
+  <symphony-settings-group
+    test-id="storage-safety-card"
+    [level]="'section'"
+    [heading]="tr('loc.symphony.storage.a69c4d')"
+    [description]="tr('loc.symphony.all.managed.symphony.data.on.this.mac.with.the.hard.3da806')"
   >
-    <mosaik-avatar
-      slot="leading"
-      class="flex-none"
-      aria-hidden="true"
-      [size]="'small'"
+    <div test-id="global-storage-overview" class="flex min-w-0 flex-col gap-[10px] px-2 py-1.5">
+      <symphony-storage-breakdown
+        [usage]="globalStorage"
+        [measured]="presenter.storageMeasured()"
+        [limitGiB]="presenter.managedLimit.setting.value()"
+        [sizeTestId]="'global-storage-size'"
+        [barTestId]="'global-storage-progress'"
+      />
+    </div>
+    <symphony-settings-row
+      test-id="workspace-storage-shares"
+      [label]="tr('loc.symphony.managed.workspaces.3c0ef3')"
+      [description]="tr('loc.symphony.each.limit.is.set.in.the.workspace.s.administration.e82f48', [(presenter.workspaceShares() | storageShareSummary)])"
+    >
+      <mosaik-avatar
+        slot="leading"
+        class="flex-none"
+        aria-hidden="true"
+        [size]="'small'"
+        [appearance]="'soft'"
+        [iconName]="'folder'"
+      />
+      @if (largest) {
+      <mosaik-button
+        test-id="open-workspace-storage"
+        [label]="largest.label"
+        [iconName]="'chevronRight'"
+        [iconSize]="'small'"
+        [iconPosition]="'after'"
+        [appearance]="'plain'"
+        [attr.aria-label]="tr('loc.symphony.open.the.administration.of.b29572', [largest.label])"
+        (click)="presenter.openWorkspaceAdministrationCommand.execute(largest.id)"
+      />
+      }
+    </symphony-settings-row>
+    <symphony-settings-row
+      test-id="local-ci-storage-share"
+      [label]="tr('loc.symphony.local.github.actions.f2564d')"
+      [description]="tr('loc.symphony.of.gb.543a62', [(presenter.storageMeasured() ? (presenter.localCiStorage()?.allocatedBytes | storageSize) : '—'), presenter.localCiLimit.setting.value(), (presenter.localCiShares().length ? ' · ' + (presenter.localCiShares() | storageShareSummary) : '')])"
+    >
+      <mosaik-avatar
+        slot="leading"
+        class="flex-none"
+        aria-hidden="true"
+        [size]="'small'"
+        [appearance]="'soft'"
+        [iconName]="'executionOutline'"
+      />
+      <mosaik-numberbox
+        test-id="local-ci-storage-limit"
+        class="w-[90px]"
+        [min]="presenter.localCiLimit.minimum"
+        [max]="presenter.localCiLimit.maximum"
+        [value]="presenter.localCiLimit.setting.value()"
+        [disabled]="presenter.store.configurationBusy()"
+        [attr.aria-label]="tr('loc.symphony.maximum.local.github.actions.storage.gb.fb08f0')"
+        (change)="presenter.commitLimitCommand.execute([presenter.localCiLimit, $event])"
+      />
+    </symphony-settings-row>
+    <symphony-settings-row
+      [label]="tr('loc.symphony.maximum.managed.storage.gb.04627f')"
+      [description]="tr('loc.symphony.mac.free.27b29d', [(filesystem?.availableBytes | storageSize)])"
+    >
+      <mosaik-numberbox
+        test-id="managed-storage-limit"
+        class="w-[90px]"
+        [min]="presenter.managedLimit.minimum"
+        [max]="presenter.managedLimit.maximum"
+        [value]="presenter.managedLimit.setting.value()"
+        [disabled]="presenter.store.configurationBusy()"
+        [attr.aria-label]="tr('loc.symphony.maximum.managed.storage.gb.04627f')"
+        (change)="presenter.commitLimitCommand.execute([presenter.managedLimit, $event])"
+      />
+    </symphony-settings-row>
+    <symphony-settings-row
+      test-id="filesystem-free-space"
+      [label]="tr('loc.symphony.minimum.mac.free.space.gb.53454f')"
+      [description]="tr('loc.symphony.symphony.stops.writing.before.the.mac.drops.below.th.08aae2')"
+    >
+      <mosaik-numberbox
+        test-id="minimum-free-disk"
+        class="w-[90px]"
+        [min]="presenter.minimumFreeDisk.minimum"
+        [max]="presenter.minimumFreeDisk.maximum"
+        [value]="presenter.minimumFreeDisk.setting.value()"
+        [disabled]="presenter.store.configurationBusy()"
+        [attr.aria-label]="tr('loc.symphony.minimum.mac.free.space.gb.53454f')"
+        (change)="presenter.commitLimitCommand.execute([presenter.minimumFreeDisk, $event])"
+      />
+    </symphony-settings-row>
+  </symphony-settings-group>
+  @if (presenter.store.storageStatus() && !presenter.store.storageStatus()?.writable) {
+  <symphony-settings-conditional [condition]="'When storage is not writable'">
+    <mosaik-message
+      test-id="global-storage-blocked"
       [appearance]="'soft'"
-      [iconName]="'folder'"
-    />
-    @if (largest) {
-    <mosaik-button
-      test-id="open-workspace-storage"
-      [label]="largest.label"
-      [iconName]="'chevronRight'"
+      [variant]="'danger'"
+      [fit]="'width'"
+      [iconName]="'errorCircle'"
       [iconSize]="'small'"
-      [iconPosition]="'after'"
-      [appearance]="'plain'"
-      [attr.aria-label]="'Open the Administration of ' + largest.label"
-      (click)="presenter.openWorkspaceAdministrationCommand.execute(largest.id)"
+      [header]="tr('loc.symphony.alarm.new.disk.writing.work.is.blocked.82868a')"
+      [content]="tr('loc.symphony.symphony.stopped.new.ai.tasks.worktrees.verification.382c40')"
     />
-    }
-  </symphony-settings-row>
-  <symphony-settings-row
-    test-id="local-ci-storage-share"
-    [label]="'Local GitHub Actions'"
-    [description]="(presenter.storageMeasured() ? (presenter.localCiStorage()?.allocatedBytes | storageSize) : '—') + ' of ' + presenter.localCiLimit.setting.value() + ' GB' + (presenter.localCiShares().length ? ' · ' + (presenter.localCiShares() | storageShareSummary) : '')"
-  >
-    <mosaik-avatar
-      slot="leading"
-      class="flex-none"
-      aria-hidden="true"
-      [size]="'small'"
-      [appearance]="'soft'"
-      [iconName]="'executionOutline'"
-    />
-    <mosaik-numberbox
-      test-id="local-ci-storage-limit"
-      class="w-[90px]"
-      [min]="presenter.localCiLimit.minimum"
-      [max]="presenter.localCiLimit.maximum"
-      [value]="presenter.localCiLimit.setting.value()"
-      [disabled]="presenter.store.configurationBusy()"
-      [attr.aria-label]="'Maximum Local GitHub Actions storage (GB)'"
-      (change)="presenter.commitLimitCommand.execute([presenter.localCiLimit, $event])"
-    />
-  </symphony-settings-row>
-  <symphony-settings-row
-    [label]="'Maximum managed storage (GB)'"
-    [description]="'Mac free: ' + (filesystem?.availableBytes | storageSize)"
-  >
-    <mosaik-numberbox
-      test-id="managed-storage-limit"
-      class="w-[90px]"
-      [min]="presenter.managedLimit.minimum"
-      [max]="presenter.managedLimit.maximum"
-      [value]="presenter.managedLimit.setting.value()"
-      [disabled]="presenter.store.configurationBusy()"
-      [attr.aria-label]="'Maximum managed storage (GB)'"
-      (change)="presenter.commitLimitCommand.execute([presenter.managedLimit, $event])"
-    />
-  </symphony-settings-row>
-  <symphony-settings-row
-    test-id="filesystem-free-space"
-    [label]="'Minimum Mac free space (GB)'"
-    [description]="'Symphony stops writing before the Mac drops below this.'"
-  >
-    <mosaik-numberbox
-      test-id="minimum-free-disk"
-      class="w-[90px]"
-      [min]="presenter.minimumFreeDisk.minimum"
-      [max]="presenter.minimumFreeDisk.maximum"
-      [value]="presenter.minimumFreeDisk.setting.value()"
-      [disabled]="presenter.store.configurationBusy()"
-      [attr.aria-label]="'Minimum Mac free space (GB)'"
-      (change)="presenter.commitLimitCommand.execute([presenter.minimumFreeDisk, $event])"
-    />
-  </symphony-settings-row>
-</symphony-settings-group>
-@if (presenter.store.storageStatus() && !presenter.store.storageStatus()?.writable) {
-<symphony-settings-conditional [condition]="'When storage is not writable'">
-  <mosaik-message
-    test-id="global-storage-blocked"
-    [appearance]="'soft'"
-    [variant]="'danger'"
-    [fit]="'width'"
-    [iconName]="'errorCircle'"
-    [iconSize]="'small'"
-    [header]="'Alarm: new disk-writing work is blocked'"
-    [content]="'Symphony stopped new AI tasks, worktrees, verification, and Local GitHub Actions. Clear managed data before continuing.'"
-  />
-</symphony-settings-conditional>
-}
+  </symphony-settings-conditional>
+  }
+</ng-container>

@@ -1,7 +1,7 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { ToolbarComponent } from '@pixel-brewery/mosaik-elements-angular';
+import { TranslateDirective, ToolbarComponent } from '@pixel-brewery/mosaik-elements-angular';
 
 // #endregion
 
@@ -20,7 +20,7 @@ import { ToolbarComponent } from '@pixel-brewery/mosaik-elements-angular';
     class: 'block min-w-0 max-w-full overflow-x-auto overscroll-contain',
     slot: 'suffix',
   },
-  imports: [ToolbarComponent],
+  imports: [TranslateDirective, ToolbarComponent],
   templateUrl: './PageToolbarComponent.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

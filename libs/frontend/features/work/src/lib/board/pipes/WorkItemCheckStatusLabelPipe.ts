@@ -2,6 +2,7 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { ICiRun } from '@symphony/domain-ci';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -10,7 +11,7 @@ import type { ICiRun } from '@symphony/domain-ci';
  *
  * @public
  */
-@Pipe({ name: 'workItemCheckStatusLabel', standalone: true, pure: true })
+@Pipe({ name: 'workItemCheckStatusLabel', standalone: true, pure: false })
 export class WorkItemCheckStatusLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -24,15 +25,15 @@ export class WorkItemCheckStatusLabelPipe implements PipeTransform {
   public transform(status: ICiRun['status']): string {
     switch (status) {
       case 'succeeded':
-        return 'Passed';
+        return translateLabel('loc.symphony.labels.passed.436fe71');
       case 'in-progress':
-        return 'Running';
+        return translateLabel('loc.symphony.labels.running.f4ccae2');
       case 'failed':
-        return 'Failed';
+        return translateLabel('loc.symphony.labels.failed.031a8f0');
       case 'queued':
-        return 'Queued';
+        return translateLabel('loc.symphony.labels.queued.661ff40');
       case 'cancelled':
-        return 'Cancelled';
+        return translateLabel('loc.symphony.labels.cancelled.d353a99');
     }
   }
 

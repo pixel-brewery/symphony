@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  TranslateDirective,
   ButtonComponent,
   PageComponent,
   PageContentComponent,
@@ -20,6 +21,7 @@ import { MobileTicketsViewPresenter } from './MobileTicketsViewPresenter';
   selector: 'symphony-mobile-tickets-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     MobileTicketCardView,
     PageComponent,

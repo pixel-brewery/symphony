@@ -1,98 +1,104 @@
-<symphony-settings-group
-  test-id="workspace-directory"
-  [heading]="'Workspaces'"
-  [description]="'Open one workspace to manage its organization, accounts, repositories and storage in isolation.'"
->
-  <div slot="actions" class="flex flex-none items-center gap-1">
-    <mosaik-button
-      test-id="import-workspace"
-      [label]="presenter.store.workspaceTransferBusy() === 'import' ? 'Importing workspace…' : 'Import workspace'"
-      [iconName]="'folderOpen'"
-      [iconSize]="'small'"
-      [appearance]="'outline'"
-      [disabled]="!!presenter.store.workspaceTransferBusy()"
-      (click)="presenter.importWorkspaceCommand.execute()"
-    />
-    <mosaik-button
-      test-id="add-workspace"
-      [label]="'Add workspace'"
-      [iconName]="'add'"
-      [iconSize]="'small'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      (click)="presenter.addWorkspaceCommand.execute()"
-    />
-  </div>
-  @for (entry of presenter.enabledEntries(); track entry.workspace.id) {
-  <ng-container
-    [ngTemplateOutlet]="workspaceRow"
-    [ngTemplateOutletContext]="{ $implicit: entry }"
-  />
-  }
-</symphony-settings-group>
-
-@if (!presenter.enabledEntries().length && !presenter.disabledEntries().length) {
-<mosaik-text
-  [mosaikTypography]="'caption'"
-  [variant]="'neutral'"
-  [wrap]="true"
-  [text]="'No workspace yet. Add one to connect its accounts, repositories and storage.'"
-/>
-} @else {
-<mosaik-text
-  [mosaikTypography]="'caption'"
-  [variant]="'neutral'"
-  [wrap]="true"
-  [text]="'Opening a workspace shows its AI team first. Problems such as an account that is not signed in or a repository that is not prepared appear in the notifications of the main window.'"
-/>
-} @if (presenter.disabledEntries().length) {
-<symphony-settings-conditional
-  test-id="workspace-directory-disabled"
-  [condition]="'While a workspace is disabled'"
->
-  <div part="settings-group-rows" class="flex min-w-0 flex-col">
-    @for (entry of presenter.disabledEntries(); track entry.workspace.id) {
+<ng-container *mosaikTranslate="let tr">
+  <symphony-settings-group
+    test-id="workspace-directory"
+    [heading]="tr('loc.symphony.workspaces.137726')"
+    [description]="tr('loc.symphony.open.one.workspace.to.manage.its.organization.accoun.2b64e7')"
+  >
+    <div slot="actions" class="flex flex-none items-center gap-1">
+      <mosaik-button
+        test-id="import-workspace"
+        [label]="presenter.store.workspaceTransferBusy() === 'import' ? tr('loc.symphony.importing.workspace.0094ac') : tr('loc.symphony.import.workspace.377566')"
+        [iconName]="'folderOpen'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
+        [disabled]="!!presenter.store.workspaceTransferBusy()"
+        (click)="presenter.importWorkspaceCommand.execute()"
+      />
+      <mosaik-button
+        test-id="add-workspace"
+        [label]="tr('loc.symphony.add.workspace.926afb')"
+        [iconName]="'add'"
+        [iconSize]="'small'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        (click)="presenter.addWorkspaceCommand.execute()"
+      />
+    </div>
+    @for (entry of presenter.enabledEntries(); track entry.workspace.id) {
     <ng-container
       [ngTemplateOutlet]="workspaceRow"
       [ngTemplateOutletContext]="{ $implicit: entry }"
     />
     }
-  </div>
-</symphony-settings-conditional>
-}
+  </symphony-settings-group>
 
-<ng-template #workspaceRow let-entry>
-  <symphony-settings-row
-    [attr.test-id]="'workspace-directory-item-' + entry.workspace.id"
-    [label]="entry.workspace.displayName"
-    [description]="entry.workspace.enabled ? (entry.agents + (entry.agents === 1 ? ' agent' : ' agents') + ' · ' + entry.aiAccounts + (entry.aiAccounts === 1 ? ' AI account' : ' AI accounts') + ' · ' + entry.repositories + (entry.repositories === 1 ? ' repository' : ' repositories') + (entry.unpreparedRepositories ? ', ' + entry.unpreparedRepositories + ' not prepared locally' : '') + ' · ' + (entry.storage ? (entry.storage.allocatedBytes | storageSize) : '—') + ' of ' + entry.workspace.storageLimitGiB + ' GB') : 'Disabled · not used for configuration and task routing'"
+  @if (!presenter.enabledEntries().length && !presenter.disabledEntries().length) {
+  <mosaik-text
+    [mosaikTypography]="'caption'"
+    [variant]="'neutral'"
+    [wrap]="true"
+    [text]="tr('loc.symphony.no.workspace.yet.add.one.to.connect.its.accounts.rep.3169d1')"
+  />
+  } @else {
+  <mosaik-text
+    [mosaikTypography]="'caption'"
+    [variant]="'neutral'"
+    [wrap]="true"
+    [text]="tr('loc.symphony.opening.a.workspace.shows.its.ai.team.first.problems.eac217')"
+  />
+  } @if (presenter.disabledEntries().length) {
+  <symphony-settings-conditional
+    test-id="workspace-directory-disabled"
+    [condition]="'While a workspace is disabled'"
   >
-    <mosaik-avatar
-      slot="leading"
-      class="flex-none"
-      aria-hidden="true"
-      [attr.test-id]="'workspace-directory-avatar-' + entry.workspace.id"
-      [size]="'medium'"
-      [appearance]="'soft'"
-      [text]="entry.workspace.shortCode"
-      [src]="(entry.workspace | workspaceAvatarSource | async) ?? undefined"
-      [textAccessor]="shortCodeAccessor"
-    />
-    @if (entry.workspace.enabled) {
-    <span class="inline-flex items-center gap-[6px]" test-id="workspace-directory-state">
-      <mosaik-dot [variant]="'success'" [size]="'small'" />
-      <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Available'" />
-    </span>
-    }
-    <mosaik-button
-      [attr.test-id]="'open-workspace-settings-' + entry.workspace.id"
-      [label]="'Open'"
-      [iconName]="'chevronRight'"
-      [iconSize]="'small'"
-      [iconPosition]="'after'"
-      [appearance]="'outline'"
-      [attr.aria-label]="'Open ' + entry.workspace.displayName"
-      (click)="presenter.openSettingsWorkspaceCommand.execute(entry.workspace.id)"
-    />
-  </symphony-settings-row>
-</ng-template>
+    <div part="settings-group-rows" class="flex min-w-0 flex-col">
+      @for (entry of presenter.disabledEntries(); track entry.workspace.id) {
+      <ng-container
+        [ngTemplateOutlet]="workspaceRow"
+        [ngTemplateOutletContext]="{ $implicit: entry }"
+      />
+      }
+    </div>
+  </symphony-settings-conditional>
+  }
+
+  <ng-template #workspaceRow let-entry>
+    <symphony-settings-row
+      [attr.test-id]="'workspace-directory-item-' + entry.workspace.id"
+      [label]="entry.workspace.displayName"
+      [description]="entry.workspace.enabled ? (tr('loc.symphony.of.gb.247055', [entry.agents, (entry.agents === 1 ? tr('loc.symphony.agent.d4f0bc') : tr('loc.symphony.agents.8c70b2')), entry.aiAccounts, (entry.aiAccounts === 1 ? tr('loc.symphony.ai.account.042001') : tr('loc.symphony.ai.accounts.050a21')), entry.repositories, (entry.repositories === 1 ? tr('loc.symphony.repository.e2885f') : tr('loc.symphony.repositories.a80388')), (entry.unpreparedRepositories ? tr('loc.symphony.not.prepared.locally.e8c52e', [entry.unpreparedRepositories]) : ''), (entry.storage ? (entry.storage.allocatedBytes | storageSize) : '—'), entry.workspace.storageLimitGiB])) : tr('loc.symphony.disabled.not.used.for.configuration.and.task.routing.37b3f5')"
+    >
+      <mosaik-avatar
+        slot="leading"
+        class="flex-none"
+        aria-hidden="true"
+        [attr.test-id]="'workspace-directory-avatar-' + entry.workspace.id"
+        [size]="'medium'"
+        [appearance]="'soft'"
+        [text]="entry.workspace.shortCode"
+        [src]="(entry.workspace | workspaceAvatarSource | async) ?? undefined"
+        [textAccessor]="shortCodeAccessor"
+      />
+      @if (entry.workspace.enabled) {
+      <span class="inline-flex items-center gap-[6px]" test-id="workspace-directory-state">
+        <mosaik-dot [variant]="'success'" [size]="'small'" />
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [text]="tr('loc.symphony.available.e67444')"
+        />
+      </span>
+      }
+      <mosaik-button
+        [attr.test-id]="'open-workspace-settings-' + entry.workspace.id"
+        [label]="tr('loc.symphony.open.ed077f')"
+        [iconName]="'chevronRight'"
+        [iconSize]="'small'"
+        [iconPosition]="'after'"
+        [appearance]="'outline'"
+        [attr.aria-label]="tr('loc.symphony.open.e71b40', [entry.workspace.displayName])"
+        (click)="presenter.openSettingsWorkspaceCommand.execute(entry.workspace.id)"
+      />
+    </symphony-settings-row>
+  </ng-template>
+</ng-container>

@@ -3,6 +3,7 @@
 import { inject, Injectable } from '@angular/core';
 import { type ThemePreference, ViewPresenter, Command } from '@symphony/frontend-core/mobile';
 import { MobileCompanionStore, MobileThemeStore } from '@symphony/frontend-feature-mobile/browser';
+import { ApplicationLocalization, type ApplicationLanguage } from '@symphony/frontend-intl';
 
 // #endregion
 
@@ -12,6 +13,25 @@ export class MobileConnectionViewPresenter extends ViewPresenter {
 
   private readonly _store = inject(MobileCompanionStore);
   private readonly _themes = inject(MobileThemeStore);
+  private readonly _localization = inject(ApplicationLocalization);
+
+  /**
+   * The phone browser's language preference.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly language = this._localization.language;
+
+  /**
+   * Changes the phone browser language without changing its desktop's preference.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly updateLanguageCommand = new Command<ApplicationLanguage>((language) =>
+    this._localization.setLanguage(language),
+  );
 
   /**
    * The snapshot.

@@ -2,10 +2,11 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { PowerState } from '@symphony/ipc-contracts-desktop';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-@Pipe({ name: 'keepAwakeStatusLabel', standalone: true, pure: true })
+@Pipe({ name: 'keepAwakeStatusLabel', standalone: true, pure: false })
 export class KeepAwakeStatusLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -16,11 +17,12 @@ export class KeepAwakeStatusLabelPipe implements PipeTransform {
    * @public
    */
   public transform(state: PowerState | undefined): string {
-    if (!state) return 'Sleep status is unavailable.';
-    if (!state.keepAwakeWhileBusy) return 'This Mac may sleep while Symphony works.';
+    if (!state) return translateLabel('loc.symphony.labels.sleep.status.is.unavailable.4ade33a');
+    if (!state.keepAwakeWhileBusy)
+      return translateLabel('loc.symphony.labels.this.mac.may.sleep.while.symphony.works.2a0fe08');
     return state.engaged
-      ? 'Sleep is blocked while tasks are running.'
-      : 'Sleep is allowed while Symphony is idle.';
+      ? translateLabel('loc.symphony.labels.sleep.is.blocked.while.tasks.are.running.90977c3')
+      : translateLabel('loc.symphony.labels.sleep.is.allowed.while.symphony.is.idle.3d6c8a4');
   }
 
   // #endregion

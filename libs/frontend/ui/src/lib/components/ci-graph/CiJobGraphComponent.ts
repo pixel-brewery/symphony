@@ -11,6 +11,7 @@ import {
   viewChildren,
 } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   DisclosureComponent,
   HintComponent,
@@ -46,6 +47,7 @@ import { projectCiJobs } from './projectCiJobs';
   selector: 'symphony-ci-job-graph',
   host: { class: 'block min-w-0' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     DisclosureComponent,
     HintComponent,

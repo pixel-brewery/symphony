@@ -1,6 +1,7 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -9,7 +10,7 @@ import { Pipe, type PipeTransform } from '@angular/core';
  *
  * @public
  */
-@Pipe({ name: 'greeting', standalone: true, pure: true })
+@Pipe({ name: 'greeting', standalone: true, pure: false })
 export class GreetingPipe implements PipeTransform {
   // #region Methods
 
@@ -22,9 +23,9 @@ export class GreetingPipe implements PipeTransform {
    */
   public transform(value: Date | number): string {
     const hour = new Date(value).getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return translateLabel('loc.symphony.labels.good.morning.90a90a4');
+    if (hour < 18) return translateLabel('loc.symphony.labels.good.afternoon.d325e1b');
+    return translateLabel('loc.symphony.labels.good.evening.15a421e');
   }
 
   // #endregion

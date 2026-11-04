@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ActionStateLabelPipe } from '../../../pipes/ActionStateLabelPipe';
 import {
+  TranslateDirective,
   AnchorComponent,
   ButtonComponent,
   DisclosureComponent,
@@ -23,7 +24,7 @@ import {
   TimelineItemComponent,
   TimelineMarkerComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import {
   CiJobGraphComponent,
@@ -39,6 +40,7 @@ import { ActionDrawerViewPresenter } from '../../view-presenters/ActionDrawerVie
   selector: 'symphony-action-drawer-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     FormsModule,
     ActionStateLabelPipe,
     CiJobGraphComponent,

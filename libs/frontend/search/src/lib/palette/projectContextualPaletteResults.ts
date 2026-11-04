@@ -1,6 +1,7 @@
 // #region Imports
 
 import type { IPaletteResult } from '../models/IPaletteResult';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -29,7 +30,9 @@ export function projectContextualPaletteResults(options: {
         id: 'command:contextual-filter',
         group: 'commands',
         icon: 'filter',
-        title: `Filter ${screenLabel} by “${query}”`,
+        get title() {
+          return translateLabel('loc.symphony.labels.filter.by.7db0b9d', screenLabel, query);
+        },
         // The filter is what the screen's own search field did, so it leads the commands.
         rank: Number.MAX_SAFE_INTEGER,
         action: { kind: 'execute', execute: () => search(query) },
@@ -42,7 +45,9 @@ export function projectContextualPaletteResults(options: {
       id: 'command:contextual-filter-clear',
       group: 'commands',
       icon: 'clear',
-      title: `Clear the ${screenLabel} filter`,
+      get title() {
+        return translateLabel('loc.symphony.labels.clear.the.filter.0291407', screenLabel);
+      },
       facts: [`Filtered by “${activeFilter}”`],
       rank: 0,
       action: { kind: 'execute', execute: () => search('') },

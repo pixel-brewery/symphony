@@ -6,6 +6,7 @@ import type { IRailRun } from './IRailRun';
 import type { IRailRunInput } from './IRailRunInput';
 import type { IRailRunSourceState } from './IRailRunSourceState';
 import { actionMessage } from './actionMessage';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -19,17 +20,21 @@ function activeLocalRailRun(
   return {
     id: `local-action:active:${active.runId}`,
     kind: 'local-action',
-    sourceLabel: run ? 'Action' : 'Local runner',
+    sourceLabel: run
+      ? translateLabel('loc.symphony.labels.action.64cff13')
+      : translateLabel('loc.symphony.labels.local.runner.eef4f85'),
     sources: [
       ...(run ? [runSourceState('github', run.status)] : []),
       runSourceState('local-runner', 'in-progress'),
     ],
     title: run?.name ?? 'Local workflow',
-    message: run
-      ? actionMessage(run, input.repositoryNames)
-      : 'Managed runner is preparing this workflow.',
+    get message() {
+      return run
+        ? actionMessage(run, input.repositoryNames)
+        : translateLabel('loc.symphony.labels.managed.runner.is.preparing.this.workflow.9e54809');
+    },
     state: 'in-progress',
-    statusLabel: 'In progress',
+    statusLabel: translateLabel('loc.symphony.labels.in.progress.c1f88e9'),
     startedAt: active.startedAt,
     active: true,
     ciRunId: active.runId,
@@ -69,7 +74,11 @@ function statusLabel(state: string): string {
 function runSourceState(kind: IRailRunSourceState['kind'], state: string): IRailRunSourceState {
   return {
     kind,
-    label: kind === 'github' ? 'GitHub' : 'Local runner',
+    get label() {
+      return kind === 'github'
+        ? 'GitHub'
+        : translateLabel('loc.symphony.labels.local.runner.eef4f85');
+    },
     state,
   };
 }
@@ -127,9 +136,18 @@ export function buildRailRuns(input: IRailRunInput): readonly IRailRun[] {
       sourceLabel: 'Agent',
       title: `${entry.workItemExternalId} · ${phase}`,
       // The status label already says the step is queued; the message adds where in line it is.
-      message: entry.lastError ?? `Position ${index + 1} of ${input.executionQueue.length}`,
+      get message() {
+        return (
+          entry.lastError ??
+          translateLabel(
+            'loc.symphony.labels.position.of.b48d31f',
+            index + 1,
+            input.executionQueue.length,
+          )
+        );
+      },
       state: 'queued',
-      statusLabel: 'Queued',
+      statusLabel: translateLabel('loc.symphony.labels.queued.661ff40'),
       startedAt: entry.queuedAt,
       active: false,
       queueEntryId: entry.id,
@@ -178,7 +196,9 @@ export function buildRailRuns(input: IRailRunInput): readonly IRailRun[] {
       return {
         id: `local-action:${execution.id}`,
         kind: 'local-action',
-        sourceLabel: run ? 'Action' : 'Local runner',
+        sourceLabel: run
+          ? translateLabel('loc.symphony.labels.action.64cff13')
+          : translateLabel('loc.symphony.labels.local.runner.eef4f85'),
         sources: [
           ...(run ? [runSourceState('github', run.status)] : []),
           runSourceState('local-runner', execution.state),

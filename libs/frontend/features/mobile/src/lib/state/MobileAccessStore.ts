@@ -6,6 +6,7 @@ import { NotificationService, operatorErrorMessage } from '@symphony/frontend-no
 import type { MobileAccessStatus, MobilePairingChallenge } from '@symphony/mobile-contracts';
 import type { IMobileAccessClient } from '../ports/IMobileAccessClient';
 import { MOBILE_ACCESS_CLIENT } from '../ports/MobileAccessClientToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -74,7 +75,11 @@ export class MobileAccessStore implements IMobileAccessOperations {
     try {
       this._mobileAccessStatus.set(await this._client.request('mobile-access.status.get', {}));
     } catch (cause) {
-      if (!silent) this.showError(cause, 'Unable to load mobile access.');
+      if (!silent)
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.load.mobile.access.2dcbffe'),
+        );
     }
   }
 
@@ -97,7 +102,9 @@ export class MobileAccessStore implements IMobileAccessOperations {
     } catch (cause) {
       this.showError(
         cause,
-        enabled ? 'Unable to enable mobile access.' : 'Unable to disable mobile access.',
+        enabled
+          ? translateLabel('loc.symphony.labels.unable.to.enable.mobile.access.1f44d83')
+          : translateLabel('loc.symphony.labels.unable.to.disable.mobile.access.6073494'),
       );
       return false;
     } finally {
@@ -119,7 +126,10 @@ export class MobileAccessStore implements IMobileAccessOperations {
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to create a mobile pairing code.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.create.a.mobile.pairing.code.5085408'),
+      );
       return false;
     } finally {
       this._mobileAccessBusy.set(false);
@@ -142,7 +152,10 @@ export class MobileAccessStore implements IMobileAccessOperations {
         ),
       );
     } catch (cause) {
-      this.showError(cause, 'Unable to update the mobile pairing request.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.update.the.mobile.pairing.request.4b9b4dc'),
+      );
     }
   }
 
@@ -158,7 +171,10 @@ export class MobileAccessStore implements IMobileAccessOperations {
         await this._client.request('mobile-access.device.revoke', { deviceId }),
       );
     } catch (cause) {
-      this.showError(cause, 'Unable to revoke the paired phone.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.revoke.the.paired.phone.6209342'),
+      );
     }
   }
 
@@ -173,7 +189,10 @@ export class MobileAccessStore implements IMobileAccessOperations {
         await this._client.request('mobile-access.devices.revoke-all', {}),
       );
     } catch (cause) {
-      this.showError(cause, 'Unable to revoke paired phones.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.revoke.paired.phones.402298c'),
+      );
     }
   }
 

@@ -3,6 +3,7 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { WorkflowHealth } from '../actions/view-presenters/actionsOverview/WorkflowHealth';
 import type { IWorkflowHealthPresentation } from './IWorkflowHealthPresentation';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -11,7 +12,7 @@ import type { IWorkflowHealthPresentation } from './IWorkflowHealthPresentation'
  *
  * @public
  */
-@Pipe({ name: 'workflowHealthPresentation', standalone: true, pure: true })
+@Pipe({ name: 'workflowHealthPresentation', standalone: true, pure: false })
 export class WorkflowHealthPresentationPipe implements PipeTransform {
   // #region Methods
 
@@ -25,13 +26,33 @@ export class WorkflowHealthPresentationPipe implements PipeTransform {
   public transform(health: WorkflowHealth): IWorkflowHealthPresentation {
     switch (health) {
       case 'failing':
-        return { variant: 'danger', label: 'Latest run failed' };
+        return {
+          variant: 'danger',
+          get label() {
+            return translateLabel('loc.symphony.labels.latest.run.failed.f774e4d');
+          },
+        };
       case 'running':
-        return { variant: 'neutral', label: 'Running' };
+        return {
+          variant: 'neutral',
+          get label() {
+            return translateLabel('loc.symphony.labels.running.f4ccae2');
+          },
+        };
       case 'passing':
-        return { variant: 'success', label: 'Latest run passed' };
+        return {
+          variant: 'success',
+          get label() {
+            return translateLabel('loc.symphony.labels.latest.run.passed.467f1da');
+          },
+        };
       case 'idle':
-        return { variant: 'neutral', label: 'No finished run' };
+        return {
+          variant: 'neutral',
+          get label() {
+            return translateLabel('loc.symphony.labels.no.finished.run.fe51380');
+          },
+        };
     }
   }
 

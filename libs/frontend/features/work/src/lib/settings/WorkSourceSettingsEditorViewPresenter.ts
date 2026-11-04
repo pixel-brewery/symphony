@@ -23,6 +23,7 @@ import { DIALOG_REF, DIALOG_REF_DATA } from '@pixel-brewery/mosaik-elements-angu
 import type { AzureDevOpsValidationIssue } from './AzureDevOpsValidationIssue';
 import type { BoardColumnMappingChoice } from './BoardColumnMappingChoice';
 import type { ApplicationSettingsDto as Settings } from '@symphony/ipc-contracts-composition';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -603,10 +604,14 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
     const account = this.store
       .connections()
       ?.azureDevOps.accounts.find((candidate) => candidate.id === this.azure.connectionId);
-    if (!account?.authenticated) return 'Not connected';
-    if (account.method === 'environment') return 'Connected · environment credential';
-    if (account.method === 'entra') return 'Connected · temporary Microsoft Entra token';
-    return 'Connected · PAT in secure storage';
+    if (!account?.authenticated) return translateLabel('loc.symphony.labels.not.connected.0303e18');
+    if (account.method === 'environment')
+      return translateLabel('loc.symphony.labels.connected.environment.credential.9a50759');
+    if (account.method === 'entra')
+      return translateLabel(
+        'loc.symphony.labels.connected.temporary.microsoft.entra.token.6d3bbe3',
+      );
+    return translateLabel('loc.symphony.labels.connected.pat.in.secure.storage.62c5152');
   };
 
   /**
@@ -966,12 +971,18 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
     const source = this.store.settings()?.workItemSources.find((item) => item.id === data.sourceId);
     const confirmed = await this._alerts.confirm({
       id: `remove-board-${data.sourceId}`,
-      header: `Remove ${source?.displayName || 'this board'}?`,
-      message:
-        'Symphony stops reading this GitHub Project. Its work items stay in GitHub, but they no longer appear on the Board, the Overview or the Orbit.',
+      header: translateLabel(
+        'loc.symphony.labels.remove.9d64ce8',
+        source?.displayName || 'this board',
+      ),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.symphony.stops.reading.this.github.project.its.work..6eb8db9',
+        );
+      },
       tone: 'danger',
-      confirmLabel: 'Remove board',
-      cancelLabel: 'Keep board',
+      confirmLabel: translateLabel('loc.symphony.labels.remove.board.4cb2d08'),
+      cancelLabel: translateLabel('loc.symphony.labels.keep.board.1867e66'),
       destructive: true,
     });
     if (!confirmed) return;
@@ -1023,12 +1034,15 @@ export class WorkSourceSettingsEditorViewPresenter extends Hydratable(ViewPresen
     if (!source) return;
     const confirmed = await this._alerts.confirm({
       id: `remove-azure-devops-source-${source.id}`,
-      header: `Remove ${source.displayName}?`,
-      message:
-        'Symphony stops reading this Azure DevOps query and deletes the stored personal access token. Its work items stay in Azure DevOps, but they no longer appear on the Board, the Overview or the Orbit.',
+      header: translateLabel('loc.symphony.labels.remove.9d64ce8', source.displayName),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.symphony.stops.reading.this.azure.devops.query.and.d.f868acc',
+        );
+      },
       tone: 'danger',
-      confirmLabel: 'Remove source',
-      cancelLabel: 'Keep source',
+      confirmLabel: translateLabel('loc.symphony.labels.remove.source.f552961'),
+      cancelLabel: translateLabel('loc.symphony.labels.keep.source.03a1e5c'),
       destructive: true,
     });
     if (!confirmed) return;

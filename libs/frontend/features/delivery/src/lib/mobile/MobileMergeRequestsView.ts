@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   BadgeComponent,
   CardComponent,
   CardContentComponent,
@@ -24,6 +25,7 @@ import { MergeRequestStateVariantPipe } from '../pipes/MergeRequestStateVariantP
   selector: 'symphony-mobile-merge-requests-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BadgeComponent,
     CardComponent,
     CardContentComponent,

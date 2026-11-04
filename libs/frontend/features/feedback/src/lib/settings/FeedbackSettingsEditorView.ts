@@ -8,6 +8,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   DialogContentDirective,
   DialogFooterDirective,
@@ -34,6 +35,7 @@ import { TeamsFeedbackValidationIssuesLabelPipe } from './TeamsFeedbackValidatio
   selector: 'symphony-feedback-settings-editor-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     DialogContentDirective,
     DialogFooterDirective,

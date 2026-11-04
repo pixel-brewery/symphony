@@ -17,6 +17,7 @@ import { CI_ACTION_CONTEXT } from '../../ports/CiActionContextToken';
 import { resolveActionRunControls } from './actionRunControls/index';
 import { buildActionLogView } from './buildActionLogView';
 import { resolveLocalActionExecution } from './resolveLocalActionExecution';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -400,10 +401,12 @@ export class ActionDrawerViewPresenter extends Hydratable(ViewPresenter) {
     } catch (cause) {
       this.approvalUncertain.set(true);
       this._notifications.showError(
-        'The approval outcome could not be confirmed.',
+        translateLabel('loc.symphony.labels.the.approval.outcome.could.not.be.confirmed.472bfa5'),
         cause instanceof Error
           ? cause.message
-          : 'Refresh and inspect the pending deployment on GitHub before another review.',
+          : translateLabel(
+              'loc.symphony.labels.refresh.and.inspect.the.pending.deployment.on.github.03d42ba',
+            ),
       );
     } finally {
       await this.refreshDetails();

@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   SelectComponent,
   SelectItemComponent,
@@ -24,6 +25,7 @@ import { UpdateSettingsCardViewPresenter } from '../view-presenters/UpdateSettin
   selector: 'symphony-update-settings-card',
   host: { class: 'flex min-w-0 flex-col' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     SelectComponent,
     SelectItemComponent,

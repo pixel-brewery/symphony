@@ -9,6 +9,7 @@ import { AI_OPERATIONS } from './AiOperationsToken';
 import { WORK_CONNECTION_OPERATIONS } from './WorkConnectionOperationsToken';
 import { SKILLS_OPERATIONS } from './SkillsOperationsToken';
 import { OrchestrationOperation } from './OrchestrationOperation';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -89,7 +90,10 @@ export class ConfigurationStore extends OrchestrationOperation {
       ]);
       this._injector.get(AUTOMATION_PREPARATION, null)?.notifyUnpreparedAutomaticExecution();
     } catch (cause) {
-      this.showError(cause, 'Unable to load application configuration.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.application.configuration.42c4f74'),
+      );
     }
   }
 
@@ -102,7 +106,10 @@ export class ConfigurationStore extends OrchestrationOperation {
     try {
       this._state.connections.set(await this._client.request('connections.get', {}));
     } catch (cause) {
-      this.showError(cause, 'Unable to load provider connections.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.provider.connections.0ab01a1'),
+      );
     }
   }
 
@@ -125,7 +132,11 @@ export class ConfigurationStore extends OrchestrationOperation {
     try {
       this._state.storageStatus.set(await this._client.request('storage.status.get', {}));
     } catch (cause) {
-      if (!silent) this.showError(cause, 'Unable to measure managed storage.');
+      if (!silent)
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.measure.managed.storage.f981043'),
+        );
     }
   }
 
@@ -152,7 +163,7 @@ export class ConfigurationStore extends OrchestrationOperation {
       if (successMessage) this._notifications.showSuccess(successMessage);
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to save settings.');
+      this.showError(cause, translateLabel('loc.symphony.labels.unable.to.save.settings.4d31946'));
       return false;
     } finally {
       this._state.configurationBusy.set(false);

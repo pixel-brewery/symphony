@@ -11,6 +11,7 @@ import {
 import { isWorkspaceSettingsEditorRequest } from '../settings/isWorkspaceSettingsEditorRequest';
 import { resolveWorkspaceEditorRoute } from '../settings/resolveWorkspaceEditorRoute';
 import { workspaceSearchEntries } from '../settings/workspaceSearchEntries';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -32,22 +33,39 @@ export function withWorkspaceSettings(): readonly IFeature<SettingsFeatureKind>[
           section: {
             scope: 'global',
             id: 'workspaces',
-            label: 'Workspaces',
-            description: 'Open or add a separate company workspace.',
+            get label() {
+              return translateLabel('loc.symphony.labels.workspaces.1377264');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.open.or.add.a.separate.company.workspace.a28cbe3',
+              );
+            },
             order: 10,
           },
           search: [
             {
               id: 'add-workspace',
-              label: 'Add workspace',
-              description:
-                'Open one workspace to manage its organization, accounts, repositories and storage in isolation.',
+              get label() {
+                return translateLabel('loc.symphony.labels.add.workspace.926afb3');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.open.one.workspace.to.manage.its.organization.accoun.2b64e74',
+                );
+              },
               keywords: ['new', 'company', 'organization'],
             },
             {
               id: 'import-workspace',
-              label: 'Import workspace',
-              description: 'Replace a matching workspace with a portable configuration bundle.',
+              get label() {
+                return translateLabel('loc.symphony.labels.import.workspace.3775664');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.replace.a.matching.workspace.with.a.portable.configu.b909ad1',
+                );
+              },
               keywords: ['bundle', 'import'],
             },
           ],
@@ -71,36 +89,63 @@ export function withWorkspaceSettings(): readonly IFeature<SettingsFeatureKind>[
           section: {
             scope: 'workspace',
             id: 'services',
-            label: 'Connected services',
-            description: 'Ticket sources, source control, and feedback intake.',
+            get label() {
+              return translateLabel('loc.symphony.labels.connected.services.5da7ca5');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.ticket.sources.source.control.and.feedback.intake.ae50600',
+              );
+            },
             order: 20,
           },
           search: [
             {
               id: 'boards',
-              label: 'Boards',
-              description:
-                'Each board is one GitHub Project or Azure DevOps query. Columns follow the project; map them to workflow states in the board editor.',
+              get label() {
+                return translateLabel('loc.symphony.labels.boards.4fcd39d');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.each.board.is.one.github.project.or.azure.devops.que.61524ba',
+                );
+              },
               keywords: ['GitHub Projects board', 'Add board', 'columns', 'work items'],
             },
             {
               id: 'connected-services',
-              label: 'Connected services',
-              description:
-                'Ticket sources, source-code accounts, and the AI accounts every agent in this workspace can run on.',
+              get label() {
+                return translateLabel('loc.symphony.labels.connected.services.5da7ca5');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.ticket.sources.source.code.accounts.and.the.ai.accou.a1c74e0',
+                );
+              },
               keywords: ['account', 'GitHub', 'Azure DevOps', 'sign in', 'remove account'],
             },
             {
               id: 'feedback-intake',
-              label: 'Feedback intake',
-              description: 'Turn requested Teams feedback from Microsoft Teams into tickets',
+              get label() {
+                return translateLabel('loc.symphony.labels.feedback.intake.bde58af');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.turn.requested.teams.feedback.from.microsoft.teams.i.b8a9a2c',
+                );
+              },
               keywords: ['Microsoft Teams', 'channel', 'feedback'],
             },
             {
               id: 'add-a-service',
-              label: 'Add a service',
-              description:
-                'Connect an AI account, another ticket source, or a source-code account.',
+              get label() {
+                return translateLabel('loc.symphony.labels.add.a.service.066ae41');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.connect.an.ai.account.another.ticket.source.or.a.sou.f8514f6',
+                );
+              },
               keywords: [
                 'Codex',
                 'Claude Code',
@@ -130,51 +175,97 @@ export function withWorkspaceSettings(): readonly IFeature<SettingsFeatureKind>[
           section: {
             scope: 'workspace',
             id: 'administration',
-            label: 'Administration',
-            description: 'Workspace storage, export, and deletion.',
+            get label() {
+              return translateLabel('loc.symphony.labels.administration.4b42c66');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.workspace.storage.export.and.deletion.4af73df',
+              );
+            },
             order: 60,
           },
           search: [
             {
               id: 'storage',
-              label: 'Maximum workspace size (GB)',
-              description: 'Between 2 and 1024 GB.',
-              group: 'Storage',
+              get label() {
+                return translateLabel('loc.symphony.labels.maximum.workspace.size.gb.56a7428');
+              },
+              get description() {
+                return translateLabel('loc.symphony.labels.between.2.and.1024.gb.08c9a67');
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.storage.a69c4de');
+              },
               keywords: ['storage', 'limit', 'disk', 'space'],
             },
             {
               id: 'delivery-grouping',
-              label: 'Automatically activate safe groups',
-              description:
-                'Analyzer suggestions are always shown on the board. Opt in only when fully compatible tickets may start one shared delivery workflow without a second confirmation.',
-              group: 'Delivery grouping',
+              get label() {
+                return translateLabel(
+                  'loc.symphony.labels.automatically.activate.safe.groups.c1d56ca',
+                );
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.analyzer.suggestions.are.always.shown.on.the.board.o.d304b46',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.delivery.grouping.ffe4e2e');
+              },
             },
             {
               id: 'edit-workspace',
-              label: 'Edit workspace',
-              description: 'Name, icon, and color.',
-              group: 'Workspace',
+              get label() {
+                return translateLabel('loc.symphony.labels.edit.workspace.52e3ba9');
+              },
+              get description() {
+                return translateLabel('loc.symphony.labels.name.icon.and.color.f3c3efa');
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.workspace.87bb59b');
+              },
               keywords: ['rename', 'icon', 'emoji', 'monogram', 'color', 'appearance'],
             },
             {
               id: 'use-only-this-workspace',
-              label: 'Use only this workspace',
-              group: 'Workspace',
+              get label() {
+                return translateLabel('loc.symphony.labels.use.only.this.workspace.0b0a94b');
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.workspace.87bb59b');
+              },
               keywords: ['scope', 'focus'],
             },
             {
               id: 'export-workspace',
-              label: 'Export workspace',
-              description: 'Stored credential fields and machine-local paths are excluded.',
-              group: 'Workspace',
+              get label() {
+                return translateLabel('loc.symphony.labels.export.workspace.ae29651');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.stored.credential.fields.and.machine.local.paths.are.3dd9deb',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.workspace.87bb59b');
+              },
               keywords: ['bundle', 'backup'],
             },
             {
               id: 'delete-workspace',
-              label: 'Delete workspace',
-              description:
-                'Permanently removes its connections, execution history, managed worktrees, and isolated AI account data.',
-              group: 'Workspace',
+              get label() {
+                return translateLabel('loc.symphony.labels.delete.workspace.55f033d');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.permanently.removes.its.connections.execution.histor.085f5df',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.workspace.87bb59b');
+              },
               keywords: ['remove workspace'],
             },
           ],

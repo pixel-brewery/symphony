@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  TranslateDirective,
   ButtonComponent,
   CardComponent,
   CardContentComponent,
@@ -32,6 +33,7 @@ import { MobileDashboardFocusPipe } from '../pipes/MobileDashboardFocusPipe';
   selector: 'symphony-mobile-home-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AgentFigureComponent,
     AgentStateLabelPipe,
     ButtonComponent,

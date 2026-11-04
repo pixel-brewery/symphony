@@ -141,6 +141,7 @@
     "@symphony/domain-skills": "workspace:*",
     "@symphony/domain-work": "workspace:*",
     "@symphony/domain-workflow": "workspace:*",
+    "@symphony/frontend-intl": "workspace:*",
     "@symphony/frontend-notification": "workspace:*",
     "@symphony/ipc-contracts-ci": "workspace:*",
     "@symphony/ipc-contracts-composition": "workspace:*",

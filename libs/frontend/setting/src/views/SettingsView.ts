@@ -7,7 +7,10 @@ import {
   effect,
   inject,
 } from '@angular/core';
-import { ViewSlotOutletComponent } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  TranslateDirective,
+  ViewSlotOutletComponent,
+} from '@pixel-brewery/mosaik-elements-angular';
 import {
   View,
   VIEW_PRESENTER,
@@ -36,6 +39,7 @@ import { SettingsSidebarView } from './SettingsSidebarView';
   selector: 'symphony-settings-view',
   host: { class: 'flex min-h-0 flex-1 flex-col' },
   imports: [
+    TranslateDirective,
     SettingsSearchView,
     SettingsSelectionDirective,
     SettingsSidebarView,

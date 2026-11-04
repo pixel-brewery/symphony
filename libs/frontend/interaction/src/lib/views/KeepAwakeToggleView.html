@@ -1,19 +1,21 @@
-@if (presenter.power.state()) {
-<mosaik-toggle-switch
-  test-id="keep-awake-while-busy"
-  [variant]="'primary'"
-  [isChecked]="presenter.keepAwake.value()"
-  [disabled]="presenter.power.busy()"
-  [attr.aria-label]="'Keep this Mac awake while tasks run'"
-  (checked)="presenter.setKeepAwakeCommand.execute(true)"
-  (unchecked)="presenter.setKeepAwakeCommand.execute(false)"
-/>
-} @else {
-<mosaik-skeleton
-  role="status"
-  aria-label="Loading sleep settings"
-  [width]="'32px'"
-  [height]="'18px'"
-  [shimmer]="true"
-/>
-}
+<ng-container *mosaikTranslate="let tr">
+  @if (presenter.power.state()) {
+  <mosaik-toggle-switch
+    test-id="keep-awake-while-busy"
+    [variant]="'primary'"
+    [isChecked]="presenter.keepAwake.value()"
+    [disabled]="presenter.power.busy()"
+    [attr.aria-label]="tr('loc.symphony.keep.this.mac.awake.while.tasks.run.b2457a')"
+    (checked)="presenter.setKeepAwakeCommand.execute(true)"
+    (unchecked)="presenter.setKeepAwakeCommand.execute(false)"
+  />
+  } @else {
+  <mosaik-skeleton
+    role="status"
+    [attr.aria-label]="tr('loc.symphony.loading.sleep.settings.4ec66a')"
+    [width]="'32px'"
+    [height]="'18px'"
+    [shimmer]="true"
+  />
+  }
+</ng-container>

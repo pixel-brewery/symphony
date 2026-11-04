@@ -1,6 +1,6 @@
 // #region Imports
 
-import { DecimalPipe } from '@angular/common';
+import { ApplicationDecimalPipe as DecimalPipe } from '@symphony/frontend-intl';
 import {
   type AfterViewInit,
   ChangeDetectionStrategy,
@@ -16,6 +16,7 @@ import {
 import { form } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import {
+  TranslateDirective,
   ButtonComponent,
   Cancel,
   CardActionsComponent,
@@ -69,6 +70,7 @@ const INPUTS: Readonly<Record<string, BreakoutInput>> = {
   standalone: true,
   host: { class: 'flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     CardActionsComponent,
     CardComponent,

@@ -10,6 +10,7 @@ import type { RuntimeDependencyCommand } from '../models/RuntimeDependencyComman
 import { PLATFORM_CLIENT } from '../ports/PlatformClientToken';
 import { PLATFORM_HEALTH_PROJECTION } from '../ports/PlatformHealthProjectionToken';
 import { PlatformStore } from '../state/PlatformStore';
+import { labelLocale, translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -23,7 +24,8 @@ const TOOL_LABELS: Readonly<Record<RuntimeDependencyCommand, string>> = {
   opencode: 'OpenCode CLI',
 };
 
-const LIST_FORMAT = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
+const listFormat = (): Intl.ListFormat =>
+  new Intl.ListFormat(labelLocale(), { style: 'long', type: 'conjunction' });
 
 /**
  * Reports developer CLIs Symphony needs but cannot find on this Mac: Git always, the GitHub CLI
@@ -78,14 +80,22 @@ export class DeveloperToolsNotificationSource implements INotificationSource {
       {
         command: 'git',
         available: health.git.available,
-        detail: 'Symphony cannot prepare repositories until it is',
+        get detail() {
+          return translateLabel(
+            'loc.symphony.labels.symphony.cannot.prepare.repositories.until.it.is.506f02f',
+          );
+        },
       },
     ];
     if (connections.some((connection) => connection.kind === 'github')) {
       required.push({
         command: 'gh',
         available: health.githubCli.available,
-        detail: 'GitHub sign-in, pull requests and Actions need it',
+        get detail() {
+          return translateLabel(
+            'loc.symphony.labels.github.sign.in.pull.requests.and.actions.need.it.8841f3f',
+          );
+        },
       });
     }
     for (const kind of ['codex', 'claude', 'opencode'] as const) {
@@ -94,7 +104,13 @@ export class DeveloperToolsNotificationSource implements INotificationSource {
       required.push({
         command: kind,
         available: health.agents[kind].available,
-        detail: `the ${LIST_FORMAT.format(names)} account${names.length === 1 ? '' : 's'} cannot run until it is`,
+        get detail() {
+          return translateLabel(
+            'loc.symphony.labels.the.account.cannot.run.until.it.is.a69b1d0',
+            listFormat().format(names),
+            names.length === 1 ? '' : 's',
+          );
+        },
       });
     }
     const installing = this._store.runtimeDependencyInstallBusy();
@@ -104,7 +120,12 @@ export class DeveloperToolsNotificationSource implements INotificationSource {
       .map((tool): INotificationItem => ({
         id: `${ITEM_PREFIX}${tool.command}`,
         severity: 'error',
-        title: `${TOOL_LABELS[tool.command]} is not installed`,
+        get title() {
+          return translateLabel(
+            'loc.symphony.labels.is.not.installed.9a88afe',
+            TOOL_LABELS[tool.command],
+          );
+        },
         location: ['System', 'Developer tools'],
         detail: tool.detail,
         scope: { kind: 'mac' },
@@ -112,13 +133,23 @@ export class DeveloperToolsNotificationSource implements INotificationSource {
           ? [
               {
                 id: 'install',
-                label: 'Install with Homebrew',
+                get label() {
+                  return translateLabel('loc.symphony.labels.install.with.homebrew.7affa76');
+                },
                 emphasis: 'primary',
                 busy: installing === tool.command,
                 disabled: installing !== undefined,
               },
             ]
-          : [{ id: 'open', label: 'Open Developer tools', emphasis: 'secondary' }],
+          : [
+              {
+                id: 'open',
+                get label() {
+                  return translateLabel('loc.symphony.labels.open.developer.tools.64c3a4e');
+                },
+                emphasis: 'secondary',
+              },
+            ],
       }));
   });
 
@@ -159,12 +190,20 @@ export class DeveloperToolsNotificationSource implements INotificationSource {
     const label = TOOL_LABELS[command];
     const confirmation = this._messageBoxService.show({
       id: `install-runtime-dependency-${command}`,
-      header: `Install ${label}?`,
-      message: `Homebrew will download and install ${label} on this Mac. Symphony uses a fixed package recipe and verifies the command after installation.`,
+      header: translateLabel('loc.symphony.labels.install.2cfbc93', label),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.homebrew.will.download.and.install.on.this.mac.symph.ad0a72f',
+          label,
+        );
+      },
       buttons: 'yesNo',
       variant: 'warning',
       pressEscapeToClose: true,
-      intl: { yesLabel: 'Install with Homebrew', noLabel: 'Cancel' },
+      intl: {
+        yesLabel: translateLabel('loc.symphony.labels.install.with.homebrew.7affa76'),
+        noLabel: translateLabel('loc.symphony.labels.cancel.19766ed'),
+      },
     });
     confirmation.closed.subscribe((decision) => {
       if (decision.reason === 'positive') void this._store.installRuntimeDependency(command);

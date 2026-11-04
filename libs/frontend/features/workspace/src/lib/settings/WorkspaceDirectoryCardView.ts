@@ -3,6 +3,7 @@
 import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   DotComponent,
@@ -30,6 +31,7 @@ import { WorkspaceDirectoryViewPresenter } from './WorkspaceDirectoryViewPresent
   selector: 'symphony-workspace-directory-card',
   host: { class: 'flex min-w-0 flex-col gap-3' },
   imports: [
+    TranslateDirective,
     AsyncPipe,
     AvatarComponent,
     ButtonComponent,

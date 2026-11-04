@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   DialogContentDirective,
   DialogFooterDirective,
@@ -19,6 +20,7 @@ import { DeliveryGroupModeDialogViewPresenter } from '../../view-presenters/Deli
 @Component({
   selector: 'symphony-delivery-group-mode-dialog-view',
   imports: [
+    TranslateDirective,
     ButtonComponent,
     DialogContentDirective,
     DialogFooterDirective,

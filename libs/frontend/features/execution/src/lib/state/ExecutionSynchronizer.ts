@@ -14,6 +14,7 @@ import { EXECUTION_CONTEXT } from '../ports/ExecutionContextToken';
 import { EXECUTION_PROJECTION } from '../ports/ExecutionProjectionToken';
 import { EXECUTION_REFRESH } from '../ports/ExecutionRefreshToken';
 import { EXECUTION_CLIENT } from '../ports/ExecutionClientToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -124,7 +125,10 @@ export class ExecutionSynchronizer implements IExecutionSynchronization {
           : snapshot,
       );
     } catch (cause) {
-      this.showError(cause, 'Unable to load work-item details.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.work.item.details.0432b40'),
+      );
     } finally {
       overtakenRefresh();
     }
@@ -197,7 +201,10 @@ export class ExecutionSynchronizer implements IExecutionSynchronization {
       }
     } catch (cause) {
       this._activity.markActivityFresh(false);
-      this.showError(cause, 'Unable to synchronize execution state.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.synchronize.execution.state.fb66556'),
+      );
     }
   }
 

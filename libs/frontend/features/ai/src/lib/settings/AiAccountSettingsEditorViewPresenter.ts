@@ -23,6 +23,7 @@ import { type AiConnection, type AiRuntimeKind } from '@symphony/frontend-core/a
 import { type ApplicationSettingsDto as Settings } from '@symphony/ipc-contracts-composition';
 import { type IAiAccountSettingsEditorRequest } from './IAiAccountSettingsEditorRequest';
 import { AiStore } from '../state/AiStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -505,11 +506,16 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
     void this._alerts
       .confirm({
         id: `install-agent-runtime-${runtime}`,
-        header: `Install ${label} CLI?`,
-        message: `Homebrew will download and install ${label} CLI on this Mac. Symphony verifies the command before enabling it for agents.`,
+        header: translateLabel('loc.symphony.labels.install.cli.3522956', label),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.homebrew.will.download.and.install.cli.on.this.mac.s.ccc5d72',
+            label,
+          );
+        },
         tone: 'warning',
-        confirmLabel: 'Install with Homebrew',
-        cancelLabel: 'Cancel',
+        confirmLabel: translateLabel('loc.symphony.labels.install.with.homebrew.7affa76'),
+        cancelLabel: translateLabel('loc.symphony.labels.cancel.19766ed'),
       })
       .then((confirmed) => {
         if (!confirmed) return;
@@ -641,22 +647,38 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
     if (blockers.length) {
       void this._alerts.confirm({
         id: `remove-ai-account-blocked-${accountId}`,
-        header: 'This account is still in use',
-        message: `${blockers.join(', ')} ${blockers.length === 1 ? 'runs' : 'run'} on this account. Move ${blockers.length === 1 ? 'that agent' : 'those agents'} to another AI account first, then remove it.`,
+        header: translateLabel('loc.symphony.labels.this.account.is.still.in.use.3aef81b'),
+        get message() {
+          return blockers.length === 1
+            ? translateLabel(
+                'loc.symphony.labels.runs.on.this.account.move.that.agent.to.another.ai.a.56f37f3',
+                blockers.join(', '),
+              )
+            : translateLabel(
+                'loc.symphony.labels.run.on.this.account.move.those.agents.to.another.ai..4aa69fa',
+                blockers.join(', '),
+              );
+        },
         tone: 'warning',
-        confirmLabel: 'OK',
+        confirmLabel: translateLabel('loc.symphony.labels.ok.565339b'),
       });
       return;
     }
     void this._alerts
       .confirm({
         id: `remove-ai-account-${accountId}`,
-        header: `Remove ${this.aiAccount.displayName.trim() || 'this AI account'}?`,
-        message:
-          'Symphony signs the account out, deletes its isolated workspace data, and drops it from every backup route. Agents keep running on their other accounts.',
+        header: translateLabel(
+          'loc.symphony.labels.remove.9d64ce8',
+          this.aiAccount.displayName.trim() || 'this AI account',
+        ),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.symphony.signs.the.account.out.deletes.its.isolated..c69dd43',
+          );
+        },
         tone: 'danger',
-        confirmLabel: 'Remove account',
-        cancelLabel: 'Keep account',
+        confirmLabel: translateLabel('loc.symphony.labels.remove.account.fd35618'),
+        cancelLabel: translateLabel('loc.symphony.labels.keep.account.9be7d99'),
         destructive: true,
       })
       .then((confirmed) => {
@@ -728,12 +750,15 @@ export class AiAccountSettingsEditorViewPresenter extends Hydratable(ViewPresent
     void this._alerts
       .confirm({
         id: `import-opencode-credentials-${this.aiAccountId() ?? 'new'}`,
-        header: 'Import current OpenCode sign-ins?',
-        message:
-          'Symphony copies the provider sign-ins currently stored by OpenCode on this Mac into this one workspace account. The copy is isolated; later sign-in changes in another workspace do not affect it.',
+        header: translateLabel('loc.symphony.labels.import.current.opencode.sign.ins.2405c36'),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.symphony.copies.the.provider.sign.ins.currently.stor.2d7f29b',
+          );
+        },
         tone: 'warning',
-        confirmLabel: 'Import into workspace',
-        cancelLabel: 'Cancel',
+        confirmLabel: translateLabel('loc.symphony.labels.import.into.workspace.f4427e5'),
+        cancelLabel: translateLabel('loc.symphony.labels.cancel.19766ed'),
       })
       .then((confirmed) => {
         if (!confirmed) return;

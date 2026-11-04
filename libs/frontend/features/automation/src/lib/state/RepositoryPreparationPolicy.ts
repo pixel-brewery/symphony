@@ -5,6 +5,7 @@ import type { IAutomationPreparation } from '@symphony/frontend-core/automation'
 import { ConfigurationStore } from '@symphony/frontend-core/configuration';
 import { REPOSITORY_RUNTIME_OPERATIONS } from '@symphony/frontend-core/workspace';
 import { NotificationService } from '@symphony/frontend-notification';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -79,8 +80,13 @@ export class RepositoryPreparationPolicy implements IAutomationPreparation {
     if (warningKey === this._repositoryPreparationWarningKey) return;
     this._repositoryPreparationWarningKey = warningKey;
     this._notifications.showWarning(
-      'Automatic AI work is waiting for local preparation.',
-      `${unprepared.map((repository) => repository.displayName).join(', ')}: open Settings and prepare the repository.`,
+      translateLabel(
+        'loc.symphony.labels.automatic.ai.work.is.waiting.for.local.preparation.0dbfe9a',
+      ),
+      translateLabel(
+        'loc.symphony.labels.open.settings.and.prepare.the.repository.94670c7',
+        unprepared.map((repository) => repository.displayName).join(', '),
+      ),
     );
   }
 

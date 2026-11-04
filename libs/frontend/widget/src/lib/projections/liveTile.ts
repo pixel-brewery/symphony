@@ -1,6 +1,7 @@
 // #region Imports
 
 import type { IWidgetTile } from '../models/IWidgetTile';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -12,7 +13,9 @@ export function liveTile(
   return {
     ...rest,
     live: liveCount > 0,
-    ...(liveCount > 0 ? { liveLabel: `${liveCount} in progress` } : {}),
+    ...(liveCount > 0
+      ? { liveLabel: translateLabel('loc.symphony.labels.in.progress.5e36911', liveCount) }
+      : {}),
     attention: false,
   };
 }

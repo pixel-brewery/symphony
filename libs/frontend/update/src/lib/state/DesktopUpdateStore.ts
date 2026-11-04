@@ -4,6 +4,7 @@ import { DestroyRef, Inject, inject, Injectable, signal, type Signal } from '@an
 import type { IDesktopApi, UpdateChannel, UpdateState } from '@symphony/ipc-contracts-desktop';
 import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
 import { NotificationService } from '@symphony/frontend-notification';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -90,8 +91,10 @@ export class DesktopUpdateStore {
     } catch (cause) {
       this._manualCheckPending = false;
       this._notifications.showError(
-        'Update check failed.',
-        cause instanceof Error ? cause.message : 'Symphony could not check for updates.',
+        translateLabel('loc.symphony.labels.update.check.failed.5af65a9'),
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.symphony.could.not.check.for.updates.2f0e98b'),
       );
     } finally {
       this._busy.set(false);
@@ -110,15 +113,17 @@ export class DesktopUpdateStore {
     try {
       this.applyState(await this._desktop.request('updates.channel.set', { channel }));
       this._notifications.showInfo(
-        'Update channel changed.',
+        translateLabel('loc.symphony.labels.update.channel.changed.fd503f9'),
         channel === 'stable'
           ? 'Symphony will receive tested stable releases.'
           : 'Symphony will receive every successful canary build.',
       );
     } catch (cause) {
       this._notifications.showError(
-        'Update channel could not be changed.',
-        cause instanceof Error ? cause.message : 'Unknown update configuration failure.',
+        translateLabel('loc.symphony.labels.update.channel.could.not.be.changed.3c79b88'),
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.unknown.update.configuration.failure.532803f'),
       );
     } finally {
       this._busy.set(false);
@@ -144,16 +149,23 @@ export class DesktopUpdateStore {
       }
       if (result.outcome === 'opened') {
         this._notifications.showInfo(
-          'Update download opened.',
-          `Install Symphony ${state.targetVersion} from the downloaded installer.`,
+          translateLabel('loc.symphony.labels.update.download.opened.21cfef2'),
+          translateLabel(
+            'loc.symphony.labels.install.symphony.from.the.downloaded.installer.3e7e2d7',
+            state.targetVersion,
+          ),
         );
       } else {
-        this._notifications.showWarning('No update is available to download.');
+        this._notifications.showWarning(
+          translateLabel('loc.symphony.labels.no.update.is.available.to.download.3e6e910'),
+        );
       }
     } catch (cause) {
       this._notifications.showError(
-        'Update download could not be opened.',
-        cause instanceof Error ? cause.message : 'Unknown update download failure.',
+        translateLabel('loc.symphony.labels.update.download.could.not.be.opened.a6dcb3e'),
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.unknown.update.download.failure.18cacb8'),
       );
     } finally {
       this._busy.set(false);
@@ -171,16 +183,22 @@ export class DesktopUpdateStore {
       const result = await this._desktop.request('updates.install', {});
       if (result.outcome === 'deferred') {
         this._notifications.showInfo(
-          'Update postponed.',
-          'The downloaded update remains ready for a later restart.',
+          translateLabel('loc.symphony.labels.update.postponed.b0c12a1'),
+          translateLabel(
+            'loc.symphony.labels.the.downloaded.update.remains.ready.for.a.later.rest.df87959',
+          ),
         );
       } else if (result.outcome === 'not-ready') {
-        this._notifications.showWarning('No update is ready to install.');
+        this._notifications.showWarning(
+          translateLabel('loc.symphony.labels.no.update.is.ready.to.install.81cd777'),
+        );
       }
     } catch (cause) {
       this._notifications.showError(
-        'Update could not be installed.',
-        cause instanceof Error ? cause.message : 'Unknown update installation failure.',
+        translateLabel('loc.symphony.labels.update.could.not.be.installed.db3cafd'),
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.unknown.update.installation.failure.42b7597'),
       );
     } finally {
       this._busy.set(false);
@@ -200,34 +218,46 @@ export class DesktopUpdateStore {
     if (this._downloadStarted && state.kind !== 'downloading') {
       this._downloadStarted = false;
       if (previous?.kind === 'downloading' && state.kind === 'failed') {
-        this._notifications.showError('The update could not be downloaded.', state.message);
+        this._notifications.showError(
+          translateLabel('loc.symphony.labels.the.update.could.not.be.downloaded.4d6fd78'),
+          state.message,
+        );
       }
     }
     if (!this._manualCheckPending) return;
     if (state.kind === 'idle' && state.lastCheckedAt) {
       this._manualCheckPending = false;
-      this._notifications.showSuccess('Symphony is up to date.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.symphony.is.up.to.date.f6c1082'),
+      );
     } else if (state.kind === 'available') {
       this._manualCheckPending = false;
       this._notifications.showInfo(
-        `Symphony ${state.targetVersion} is available.`,
-        'Download the installer when you are ready to update.',
+        translateLabel('loc.symphony.labels.symphony.is.available.e9bdb6e', state.targetVersion),
+        translateLabel(
+          'loc.symphony.labels.download.the.installer.when.you.are.ready.to.update.8517434',
+        ),
       );
     } else if (state.kind === 'downloading') {
       this._manualCheckPending = false;
       this._notifications.showInfo(
-        'A new version is available.',
-        'Symphony is downloading it in the background.',
+        translateLabel('loc.symphony.labels.a.new.version.is.available.cba3685'),
+        translateLabel('loc.symphony.labels.symphony.is.downloading.it.in.the.background.497d63b'),
       );
     } else if (state.kind === 'ready') {
       this._manualCheckPending = false;
       this._notifications.showInfo(
-        'A new version is ready.',
-        'Restart Symphony when you are ready to install it.',
+        translateLabel('loc.symphony.labels.a.new.version.is.ready.b9d4487'),
+        translateLabel(
+          'loc.symphony.labels.restart.symphony.when.you.are.ready.to.install.it.df93cc5',
+        ),
       );
     } else if (state.kind === 'failed') {
       this._manualCheckPending = false;
-      this._notifications.showError('Update check failed.', state.message);
+      this._notifications.showError(
+        translateLabel('loc.symphony.labels.update.check.failed.5af65a9'),
+        state.message,
+      );
     }
   }
 

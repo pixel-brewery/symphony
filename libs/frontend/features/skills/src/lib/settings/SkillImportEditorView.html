@@ -1,72 +1,78 @@
-<ng-template mosaikDialogHeader>
-  <mosaik-dialog-header slot="header" [text]="'Import skill'" [subText]="'Portable skill package'">
-    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
-  </mosaik-dialog-header>
-</ng-template>
-<ng-template mosaikDialogContent>
-  <div test-id="settings-editor-drawer" class="flex min-w-0 flex-col gap-1.5 py-0.5">
-    @if (presenter.isHydrating()) {
-    <section
-      test-id="settings-editor-loading-skeleton"
-      class="flex min-w-0 flex-col gap-1"
-      role="status"
-      aria-busy="true"
-      aria-label="Loading settings"
+<ng-container *mosaikTranslate="let tr">
+  <ng-template mosaikDialogHeader>
+    <mosaik-dialog-header
+      slot="header"
+      [text]="tr('loc.symphony.import.skill.42eea9')"
+      [subText]="tr('loc.symphony.portable.skill.package.8ed306')"
     >
-      <mosaik-skeleton [width]="'10rem'" [height]="'14px'" [shimmer]="true" />
-      <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
-      <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
-    </section>
-    } @else {
-    <div class="flex min-w-0 flex-col gap-[3px]">
-      <mosaik-text
-        part="sheet-heading"
-        [mosaikTypography]="'subtitle2'"
-        [text]="'Portable skill package'"
+      <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+    </mosaik-dialog-header>
+  </ng-template>
+  <ng-template mosaikDialogContent>
+    <div test-id="settings-editor-drawer" class="flex min-w-0 flex-col gap-1.5 py-0.5">
+      @if (presenter.isHydrating()) {
+      <section
+        test-id="settings-editor-loading-skeleton"
+        class="flex min-w-0 flex-col gap-1"
+        role="status"
+        aria-busy="true"
+        [attr.aria-label]="tr('loc.symphony.loading.settings.509c3e')"
+      >
+        <mosaik-skeleton [width]="'10rem'" [height]="'14px'" [shimmer]="true" />
+        <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
+        <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+      </section>
+      } @else {
+      <div class="flex min-w-0 flex-col gap-[3px]">
+        <mosaik-text
+          part="sheet-heading"
+          [mosaikTypography]="'subtitle2'"
+          [text]="tr('loc.symphony.portable.skill.package.8ed306')"
+        />
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.select.a.folder.containing.skill.md.and.packaged.res.e9fd0f')"
+        />
+      </div>
+      <mosaik-filebox
+        test-id="skill-import-path"
+        [label]="tr('loc.symphony.skill.folder.path.4b3372')"
+        [value]="presenter.importPath"
+        [directory]="true"
+        [readonly]="true"
+      >
+        <mosaik-button
+          slot="suffix"
+          test-id="choose-skill-import-path"
+          [iconName]="'folder'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          [attr.aria-label]="tr('loc.symphony.choose.portable.skill.folder.258ffb')"
+          (click)="presenter.chooseImportDirectoryCommand.execute()"
+        />
+      </mosaik-filebox>
+      }
+    </div>
+  </ng-template>
+  <ng-template mosaikDialogFooter>
+    <div class="flex w-full min-w-0 items-center justify-end gap-1">
+      <mosaik-button
+        test-id="cancel-settings-editor"
+        [label]="tr('loc.symphony.cancel.19766e')"
+        [appearance]="'plain'"
+        (click)="presenter.closeCommand.execute()"
       />
-      <mosaik-text
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="'Select a folder containing SKILL.md and packaged resources.'"
+      <mosaik-button
+        test-id="save-settings-editor"
+        [label]="tr('loc.symphony.import.skill.42eea9')"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.busy()"
+        [disabled]="!presenter.importPath.trim() || presenter.busy() || presenter.editorBusy()"
+        (click)="presenter.saveCommand.execute()"
       />
     </div>
-    <mosaik-filebox
-      test-id="skill-import-path"
-      [label]="'Skill folder path'"
-      [value]="presenter.importPath"
-      [directory]="true"
-      [readonly]="true"
-    >
-      <mosaik-button
-        slot="suffix"
-        test-id="choose-skill-import-path"
-        [iconName]="'folder'"
-        [iconSize]="'small'"
-        [appearance]="'plain'"
-        [attr.aria-label]="'Choose portable skill folder'"
-        (click)="presenter.chooseImportDirectoryCommand.execute()"
-      />
-    </mosaik-filebox>
-    }
-  </div>
-</ng-template>
-<ng-template mosaikDialogFooter>
-  <div class="flex w-full min-w-0 items-center justify-end gap-1">
-    <mosaik-button
-      test-id="cancel-settings-editor"
-      [label]="'Cancel'"
-      [appearance]="'plain'"
-      (click)="presenter.closeCommand.execute()"
-    />
-    <mosaik-button
-      test-id="save-settings-editor"
-      [label]="'Import skill'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      [isBusy]="presenter.busy()"
-      [disabled]="!presenter.importPath.trim() || presenter.busy() || presenter.editorBusy()"
-      (click)="presenter.saveCommand.execute()"
-    />
-  </div>
-</ng-template>
+  </ng-template>
+</ng-container>

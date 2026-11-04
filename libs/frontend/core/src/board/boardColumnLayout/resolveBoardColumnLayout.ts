@@ -3,6 +3,7 @@
 import type { IBoardColumn, IWorkItem } from '@symphony/domain-work';
 import type { IBoardColumnLayout } from './IBoardColumnLayout';
 import { UNASSIGNED_BOARD_COLUMN_ID } from './UnassignedBoardColumnId';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -55,7 +56,12 @@ export function resolveBoardColumnLayout(
     (item.boardColumnId ? aliases.get(item.boardColumnId) : undefined) ??
     UNASSIGNED_BOARD_COLUMN_ID;
   if (items.some((item) => columnIdFor(item) === UNASSIGNED_BOARD_COLUMN_ID)) {
-    columns.push({ id: UNASSIGNED_BOARD_COLUMN_ID, label: 'No column' });
+    columns.push({
+      id: UNASSIGNED_BOARD_COLUMN_ID,
+      get label() {
+        return translateLabel('loc.symphony.labels.no.column.d4e2353');
+      },
+    });
   }
   const providerColumnFor = (item: IWorkItem, columnId: string): IBoardColumn | undefined => {
     const candidates = members.get(columnId) ?? [];

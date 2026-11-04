@@ -1,14 +1,45 @@
-<symphony-settings-group
-  test-id="theme-settings-card"
-  [heading]="'Color theme'"
-  [description]="'Select a fixed appearance or follow the current macOS preference.'"
->
-  <symphony-settings-row
-    test-id="appearance-theme-settings-group"
-    [label]="'Theme'"
-    [description]="'Choose System to switch between light and dark automatically when macOS changes.'"
+<ng-container *mosaikTranslate="let tr">
+  <symphony-settings-group
+    test-id="language-settings-card"
+    [heading]="tr('loc.symphony.application.language.89baa9')"
+    [description]="tr('loc.symphony.choose.the.language.of.symphony.your.repositories.an.984eb0')"
   >
-    <symphony-theme-segment />
-  </symphony-settings-row>
-</symphony-settings-group>
-<mosaik-view-slot-outlet class="contents" [slot]="appearanceSlot" />
+    <symphony-settings-row
+      [label]="tr('loc.symphony.language.a4fe65')"
+      [description]="tr('loc.symphony.the.selection.applies.to.this.browser.profile.and.is.7541d1')"
+    >
+      <mosaik-segment
+        test-id="language-select"
+        [appearance]="'soft'"
+        [attr.aria-label]="tr('loc.symphony.application.language.89baa9')"
+      >
+        <mosaik-segment-item
+          test-id="language-en"
+          [label]="tr('loc.symphony.english.ba118b')"
+          [isChecked]="presenter.language() === 'en'"
+          (checked)="presenter.updateLanguageCommand.execute('en')"
+        />
+        <mosaik-segment-item
+          test-id="language-de"
+          [label]="tr('loc.symphony.deutsch.801cfe')"
+          [isChecked]="presenter.language() === 'de'"
+          (checked)="presenter.updateLanguageCommand.execute('de')"
+        />
+      </mosaik-segment>
+    </symphony-settings-row>
+  </symphony-settings-group>
+  <symphony-settings-group
+    test-id="theme-settings-card"
+    [heading]="tr('loc.symphony.color.theme.475074')"
+    [description]="tr('loc.symphony.select.a.fixed.appearance.or.follow.the.current.maco.3e89b2')"
+  >
+    <symphony-settings-row
+      test-id="appearance-theme-settings-group"
+      [label]="tr('loc.symphony.theme.efb52e')"
+      [description]="tr('loc.symphony.choose.system.to.switch.between.light.and.dark.autom.69bf56')"
+    >
+      <symphony-theme-segment />
+    </symphony-settings-row>
+  </symphony-settings-group>
+  <mosaik-view-slot-outlet class="contents" [slot]="appearanceSlot" />
+</ng-container>

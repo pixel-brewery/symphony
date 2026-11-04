@@ -3,6 +3,7 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 import { stageRoles, type IWorkflowStage } from '@symphony/domain-workflow';
 import { type IExecutionRecord } from '@symphony/domain-execution';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -15,7 +16,7 @@ interface ITaskStatusPresentation {
   readonly variant: 'primary' | 'neutral' | 'info' | 'success' | 'danger' | 'warning';
 }
 
-@Pipe({ name: 'taskStatusPresentation', standalone: true, pure: true })
+@Pipe({ name: 'taskStatusPresentation', standalone: true, pure: false })
 export class TaskStatusPresentationPipe implements PipeTransform {
   // #region Methods
 
@@ -38,14 +39,27 @@ export class TaskStatusPresentationPipe implements PipeTransform {
     hasWorkItem: boolean,
     stage: IWorkflowStage | undefined,
   ): ITaskStatusPresentation {
-    if (isStarting) return { label: 'Starting', variant: 'primary' };
-    if (isSolving) return { label: 'Starting Solver', variant: 'primary' };
+    if (isStarting)
+      return {
+        get label() {
+          return translateLabel('loc.symphony.labels.starting.aeed4d2');
+        },
+        variant: 'primary',
+      };
+    if (isSolving)
+      return {
+        get label() {
+          return translateLabel('loc.symphony.labels.starting.solver.13fce56');
+        },
+        variant: 'primary',
+      };
     if (externalCoordination) {
       return {
-        label:
-          externalCoordination.action === 'solve'
-            ? 'Solution is running on another instance'
-            : 'Analysis is running on another instance',
+        get label() {
+          return externalCoordination.action === 'solve'
+            ? translateLabel('loc.symphony.labels.solution.is.running.on.another.instance.f6073e8')
+            : translateLabel('loc.symphony.labels.analysis.is.running.on.another.instance.ced0557');
+        },
         variant: 'warning',
       };
     }
@@ -53,16 +67,55 @@ export class TaskStatusPresentationPipe implements PipeTransform {
     // the analysis here regardless of the stage is what makes an item look ready for a step
     // its stage would refuse to run.
     if (!execution) {
-      if (!hasWorkItem) return { label: 'Unavailable', variant: 'primary' };
-      if (!stage) return { label: 'Column is not mapped', variant: 'warning' };
-      if (stage.kind === 'terminal') return { label: 'Closed', variant: 'success' };
+      if (!hasWorkItem)
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.unavailable.ca18449');
+          },
+          variant: 'primary',
+        };
+      if (!stage)
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.column.is.not.mapped.9f4b3c5');
+          },
+          variant: 'warning',
+        };
+      if (stage.kind === 'terminal')
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.closed.c21ead0');
+          },
+          variant: 'success',
+        };
       if (stage.kind === 'human-gate')
-        return { label: 'Waiting for a decision', variant: 'primary' };
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.waiting.for.a.decision.7dfb0b7');
+          },
+          variant: 'primary',
+        };
       const roles = stageRoles([stage], stage.id);
-      if (roles.includes('analyze')) return { label: 'Ready to analyze', variant: 'primary' };
+      if (roles.includes('analyze'))
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.ready.to.analyze.d5d5edf');
+          },
+          variant: 'primary',
+        };
       if (roles.includes('solve'))
-        return { label: 'Waiting for implementation', variant: 'primary' };
-      return { label: `${stage.label} runs no step`, variant: 'warning' };
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.waiting.for.implementation.74131e4');
+          },
+          variant: 'primary',
+        };
+      return {
+        get label() {
+          return translateLabel('loc.symphony.labels.runs.no.step.ab0ceee', stage.label);
+        },
+        variant: 'warning',
+      };
     }
     const solution = execution.kind === 'solution' || execution.kind === 'revision';
     const labels = solution

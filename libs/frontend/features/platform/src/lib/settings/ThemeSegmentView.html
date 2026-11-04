@@ -1,10 +1,16 @@
-<mosaik-segment test-id="theme-select" [appearance]="'soft'" [attr.aria-label]="'Theme'">
-  @for (option of themes; track option.value) {
-  <mosaik-segment-item
-    [attr.test-id]="'theme-' + option.value"
-    [label]="option.label"
-    [isChecked]="presenter.theme() === option.value"
-    (checked)="presenter.updateThemeCommand.execute(option.value)"
-  />
-  }
-</mosaik-segment>
+<ng-container *mosaikTranslate="let tr">
+  <mosaik-segment
+    test-id="theme-select"
+    [appearance]="'soft'"
+    [attr.aria-label]="tr('loc.symphony.theme.efb52e')"
+  >
+    @for (option of themes; track option.value) {
+    <mosaik-segment-item
+      [attr.test-id]="'theme-' + option.value"
+      [label]="option.label"
+      [isChecked]="presenter.theme() === option.value"
+      (checked)="presenter.updateThemeCommand.execute(option.value)"
+    />
+    }
+  </mosaik-segment>
+</ng-container>

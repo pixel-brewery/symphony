@@ -3,6 +3,7 @@
 import { computed, inject, type Signal } from '@angular/core';
 import type { ISettingsSearchEntry } from '@symphony/frontend-setting';
 import { FEEDBACK_SETTINGS_CONTEXT } from '../ports/FeedbackSettingsContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -19,8 +20,12 @@ export function feedbackIntakeSearchEntries(): Signal<readonly ISettingsSearchEn
     (context.settings()?.feedbackIntakeSources ?? []).map((source): ISettingsSearchEntry => ({
       id: `feedback-intake-${source.id}`,
       label: source.displayName,
-      description: 'Microsoft Teams feedback intake',
-      group: 'Feedback intake',
+      get description() {
+        return translateLabel('loc.symphony.labels.microsoft.teams.feedback.intake.5495824');
+      },
+      get group() {
+        return translateLabel('loc.symphony.labels.feedback.intake.bde58af');
+      },
       keywords: ['Microsoft Teams', 'channel', 'feedback', 'intake'],
       value: source.enabled ? 'Enabled' : 'Disabled',
       workspaceId: source.workspaceId,

@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   CardComponent,
   ImageComponent,
@@ -23,6 +24,7 @@ import { ArcadeViewPresenter } from '../view-presenters/ArcadeViewPresenter';
   selector: 'symphony-arcade-view',
   host: { class: 'flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     CardComponent,
     ImageComponent,

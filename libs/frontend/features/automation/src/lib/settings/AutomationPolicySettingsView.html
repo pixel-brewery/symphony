@@ -1,138 +1,139 @@
-@let runtime = presenter.runtime(); @let policy = runtime.agenticDelivery; @let level =
-presenter.agenticLevel();
-<div class="flex min-w-0 flex-col gap-3" test-id="runtime-settings-card">
-  <symphony-settings-group
-    test-id="autonomy-settings-group"
-    [level]="'section'"
-    [heading]="'Autonomous work'"
-    [description]="'Schedule unattended analysis, implementation, retry, and pull-request synchronization.'"
-  >
-    <symphony-settings-row
-      [label]="'Run autonomous work'"
-      [description]="'Analyze backlog items, implement Ready items, retry failed work, and synchronize pull-request status.'"
-    >
-      <mosaik-toggle-switch
-        test-id="autonomous-execution"
-        aria-label="Run autonomous work"
-        [variant]="'primary'"
-        [isChecked]="runtime.autonomousExecutionEnabled"
-        (checked)="presenter.setRuntimeFlagCommand.execute(['autonomousExecutionEnabled', true])"
-        (unchecked)="presenter.setRuntimeFlagCommand.execute(['autonomousExecutionEnabled', false])"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row
-      [label]="'Work interval (minutes)'"
-      [description]="'A new interval starts only work that fits the remaining slots.'"
-    >
-      <mosaik-numberbox
-        class="w-[110px]"
-        test-id="autonomous-work-interval"
-        aria-label="Work interval (minutes)"
-        [min]="1"
-        [max]="1440"
-        [value]="runtime.autonomousWorkIntervalMinutes"
-        (change)="presenter.commitRuntimeNumberCommand.execute(['autonomousWorkIntervalMinutes', $event])"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row
-      [label]="'Maximum parallel tasks'"
-      [description]="'Shared by manual and autonomous analysis, implementation and retries, application-wide.'"
-    >
-      <mosaik-numberbox
-        class="w-[110px]"
-        test-id="max-parallel-executions"
-        aria-label="Maximum parallel tasks"
-        [min]="1"
-        [max]="32"
-        [value]="runtime.maxParallelExecutions"
-        (change)="presenter.commitRuntimeNumberCommand.execute(['maxParallelExecutions', $event])"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row
-      [label]="'Serialize overlapping deliveries'"
-      [description]="'Hold back a solution whose predicted change surface overlaps a pull request still in flight until that delivery merges.'"
-    >
-      <mosaik-toggle-switch
-        test-id="agentic-conflict-serialization"
-        aria-label="Serialize overlapping deliveries"
-        [variant]="'primary'"
-        [isChecked]="policy.conflictSerializationEnabled"
-        (checked)="presenter.setAgenticFlagCommand.execute(['conflictSerializationEnabled', true])"
-        (unchecked)="presenter.setAgenticFlagCommand.execute(['conflictSerializationEnabled', false])"
-      />
-    </symphony-settings-row>
-  </symphony-settings-group>
-
-  <div class="flex min-w-0 flex-col gap-2" test-id="agentic-delivery-settings-group">
+<ng-container *mosaikTranslate="let tr">
+  @let runtime = presenter.runtime(); @let policy = runtime.agenticDelivery; @let level =
+  presenter.agenticLevel();
+  <div class="flex min-w-0 flex-col gap-3" test-id="runtime-settings-card">
     <symphony-settings-group
+      test-id="autonomy-settings-group"
       [level]="'section'"
-      [heading]="'Fix failed checks'"
-      [description]="'When a check fails on a pull request Symphony created, each step below lets the AI team go one step further. A step works only when the steps above it are on.'"
+      [heading]="tr('loc.symphony.autonomous.work.05a89b')"
+      [description]="tr('loc.symphony.schedule.unattended.analysis.implementation.retry.an.0ef6a1')"
     >
-      <div part="settings-row" class="flex min-w-0 flex-col gap-1 px-2 py-1.5">
-        <div class="flex min-w-0 flex-col gap-[2px]">
-          <mosaik-text [mosaikTypography]="'body2'" [text]="'Level'" />
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [wrap]="true"
-            [text]="'Choose a level, or switch single steps below; the level then reads Custom.'"
-          />
+      <symphony-settings-row
+        [label]="tr('loc.symphony.run.autonomous.work.853ddd')"
+        [description]="tr('loc.symphony.analyze.backlog.items.implement.ready.items.retry.fa.52342b')"
+      >
+        <mosaik-toggle-switch
+          test-id="autonomous-execution"
+          [attr.aria-label]="tr('loc.symphony.run.autonomous.work.853ddd')"
+          [variant]="'primary'"
+          [isChecked]="runtime.autonomousExecutionEnabled"
+          (checked)="presenter.setRuntimeFlagCommand.execute(['autonomousExecutionEnabled', true])"
+          (unchecked)="presenter.setRuntimeFlagCommand.execute(['autonomousExecutionEnabled', false])"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.work.interval.minutes.689e6d')"
+        [description]="tr('loc.symphony.a.new.interval.starts.only.work.that.fits.the.remain.b17e1b')"
+      >
+        <mosaik-numberbox
+          class="w-[110px]"
+          test-id="autonomous-work-interval"
+          [attr.aria-label]="tr('loc.symphony.work.interval.minutes.689e6d')"
+          [min]="1"
+          [max]="1440"
+          [value]="runtime.autonomousWorkIntervalMinutes"
+          (change)="presenter.commitRuntimeNumberCommand.execute(['autonomousWorkIntervalMinutes', $event])"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.maximum.parallel.tasks.91913e')"
+        [description]="tr('loc.symphony.shared.by.manual.and.autonomous.analysis.implementat.e93bb6')"
+      >
+        <mosaik-numberbox
+          class="w-[110px]"
+          test-id="max-parallel-executions"
+          [attr.aria-label]="tr('loc.symphony.maximum.parallel.tasks.91913e')"
+          [min]="1"
+          [max]="32"
+          [value]="runtime.maxParallelExecutions"
+          (change)="presenter.commitRuntimeNumberCommand.execute(['maxParallelExecutions', $event])"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.serialize.overlapping.deliveries.0aa97a')"
+        [description]="tr('loc.symphony.hold.back.a.solution.whose.predicted.change.surface.e408e3')"
+      >
+        <mosaik-toggle-switch
+          test-id="agentic-conflict-serialization"
+          [attr.aria-label]="tr('loc.symphony.serialize.overlapping.deliveries.0aa97a')"
+          [variant]="'primary'"
+          [isChecked]="policy.conflictSerializationEnabled"
+          (checked)="presenter.setAgenticFlagCommand.execute(['conflictSerializationEnabled', true])"
+          (unchecked)="presenter.setAgenticFlagCommand.execute(['conflictSerializationEnabled', false])"
+        />
+      </symphony-settings-row>
+    </symphony-settings-group>
+
+    <div class="flex min-w-0 flex-col gap-2" test-id="agentic-delivery-settings-group">
+      <symphony-settings-group
+        [level]="'section'"
+        [heading]="tr('loc.symphony.fix.failed.checks.3e8922')"
+        [description]="tr('loc.symphony.when.a.check.fails.on.a.pull.request.symphony.create.bdfe47')"
+      >
+        <div part="settings-row" class="flex min-w-0 flex-col gap-1 px-2 py-1.5">
+          <div class="flex min-w-0 flex-col gap-[2px]">
+            <mosaik-text [mosaikTypography]="'body2'" [text]="tr('loc.symphony.level.170930')" />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="tr('loc.symphony.choose.a.level.or.switch.single.steps.below.the.leve.879a2b')"
+            />
+          </div>
+          <mosaik-segment
+            class="w-full"
+            test-id="agentic-level"
+            [attr.aria-label]="tr('loc.symphony.level.170930')"
+            [appearance]="'soft'"
+          >
+            <mosaik-segment-item
+              test-id="agentic-level-off"
+              [label]="tr('loc.symphony.off.ca7981')"
+              [fit]="'width'"
+              [isChecked]="level === 'off'"
+              (checked)="presenter.selectLevelCommand.execute('off')"
+            />
+            <mosaik-segment-item
+              test-id="agentic-level-watch"
+              [label]="tr('loc.symphony.watch.a71e75')"
+              [fit]="'width'"
+              [isChecked]="level === 'watch'"
+              (checked)="presenter.selectLevelCommand.execute('watch')"
+            />
+            <mosaik-segment-item
+              test-id="agentic-level-diagnose"
+              [label]="tr('loc.symphony.diagnose.64dd65')"
+              [fit]="'width'"
+              [isChecked]="level === 'diagnose'"
+              (checked)="presenter.selectLevelCommand.execute('diagnose')"
+            />
+            <mosaik-segment-item
+              test-id="agentic-level-repair"
+              [label]="tr('loc.symphony.repair.1196b6')"
+              [fit]="'width'"
+              [isChecked]="level === 'repair'"
+              (checked)="presenter.selectLevelCommand.execute('repair')"
+            />
+            <mosaik-segment-item
+              test-id="agentic-level-full"
+              [label]="tr('loc.symphony.full.008dac')"
+              [fit]="'width'"
+              [isChecked]="level === 'full'"
+              (checked)="presenter.selectLevelCommand.execute('full')"
+            />
+            <mosaik-segment-item
+              test-id="agentic-level-custom"
+              [label]="tr('loc.symphony.custom.494ca7')"
+              [fit]="'width'"
+              [isChecked]="level === 'custom'"
+              (checked)="presenter.selectLevelCommand.execute('custom')"
+            />
+          </mosaik-segment>
         </div>
-        <mosaik-segment
-          class="w-full"
-          test-id="agentic-level"
-          aria-label="Level"
-          [appearance]="'soft'"
-        >
-          <mosaik-segment-item
-            test-id="agentic-level-off"
-            [label]="'Off'"
-            [fit]="'width'"
-            [isChecked]="level === 'off'"
-            (checked)="presenter.selectLevelCommand.execute('off')"
-          />
-          <mosaik-segment-item
-            test-id="agentic-level-watch"
-            [label]="'Watch'"
-            [fit]="'width'"
-            [isChecked]="level === 'watch'"
-            (checked)="presenter.selectLevelCommand.execute('watch')"
-          />
-          <mosaik-segment-item
-            test-id="agentic-level-diagnose"
-            [label]="'Diagnose'"
-            [fit]="'width'"
-            [isChecked]="level === 'diagnose'"
-            (checked)="presenter.selectLevelCommand.execute('diagnose')"
-          />
-          <mosaik-segment-item
-            test-id="agentic-level-repair"
-            [label]="'Repair'"
-            [fit]="'width'"
-            [isChecked]="level === 'repair'"
-            (checked)="presenter.selectLevelCommand.execute('repair')"
-          />
-          <mosaik-segment-item
-            test-id="agentic-level-full"
-            [label]="'Full'"
-            [fit]="'width'"
-            [isChecked]="level === 'full'"
-            (checked)="presenter.selectLevelCommand.execute('full')"
-          />
-          <mosaik-segment-item
-            test-id="agentic-level-custom"
-            [label]="'Custom'"
-            [fit]="'width'"
-            [isChecked]="level === 'custom'"
-            (checked)="presenter.selectLevelCommand.execute('custom')"
-          />
-        </mosaik-segment>
-      </div>
-      <ol part="settings-row" class="m-0 flex min-w-0 list-none flex-col px-2 py-1.5">
-        <ng-container
-          [ngTemplateOutlet]="rung"
-          [ngTemplateOutletContext]="{
+        <ol part="settings-row" class="m-0 flex min-w-0 list-none flex-col px-2 py-1.5">
+          <ng-container
+            [ngTemplateOutlet]="rung"
+            [ngTemplateOutletContext]="{
             key: 'enabled',
             testId: 'agentic-delivery-enabled',
             label: 'Enable agentic delivery',
@@ -143,384 +144,389 @@ presenter.agenticLevel();
                 : '.'),
             next: 'observeFailures'
           }"
-        />
-        <ng-container
-          [ngTemplateOutlet]="rung"
-          [ngTemplateOutletContext]="{
+          />
+          <ng-container
+            [ngTemplateOutlet]="rung"
+            [ngTemplateOutletContext]="{
             key: 'observeFailures',
             testId: 'agentic-observe-failures',
             label: 'Observe failed actions',
             description: 'Watch CI runs on Symphony pull requests and record why they fail. Never changes any code.',
             next: 'aiDiagnosisEnabled'
           }"
-        />
-        <ng-container
-          [ngTemplateOutlet]="rung"
-          [ngTemplateOutletContext]="{
+          />
+          <ng-container
+            [ngTemplateOutlet]="rung"
+            [ngTemplateOutletContext]="{
             key: 'aiDiagnosisEnabled',
             testId: 'agentic-ai-diagnosis',
             label: 'Use AI for diagnosis',
             description: 'Let an AI skill read the recorded failure and determine its cause, within the budgets below.',
             next: 'ciRerunEnabled'
           }"
-        />
-        <ng-container
-          [ngTemplateOutlet]="rung"
-          [ngTemplateOutletContext]="{
+          />
+          <ng-container
+            [ngTemplateOutlet]="rung"
+            [ngTemplateOutletContext]="{
             key: 'ciRerunEnabled',
             testId: 'agentic-ci-rerun',
             label: 'Rerun transient and infrastructure failures',
             description: 'Request a single rerun instead of a repair when a failure is temporary or caused by CI infrastructure.',
             next: 'managedBranchUpdatesEnabled'
           }"
-        />
-        <ng-container
-          [ngTemplateOutlet]="rung"
-          [ngTemplateOutletContext]="{
+          />
+          <ng-container
+            [ngTemplateOutlet]="rung"
+            [ngTemplateOutletContext]="{
             key: 'managedBranchUpdatesEnabled',
             testId: 'agentic-managed-branch-updates',
             label: 'Update managed pull-request branches',
             description: 'Push fixes to the pull-request branch and merge the base into it when it falls behind — never a rebase or force-push, only Symphony branches.',
             next: 'sourceRepairEnabled'
           }"
-        />
-        <ng-container
-          [ngTemplateOutlet]="rung"
-          [ngTemplateOutletContext]="{
+          />
+          <ng-container
+            [ngTemplateOutlet]="rung"
+            [ngTemplateOutletContext]="{
             key: 'sourceRepairEnabled',
             testId: 'agentic-source-repair',
             label: 'Repair source failures',
             description: 'Fix code or tests when the diagnosis locates the problem in the source; a conflicting branch gets a budgeted revision.',
             next: 'workflowRepairEnabled'
           }"
-        />
-        <ng-container
-          [ngTemplateOutlet]="rung"
-          [ngTemplateOutletContext]="{
+          />
+          <ng-container
+            [ngTemplateOutlet]="rung"
+            [ngTemplateOutletContext]="{
             key: 'workflowRepairEnabled',
             testId: 'agentic-workflow-repair',
             label: 'Repair workflow failures',
             description: 'Fix the CI workflow configuration when the diagnosis locates the problem there.',
             next: 'replacementPullRequestEnabled'
           }"
-        />
-        <ng-container
-          [ngTemplateOutlet]="rung"
-          [ngTemplateOutletContext]="{
+          />
+          <ng-container
+            [ngTemplateOutlet]="rung"
+            [ngTemplateOutletContext]="{
             key: 'replacementPullRequestEnabled',
             testId: 'agentic-replacement-pr',
             label: 'Allow replacement pull requests',
             description: 'Open a new pull request only when the original was closed and its branch can no longer be updated.',
             next: null
           }"
+          />
+        </ol>
+      </symphony-settings-group>
+
+      <symphony-settings-group
+        test-id="agentic-budgets-settings-group"
+        [heading]="tr('loc.symphony.budgets.a1a06e')"
+        [description]="tr('loc.symphony.spent.only.by.diagnosis.and.repairs.e2af65')"
+      >
+        <div
+          part="settings-row"
+          class="grid min-w-0 grid-cols-3 gap-x-2 gap-y-1.5 px-2 py-1.5 max-[640px]:grid-cols-2"
+        >
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.diagnosis.token.budget.220d99')"
+            />
+            <mosaik-numberbox
+              class="w-full max-w-[150px]"
+              test-id="agentic-diagnosis-token-budget"
+              [attr.aria-label]="tr('loc.symphony.diagnosis.token.budget.220d99')"
+              [min]="1000"
+              [max]="1000000"
+              [value]="policy.diagnosisTokenBudget"
+              (change)="presenter.commitAgenticNumberCommand.execute(['diagnosisTokenBudget', $event])"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.repair.token.budget.64d586')"
+            />
+            <mosaik-numberbox
+              class="w-full max-w-[150px]"
+              test-id="agentic-repair-token-budget"
+              [attr.aria-label]="tr('loc.symphony.repair.token.budget.64d586')"
+              [min]="1000"
+              [max]="2000000"
+              [value]="policy.repairTokenBudget"
+              (change)="presenter.commitAgenticNumberCommand.execute(['repairTokenBudget', $event])"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.daily.token.budget.fb912b')"
+            />
+            <mosaik-numberbox
+              class="w-full max-w-[150px]"
+              test-id="agentic-daily-token-budget"
+              [attr.aria-label]="tr('loc.symphony.daily.token.budget.fb912b')"
+              [min]="1000"
+              [max]="10000000"
+              [value]="policy.dailyTokenBudget"
+              (change)="presenter.commitAgenticNumberCommand.execute(['dailyTokenBudget', $event])"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.maximum.attempts.per.branch.f5cd3e')"
+            />
+            <mosaik-numberbox
+              class="w-full max-w-[150px]"
+              test-id="agentic-max-attempts"
+              [attr.aria-label]="tr('loc.symphony.maximum.attempts.per.branch.f5cd3e')"
+              [min]="1"
+              [max]="10"
+              [value]="policy.maxAttempts"
+              (change)="presenter.commitAgenticNumberCommand.execute(['maxAttempts', $event])"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.maximum.parallel.repairs.1cc7a9')"
+            />
+            <mosaik-numberbox
+              class="w-full max-w-[150px]"
+              test-id="agentic-max-parallel-repairs"
+              [attr.aria-label]="tr('loc.symphony.maximum.parallel.repairs.1cc7a9')"
+              [min]="1"
+              [max]="16"
+              [value]="policy.maxParallelRepairs"
+              (change)="presenter.commitAgenticNumberCommand.execute(['maxParallelRepairs', $event])"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.cooldown.minutes.486b99')"
+            />
+            <mosaik-numberbox
+              class="w-full max-w-[150px]"
+              test-id="agentic-cooldown"
+              [attr.aria-label]="tr('loc.symphony.cooldown.minutes.486b99')"
+              [min]="1"
+              [max]="1440"
+              [value]="policy.cooldownMinutes"
+              (change)="presenter.commitAgenticNumberCommand.execute(['cooldownMinutes', $event])"
+            />
+          </div>
+        </div>
+      </symphony-settings-group>
+    </div>
+
+    <symphony-settings-group
+      test-id="review-feedback-settings-group"
+      [level]="'section'"
+      [heading]="tr('loc.symphony.address.reviews.968688')"
+      [description]="tr('loc.symphony.when.a.reviewer.comments.on.a.pull.request.symphony.0d0f53')"
+    >
+      <symphony-settings-row
+        [label]="tr('loc.symphony.listen.for.pull.request.review.feedback.3079f0')"
+        [description]="tr('loc.symphony.allow.assigned.review.feedback.skills.to.act.on.revi.a3a1b5')"
+      >
+        <mosaik-toggle-switch
+          test-id="agentic-review-feedback"
+          [attr.aria-label]="tr('loc.symphony.listen.for.pull.request.review.feedback.3079f0')"
+          [variant]="'primary'"
+          [isChecked]="policy.reviewFeedbackEnabled"
+          (checked)="presenter.setAgenticFlagCommand.execute(['reviewFeedbackEnabled', true])"
+          (unchecked)="presenter.setAgenticFlagCommand.execute(['reviewFeedbackEnabled', false])"
         />
-      </ol>
+      </symphony-settings-row>
     </symphony-settings-group>
 
     <symphony-settings-group
-      test-id="agentic-budgets-settings-group"
-      [heading]="'Budgets'"
-      [description]="'Spent only by diagnosis and repairs.'"
+      test-id="github-automation-settings-group"
+      [level]="'section'"
+      [heading]="tr('loc.symphony.github.commands.25e899')"
+      [description]="tr('loc.symphony.decide.whether.authorized.issue.comments.may.start.s.16b6a8')"
     >
+      <symphony-settings-row
+        [label]="tr('loc.symphony.allow.github.commands.3676f4')"
+        [description]="tr('loc.symphony.run.authorized.comments.in.a.configured.github.issue.3e5436')"
+      >
+        <mosaik-toggle-switch
+          test-id="automatic-github-execution"
+          [attr.aria-label]="tr('loc.symphony.allow.github.commands.3676f4')"
+          [variant]="'primary'"
+          [isChecked]="runtime.automaticExecutionEnabled"
+          (checked)="presenter.setRuntimeFlagCommand.execute(['automaticExecutionEnabled', true])"
+          (unchecked)="presenter.setRuntimeFlagCommand.execute(['automaticExecutionEnabled', false])"
+        />
+      </symphony-settings-row>
       <div
         part="settings-row"
-        class="grid min-w-0 grid-cols-3 gap-x-2 gap-y-1.5 px-2 py-1.5 max-[640px]:grid-cols-2"
+        class="flex min-w-0 flex-wrap items-center gap-[6px] px-2 py-1.5"
+        test-id="remote-github-commands-guide"
+        [attr.aria-label]="tr('loc.symphony.commands.b269dc')"
       >
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [text]="'Diagnosis token budget'"
-          />
-          <mosaik-numberbox
-            class="w-full max-w-[150px]"
-            test-id="agentic-diagnosis-token-budget"
-            aria-label="Diagnosis token budget"
-            [min]="1000"
-            [max]="1000000"
-            [value]="policy.diagnosisTokenBudget"
-            (change)="presenter.commitAgenticNumberCommand.execute(['diagnosisTokenBudget', $event])"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [text]="'Repair token budget'"
-          />
-          <mosaik-numberbox
-            class="w-full max-w-[150px]"
-            test-id="agentic-repair-token-budget"
-            aria-label="Repair token budget"
-            [min]="1000"
-            [max]="2000000"
-            [value]="policy.repairTokenBudget"
-            (change)="presenter.commitAgenticNumberCommand.execute(['repairTokenBudget', $event])"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [text]="'Daily token budget'"
-          />
-          <mosaik-numberbox
-            class="w-full max-w-[150px]"
-            test-id="agentic-daily-token-budget"
-            aria-label="Daily token budget"
-            [min]="1000"
-            [max]="10000000"
-            [value]="policy.dailyTokenBudget"
-            (change)="presenter.commitAgenticNumberCommand.execute(['dailyTokenBudget', $event])"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [text]="'Maximum attempts per branch'"
-          />
-          <mosaik-numberbox
-            class="w-full max-w-[150px]"
-            test-id="agentic-max-attempts"
-            aria-label="Maximum attempts per branch"
-            [min]="1"
-            [max]="10"
-            [value]="policy.maxAttempts"
-            (change)="presenter.commitAgenticNumberCommand.execute(['maxAttempts', $event])"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [text]="'Maximum parallel repairs'"
-          />
-          <mosaik-numberbox
-            class="w-full max-w-[150px]"
-            test-id="agentic-max-parallel-repairs"
-            aria-label="Maximum parallel repairs"
-            [min]="1"
-            [max]="16"
-            [value]="policy.maxParallelRepairs"
-            (change)="presenter.commitAgenticNumberCommand.execute(['maxParallelRepairs', $event])"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [text]="'Cooldown (minutes)'"
-          />
-          <mosaik-numberbox
-            class="w-full max-w-[150px]"
-            test-id="agentic-cooldown"
-            aria-label="Cooldown (minutes)"
-            [min]="1"
-            [max]="1440"
-            [value]="policy.cooldownMinutes"
-            (change)="presenter.commitAgenticNumberCommand.execute(['cooldownMinutes', $event])"
-          />
-        </div>
-      </div>
-    </symphony-settings-group>
-  </div>
-
-  <symphony-settings-group
-    test-id="review-feedback-settings-group"
-    [level]="'section'"
-    [heading]="'Address reviews'"
-    [description]="'When a reviewer comments on a pull request Symphony created.'"
-  >
-    <symphony-settings-row
-      [label]="'Listen for pull-request review feedback'"
-      [description]="'Allow assigned review-feedback skills to act on reviewer comments.'"
-    >
-      <mosaik-toggle-switch
-        test-id="agentic-review-feedback"
-        aria-label="Listen for pull-request review feedback"
-        [variant]="'primary'"
-        [isChecked]="policy.reviewFeedbackEnabled"
-        (checked)="presenter.setAgenticFlagCommand.execute(['reviewFeedbackEnabled', true])"
-        (unchecked)="presenter.setAgenticFlagCommand.execute(['reviewFeedbackEnabled', false])"
-      />
-    </symphony-settings-row>
-  </symphony-settings-group>
-
-  <symphony-settings-group
-    test-id="github-automation-settings-group"
-    [level]="'section'"
-    [heading]="'GitHub commands'"
-    [description]="'Decide whether authorized issue comments may start Symphony tasks.'"
-  >
-    <symphony-settings-row
-      [label]="'Allow GitHub commands'"
-      [description]="'Run authorized comments in a configured GitHub issue and deliver successful implementation branches and pull requests.'"
-    >
-      <mosaik-toggle-switch
-        test-id="automatic-github-execution"
-        aria-label="Allow GitHub commands"
-        [variant]="'primary'"
-        [isChecked]="runtime.automaticExecutionEnabled"
-        (checked)="presenter.setRuntimeFlagCommand.execute(['automaticExecutionEnabled', true])"
-        (unchecked)="presenter.setRuntimeFlagCommand.execute(['automaticExecutionEnabled', false])"
-      />
-    </symphony-settings-row>
-    <div
-      part="settings-row"
-      class="flex min-w-0 flex-wrap items-center gap-[6px] px-2 py-1.5"
-      test-id="remote-github-commands-guide"
-      aria-label="Commands"
-    >
-      <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Commands'" />
-      <mosaik-code [text]="'@symphony your instruction'" />
-      <mosaik-code [text]="'/symphony analyze'" />
-      <mosaik-code [text]="'/symphony fix'" />
-      <mosaik-code [text]="'/symphony retry'" />
-      <mosaik-code [text]="'/symphony rerun-ci'" />
-    </div>
-  </symphony-settings-group>
-
-  <symphony-settings-group
-    test-id="managed-workspaces-settings-group"
-    [level]="'section'"
-    [heading]="'Execution'"
-    [description]="'Where worktrees live, how often the board refreshes, and how failed work is kept.'"
-  >
-    <symphony-settings-row [label]="'Managed root'">
-      <mosaik-text
-        slot="detail"
-        class="technical-value"
-        test-id="workspace-root"
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="runtime.workspaceRoot || '—'"
-      />
-      <mosaik-button
-        test-id="choose-workspace-root"
-        [iconName]="'folder'"
-        [iconSize]="'small'"
-        [appearance]="'plain'"
-        [attr.aria-label]="'Choose managed execution root'"
-        [mosaikTooltip]="'Choose managed execution root'"
-        (click)="presenter.chooseWorkspaceRootCommand.execute()"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row [label]="'Board refresh interval (minutes)'">
-      <mosaik-numberbox
-        class="w-[110px]"
-        test-id="board-refresh-interval"
-        aria-label="Board refresh interval (minutes)"
-        [min]="1"
-        [max]="1440"
-        [value]="runtime.boardRefreshIntervalMinutes"
-        (change)="presenter.commitRuntimeNumberCommand.execute(['boardRefreshIntervalMinutes', $event])"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row
-      [label]="'Retain failed execution workspaces'"
-      [description]="'Keep failed worktrees for diagnosis instead of removing them after completion.'"
-    >
-      <mosaik-toggle-switch
-        test-id="retain-failed-workspaces"
-        aria-label="Retain failed execution workspaces"
-        [variant]="'primary'"
-        [isChecked]="runtime.retainFailedWorkspaces"
-        (checked)="presenter.setRuntimeFlagCommand.execute(['retainFailedWorkspaces', true])"
-        (unchecked)="presenter.setRuntimeFlagCommand.execute(['retainFailedWorkspaces', false])"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row
-      [label]="'Verification repair attempts per run'"
-      [description]="'How often a run hands failing repository checks back to the agent before it fails. Zero lets the first red check end the run.'"
-    >
-      <mosaik-numberbox
-        class="w-[110px]"
-        test-id="maximum-verification-repair-attempts"
-        aria-label="Verification repair attempts per run"
-        [min]="0"
-        [max]="10"
-        [value]="runtime.maximumVerificationRepairAttempts"
-        (change)="presenter.commitRuntimeNumberCommand.execute(['maximumVerificationRepairAttempts', $event])"
-      />
-    </symphony-settings-row>
-    @if (presenter.workspaceCleanupAvailable) {
-    <symphony-settings-row
-      test-id="workspace-cleanup-settings-group"
-      [label]="'Clear inactive workspaces'"
-      [description]="'Running executions are preserved; uncommitted changes in inactive worktrees may be removed.'"
-    >
-      <mosaik-button
-        test-id="clear-workspaces"
-        [label]="'Clear inactive workspaces'"
-        [appearance]="'outline'"
-        [variant]="'danger'"
-        (click)="presenter.confirmClearWorkspacesCommand.execute()"
-      />
-    </symphony-settings-row>
-    }
-  </symphony-settings-group>
-</div>
-
-<!-- One switch on the `Fix failed checks` rail: its dot and line, its texts and the prerequisite it
-     still needs. -->
-<ng-template
-  #rung
-  let-key="key"
-  let-testId="testId"
-  let-label="label"
-  let-description="description"
-  let-next="next"
->
-  @let on = presenter.agenticSwitchOn()(key); @let blocker = presenter.agenticBlocker()(key);
-  <li class="flex min-w-0 gap-[14px]" [attr.test-id]="testId + '-rung'">
-    <div class="flex w-[14px] flex-none flex-col items-center pt-[5px]" aria-hidden="true">
-      <span
-        part="ladder-dot"
-        class="h-[12px] w-[12px] flex-none"
-        [attr.data-state]="on ? 'on' : blocker ? 'blocked' : 'off'"
-      ></span>
-      @if (next) {
-      <span part="ladder-line" class="w-[2px] flex-1" [attr.data-on]="on"></span>
-      }
-    </div>
-    <div class="flex min-w-0 flex-1 items-start gap-2" [style.padding-bottom.px]="next ? 12 : 0">
-      <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-        <mosaik-text
-          [mosaikTypography]="'body2'"
-          [variant]="blocker ? 'neutral' : 'default'"
-          [wrap]="true"
-          [text]="label"
-        />
         <mosaik-text
           [mosaikTypography]="'caption'"
           [variant]="'neutral'"
-          [wrap]="true"
-          [text]="description"
+          [text]="tr('loc.symphony.commands.b269dc')"
         />
-        @if (blocker) {
-        <span class="flex min-w-0 items-center gap-0.5" [attr.test-id]="testId + '-needs'">
-          <mosaik-icon aria-hidden="true" [iconName]="'info'" [size]="'tiny'" />
+        <mosaik-code [text]="tr('loc.symphony.symphony.your.instruction.0a62e7')" />
+        <mosaik-code [text]="tr('loc.symphony.symphony.analyze.62cbf2')" />
+        <mosaik-code [text]="tr('loc.symphony.symphony.fix.f1d424')" />
+        <mosaik-code [text]="tr('loc.symphony.symphony.retry.b75464')" />
+        <mosaik-code [text]="tr('loc.symphony.symphony.rerun.ci.cbc727')" />
+      </div>
+    </symphony-settings-group>
+
+    <symphony-settings-group
+      test-id="managed-workspaces-settings-group"
+      [level]="'section'"
+      [heading]="tr('loc.symphony.execution.a45cd4')"
+      [description]="tr('loc.symphony.where.worktrees.live.how.often.the.board.refreshes.a.8f7fa3')"
+    >
+      <symphony-settings-row [label]="tr('loc.symphony.managed.root.cd763c')">
+        <mosaik-text
+          slot="detail"
+          class="technical-value"
+          test-id="workspace-root"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="runtime.workspaceRoot || '—'"
+        />
+        <mosaik-button
+          test-id="choose-workspace-root"
+          [iconName]="'folder'"
+          [iconSize]="'small'"
+          [appearance]="'plain'"
+          [attr.aria-label]="tr('loc.symphony.choose.managed.execution.root.f14d04')"
+          [mosaikTooltip]="tr('loc.symphony.choose.managed.execution.root.f14d04')"
+          (click)="presenter.chooseWorkspaceRootCommand.execute()"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row [label]="tr('loc.symphony.board.refresh.interval.minutes.17a421')">
+        <mosaik-numberbox
+          class="w-[110px]"
+          test-id="board-refresh-interval"
+          [attr.aria-label]="tr('loc.symphony.board.refresh.interval.minutes.17a421')"
+          [min]="1"
+          [max]="1440"
+          [value]="runtime.boardRefreshIntervalMinutes"
+          (change)="presenter.commitRuntimeNumberCommand.execute(['boardRefreshIntervalMinutes', $event])"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.retain.failed.execution.workspaces.8ff62a')"
+        [description]="tr('loc.symphony.keep.failed.worktrees.for.diagnosis.instead.of.remov.f14d4e')"
+      >
+        <mosaik-toggle-switch
+          test-id="retain-failed-workspaces"
+          [attr.aria-label]="tr('loc.symphony.retain.failed.execution.workspaces.8ff62a')"
+          [variant]="'primary'"
+          [isChecked]="runtime.retainFailedWorkspaces"
+          (checked)="presenter.setRuntimeFlagCommand.execute(['retainFailedWorkspaces', true])"
+          (unchecked)="presenter.setRuntimeFlagCommand.execute(['retainFailedWorkspaces', false])"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.verification.repair.attempts.per.run.4771be')"
+        [description]="tr('loc.symphony.how.often.a.run.hands.failing.repository.checks.back.646d6d')"
+      >
+        <mosaik-numberbox
+          class="w-[110px]"
+          test-id="maximum-verification-repair-attempts"
+          [attr.aria-label]="tr('loc.symphony.verification.repair.attempts.per.run.4771be')"
+          [min]="0"
+          [max]="10"
+          [value]="runtime.maximumVerificationRepairAttempts"
+          (change)="presenter.commitRuntimeNumberCommand.execute(['maximumVerificationRepairAttempts', $event])"
+        />
+      </symphony-settings-row>
+      @if (presenter.workspaceCleanupAvailable) {
+      <symphony-settings-row
+        test-id="workspace-cleanup-settings-group"
+        [label]="tr('loc.symphony.clear.inactive.workspaces.614260')"
+        [description]="tr('loc.symphony.running.executions.are.preserved.uncommitted.changes.cf7753')"
+      >
+        <mosaik-button
+          test-id="clear-workspaces"
+          [label]="tr('loc.symphony.clear.inactive.workspaces.614260')"
+          [appearance]="'outline'"
+          [variant]="'danger'"
+          (click)="presenter.confirmClearWorkspacesCommand.execute()"
+        />
+      </symphony-settings-row>
+      }
+    </symphony-settings-group>
+  </div>
+
+  <!-- One switch on the `Fix failed checks` rail: its dot and line, its texts and the prerequisite it
+     still needs. -->
+  <ng-template
+    #rung
+    let-key="key"
+    let-testId="testId"
+    let-label="label"
+    let-description="description"
+    let-next="next"
+  >
+    @let on = presenter.agenticSwitchOn()(key); @let blocker = presenter.agenticBlocker()(key);
+    <li class="flex min-w-0 gap-[14px]" [attr.test-id]="testId + '-rung'">
+      <div class="flex w-[14px] flex-none flex-col items-center pt-[5px]" aria-hidden="true">
+        <span
+          part="ladder-dot"
+          class="h-[12px] w-[12px] flex-none"
+          [attr.data-state]="on ? 'on' : blocker ? 'blocked' : 'off'"
+        ></span>
+        @if (next) {
+        <span part="ladder-line" class="w-[2px] flex-1" [attr.data-on]="on"></span>
+        }
+      </div>
+      <div class="flex min-w-0 flex-1 items-start gap-2" [style.padding-bottom.px]="next ? 12 : 0">
+        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [variant]="blocker ? 'neutral' : 'default'"
+            [wrap]="true"
+            [text]="label"
+          />
           <mosaik-text
             [mosaikTypography]="'caption'"
             [variant]="'neutral'"
             [wrap]="true"
-            [text]="'Needs “' + (blocker | agenticSwitchLabel) + '”'"
+            [text]="description"
           />
-        </span>
-        }
+          @if (blocker) {
+          <span class="flex min-w-0 items-center gap-0.5" [attr.test-id]="testId + '-needs'">
+            <mosaik-icon aria-hidden="true" [iconName]="'info'" [size]="'tiny'" />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="tr('loc.symphony.needs.4198b9', [(blocker | agenticSwitchLabel)])"
+            />
+          </span>
+          }
+        </div>
+        <mosaik-toggle-switch
+          class="flex-none"
+          [attr.test-id]="testId"
+          [attr.aria-label]="label"
+          [variant]="'primary'"
+          [isChecked]="on"
+          [disabled]="!!blocker"
+          (checked)="presenter.setAgenticSwitchCommand.execute([key, true])"
+          (unchecked)="presenter.setAgenticSwitchCommand.execute([key, false])"
+        />
       </div>
-      <mosaik-toggle-switch
-        class="flex-none"
-        [attr.test-id]="testId"
-        [attr.aria-label]="label"
-        [variant]="'primary'"
-        [isChecked]="on"
-        [disabled]="!!blocker"
-        (checked)="presenter.setAgenticSwitchCommand.execute([key, true])"
-        (unchecked)="presenter.setAgenticSwitchCommand.execute([key, false])"
-      />
-    </div>
-  </li>
-</ng-template>
+    </li>
+  </ng-template>
+</ng-container>

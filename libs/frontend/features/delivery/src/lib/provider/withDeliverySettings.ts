@@ -15,6 +15,7 @@ import { isDeliveryTargetSettingsEditorRequest } from '../settings/isDeliveryTar
 import { initializeDeliverySettingsRoute } from '../settings/initializeDeliverySettingsRoute';
 import { repositorySearchEntries } from '../settings/repositorySearchEntries';
 import { resolveRepositoryEditorRoute } from '../settings/resolveRepositoryEditorRoute';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -35,16 +36,27 @@ export function withDeliverySettings(): readonly IFeature<SettingsFeatureKind>[]
           section: {
             scope: 'workspace',
             id: 'repositories',
-            label: 'Repositories',
-            description: 'Local source code and AI work approval.',
+            get label() {
+              return translateLabel('loc.symphony.labels.repositories.1e32af8');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.local.source.code.and.ai.work.approval.eb03fc3',
+              );
+            },
             order: 30,
           },
           search: [
             {
               id: 'repositories',
-              label: 'Repositories',
-              description:
-                'Add every source-code repository used by this workspace. Configured repositories are available to AI tasks.',
+              get label() {
+                return translateLabel('loc.symphony.labels.repositories.1e32af8');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.add.every.source.code.repository.used.by.this.worksp.be1a6a5',
+                );
+              },
               keywords: [
                 'Add repository',
                 'Prepare locally',
@@ -68,16 +80,27 @@ export function withDeliverySettings(): readonly IFeature<SettingsFeatureKind>[]
           section: {
             scope: 'workspace',
             id: 'delivery',
-            label: 'Delivery destinations',
-            description: 'Production, environments, release channels, and deployment workflows.',
+            get label() {
+              return translateLabel('loc.symphony.labels.delivery.destinations.3629ca6');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.production.environments.release.channels.and.deploym.d2fddbd',
+              );
+            },
             order: 40,
           },
           search: [
             {
               id: 'delivery-destinations',
-              label: 'Delivery destinations',
-              description:
-                'Choose which environments, release channels and installations appear in the orbit. Mark the destination that represents Production. A version is confirmed only by delivery evidence.',
+              get label() {
+                return translateLabel('loc.symphony.labels.delivery.destinations.3629ca6');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.choose.which.environments.release.channels.and.insta.d40fdb0',
+                );
+              },
               keywords: [
                 'Add destination',
                 'Production',

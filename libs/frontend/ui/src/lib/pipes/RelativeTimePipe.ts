@@ -11,7 +11,7 @@ import { formatRelativeTime } from '@symphony/frontend-core';
  *
  * @public
  */
-@Pipe({ name: 'relativeTime' })
+@Pipe({ name: 'relativeTime', pure: false })
 export class RelativeTimePipe implements PipeTransform {
   // #region Methods
 

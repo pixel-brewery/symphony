@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   CardComponent,
   CardContentComponent,
@@ -10,6 +11,8 @@ import {
   PageComponent,
   PageContentComponent,
   PageHeaderComponent,
+  SegmentComponent,
+  SegmentItemComponent,
   SelectComponent,
   SelectItemComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
@@ -22,6 +25,7 @@ import { MobileConnectionViewPresenter } from '../view-presenters/MobileConnecti
   selector: 'symphony-mobile-connection-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     CardComponent,
     CardContentComponent,
@@ -30,6 +34,8 @@ import { MobileConnectionViewPresenter } from '../view-presenters/MobileConnecti
     PageComponent,
     PageContentComponent,
     PageHeaderComponent,
+    SegmentComponent,
+    SegmentItemComponent,
     SelectComponent,
     SelectItemComponent,
   ],

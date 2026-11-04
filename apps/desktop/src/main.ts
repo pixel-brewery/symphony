@@ -84,6 +84,7 @@ import { handleSquirrelStartup } from './squirrel-startup';
 import { UpdateCoordinator } from './update-coordinator';
 import { CredentialVault } from './credential-vault';
 import { SpeechRecognitionCoordinator } from './speech-recognition';
+import { nativeText } from './intl/nativeText';
 
 // #endregion
 
@@ -647,10 +648,20 @@ function scheduleNextUpdateCheck(delayMilliseconds = UPDATE_CHECK_INTERVAL_MS): 
 async function promptForReadyUpdate(state: Extract<UpdateState, { kind: 'ready' }>): Promise<void> {
   const result = await showLifecycleMessageBox({
     type: 'info',
-    title: 'Symphony update ready',
-    message: `Symphony ${state.targetVersion} is ready to install.`,
-    detail: 'Restart Symphony now to use the new version, or install it on a later restart.',
-    buttons: ['Restart and update', 'Later'],
+    title: nativeText(app.getLocale(), 'loc.symphony.desktop.symphony.update.ready.b89e57f'),
+    message: nativeText(
+      app.getLocale(),
+      'loc.symphony.desktop.symphony.is.ready.to.install.7d32d37',
+      state.targetVersion,
+    ),
+    detail: nativeText(
+      app.getLocale(),
+      'loc.symphony.desktop.restart.symphony.now.to.use.the.new.version.or.insta.67284be',
+    ),
+    buttons: [
+      nativeText(app.getLocale(), 'loc.symphony.desktop.restart.and.update.78b017c'),
+      nativeText(app.getLocale(), 'loc.symphony.desktop.later.73b6e48'),
+    ],
     defaultId: 0,
     cancelId: 1,
     noLink: true,
@@ -676,14 +687,29 @@ async function coordinateUpdateInstall(): Promise<DesktopResponsePayload<'update
         executionCount > 0;
       const result = await showLifecycleMessageBox({
         type: 'warning',
-        title: 'Tasks are still running',
-        message: 'Symphony must stop its active tasks before installing the update.',
+        title: nativeText(app.getLocale(), 'loc.symphony.desktop.tasks.are.still.running.9e3f674'),
+        message: nativeText(
+          app.getLocale(),
+          'loc.symphony.desktop.symphony.must.stop.its.active.tasks.before.installin.978720a',
+        ),
         detail: canPause
-          ? 'Pause the active executions and resume them automatically after Symphony restarts.'
-          : 'Active Issue Creator, local verification, local CI, or developer-tool installation cannot resume after restart. Keep Symphony open or cancel the active tasks before updating.',
+          ? nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.pause.the.active.executions.and.resume.them.automati.9813ecf',
+            )
+          : nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.active.issue.creator.local.verification.local.ci.or..00a0023',
+            ),
         buttons: canPause
-          ? ['Pause tasks and update', 'Later']
-          : ['Cancel tasks and update', 'Later'],
+          ? [
+              nativeText(app.getLocale(), 'loc.symphony.desktop.pause.tasks.and.update.2e0e761'),
+              nativeText(app.getLocale(), 'loc.symphony.desktop.later.73b6e48'),
+            ]
+          : [
+              nativeText(app.getLocale(), 'loc.symphony.desktop.cancel.tasks.and.update.c05ec83'),
+              nativeText(app.getLocale(), 'loc.symphony.desktop.later.73b6e48'),
+            ],
         defaultId: 1,
         cancelId: 1,
         noLink: true,
@@ -695,13 +721,26 @@ async function coordinateUpdateInstall(): Promise<DesktopResponsePayload<'update
   } catch (cause) {
     await showLifecycleMessageBox({
       type: 'error',
-      title: 'Update restart is not safe yet',
-      message: 'Symphony could not verify its active background tasks.',
+      title: nativeText(
+        app.getLocale(),
+        'loc.symphony.desktop.update.restart.is.not.safe.yet.68906d8',
+      ),
+      message: nativeText(
+        app.getLocale(),
+        'loc.symphony.desktop.symphony.could.not.verify.its.active.background.task.15433c0',
+      ),
       detail:
         cause instanceof Error
-          ? `${cause.message}\n\nThe downloaded update will remain ready for a later restart.`
-          : 'The downloaded update will remain ready for a later restart.',
-      buttons: ['Keep Symphony open'],
+          ? nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.the.downloaded.update.will.remain.ready.for.a.later..86d5dfc',
+              cause.message,
+            )
+          : nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.the.downloaded.update.will.remain.ready.for.a.later..959ba7c',
+            ),
+      buttons: [nativeText(app.getLocale(), 'loc.symphony.desktop.keep.symphony.open.e2e07ce')],
       defaultId: 0,
       noLink: true,
     });
@@ -1114,12 +1153,12 @@ function settingsNavigationPath(
 
 function configureApplicationMenu(): void {
   const settings: MenuItemConstructorOptions = {
-    label: 'Settings…',
+    label: nativeText(app.getLocale(), 'loc.symphony.desktop.settings.7a04083'),
     accelerator: 'CmdOrCtrl+,',
     click: () => void showMainWindowAt(SETTINGS_NAVIGATION_PATH),
   };
   const newWorkItem: MenuItemConstructorOptions = {
-    label: 'New Work Item…',
+    label: nativeText(app.getLocale(), 'loc.symphony.desktop.new.work.item.6fa752d'),
     accelerator: 'CmdOrCtrl+N',
     click: () => void showMainWindowAt('/main/board?create=true'),
   };
@@ -1129,7 +1168,7 @@ function configureApplicationMenu(): void {
     Menu.setApplicationMenu(
       Menu.buildFromTemplate([
         {
-          label: 'File',
+          label: nativeText(app.getLocale(), 'loc.symphony.desktop.file.50009ce'),
           submenu: [newWorkItem, settings, { type: 'separator' }, { role: 'quit' }],
         },
         { role: 'editMenu' },
@@ -1155,7 +1194,10 @@ function configureApplicationMenu(): void {
           { role: 'quit' },
         ],
       },
-      { label: 'File', submenu: [newWorkItem, { type: 'separator' }, { role: 'close' }] },
+      {
+        label: nativeText(app.getLocale(), 'loc.symphony.desktop.file.50009ce'),
+        submenu: [newWorkItem, { type: 'separator' }, { role: 'close' }],
+      },
       { role: 'editMenu' },
       { role: 'viewMenu' },
       { role: 'windowMenu' },
@@ -1191,19 +1233,57 @@ async function coordinateQuit(): Promise<void> {
 
     const breakdown = [
       executionCount
-        ? `${executionCount} analysis or implementation ${executionCount === 1 ? 'run' : 'runs'}`
+        ? executionCount === 1
+          ? nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.analysis.or.implementation.run.037769d',
+              executionCount,
+            )
+          : nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.analysis.or.implementation.runs.ab25aa2',
+              executionCount,
+            )
         : undefined,
-      draftCount ? `${draftCount} AI issue ${draftCount === 1 ? 'draft' : 'drafts'}` : undefined,
+      draftCount
+        ? draftCount === 1
+          ? nativeText(app.getLocale(), 'loc.symphony.desktop.ai.issue.draft.64d8d3e', draftCount)
+          : nativeText(app.getLocale(), 'loc.symphony.desktop.ai.issue.drafts.916b1b2', draftCount)
+        : undefined,
       verificationCount
-        ? `${verificationCount} local verification ${verificationCount === 1 ? 'run' : 'runs'}`
+        ? verificationCount === 1
+          ? nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.local.verification.run.0c1ac04',
+              verificationCount,
+            )
+          : nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.local.verification.runs.290e1b0',
+              verificationCount,
+            )
         : undefined,
-      localCiCount ? `${localCiCount} local CI ${localCiCount === 1 ? 'run' : 'runs'}` : undefined,
+      localCiCount
+        ? localCiCount === 1
+          ? nativeText(app.getLocale(), 'loc.symphony.desktop.local.ci.run.fe6281e', localCiCount)
+          : nativeText(app.getLocale(), 'loc.symphony.desktop.local.ci.runs.2bec066', localCiCount)
+        : undefined,
       installationCount
-        ? `${installationCount} developer-tool ${installationCount === 1 ? 'installation' : 'installations'}`
+        ? installationCount === 1
+          ? nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.developer.tool.installation.09468ad',
+              installationCount,
+            )
+          : nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.developer.tool.installations.1c303b8',
+              installationCount,
+            )
         : undefined,
     ]
       .filter(Boolean)
-      .join(' and ');
+      .join(nativeText(app.getLocale(), 'loc.symphony.desktop.and.e3ee915'));
     const canQuitAndResume =
       draftCount === 0 &&
       verificationCount === 0 &&
@@ -1212,19 +1292,42 @@ async function coordinateQuit(): Promise<void> {
       executionCount > 0;
     const buttons = canQuitAndResume
       ? [
-          'Keep running in background',
-          'Quit and resume later',
-          'Cancel tasks and quit',
-          "Don't quit",
+          nativeText(app.getLocale(), 'loc.symphony.desktop.keep.running.in.background.a4b023f'),
+          nativeText(app.getLocale(), 'loc.symphony.desktop.quit.and.resume.later.30a150e'),
+          nativeText(app.getLocale(), 'loc.symphony.desktop.cancel.tasks.and.quit.34b0671'),
+          nativeText(app.getLocale(), 'loc.symphony.desktop.don.t.quit.01965eb'),
         ]
-      : ['Keep running in background', 'Cancel tasks and quit', "Don't quit"];
+      : [
+          nativeText(app.getLocale(), 'loc.symphony.desktop.keep.running.in.background.a4b023f'),
+          nativeText(app.getLocale(), 'loc.symphony.desktop.cancel.tasks.and.quit.34b0671'),
+          nativeText(app.getLocale(), 'loc.symphony.desktop.don.t.quit.01965eb'),
+        ];
     const result = await showLifecycleMessageBox({
       type: 'warning',
-      title: 'Tasks are still running',
-      message: `${total} background ${total === 1 ? 'task is' : 'tasks are'} still running.`,
+      title: nativeText(app.getLocale(), 'loc.symphony.desktop.tasks.are.still.running.9e3f674'),
+      message:
+        total === 1
+          ? nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.background.task.is.still.running.699c9a8',
+              total,
+            )
+          : nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.background.tasks.are.still.running.15ad877',
+              total,
+            ),
       detail: canQuitAndResume
-        ? `${breakdown} will be interrupted if Symphony exits. Keep the live process running, pause it safely and resume from its durable Codex session later, or cancel it before quitting.`
-        : `${breakdown} will be interrupted if Symphony exits. Keep Symphony running in the background to preserve non-resumable work, or cancel it before quitting.`,
+        ? nativeText(
+            app.getLocale(),
+            'loc.symphony.desktop.will.be.interrupted.if.symphony.exits.keep.the.live..4563c62',
+            breakdown,
+          )
+        : nativeText(
+            app.getLocale(),
+            'loc.symphony.desktop.will.be.interrupted.if.symphony.exits.keep.symphony..07c09fd',
+            breakdown,
+          ),
       buttons,
       defaultId: 0,
       cancelId: buttons.length - 1,
@@ -1250,13 +1353,29 @@ async function coordinateQuit(): Promise<void> {
   } catch (cause) {
     const result = await showLifecycleMessageBox({
       type: 'error',
-      title: 'Background tasks could not be verified',
-      message: 'Symphony could not safely verify or stop its background tasks.',
+      title: nativeText(
+        app.getLocale(),
+        'loc.symphony.desktop.background.tasks.could.not.be.verified.38fa1fa',
+      ),
+      message: nativeText(
+        app.getLocale(),
+        'loc.symphony.desktop.symphony.could.not.safely.verify.or.stop.its.backgro.07b894e',
+      ),
       detail:
         cause instanceof Error
-          ? `${cause.message}\n\nKeep Symphony open unless you intentionally want to force quit.`
-          : 'Keep Symphony open unless you intentionally want to force quit.',
-      buttons: ["Don't quit", 'Force quit'],
+          ? nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.keep.symphony.open.unless.you.intentionally.want.to..37f6224',
+              cause.message,
+            )
+          : nativeText(
+              app.getLocale(),
+              'loc.symphony.desktop.keep.symphony.open.unless.you.intentionally.want.to..4027978',
+            ),
+      buttons: [
+        nativeText(app.getLocale(), 'loc.symphony.desktop.don.t.quit.01965eb'),
+        nativeText(app.getLocale(), 'loc.symphony.desktop.force.quit.b0c2698'),
+      ],
       defaultId: 0,
       cancelId: 0,
       noLink: true,

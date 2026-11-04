@@ -7,6 +7,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   DialogContentDirective,
   DialogFooterDirective,
@@ -27,6 +28,7 @@ import { SkillImportEditorViewPresenter } from './SkillImportEditorViewPresenter
   selector: 'symphony-skill-import-editor',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     DialogContentDirective,
     DialogFooterDirective,

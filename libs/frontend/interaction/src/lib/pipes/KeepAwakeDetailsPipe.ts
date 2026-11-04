@@ -2,10 +2,11 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { PowerState } from '@symphony/ipc-contracts-desktop';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-@Pipe({ name: 'keepAwakeDetails', standalone: true, pure: true })
+@Pipe({ name: 'keepAwakeDetails', standalone: true, pure: false })
 export class KeepAwakeDetailsPipe implements PipeTransform {
   // #region Methods
 
@@ -19,11 +20,20 @@ export class KeepAwakeDetailsPipe implements PipeTransform {
     if (!state) return '';
     const tasks = `${state.activeTaskCount} running ${state.activeTaskCount === 1 ? 'task' : 'tasks'}`;
     if (!state.keepAwakeWhileBusy) {
-      return `Analysis, implementation, and local CI runs stop when macOS sleeps · ${tasks}`;
+      return translateLabel(
+        'loc.symphony.labels.analysis.implementation.and.local.ci.runs.stop.when..51b5aa2',
+        tasks,
+      );
     }
     return state.engaged
-      ? `The display may still turn off, and a closed lid still sleeps · ${tasks}`
-      : `Sleep is blocked again as soon as the next task starts · ${tasks}`;
+      ? translateLabel(
+          'loc.symphony.labels.the.display.may.still.turn.off.and.a.closed.lid.stil.5602ca3',
+          tasks,
+        )
+      : translateLabel(
+          'loc.symphony.labels.sleep.is.blocked.again.as.soon.as.the.next.task.star.47a4e0b',
+          tasks,
+        );
   }
 
   // #endregion

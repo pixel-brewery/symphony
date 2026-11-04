@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   BannerComponent,
@@ -34,6 +35,7 @@ import { MobileWorkItemCreateViewPresenter } from './MobileWorkItemCreateViewPre
   selector: 'symphony-mobile-work-item-create-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AiDirective,
     AvatarComponent,
     BadgeComponent,

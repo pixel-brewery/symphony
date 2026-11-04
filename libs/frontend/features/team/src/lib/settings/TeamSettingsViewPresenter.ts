@@ -22,6 +22,7 @@ import {
   teamIntelligenceTotal,
 } from './model-intelligence';
 import { agentRemovalBlockers, withoutAgent } from './agent-removal';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -383,23 +384,31 @@ export class TeamSettingsViewPresenter {
     if (blocker) {
       await this._alerts.confirm({
         id: `remove-agent-blocked-${agent.id}`,
-        header: 'This agent cannot be removed',
-        message:
-          blocker === 'last-agent'
-            ? 'A workspace needs at least one AI agent. Add another agent first, then remove this one.'
-            : 'This agent is the only Work Item Creator while a Teams feedback intake is enabled. Assign that responsibility to another agent or disable the intake first.',
+        header: translateLabel('loc.symphony.labels.this.agent.cannot.be.removed.1eba77f'),
+        get message() {
+          return blocker === 'last-agent'
+            ? translateLabel(
+                'loc.symphony.labels.a.workspace.needs.at.least.one.ai.agent.add.another..635322e',
+              )
+            : translateLabel(
+                'loc.symphony.labels.this.agent.is.the.only.work.item.creator.while.a.tea.77a091e',
+              );
+        },
         tone: 'warning',
-        confirmLabel: 'OK',
+        confirmLabel: translateLabel('loc.symphony.labels.ok.565339b'),
       });
       return;
     }
     const confirmed = await this._alerts.confirm({
       id: `remove-agent-${agent.id}`,
-      header: `Remove ${agent.displayName}?`,
-      message:
-        'Symphony removes the agent, its position, and its routing. Its responsibilities move to another agent that is allowed to take them; the AI account itself stays connected.',
-      confirmLabel: 'Remove agent',
-      cancelLabel: 'Keep agent',
+      header: translateLabel('loc.symphony.labels.remove.9d64ce8', agent.displayName),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.symphony.removes.the.agent.its.position.and.its.rout.79fd131',
+        );
+      },
+      confirmLabel: translateLabel('loc.symphony.labels.remove.agent.88eaed8'),
+      cancelLabel: translateLabel('loc.symphony.labels.keep.agent.68ce998'),
       destructive: true,
     });
     if (confirmed) await this.store.saveSettings(withoutAgent(this.requireSettings(), agent.id));

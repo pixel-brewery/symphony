@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   BannerComponent,
   BannerHeaderComponent,
   BannerSubHeaderComponent,
@@ -34,6 +35,7 @@ import { MobileTicketDetailViewPresenter } from './MobileTicketDetailViewPresent
   selector: 'symphony-mobile-ticket-detail-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BannerComponent,
     BannerHeaderComponent,
     BannerSubHeaderComponent,

@@ -6,7 +6,7 @@ import { actionStatusLabel } from '@symphony/frontend-core/delivery';
 
 // #endregion
 
-@Pipe({ name: 'ciRunStatusLabel', standalone: true, pure: true })
+@Pipe({ name: 'ciRunStatusLabel', standalone: true, pure: false })
 export class CiRunStatusLabelPipe implements PipeTransform {
   // #region Methods
 

@@ -2,6 +2,7 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { SkillPackageCatalogDto } from '@symphony/ipc-contracts-skills';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -11,7 +12,7 @@ import type { SkillPackageCatalogDto } from '@symphony/ipc-contracts-skills';
  *
  * @public
  */
-@Pipe({ name: 'skillSourceLabel', standalone: true, pure: true })
+@Pipe({ name: 'skillSourceLabel', standalone: true, pure: false })
 export class SkillSourceLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -24,13 +25,13 @@ export class SkillSourceLabelPipe implements PipeTransform {
   public transform(source: SkillPackageCatalogDto['packages'][number]['source']): string {
     switch (source) {
       case 'repository':
-        return 'Project';
+        return translateLabel('loc.symphony.labels.project.9859597');
       case 'user':
-        return 'Shared';
+        return translateLabel('loc.symphony.labels.shared.e3c4b39');
       case 'legacy':
-        return 'Legacy';
+        return translateLabel('loc.symphony.labels.legacy.1432897');
       case 'bundled':
-        return 'Built-in';
+        return translateLabel('loc.symphony.labels.built.in.1f43948');
     }
   }
 

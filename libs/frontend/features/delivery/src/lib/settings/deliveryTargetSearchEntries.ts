@@ -3,6 +3,7 @@
 import { computed, inject, type Signal } from '@angular/core';
 import type { ISettingsSearchEntry } from '@symphony/frontend-setting';
 import { DELIVERY_SETTINGS_CONTEXT } from '../ports/DeliverySettingsContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -33,7 +34,7 @@ export function deliveryTargetSearchEntries(): Signal<readonly ISettingsSearchEn
         {
           id: `delivery-target-${target.id}`,
           label: target.displayName,
-          description: `${target.production ? 'Production · ' : ''}${KIND_LABELS[target.kind]}`,
+          description: `${target.production ? translateLabel('loc.symphony.labels.production.01492f4') : ''}${KIND_LABELS[target.kind]}`,
           group: repository.displayName,
           keywords: [
             'destination',

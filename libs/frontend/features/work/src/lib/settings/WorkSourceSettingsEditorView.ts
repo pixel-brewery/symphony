@@ -9,6 +9,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   DialogContentDirective,
@@ -40,6 +41,7 @@ import { WorkSourceSettingsEditorViewPresenter } from './WorkSourceSettingsEdito
   selector: 'symphony-work-source-settings-editor-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AvatarComponent,
     AzureDevOpsValidationIssuesLabelPipe,
     ButtonComponent,

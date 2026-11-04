@@ -7,6 +7,7 @@ import { ConfigurationStore } from '@symphony/frontend-core/configuration';
 import type { INotificationItem, INotificationSource } from '@symphony/frontend-notification';
 import { REPOSITORY_RUNTIME_CLIENT } from '../ports/RepositoryRuntimeClientToken';
 import { RepositoryRuntimeStore } from '../state/RepositoryRuntimeStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -63,20 +64,37 @@ export class RepositoryPreparationNotificationSource implements INotificationSou
         {
           id: `${ITEM_PREFIX}${repository.id}`,
           severity: inspectionError ? 'error' : 'warning',
-          title: inspectionError
-            ? `${repository.displayName} cannot be inspected locally`
-            : `${repository.displayName} is not prepared locally`,
+          get title() {
+            return inspectionError
+              ? translateLabel(
+                  'loc.symphony.labels.cannot.be.inspected.locally.922cb5e',
+                  repository.displayName,
+                )
+              : translateLabel(
+                  'loc.symphony.labels.is.not.prepared.locally.617e5ea',
+                  repository.displayName,
+                );
+          },
           location: [workspaceName, 'Repositories'],
-          detail: inspectionError
-            ? `Check Local checkout and its Git metadata. ${inspectionError}`
-            : automatic.has(repository.id)
-              ? 'automatic AI work waits for it'
-              : 'AI work in it waits until it is',
+          get detail() {
+            return inspectionError
+              ? translateLabel(
+                  'loc.symphony.labels.check.local.checkout.and.its.git.metadata.52c0463',
+                  inspectionError,
+                )
+              : automatic.has(repository.id)
+                ? translateLabel('loc.symphony.labels.automatic.ai.work.waits.for.it.db4bc64')
+                : translateLabel('loc.symphony.labels.ai.work.in.it.waits.until.it.is.15d6541');
+          },
           scope: { kind: 'workspace', workspaceId: repository.workspaceId, name: workspaceName },
           actions: [
             {
               id: inspectionError ? 'open-repository' : 'prepare',
-              label: inspectionError ? 'Open repository settings' : 'Prepare locally',
+              get label() {
+                return inspectionError
+                  ? translateLabel('loc.symphony.labels.open.repository.settings.b13f9ec')
+                  : translateLabel('loc.symphony.labels.prepare.locally.29498e1');
+              },
               emphasis: 'secondary',
               busy: !inspectionError && busy === repository.id,
               disabled: !inspectionError && busy !== undefined,

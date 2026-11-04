@@ -4,6 +4,7 @@ import type { ICiRun } from '@symphony/domain-ci';
 import type { IPullRequestSummary } from '@symphony/domain-delivery';
 import { pullRequestStateLabel, pullRequestStateOf } from '@symphony/frontend-core/delivery';
 import { scorePaletteMatch, type IPaletteResult } from '@symphony/frontend-search';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -35,7 +36,9 @@ export function projectDeliveryPaletteResults(
     id: 'command:sync-now',
     group: 'commands',
     icon: 'sync',
-    title: 'Sync now',
+    get title() {
+      return translateLabel('loc.symphony.labels.sync.now.885e8f4');
+    },
     rank: normalizedQuery ? scorePaletteMatch(normalizedQuery, ['Sync now'], SYNC_KEYWORDS) : 0,
     action: { kind: 'execute', execute: sync },
   };

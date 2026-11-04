@@ -36,6 +36,7 @@
     "@symphony/frontend-feature-execution": "workspace:*",
     "@symphony/frontend-feature-mobile": "workspace:*",
     "@symphony/frontend-interaction": "workspace:*",
+    "@symphony/frontend-intl": "workspace:*",
     "@symphony/frontend-notification": "workspace:*",
     "@symphony/frontend-search": "workspace:*",
     "@symphony/frontend-ui": "workspace:*",

@@ -11,6 +11,7 @@ import {
 import { agentSearchEntries } from '../settings/agentSearchEntries';
 import { isTeamSettingsEditorRequest } from '../settings/isTeamSettingsEditorRequest';
 import { resolveAgentEditorRoute } from '../settings/resolveAgentEditorRoute';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -32,28 +33,51 @@ export function withTeamSettings(): readonly IFeature<SettingsFeatureKind>[] {
           section: {
             scope: 'workspace',
             id: 'team',
-            label: 'AI team',
-            description: 'Agents, responsibilities, skills, and backup order.',
+            get label() {
+              return translateLabel('loc.symphony.labels.ai.team.83e4e86');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.agents.responsibilities.skills.and.backup.order.73ccdf0',
+              );
+            },
             order: 10,
           },
           search: [
             {
               id: 'delivery-flow',
-              label: 'Delivery flow',
-              description: 'Who works on each step of a work item, and the backup after them.',
+              get label() {
+                return translateLabel('loc.symphony.labels.delivery.flow.05bd136');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.who.works.on.each.step.of.a.work.item.and.the.backup.6e6f991',
+                );
+              },
               keywords: ['steps', 'backup', 'who does what', 'responsibilities'],
             },
             {
               id: 'agents',
-              label: 'Agents',
-              description:
-                'Configure the AI agents in this workspace, their positions, responsibilities, and skills.',
+              get label() {
+                return translateLabel('loc.symphony.labels.agents.279b44d');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.configure.the.ai.agents.in.this.workspace.their.posi.9b75fdb',
+                );
+              },
               keywords: ['agent', 'add an AI agent', 'model', 'effort', 'account', 'figure'],
             },
             {
               id: 'technical-ai-setup',
-              label: 'Technical AI setup',
-              description: 'Positions, providers, models, and automatic backup routes',
+              get label() {
+                return translateLabel('loc.symphony.labels.technical.ai.setup.a6f9d02');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.positions.providers.models.and.automatic.backup.rout.e681826',
+                );
+              },
               keywords: ['positions', 'permissions', 'AI services', 'backup order', 'routing'],
             },
           ],

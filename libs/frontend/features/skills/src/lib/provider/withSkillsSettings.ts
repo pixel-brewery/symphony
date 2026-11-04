@@ -11,6 +11,7 @@ import { isSkillCatalogEditorRequest } from '../settings/isSkillCatalogEditorReq
 import { isSkillEditorRequest } from '../settings/isSkillEditorRequest';
 import { isSkillImportEditorRequest } from '../settings/isSkillImportEditorRequest';
 import { isSkillRoleInstructionsEditorRequest } from '../settings/isSkillRoleInstructionsEditorRequest';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -32,33 +33,62 @@ export function withSkillsSettings(): readonly IFeature<SettingsFeatureKind>[] {
           section: {
             scope: 'global',
             id: 'skills',
-            label: 'Skills',
-            description: 'How each step of the delivery flow works, in every workspace.',
+            get label() {
+              return translateLabel('loc.symphony.labels.skills.66d0f52');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.how.each.step.of.the.delivery.flow.works.in.every.wo.18f68cf',
+              );
+            },
             order: 30,
           },
           search: [
             {
               id: 'process-roles',
-              label: 'Edit instructions',
-              description:
-                'Add instructions to refine how a built-in process role works; permissions and the reporting contract stay fixed.',
+              get label() {
+                return translateLabel('loc.symphony.labels.edit.instructions.23e2751');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.add.instructions.to.refine.how.a.built.in.process.ro.84568bf',
+                );
+              },
               keywords: ['create', 'analyze', 'solve', 'verify', 'diagnose CI', 'repair CI'],
             },
             {
               id: 'skill-packages',
-              label: 'Add skills',
-              description: 'Activate a discovered skill package for an optional AI step.',
+              get label() {
+                return translateLabel('loc.symphony.labels.add.skills.7e02e13');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.activate.a.discovered.skill.package.for.an.optional..50ae0e0',
+                );
+              },
               keywords: ['skill package', 'deactivate', 'catalog'],
             },
             {
               id: 'new-skill',
-              label: 'New skill',
-              description: 'Create a portable Symphony skill package.',
+              get label() {
+                return translateLabel('loc.symphony.labels.new.skill.9bf06a8');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.create.a.portable.symphony.skill.package.17f1954',
+                );
+              },
             },
             {
               id: 'import-skill',
-              label: 'Import skill',
-              description: 'Select a folder containing SKILL.md and packaged resources.',
+              get label() {
+                return translateLabel('loc.symphony.labels.import.skill.42eea9a');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.select.a.folder.containing.skill.md.and.packaged.res.e9fd0fb',
+                );
+              },
               keywords: ['portable skill package'],
             },
           ],

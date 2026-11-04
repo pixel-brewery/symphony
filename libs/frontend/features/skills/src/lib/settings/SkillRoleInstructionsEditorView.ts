@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   DialogContentDirective,
   DialogFooterDirective,
@@ -28,6 +29,7 @@ import { SkillRoleInstructionsEditorViewPresenter } from './SkillRoleInstruction
   selector: 'symphony-skill-role-instructions-editor-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     DialogContentDirective,
     DialogFooterDirective,

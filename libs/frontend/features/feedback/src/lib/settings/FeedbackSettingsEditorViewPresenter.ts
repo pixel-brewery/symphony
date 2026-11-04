@@ -21,6 +21,7 @@ import { FEEDBACK_SETTINGS_CONTEXT } from '../ports/FeedbackSettingsContextToken
 import { FeedbackStore } from '../state/FeedbackStore';
 import type { IFeedbackSettingsEditorRequest } from './IFeedbackSettingsEditorRequest';
 import type { TeamsFeedbackValidationIssue } from './TeamsFeedbackValidationIssue';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -167,12 +168,18 @@ export class FeedbackSettingsEditorViewPresenter extends Hydratable(ViewPresente
     if (!this.data.sourceId) return;
     const confirmed = await this._alerts.confirm({
       id: `remove-feedback-intake-${this.data.sourceId}`,
-      header: `Remove ${this.teams.displayName.trim() || 'this intake'}?`,
-      message:
-        'Symphony stops reading this Microsoft Teams channel. Work items it already created stay in GitHub.',
+      header: translateLabel(
+        'loc.symphony.labels.remove.9d64ce8',
+        this.teams.displayName.trim() || 'this intake',
+      ),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.symphony.stops.reading.this.microsoft.teams.channel..e927e15',
+        );
+      },
       tone: 'danger',
-      confirmLabel: 'Remove intake',
-      cancelLabel: 'Keep intake',
+      confirmLabel: translateLabel('loc.symphony.labels.remove.intake.3bbf689'),
+      cancelLabel: translateLabel('loc.symphony.labels.keep.intake.264071f'),
       destructive: true,
     });
     if (!confirmed) return;

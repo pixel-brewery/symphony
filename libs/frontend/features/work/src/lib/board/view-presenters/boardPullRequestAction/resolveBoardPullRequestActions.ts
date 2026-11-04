@@ -3,6 +3,7 @@
 import type { IBoardPullRequestAction } from './IBoardPullRequestAction';
 import type { IBoardPullRequestActionOptions } from './IBoardPullRequestActionOptions';
 import type { IBoardPullRequestContext } from './IBoardPullRequestContext';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -22,7 +23,9 @@ export function resolveBoardPullRequestActions(
   const actions: IBoardPullRequestAction[] = [
     {
       id: 'open',
-      label: 'Open in GitHub',
+      get label() {
+        return translateLabel('loc.symphony.labels.open.in.github.4fb7881');
+      },
       subLabel: `#${context.reference.number}`,
       iconName: 'branch',
       variant: 'default',
@@ -30,7 +33,11 @@ export function resolveBoardPullRequestActions(
     },
     {
       id: 'remote',
-      label: remoteRunning ? 'Cancel remote run' : 'Run remotely',
+      get label() {
+        return remoteRunning
+          ? translateLabel('loc.symphony.labels.cancel.remote.run.fd75f5b')
+          : translateLabel('loc.symphony.labels.run.remotely.99694b7');
+      },
       iconName: remoteRunning ? 'clear' : 'cloudArrowRight',
       variant: remoteRunning ? 'danger' : 'highlight',
       cancels: remoteRunning,
@@ -47,7 +54,11 @@ export function resolveBoardPullRequestActions(
         : undefined;
     actions.push({
       id: 'local',
-      label: locallyRunning ? 'Stop local runner' : 'Run locally',
+      get label() {
+        return locallyRunning
+          ? translateLabel('loc.symphony.labels.stop.local.runner.fd14eb4')
+          : translateLabel('loc.symphony.labels.run.locally.a28ec84');
+      },
       iconName: locallyRunning ? 'clear' : 'arrowRight',
       variant: locallyRunning ? 'danger' : 'default',
       cancels: locallyRunning,

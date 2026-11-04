@@ -18,6 +18,7 @@ import type { PullRequestSort } from './PullRequestSort';
 import { SORT_LABELS } from './SortLabels';
 import { SORT_MENU_ID } from './SortMenuId';
 import { STATE_MENU_ID } from './StateMenuId';
+import { labelLocale, translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -29,42 +30,82 @@ export function resolvePullRequestListMenus(
   selectedBase: PullRequestBaseFilter | undefined,
   sort: PullRequestSort,
 ): readonly ICollectionListMenu[] {
+  // Locale remains an input to computed menu owners even when labels are read lazily.
+  labelLocale();
   return [
     {
       id: STATE_MENU_ID,
-      label: 'State',
-      subLabel: selectedState ? pullRequestStateLabel(selectedState) : 'All states',
+      get label() {
+        return translateLabel('loc.symphony.labels.state.a3b50c4');
+      },
+      get subLabel() {
+        return selectedState
+          ? pullRequestStateLabel(selectedState)
+          : translateLabel('loc.symphony.labels.all.states.f189411');
+      },
       testId: 'pull-requests-state-filter',
       options: [
-        { id: ALL_STATES_OPTION_ID, label: 'All states', checked: !selectedState },
+        {
+          id: ALL_STATES_OPTION_ID,
+          get label() {
+            return translateLabel('loc.symphony.labels.all.states.f189411');
+          },
+          checked: !selectedState,
+        },
         ...PULL_REQUEST_STATES.map((state) => ({
           id: state,
-          label: pullRequestStateLabel(state),
+          get label() {
+            return pullRequestStateLabel(state);
+          },
           checked: state === selectedState,
         })),
       ],
     },
     {
       id: BASE_MENU_ID,
-      label: 'Base',
-      subLabel: selectedBase ? BASE_FILTER_LABELS[selectedBase] : 'All',
+      get label() {
+        return translateLabel('loc.symphony.labels.base.7b47361');
+      },
+      get subLabel() {
+        return selectedBase
+          ? BASE_FILTER_LABELS[selectedBase]
+          : translateLabel('loc.symphony.labels.all.a52ace4');
+      },
       testId: 'pull-requests-base-filter',
       options: [
-        { id: ALL_BASES_OPTION_ID, label: 'All', checked: !selectedBase },
+        {
+          id: ALL_BASES_OPTION_ID,
+          get label() {
+            return translateLabel('loc.symphony.labels.all.a52ace4');
+          },
+          checked: !selectedBase,
+        },
         ...(Object.keys(BASE_FILTER_LABELS) as PullRequestBaseFilter[]).map((base) => ({
           id: base,
-          label: BASE_FILTER_LABELS[base],
+          get label() {
+            return BASE_FILTER_LABELS[base];
+          },
           checked: base === selectedBase,
         })),
       ],
     },
     {
       id: AUTHOR_MENU_ID,
-      label: 'Author',
-      subLabel: selectedAuthor ?? 'Everyone',
+      get label() {
+        return translateLabel('loc.symphony.labels.author.d95082a');
+      },
+      get subLabel() {
+        return selectedAuthor ?? translateLabel('loc.symphony.labels.everyone.da2e5dc');
+      },
       testId: 'pull-requests-author-filter',
       options: [
-        { id: EVERYONE_OPTION_ID, label: 'Everyone', checked: !selectedAuthor },
+        {
+          id: EVERYONE_OPTION_ID,
+          get label() {
+            return translateLabel('loc.symphony.labels.everyone.da2e5dc');
+          },
+          checked: !selectedAuthor,
+        },
         ...authors.map((author) => ({
           id: AUTHOR_OPTION_PREFIX + author,
           label: author,
@@ -74,11 +115,15 @@ export function resolvePullRequestListMenus(
     },
     {
       id: SORT_MENU_ID,
-      label: 'Sort',
+      get label() {
+        return translateLabel('loc.symphony.labels.sort.bec6903');
+      },
       testId: 'pull-requests-sort',
       options: (Object.keys(SORT_LABELS) as PullRequestSort[]).map((id) => ({
         id,
-        label: SORT_LABELS[id],
+        get label() {
+          return SORT_LABELS[id];
+        },
         checked: id === sort,
       })),
     },

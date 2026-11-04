@@ -1,8 +1,9 @@
 // #region Imports
 
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   BannerComponent,
@@ -64,6 +65,7 @@ import { PullRequestsViewPresenter } from '../view-presenters/PullRequestsViewPr
   selector: 'symphony-pull-requests-view',
   host: { class: 'flex min-h-0 w-full min-w-0 flex-1 overflow-hidden' },
   imports: [
+    TranslateDirective,
     AvatarComponent,
     BadgeComponent,
     BannerComponent,

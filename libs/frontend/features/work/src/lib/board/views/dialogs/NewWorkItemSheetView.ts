@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 import {
+  TranslateDirective,
   BadgeComponent,
   BannerComponent,
   BannerHeaderComponent,
@@ -48,6 +49,7 @@ import { NewWorkItemSheetViewPresenter } from '../../view-presenters/NewWorkItem
 @Component({
   selector: 'symphony-new-work-item-sheet-view',
   imports: [
+    TranslateDirective,
     IconNameDirective,
     FormFieldDirective,
     AiDirective,

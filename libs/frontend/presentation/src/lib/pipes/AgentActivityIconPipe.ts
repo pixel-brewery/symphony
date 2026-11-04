@@ -1,6 +1,7 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -16,7 +17,7 @@ interface IAgentActivityIcon {
  *
  * @public
  */
-@Pipe({ name: 'agentActivityIcon', standalone: true, pure: true })
+@Pipe({ name: 'agentActivityIcon', standalone: true, pure: false })
 export class AgentActivityIconPipe implements PipeTransform {
   // #region Methods
 
@@ -30,17 +31,53 @@ export class AgentActivityIconPipe implements PipeTransform {
   public transform(state: string): IAgentActivityIcon {
     switch (state) {
       case 'completed':
-        return { icon: 'checkmarkCircle', variant: 'success', label: 'Finished' };
+        return {
+          icon: 'checkmarkCircle',
+          variant: 'success',
+          get label() {
+            return translateLabel('loc.symphony.labels.finished.7804f7a');
+          },
+        };
       case 'needs-input':
-        return { icon: 'warning', variant: 'warning', label: 'Waiting for you' };
+        return {
+          icon: 'warning',
+          variant: 'warning',
+          get label() {
+            return translateLabel('loc.symphony.labels.waiting.for.you.9f760ab');
+          },
+        };
       case 'blocked':
-        return { icon: 'warning', variant: 'warning', label: 'Blocked' };
+        return {
+          icon: 'warning',
+          variant: 'warning',
+          get label() {
+            return translateLabel('loc.symphony.labels.blocked.18f2a09');
+          },
+        };
       case 'failed':
-        return { icon: 'errorCircle', variant: 'danger', label: 'Failed' };
+        return {
+          icon: 'errorCircle',
+          variant: 'danger',
+          get label() {
+            return translateLabel('loc.symphony.labels.failed.031a8f0');
+          },
+        };
       case 'paused':
-        return { icon: 'pause', variant: 'neutral', label: 'Paused' };
+        return {
+          icon: 'pause',
+          variant: 'neutral',
+          get label() {
+            return translateLabel('loc.symphony.labels.paused.e159b06');
+          },
+        };
       default:
-        return { icon: 'executionOutline', variant: 'neutral', label: 'Queued' };
+        return {
+          icon: 'executionOutline',
+          variant: 'neutral',
+          get label() {
+            return translateLabel('loc.symphony.labels.queued.661ff40');
+          },
+        };
     }
   }
 

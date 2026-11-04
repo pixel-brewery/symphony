@@ -4,6 +4,7 @@ import { Inject, inject, Injectable } from '@angular/core';
 import type { IQuickCreateItem, IQuickCreateItemSource } from '@symphony/frontend-quick-create';
 import { WORK_QUICK_CREATE_CONTEXT } from '../ports/WorkQuickCreateContextToken';
 import type { IWorkQuickCreateContext } from '../ports/IWorkQuickCreateContext';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -36,13 +37,15 @@ export class WorkQuickCreateSource implements IQuickCreateItemSource {
       {
         id: 'work.create',
         navigationItemKey: 'board',
-        label: 'New work item',
+        get label() {
+          return translateLabel('loc.symphony.labels.new.work.item.4b01264');
+        },
         testId: 'home-create-work-item',
         route: '/main/board',
         disabled: !this._context.canCreateWorkItem(),
         tooltip: this._context.canCreateWorkItem()
-          ? 'Create a work item on the selected board.'
-          : 'Select one board to create a work item.',
+          ? translateLabel('loc.symphony.labels.create.a.work.item.on.the.selected.board.07e93f9')
+          : translateLabel('loc.symphony.labels.select.one.board.to.create.a.work.item.58df4b6'),
       },
     ];
   }

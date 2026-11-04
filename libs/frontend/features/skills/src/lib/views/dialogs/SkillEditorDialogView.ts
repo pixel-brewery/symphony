@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   BadgeComponent,
   ButtonComponent,
   DialogContentDirective,
@@ -32,6 +33,7 @@ import { SkillEditorDialogViewPresenter } from '../../view-presenters/SkillEdito
   selector: 'symphony-skill-editor-dialog-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BadgeComponent,
     ButtonComponent,
     DialogContentDirective,

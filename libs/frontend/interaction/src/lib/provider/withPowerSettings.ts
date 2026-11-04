@@ -6,6 +6,7 @@ import {
   withSettingsViews,
   type SettingsFeatureKind,
 } from '@symphony/frontend-setting';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -27,15 +28,29 @@ export function withPowerSettings(): IFeature<SettingsFeatureKind> {
           scope: 'global',
           id: 'system',
           label: 'System',
-          description: 'This Mac: tools, storage, virtual machines, updates and sleep.',
+          get description() {
+            return translateLabel(
+              'loc.symphony.labels.this.mac.tools.storage.virtual.machines.updates.and..e89ed8d',
+            );
+          },
           order: 40,
         },
         search: [
           {
             id: 'keep-awake',
-            label: 'Keep this Mac awake while tasks run',
-            description: 'The display may still turn off, and battery use rises while a task runs.',
-            group: 'Sleep',
+            get label() {
+              return translateLabel(
+                'loc.symphony.labels.keep.this.mac.awake.while.tasks.run.b2457a9',
+              );
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.the.display.may.still.turn.off.and.battery.use.rises.9081cc3',
+              );
+            },
+            get group() {
+              return translateLabel('loc.symphony.labels.sleep.d466bcf');
+            },
             keywords: ['sleep', 'caffeinate', 'power', 'battery', 'lid'],
             loadControl: () =>
               import('../views/KeepAwakeToggleView').then((module) => module.KeepAwakeToggleView),

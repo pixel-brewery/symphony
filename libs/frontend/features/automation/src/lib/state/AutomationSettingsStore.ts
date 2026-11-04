@@ -14,6 +14,7 @@ import {
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { AUTOMATION_SETTINGS_CONTEXT } from '../ports/AutomationSettingsContextToken';
 import { AUTOMATION_PATH_SELECTOR } from '../ports/AutomationPathSelectorToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -297,7 +298,9 @@ export class AutomationSettingsStore {
     const session = this._session;
     const result = await this._client.selectPath({
       kind: 'directory',
-      title: 'Choose managed execution root',
+      get title() {
+        return translateLabel('loc.symphony.labels.choose.managed.execution.root.f14d04e');
+      },
       defaultPath: this.runtime().workspaceRoot || undefined,
     });
     if (session !== this._session) return;
@@ -372,11 +375,14 @@ export class AutomationSettingsStore {
     // independent of the window's dialog service.
     const confirmed = await this._injector.get(SettingsAlertService).confirm({
       id: 'clear-workspaces-confirmation',
-      header: 'Clear inactive execution workspaces?',
-      message:
-        'Running executions are preserved. Local uncommitted changes in inactive managed workspaces may be removed.',
-      confirmLabel: 'Clear workspaces',
-      cancelLabel: 'Keep workspaces',
+      header: translateLabel('loc.symphony.labels.clear.inactive.execution.workspaces.06ea974'),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.running.executions.are.preserved.local.uncommitted.c.af71118',
+        );
+      },
+      confirmLabel: translateLabel('loc.symphony.labels.clear.workspaces.b139714'),
+      cancelLabel: translateLabel('loc.symphony.labels.keep.workspaces.1d1d5c8'),
       destructive: true,
     });
     if (confirmed) await this._context.clearWorkspaces();

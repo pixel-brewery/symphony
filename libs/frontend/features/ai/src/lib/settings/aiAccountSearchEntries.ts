@@ -5,6 +5,7 @@ import type { ISettingsSearchEntry } from '@symphony/frontend-setting';
 import { AI_RUNTIME_LABELS } from '@symphony/frontend-ui';
 import { AiStore } from '../state/AiStore';
 import { aiAccountSignIn } from './aiAccountSignIn';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -28,8 +29,16 @@ export function aiAccountSearchEntries(): Signal<readonly ISettingsSearchEntry[]
         {
           id: `ai-account-${account.id}`,
           label: account.displayName,
-          description: `${runtime} account${gateway ? ` · ${gateway}` : ''}`,
-          group: 'AI accounts',
+          get description() {
+            return translateLabel(
+              'loc.symphony.labels.account.9d08ca3',
+              runtime,
+              gateway ? ` · ${gateway}` : '',
+            );
+          },
+          get group() {
+            return translateLabel('loc.symphony.labels.ai.accounts.050a216');
+          },
           keywords: ['AI account', runtime, ...(gateway ? [gateway] : [])],
           ...(signIn ? { value: signIn } : {}),
           workspaceId: account.workspaceId,

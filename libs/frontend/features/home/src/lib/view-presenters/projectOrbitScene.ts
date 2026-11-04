@@ -9,6 +9,7 @@ import { type IWorkItem } from '@symphony/domain-work';
 import { type IWorkflowDefinition } from '@symphony/domain-workflow';
 import type { IOrbitNode, IOrbitRing, IOrbitScene, ISceneEdge } from '@symphony/frontend-ui';
 import type { IOrbitCluster } from './IOrbitCluster';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -61,7 +62,9 @@ export function projectOrbitScene(
   nodes.push({
     id: 'production',
     kind: 'production',
-    label: 'Production',
+    get label() {
+      return translateLabel('loc.symphony.labels.production.13a7c65');
+    },
     position: { x: 0, y: 0, z: 0 },
     targetId: singleProduction?.id,
     targetKind: singleProduction?.kind,
@@ -147,7 +150,15 @@ export function projectOrbitScene(
   }
   const beltRadius = Math.max(22, (rings.at(-1)?.radius ?? 0) + 7);
   if (items.length)
-    rings.push({ id: 'orbit:belt', label: 'Work items', radius: beltRadius, tilt: 0, rotation: 0 });
+    rings.push({
+      id: 'orbit:belt',
+      get label() {
+        return translateLabel('loc.symphony.labels.work.items.5759a41');
+      },
+      radius: beltRadius,
+      tilt: 0,
+      rotation: 0,
+    });
   const byId = new Map(items.map((item) => [item.id, item]));
   const placed = new Set<string>();
   const sectors: { readonly cluster: IOrbitCluster; readonly members: readonly IWorkItem[] }[] = [];
@@ -168,7 +179,9 @@ export function projectOrbitScene(
       cluster: {
         id: 'work-items',
         kind: 'column',
-        label: 'Work items',
+        get label() {
+          return translateLabel('loc.symphony.labels.work.items.5759a41');
+        },
         tone: 'neutral',
         memberIds: rest.map((item) => item.id),
       },

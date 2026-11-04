@@ -1,234 +1,255 @@
-<div
-  class="flex min-w-0 flex-col gap-3"
-  test-id="builtin-skills"
-  [attr.aria-busy]="presenter.isHydrating()"
->
-  <mosaik-text
-    [mosaikTypography]="'caption'"
-    [variant]="'neutral'"
-    [wrap]="true"
-    [text]="'Every step runs its built-in process role. Add instructions to refine how a role works — permissions and the reporting contract stay fixed — and attach a skill package for an optional AI step.'"
-  />
-  @for (entry of presenter.steps(); track entry.step.id) {
-  <section
-    class="flex min-w-0 flex-col gap-1"
-    [attr.test-id]="'skill-step-' + entry.step.id"
-    [attr.aria-label]="entry.step.label"
+<ng-container *mosaikTranslate="let tr">
+  <div
+    class="flex min-w-0 flex-col gap-3"
+    test-id="builtin-skills"
+    [attr.aria-busy]="presenter.isHydrating()"
   >
-    <div class="flex min-w-0 items-center gap-[10px] px-[2px]">
-      <span
-        part="flow-step-icon"
-        class="flex h-[30px] w-[30px] flex-none items-center justify-center"
-        aria-hidden="true"
-      >
-        <mosaik-icon [iconName]="entry.step.icon" [size]="'small'" />
-      </span>
-      <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
-        <mosaik-text
-          role="heading"
-          aria-level="2"
-          [mosaikTypography]="'subtitle2'"
-          [text]="entry.step.label"
-        />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [wrap]="true"
-          [text]="entry.step.description"
-        />
+    <mosaik-text
+      [mosaikTypography]="'caption'"
+      [variant]="'neutral'"
+      [wrap]="true"
+      [text]="tr('loc.symphony.every.step.runs.its.built.in.process.role.add.instru.d65e62')"
+    />
+    @for (entry of presenter.steps(); track entry.step.id) {
+    <section
+      class="flex min-w-0 flex-col gap-1"
+      [attr.test-id]="'skill-step-' + entry.step.id"
+      [attr.aria-label]="entry.step.label"
+    >
+      <div class="flex min-w-0 items-center gap-[10px] px-[2px]">
+        <span
+          part="flow-step-icon"
+          class="flex h-[30px] w-[30px] flex-none items-center justify-center"
+          aria-hidden="true"
+        >
+          <mosaik-icon [iconName]="entry.step.icon" [size]="'small'" />
+        </span>
+        <div class="flex min-w-0 flex-1 flex-col gap-[1px]">
+          <mosaik-text
+            role="heading"
+            aria-level="2"
+            [mosaikTypography]="'subtitle2'"
+            [text]="entry.step.label"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="entry.step.description"
+          />
+        </div>
       </div>
-    </div>
+      <div part="settings-group-rows" class="flex min-w-0 flex-col">
+        @for (skill of entry.roles; track skill.role) {
+        <div
+          class="flex min-w-0 items-center gap-2 px-2 py-1.5"
+          [attr.test-id]="'builtin-skill-' + skill.role"
+        >
+          <mosaik-icon
+            class="flex-none"
+            aria-hidden="true"
+            [iconName]="'clipboardTask'"
+            [size]="'small'"
+          />
+          <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+            <span class="flex min-w-0 flex-wrap items-center gap-[6px]">
+              <mosaik-text [mosaikTypography]="'body2'" [text]="skill.displayName" />
+              <mosaik-badge
+                [label]="tr('loc.symphony.v.9ad023', [skill.version])"
+                [appearance]="'soft'"
+                [variant]="'neutral'"
+                [size]="'small'"
+              />
+              <mosaik-badge
+                [label]="skill.mutatesWorkspace ? tr('loc.symphony.changes.files.838b2a') : tr('loc.symphony.reads.only.7846ad')"
+                [appearance]="'outline'"
+                [variant]="'neutral'"
+                [size]="'small'"
+              />
+              @if (skill.publishesPullRequest) {
+              <mosaik-badge
+                [label]="tr('loc.symphony.publishes.pull.requests.75ddde')"
+                [appearance]="'outline'"
+                [variant]="'neutral'"
+                [size]="'small'"
+              />
+              }
+            </span>
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="skill.description"
+            />
+            @let added = skill.additionalInstructions | addedLineCount;
+            <mosaik-text
+              [attr.test-id]="'builtin-skill-additions-' + skill.role"
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="added ? tr('loc.symphony.built.in.instructions.your.additions.68ecdf', [added, (added === 1 ? tr('loc.symphony.line.added.49b597') : tr('loc.symphony.lines.added.5866e3'))]) : tr('loc.symphony.built.in.instructions.only.7f3383')"
+            />
+          </div>
+          <mosaik-button
+            class="flex-none"
+            [attr.test-id]="'builtin-skill-edit-' + skill.role"
+            [label]="tr('loc.symphony.edit.instructions.23e275')"
+            [iconName]="'edit'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            (click)="presenter.editInstructionsCommand.execute(skill.role)"
+          />
+        </div>
+        } @for (skill of entry.packages; track skill.id) {
+        <div
+          class="flex min-w-0 items-center gap-2 px-2 py-1.5"
+          [attr.test-id]="'skill-package-' + skill.source + '-' + skill.name"
+        >
+          <mosaik-icon
+            class="flex-none"
+            aria-hidden="true"
+            [iconName]="'skills'"
+            [size]="'small'"
+          />
+          <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+            <span class="flex min-w-0 flex-wrap items-center gap-[6px]">
+              <a
+                symphonyPseudoLink
+                role="button"
+                tabindex="0"
+                [attr.test-id]="'open-skill-' + skill.name"
+                [attr.aria-label]="tr('loc.symphony.skill.details.b8cedc', [skill.displayName])"
+                [mosaikTooltip]="tr('loc.symphony.skill.details.37c6c8')"
+                (click)="presenter.openSkillCommand.execute(skill.id)"
+                (keydown.enter)="presenter.openSkillCommand.execute(skill.id)"
+              >
+                <mosaik-text [mosaikTypography]="'body2'" [text]="skill.displayName" />
+              </a>
+              <mosaik-badge
+                [label]="skill.source | skillSourceLabel"
+                [appearance]="'soft'"
+                [variant]="(skill.source === 'user') | booleanVariant: 'success' : 'neutral'"
+                [size]="'small'"
+              />
+            </span>
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="skill.description"
+            />
+            <span class="flex min-w-0 flex-wrap items-center gap-[4px]">
+              <mosaik-text
+                class="technical-value"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="skill.name"
+              />
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="tr('loc.symphony.resources.4c5ef4', [skill.resourceCount, (skill.implicitInvocation ? tr('loc.symphony.automatic.explicit.6300e2') : tr('loc.symphony.explicit.only.c6b75c'))])"
+              />
+            </span>
+          </div>
+          <mosaik-button
+            class="flex-none"
+            [attr.test-id]="'deactivate-skill-' + skill.name"
+            [label]="tr('loc.symphony.deactivate.fb1e6f')"
+            [iconName]="'clear'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [disabled]="presenter.skillsBusy() || presenter.configurationBusy()"
+            (click)="presenter.deactivateSkillCommand.execute(skill.id)"
+          />
+        </div>
+        } @if (entry.openOptions.length) {
+        <div
+          class="flex min-w-0 items-center gap-2 px-2 py-1.5"
+          [attr.test-id]="'skill-step-empty-' + entry.step.id"
+        >
+          <mosaik-icon
+            class="flex-none"
+            aria-hidden="true"
+            [iconName]="'skills'"
+            [size]="'small'"
+          />
+          <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+            <mosaik-text
+              [mosaikTypography]="'body2'"
+              [text]="tr('loc.symphony.no.skill.package.f96bed')"
+            />
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="tr('loc.symphony.optional.a.package.that.runs.as.f02fab', [(entry.openOptions | skillFlowOptionLabels)])"
+            />
+          </div>
+          <mosaik-button
+            class="flex-none"
+            [attr.test-id]="'add-skill-' + entry.step.id"
+            [label]="tr('loc.symphony.add.skill.bc4db5')"
+            [iconName]="'add'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            [disabled]="presenter.skillsBusy()"
+            (click)="presenter.addSkillCommand.execute(entry.openOptions[0]!.role)"
+          />
+        </div>
+        }
+      </div>
+    </section>
+    } @if (presenter.packagesMissing() && !presenter.isHydrating()) {
     <div part="settings-group-rows" class="flex min-w-0 flex-col">
-      @for (skill of entry.roles; track skill.role) {
-      <div
-        class="flex min-w-0 items-center gap-2 px-2 py-1.5"
-        [attr.test-id]="'builtin-skill-' + skill.role"
-      >
-        <mosaik-icon
+      <div class="flex min-w-0 items-center gap-2 px-2 py-1.5" test-id="active-skills-empty">
+        <mosaik-avatar
           class="flex-none"
           aria-hidden="true"
-          [iconName]="'clipboardTask'"
+          [iconName]="'skills'"
           [size]="'small'"
-        />
-        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-          <span class="flex min-w-0 flex-wrap items-center gap-[6px]">
-            <mosaik-text [mosaikTypography]="'body2'" [text]="skill.displayName" />
-            <mosaik-badge
-              [label]="'v' + skill.version"
-              [appearance]="'soft'"
-              [variant]="'neutral'"
-              [size]="'small'"
-            />
-            <mosaik-badge
-              [label]="skill.mutatesWorkspace ? 'Changes files' : 'Reads only'"
-              [appearance]="'outline'"
-              [variant]="'neutral'"
-              [size]="'small'"
-            />
-            @if (skill.publishesPullRequest) {
-            <mosaik-badge
-              [label]="'Publishes pull requests'"
-              [appearance]="'outline'"
-              [variant]="'neutral'"
-              [size]="'small'"
-            />
-            }
-          </span>
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [wrap]="true"
-            [text]="skill.description"
-          />
-          @let added = skill.additionalInstructions | addedLineCount;
-          <mosaik-text
-            [attr.test-id]="'builtin-skill-additions-' + skill.role"
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [wrap]="true"
-            [text]="added ? 'Built-in instructions · your additions: ' + added + (added === 1 ? ' line added' : ' lines added') : 'Built-in instructions only'"
-          />
-        </div>
-        <mosaik-button
-          class="flex-none"
-          [attr.test-id]="'builtin-skill-edit-' + skill.role"
-          [label]="'Edit instructions'"
-          [iconName]="'edit'"
-          [iconSize]="'small'"
-          [appearance]="'plain'"
-          (click)="presenter.editInstructionsCommand.execute(skill.role)"
-        />
-      </div>
-      } @for (skill of entry.packages; track skill.id) {
-      <div
-        class="flex min-w-0 items-center gap-2 px-2 py-1.5"
-        [attr.test-id]="'skill-package-' + skill.source + '-' + skill.name"
-      >
-        <mosaik-icon class="flex-none" aria-hidden="true" [iconName]="'skills'" [size]="'small'" />
-        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-          <span class="flex min-w-0 flex-wrap items-center gap-[6px]">
-            <a
-              symphonyPseudoLink
-              role="button"
-              tabindex="0"
-              [attr.test-id]="'open-skill-' + skill.name"
-              [attr.aria-label]="'Skill details: ' + skill.displayName"
-              [mosaikTooltip]="'Skill details'"
-              (click)="presenter.openSkillCommand.execute(skill.id)"
-              (keydown.enter)="presenter.openSkillCommand.execute(skill.id)"
-            >
-              <mosaik-text [mosaikTypography]="'body2'" [text]="skill.displayName" />
-            </a>
-            <mosaik-badge
-              [label]="skill.source | skillSourceLabel"
-              [appearance]="'soft'"
-              [variant]="(skill.source === 'user') | booleanVariant: 'success' : 'neutral'"
-              [size]="'small'"
-            />
-          </span>
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [wrap]="true"
-            [text]="skill.description"
-          />
-          <span class="flex min-w-0 flex-wrap items-center gap-[4px]">
-            <mosaik-text
-              class="technical-value"
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="skill.name"
-            />
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="'· ' + skill.resourceCount + ' resources · ' + (skill.implicitInvocation ? 'automatic + explicit' : 'explicit only')"
-            />
-          </span>
-        </div>
-        <mosaik-button
-          class="flex-none"
-          [attr.test-id]="'deactivate-skill-' + skill.name"
-          [label]="'Deactivate'"
-          [iconName]="'clear'"
-          [iconSize]="'small'"
-          [appearance]="'plain'"
-          [disabled]="presenter.skillsBusy() || presenter.configurationBusy()"
-          (click)="presenter.deactivateSkillCommand.execute(skill.id)"
-        />
-      </div>
-      } @if (entry.openOptions.length) {
-      <div
-        class="flex min-w-0 items-center gap-2 px-2 py-1.5"
-        [attr.test-id]="'skill-step-empty-' + entry.step.id"
-      >
-        <mosaik-icon class="flex-none" aria-hidden="true" [iconName]="'skills'" [size]="'small'" />
-        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-          <mosaik-text [mosaikTypography]="'body2'" [text]="'No skill package'" />
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [wrap]="true"
-            [text]="'Optional: a package that runs as ' + (entry.openOptions | skillFlowOptionLabels) + '.'"
-          />
-        </div>
-        <mosaik-button
-          class="flex-none"
-          [attr.test-id]="'add-skill-' + entry.step.id"
-          [label]="'Add skill'"
-          [iconName]="'add'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          [disabled]="presenter.skillsBusy()"
-          (click)="presenter.addSkillCommand.execute(entry.openOptions[0]!.role)"
-        />
-      </div>
-      }
-    </div>
-  </section>
-  } @if (presenter.packagesMissing() && !presenter.isHydrating()) {
-  <div part="settings-group-rows" class="flex min-w-0 flex-col">
-    <div class="flex min-w-0 items-center gap-2 px-2 py-1.5" test-id="active-skills-empty">
-      <mosaik-avatar
-        class="flex-none"
-        aria-hidden="true"
-        [iconName]="'skills'"
-        [size]="'small'"
-        [appearance]="'soft'"
-        [variant]="'neutral'"
-      />
-      <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-        <mosaik-text [mosaikTypography]="'body2'" [text]="'No installed skills'" />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
+          [appearance]="'soft'"
           [variant]="'neutral'"
-          [wrap]="true"
-          [text]="'Use Add skills to activate a discovered package.'"
         />
+        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [text]="tr('loc.symphony.no.installed.skills.c9e170')"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="tr('loc.symphony.use.add.skills.to.activate.a.discovered.package.2d05cc')"
+          />
+        </div>
       </div>
     </div>
-  </div>
-  } @if (presenter.rolesMissing() && !presenter.isHydrating()) {
-  <div part="settings-group-rows" class="flex min-w-0 flex-col">
-    <div class="flex min-w-0 items-center gap-2 px-2 py-1.5" test-id="builtin-skills-empty">
-      <mosaik-avatar
-        class="flex-none"
-        aria-hidden="true"
-        [iconName]="'skills'"
-        [size]="'small'"
-        [appearance]="'soft'"
-        [variant]="'neutral'"
-      />
-      <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-        <mosaik-text [mosaikTypography]="'body2'" [text]="'No roles loaded'" />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
+    } @if (presenter.rolesMissing() && !presenter.isHydrating()) {
+    <div part="settings-group-rows" class="flex min-w-0 flex-col">
+      <div class="flex min-w-0 items-center gap-2 px-2 py-1.5" test-id="builtin-skills-empty">
+        <mosaik-avatar
+          class="flex-none"
+          aria-hidden="true"
+          [iconName]="'skills'"
+          [size]="'small'"
+          [appearance]="'soft'"
           [variant]="'neutral'"
-          [wrap]="true"
-          [text]="'Reopen settings to load the built-in process roles.'"
         />
+        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+          <mosaik-text
+            [mosaikTypography]="'body2'"
+            [text]="tr('loc.symphony.no.roles.loaded.90b686')"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="tr('loc.symphony.reopen.settings.to.load.the.built.in.process.roles.b3b47b')"
+          />
+        </div>
       </div>
     </div>
+    }
   </div>
-  }
-</div>
+</ng-container>

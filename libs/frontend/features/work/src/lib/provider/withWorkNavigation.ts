@@ -8,6 +8,7 @@ import {
 } from '@symphony/frontend-core';
 import { WORK_WIDGET_CONTEXT } from '../ports/WorkWidgetContextToken';
 import { WorkWidgetSource } from '../widgets/WorkWidgetSource';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -28,18 +29,24 @@ export function withWorkNavigation(order: number): IFeature<NavigationFeatureKin
       return [
         {
           key: 'board',
-          label: 'Board',
+          get label() {
+            return translateLabel('loc.symphony.labels.board.4816cbf');
+          },
           icon: 'board',
           route: '/main/board',
           order,
           region: 'desktop-main',
-          group: 'Delivery',
+          get group() {
+            return translateLabel('loc.symphony.labels.delivery.52bfe58');
+          },
           countTone: 'quiet',
           count: () => (context.snapshot() ? source.attentionCount() || undefined : undefined),
         },
         {
           key: 'setup',
-          label: 'Set up a project',
+          get label() {
+            return translateLabel('loc.symphony.labels.set.up.a.project.34e60d3');
+          },
           icon: 'add',
           route: '/main/setup',
           region: 'workspace-menu',

@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   ButtonComponent,
@@ -48,6 +49,7 @@ import { ActionsViewPresenter } from '../view-presenters/ActionsViewPresenter';
   selector: 'symphony-actions-workflow-view',
   host: { class: 'flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-clip' },
   imports: [
+    TranslateDirective,
     ActionRunBadgePipe,
     ActionRunDurationPipe,
     ActionRunnerLabelPipe,

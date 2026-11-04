@@ -2,10 +2,12 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { INotificationItem } from '../models/INotificationItem';
+import { labelLocale } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-const LIST_FORMAT = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
+const listFormat = (): Intl.ListFormat =>
+  new Intl.ListFormat(labelLocale(), { style: 'long', type: 'conjunction' });
 
 /**
  * Names the places problems come from, workspaces first and this Mac last:
@@ -13,7 +15,7 @@ const LIST_FORMAT = new Intl.ListFormat('en', { style: 'long', type: 'conjunctio
  *
  * @public
  */
-@Pipe({ name: 'notificationScopeList', standalone: true, pure: true })
+@Pipe({ name: 'notificationScopeList', standalone: true, pure: false })
 export class NotificationScopeListPipe implements PipeTransform {
   // #region Methods
 
@@ -33,7 +35,7 @@ export class NotificationScopeListPipe implements PipeTransform {
     const places = items.some((item) => item.scope.kind === 'mac')
       ? [...workspaces, 'this Mac']
       : workspaces;
-    return LIST_FORMAT.format(places);
+    return listFormat().format(places);
   }
 
   // #endregion

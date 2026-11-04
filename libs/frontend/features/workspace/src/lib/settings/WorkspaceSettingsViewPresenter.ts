@@ -16,6 +16,7 @@ import { WORKSPACE_PATH_SELECTOR } from '../ports/WorkspacePathSelectorToken';
 import { WORKSPACE_SETTINGS_CONTEXT } from '../ports/WorkspaceSettingsContextToken';
 import { WorkspaceSelectionStore } from '../state/WorkspaceSelectionStore';
 import { WorkspaceStore } from '../state/WorkspaceStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -223,12 +224,15 @@ export class WorkspaceSettingsViewPresenter {
   private async confirmDelete(workspace: Workspace): Promise<void> {
     const confirmed = await this._alerts.confirm({
       id: `delete-workspace-confirmation-${workspace.id}`,
-      header: `Delete ${workspace.displayName}?`,
-      message:
-        'This permanently removes its connections, execution history, managed worktrees, and isolated AI account data. Configured repository checkouts are kept.',
+      header: translateLabel('loc.symphony.labels.delete.dc6c5ae', workspace.displayName),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.this.permanently.removes.its.connections.execution.h.f5bff7d',
+        );
+      },
       tone: 'danger',
-      confirmLabel: 'Delete workspace',
-      cancelLabel: 'Keep workspace',
+      confirmLabel: translateLabel('loc.symphony.labels.delete.workspace.55f033d'),
+      cancelLabel: translateLabel('loc.symphony.labels.keep.workspace.fc3a787'),
       destructive: true,
     });
     if (confirmed) await this.store.deleteWorkspace(workspace.id);
@@ -237,7 +241,12 @@ export class WorkspaceSettingsViewPresenter {
   private async exportWorkspace(workspace: Workspace): Promise<void> {
     const result = await this._paths.selectPath({
       kind: 'directory',
-      title: `Choose export destination for ${workspace.displayName}`,
+      get title() {
+        return translateLabel(
+          'loc.symphony.labels.choose.export.destination.for.f12b87a',
+          workspace.displayName,
+        );
+      },
     });
     const destinationRoot = result.paths[0];
     if (!result.canceled && destinationRoot)

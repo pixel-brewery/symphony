@@ -1,10 +1,11 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-@Pipe({ name: 'runtimeDependencyLabel', standalone: true, pure: true })
+@Pipe({ name: 'runtimeDependencyLabel', standalone: true, pure: false })
 export class RuntimeDependencyLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -21,7 +22,7 @@ export class RuntimeDependencyLabelPipe implements PipeTransform {
       case 'git':
         return 'Git';
       case 'github-cli':
-        return 'GitHub CLI';
+        return translateLabel('loc.symphony.labels.github.cli.44ba6c9');
       case 'codex':
         return 'Codex CLI';
       case 'claude':

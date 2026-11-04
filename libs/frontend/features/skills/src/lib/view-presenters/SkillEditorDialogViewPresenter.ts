@@ -14,6 +14,7 @@ import { SkillStore } from '../catalog/SkillStore';
 import type { ISkillEditorRequest } from '../settings/ISkillEditorRequest';
 import { SKILL_IMPORT_PATHS } from '../settings/SkillImportPathsToken';
 import { skillFlowOptions, skillFlowRoleFromEvent } from './skillFlowPresentation';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -326,7 +327,9 @@ export class SkillEditorDialogViewPresenter extends Hydratable(ViewPresenter) {
   private async onExecuteChooseExportDirectoryCommand(): Promise<void> {
     const result = await this._paths.selectPath({
       kind: 'directory',
-      title: 'Choose skill export destination',
+      get title() {
+        return translateLabel('loc.symphony.labels.choose.skill.export.destination.e5dfd1d');
+      },
       defaultPath: this.exportPath().trim() || undefined,
     });
     if (!result.canceled && result.paths[0]) this.exportPath.set(result.paths[0]);
@@ -353,10 +356,14 @@ export class SkillEditorDialogViewPresenter extends Hydratable(ViewPresenter) {
     if (!name) return;
     const confirmed = await this._alerts.confirm({
       id: 'move-skill-to-trash',
-      header: `Move “${name}” to trash?`,
-      message: 'The skill package is moved to the trash and no longer runs in its flow step.',
-      confirmLabel: 'Move to trash',
-      cancelLabel: 'Cancel',
+      header: translateLabel('loc.symphony.labels.move.to.trash.6f1ed8f', name),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.the.skill.package.is.moved.to.the.trash.and.no.longe.4d7d4de',
+        );
+      },
+      confirmLabel: translateLabel('loc.symphony.labels.move.to.trash.b250a45'),
+      cancelLabel: translateLabel('loc.symphony.labels.cancel.19766ed'),
       destructive: true,
     });
     if (confirmed && (await this.store.deleteSkill(name))) this._dialogRef.close();

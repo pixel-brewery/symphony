@@ -11,6 +11,7 @@ import {
 } from '@symphony/frontend-core/delivery';
 import { liveTile, type IWidgetTile } from '@symphony/frontend-widget';
 import type { IDeliveryWidgetContext } from './IDeliveryWidgetContext';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -45,7 +46,10 @@ export class DeliveryWidgetSource {
         count: counts.get(state) ?? 0,
         route: PULL_REQUESTS_ROUTE,
         queryParams: { state },
-        ariaLabel: `Open the pull requests filtered to ${label}`,
+        ariaLabel: translateLabel(
+          'loc.symphony.labels.open.the.pull.requests.filtered.to.4843cf2',
+          label,
+        ),
         liveCount: running.get(state) ?? 0,
       });
     });

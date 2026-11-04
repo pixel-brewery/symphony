@@ -8,6 +8,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   CardComponent,
@@ -52,6 +53,7 @@ import { TeamSettingsViewPresenter } from './TeamSettingsViewPresenter';
   selector: 'symphony-team-settings-card',
   host: { class: 'block min-w-0' },
   imports: [
+    TranslateDirective,
     AgentAvailabilityLabelPipe,
     AgentAvailabilityVariantPipe,
     AgentBackupNamesPipe,

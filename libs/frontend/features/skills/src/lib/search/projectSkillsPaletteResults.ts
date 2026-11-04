@@ -2,6 +2,7 @@
 
 import { scorePaletteMatch, type IPaletteResult } from '@symphony/frontend-search';
 import type { SkillPackageCatalogDto } from '@symphony/ipc-contracts-skills';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -38,7 +39,9 @@ export function projectSkillsPaletteResults(
       id: `command:skill:${skill.id}`,
       group: 'commands',
       icon: 'skills',
-      title: `Open ${skill.displayName} in Settings`,
+      get title() {
+        return translateLabel('loc.symphony.labels.open.in.settings.3e42eed', skill.displayName);
+      },
       facts: ['Skill', ...(skill.description ? [skill.description] : [])],
       rank,
       action: { kind: 'navigate', path: '/main/settings', queryParams: { section: 'skills' } },

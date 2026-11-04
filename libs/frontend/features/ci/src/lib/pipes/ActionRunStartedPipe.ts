@@ -1,6 +1,7 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { labelLocale, translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -12,7 +13,7 @@ const DAY = 24 * 60 * 60 * 1_000;
  *
  * @public
  */
-@Pipe({ name: 'actionRunStarted', standalone: true, pure: true })
+@Pipe({ name: 'actionRunStarted', standalone: true, pure: false })
 export class ActionRunStartedPipe implements PipeTransform {
   // #region Methods
 
@@ -31,10 +32,18 @@ export class ActionRunStartedPipe implements PipeTransform {
     startOfToday.setHours(0, 0, 0, 0);
     const date = new Date(time);
     if (time >= startOfToday.getTime()) {
-      return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}`;
+      return translateLabel(
+        'loc.symphony.labels.today.4ee9f32',
+        date.toLocaleTimeString(labelLocale(), {
+          hour: '2-digit',
+          minute: '2-digit',
+          hourCycle: 'h23',
+        }),
+      );
     }
-    if (time >= startOfToday.getTime() - DAY) return 'Yesterday';
-    return date.toLocaleDateString('en-US', {
+    if (time >= startOfToday.getTime() - DAY)
+      return translateLabel('loc.symphony.labels.yesterday.5661812');
+    return date.toLocaleDateString(labelLocale(), {
       month: 'short',
       day: 'numeric',
       ...(date.getFullYear() === startOfToday.getFullYear() ? {} : { year: 'numeric' }),

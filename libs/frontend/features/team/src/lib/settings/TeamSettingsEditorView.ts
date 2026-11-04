@@ -19,6 +19,7 @@ import {
   SkillFlowRoleLabelPipe,
 } from '@symphony/frontend-ui';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   CardComponent,
@@ -57,6 +58,7 @@ import { SettingNamePipe } from '../pipes/SettingNamePipe';
   selector: 'symphony-team-settings-editor-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AgentFigureComponent,
     AiAccountStatusPipe,
     AiValidationIssuesLabelPipe,

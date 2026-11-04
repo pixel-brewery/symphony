@@ -11,6 +11,7 @@ import {
 import { liveTile, type IWidgetTile } from '@symphony/frontend-widget';
 import type { IWorkWidgetContext } from './IWorkWidgetContext';
 import { WORK_WIDGET_CONTEXT } from '../ports/WorkWidgetContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -46,11 +47,16 @@ export class WorkWidgetSource {
           {
             id: 'attention',
             testId: 'home-attention-widget',
-            label: 'Needs attention',
+            get label() {
+              return translateLabel('loc.symphony.labels.needs.attention.c1ebc78');
+            },
             count: attention,
             route: BOARD_ROUTE,
             queryParams: { attention: 'true' },
-            ariaLabel: `Open the board filtered to the ${attention} work items needing attention`,
+            ariaLabel: translateLabel(
+              'loc.symphony.labels.open.the.board.filtered.to.the.work.items.needing.at.c1346a6',
+              attention,
+            ),
             live: false,
             attention: true,
           },
@@ -65,7 +71,10 @@ export class WorkWidgetSource {
           count: counts.get(column.id) ?? 0,
           route: BOARD_ROUTE,
           queryParams: { column: column.id },
-          ariaLabel: `Open the board filtered to ${column.label}`,
+          ariaLabel: translateLabel(
+            'loc.symphony.labels.open.the.board.filtered.to.f02b823',
+            column.label,
+          ),
           liveCount: running.get(column.id) ?? 0,
         }),
       );

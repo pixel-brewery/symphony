@@ -1,145 +1,155 @@
-<ng-template mosaikDialogHeader>
-  <mosaik-dialog-header
-    slot="header"
-    class="flex min-w-0 flex-1"
-    [text]="presenter.data.workspaceId ? 'Edit workspace' : 'Add workspace'"
-    [subText]="'Name, icon and availability'"
-  >
-    <mosaik-button
-      slot="suffix"
-      test-id="close-settings-editor"
-      [iconName]="'clear'"
-      [iconSize]="'small'"
-      [appearance]="'plain'"
-      [attr.aria-label]="'Close'"
-      (click)="presenter.closeCommand.execute()"
-    />
-  </mosaik-dialog-header>
-</ng-template>
-<ng-template mosaikDialogContent>
-  <div test-id="settings-editor-drawer" class="flex min-w-0 flex-col gap-[14px]">
-    @if(presenter.isHydrating()) {
-    <section
-      test-id="settings-editor-loading-skeleton"
-      class="flex min-w-0 flex-col gap-1.5"
-      role="status"
-      aria-busy="true"
-      aria-label="Loading settings"
+<ng-container *mosaikTranslate="let tr">
+  <ng-template mosaikDialogHeader>
+    <mosaik-dialog-header
+      slot="header"
+      class="flex min-w-0 flex-1"
+      [text]="presenter.data.workspaceId ? tr('loc.symphony.edit.workspace.52e3ba') : tr('loc.symphony.add.workspace.926afb')"
+      [subText]="tr('loc.symphony.name.icon.and.availability.2a5a31')"
     >
-      <div class="flex min-w-0 flex-col gap-0.5">
-        <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
-        <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
-      </div>
-      <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
-        @for (field of [1, 2, 3]; track field) {
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-skeleton [width]="'5rem'" [height]="'12px'" [shimmer]="true" />
-          <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+      <mosaik-button
+        slot="suffix"
+        test-id="close-settings-editor"
+        [iconName]="'clear'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [attr.aria-label]="tr('loc.symphony.close.7d9eb7')"
+        (click)="presenter.closeCommand.execute()"
+      />
+    </mosaik-dialog-header>
+  </ng-template>
+  <ng-template mosaikDialogContent>
+    <div test-id="settings-editor-drawer" class="flex min-w-0 flex-col gap-[14px]">
+      @if(presenter.isHydrating()) {
+      <section
+        test-id="settings-editor-loading-skeleton"
+        class="flex min-w-0 flex-col gap-1.5"
+        role="status"
+        aria-busy="true"
+        [attr.aria-label]="tr('loc.symphony.loading.settings.509c3e')"
+      >
+        <div class="flex min-w-0 flex-col gap-0.5">
+          <mosaik-skeleton [width]="'7rem'" [height]="'14px'" [shimmer]="true" />
+          <mosaik-skeleton [width]="'22rem'" [height]="'12px'" [shimmer]="true" />
         </div>
+        <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
+          @for (field of [1, 2, 3]; track field) {
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-skeleton [width]="'5rem'" [height]="'12px'" [shimmer]="true" />
+            <mosaik-skeleton [width]="'100%'" [height]="'36px'" [shimmer]="true" />
+          </div>
+          }
+        </div>
+      </section>
+      }
+      <div class="flex min-w-0 flex-col gap-[14px]" [hidden]="presenter.isHydrating()">
+        <div class="flex min-w-0 flex-col gap-[3px]">
+          <mosaik-text
+            part="settings-group-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="tr('loc.symphony.workspace.87bb59')"
+          />
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="tr('loc.symphony.choose.how.this.workspace.appears.in.navigation.70af1c')"
+          />
+        </div>
+        <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.name.dcd1d5')"
+            />
+            <mosaik-textbox
+              test-id="workspace-name"
+              class="w-full"
+              [value]="presenter.workspace.displayName"
+              [attr.aria-label]="tr('loc.symphony.name.dcd1d5')"
+              (input)="presenter.workspace.displayName = eventText($event)"
+            />
+          </div>
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.short.code.42979e')"
+            />
+            <mosaik-textbox
+              test-id="workspace-short-code"
+              class="w-full"
+              [value]="presenter.workspace.shortCode"
+              [attr.aria-label]="tr('loc.symphony.short.code.42979e')"
+              (input)="presenter.setShortCodeCommand.execute(eventText($event))"
+            />
+          </div>
+        </div>
+        <div class="flex min-w-0 items-center gap-2">
+          <mosaik-avatar
+            test-id="workspace-editor-avatar"
+            class="flex-none"
+            aria-hidden="true"
+            [size]="'large'"
+            [src]="(presenter.workspace | workspaceAvatarSource | async) ?? undefined"
+            [text]="presenter.workspace.shortCode"
+            [textAccessor]="shortCodeAccessor"
+          />
+          <mosaik-button
+            test-id="choose-workspace-icon"
+            [label]="tr('loc.symphony.choose.icon.1ae4fe')"
+            [appearance]="'outline'"
+            [disabled]="presenter.busy() || presenter.editorBusy() || presenter.avatarBusy()"
+            (click)="presenter.chooseAvatarCommand.execute()"
+          />
+        </div>
+        <div part="settings-group-rows" class="flex min-w-0 flex-col">
+          <symphony-settings-row
+            [label]="tr('loc.symphony.workspace.enabled.7d75fa')"
+            [description]="tr('loc.symphony.include.this.workspace.in.configuration.and.task.rou.5b190a')"
+          >
+            <mosaik-toggle-switch
+              test-id="workspace-enabled"
+              [variant]="'primary'"
+              [isChecked]="presenter.workspace.enabled"
+              [attr.aria-label]="tr('loc.symphony.workspace.enabled.7d75fa')"
+              (checked)="presenter.workspace.enabled = true"
+              (unchecked)="presenter.workspace.enabled = false"
+            />
+          </symphony-settings-row>
+        </div>
+        @if (presenter.error(); as error) {
+        <mosaik-message
+          test-id="settings-editor-error"
+          [appearance]="'soft'"
+          [variant]="'danger'"
+          [fit]="'width'"
+          [iconName]="'errorCircle'"
+          [iconSize]="'small'"
+          [header]="error === 'save' ? tr('loc.symphony.unable.to.save.settings.4d3194') : tr('loc.symphony.check.the.workspace.5f1db6')"
+          [content]="error === 'save' ? tr('loc.symphony.your.changes.are.still.here.try.again.441881') : tr('loc.symphony.enter.a.name.and.a.short.code.and.choose.a.valid.ico.c90eed')"
+        />
         }
       </div>
-    </section>
-    }
-    <div class="flex min-w-0 flex-col gap-[14px]" [hidden]="presenter.isHydrating()">
-      <div class="flex min-w-0 flex-col gap-[3px]">
-        <mosaik-text
-          part="settings-group-heading"
-          [mosaikTypography]="'subtitle2'"
-          [text]="'Workspace'"
-        />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [wrap]="true"
-          [text]="'Choose how this workspace appears in navigation.'"
-        />
-      </div>
-      <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5">
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Name'" />
-          <mosaik-textbox
-            test-id="workspace-name"
-            class="w-full"
-            [value]="presenter.workspace.displayName"
-            [attr.aria-label]="'Name'"
-            (input)="presenter.workspace.displayName = eventText($event)"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-[6px]">
-          <mosaik-text [mosaikTypography]="'caption'" [variant]="'neutral'" [text]="'Short code'" />
-          <mosaik-textbox
-            test-id="workspace-short-code"
-            class="w-full"
-            [value]="presenter.workspace.shortCode"
-            [attr.aria-label]="'Short code'"
-            (input)="presenter.setShortCodeCommand.execute(eventText($event))"
-          />
-        </div>
-      </div>
-      <div class="flex min-w-0 items-center gap-2">
-        <mosaik-avatar
-          test-id="workspace-editor-avatar"
-          class="flex-none"
-          aria-hidden="true"
-          [size]="'large'"
-          [src]="(presenter.workspace | workspaceAvatarSource | async) ?? undefined"
-          [text]="presenter.workspace.shortCode"
-          [textAccessor]="shortCodeAccessor"
-        />
-        <mosaik-button
-          test-id="choose-workspace-icon"
-          [label]="'Choose icon'"
-          [appearance]="'outline'"
-          [disabled]="presenter.busy() || presenter.editorBusy() || presenter.avatarBusy()"
-          (click)="presenter.chooseAvatarCommand.execute()"
-        />
-      </div>
-      <div part="settings-group-rows" class="flex min-w-0 flex-col">
-        <symphony-settings-row
-          [label]="'Workspace enabled'"
-          [description]="'Include this workspace in configuration and task routing.'"
-        >
-          <mosaik-toggle-switch
-            test-id="workspace-enabled"
-            [variant]="'primary'"
-            [isChecked]="presenter.workspace.enabled"
-            [attr.aria-label]="'Workspace enabled'"
-            (checked)="presenter.workspace.enabled = true"
-            (unchecked)="presenter.workspace.enabled = false"
-          />
-        </symphony-settings-row>
-      </div>
-      @if (presenter.error(); as error) {
-      <mosaik-message
-        test-id="settings-editor-error"
-        [appearance]="'soft'"
-        [variant]="'danger'"
-        [fit]="'width'"
-        [iconName]="'errorCircle'"
-        [iconSize]="'small'"
-        [header]="error === 'save' ? 'Unable to save settings.' : 'Check the workspace'"
-        [content]="error === 'save' ? 'Your changes are still here. Try again.' : 'Enter a name and a short code, and choose a valid icon color.'"
-      />
-      }
     </div>
-  </div>
-</ng-template>
-<ng-template mosaikDialogFooter>
-  <div class="flex w-full min-w-0 flex-wrap items-center justify-end gap-1">
-    <mosaik-button
-      test-id="cancel-settings-editor"
-      [label]="'Cancel'"
-      [appearance]="'plain'"
-      (click)="presenter.closeCommand.execute()"
-    />
-    <mosaik-button
-      test-id="save-settings-editor"
-      [label]="'Save'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      [isBusy]="presenter.busy()"
-      [disabled]="presenter.busy() || presenter.editorBusy() || presenter.avatarBusy()"
-      (click)="presenter.saveCommand.execute()"
-    />
-  </div>
-</ng-template>
+  </ng-template>
+  <ng-template mosaikDialogFooter>
+    <div class="flex w-full min-w-0 flex-wrap items-center justify-end gap-1">
+      <mosaik-button
+        test-id="cancel-settings-editor"
+        [label]="tr('loc.symphony.cancel.19766e')"
+        [appearance]="'plain'"
+        (click)="presenter.closeCommand.execute()"
+      />
+      <mosaik-button
+        test-id="save-settings-editor"
+        [label]="tr('loc.symphony.save.1509f5')"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.busy()"
+        [disabled]="presenter.busy() || presenter.editorBusy() || presenter.avatarBusy()"
+        (click)="presenter.saveCommand.execute()"
+      />
+    </div>
+  </ng-template>
+</ng-container>

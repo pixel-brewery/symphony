@@ -1,57 +1,59 @@
-<mosaik-page class="block min-h-full min-w-0" test-id="mobile-pull-requests-view">
-  <mosaik-page-header
-    [inset]="'all'"
-    [text]="'Pull Requests'"
-    [subText]="presenter.allMergeRequests().length + ' available'"
-  />
-  <mosaik-page-pre-content [inset]="'horizontal'">
-    <mosaik-searchbox
-      class="flex w-full min-w-0"
-      [value]="presenter.query()"
-      [placeholder]="'Title, branch, author or number'"
-      [isClearable]="true"
-      [mode]="'delay'"
-      [delay]="150"
-      (searched)="presenter.updateQueryCommand.execute($event)"
-      (cleared)="presenter.clearQueryCommand.execute()"
-      test-id="mobile-merge-request-search"
+<ng-container *mosaikTranslate="let tr">
+  <mosaik-page class="block min-h-full min-w-0" test-id="mobile-pull-requests-view">
+    <mosaik-page-header
+      [inset]="'all'"
+      [text]="tr('loc.symphony.pull.requests.1a3b23')"
+      [subText]="tr('loc.symphony.available.6cfafd', [presenter.allMergeRequests().length])"
     />
-  </mosaik-page-pre-content>
-  <mosaik-page-content [inset]="'all'">
-    <div class="grid min-w-0 gap-2">
-      @for (mergeRequest of presenter.mergeRequests(); track mergeRequest.id) {
-      <a
-        symphonyPseudoLink
-        class="block min-w-0"
-        [href]="mergeRequest.externalUrl"
-        target="_blank"
-        rel="noreferrer"
-        [attr.test-id]="'mobile-merge-request-' + mergeRequest.id"
-      >
-        <mosaik-card [appearance]="'soft'">
-          <mosaik-card-header
-            [text]="mergeRequest.title"
-            [subText]="'#' + mergeRequest.number + (mergeRequest.author ? ' · ' + mergeRequest.author : '')"
-          />
-          <mosaik-card-content>
-            <div class="flex min-w-0 items-center gap-2">
-              <mosaik-badge
-                [label]="mergeRequest.draft ? 'Draft' : mergeRequest.state"
-                [appearance]="'soft'"
-                [variant]="mergeRequest | mergeRequestStateVariant"
-                [size]="'small'"
-              />
-              <span>{{ mergeRequest.sourceBranch }} → {{ mergeRequest.targetBranch }}</span>
-            </div>
-          </mosaik-card-content>
-        </mosaik-card>
-      </a>
-      } @empty {
-      <mosaik-empty-state
-        [header]="presenter.query() ? 'No matching pull requests' : 'No pull requests'"
-        [content]="presenter.query() ? 'Try a different search.' : 'Pull requests from the desktop workspace will appear here.'"
+    <mosaik-page-pre-content [inset]="'horizontal'">
+      <mosaik-searchbox
+        class="flex w-full min-w-0"
+        [value]="presenter.query()"
+        [placeholder]="tr('loc.symphony.title.branch.author.or.number.7e010c')"
+        [isClearable]="true"
+        [mode]="'delay'"
+        [delay]="150"
+        (searched)="presenter.updateQueryCommand.execute($event)"
+        (cleared)="presenter.clearQueryCommand.execute()"
+        test-id="mobile-merge-request-search"
       />
-      }
-    </div>
-  </mosaik-page-content>
-</mosaik-page>
+    </mosaik-page-pre-content>
+    <mosaik-page-content [inset]="'all'">
+      <div class="grid min-w-0 gap-2">
+        @for (mergeRequest of presenter.mergeRequests(); track mergeRequest.id) {
+        <a
+          symphonyPseudoLink
+          class="block min-w-0"
+          [href]="mergeRequest.externalUrl"
+          target="_blank"
+          rel="noreferrer"
+          [attr.test-id]="'mobile-merge-request-' + mergeRequest.id"
+        >
+          <mosaik-card [appearance]="'soft'">
+            <mosaik-card-header
+              [text]="mergeRequest.title"
+              [subText]="'#' + mergeRequest.number + (mergeRequest.author ? ' · ' + mergeRequest.author : '')"
+            />
+            <mosaik-card-content>
+              <div class="flex min-w-0 items-center gap-2">
+                <mosaik-badge
+                  [label]="mergeRequest.draft ? tr('loc.symphony.draft.ebf12e') : mergeRequest.state"
+                  [appearance]="'soft'"
+                  [variant]="mergeRequest | mergeRequestStateVariant"
+                  [size]="'small'"
+                />
+                <span>{{ mergeRequest.sourceBranch }} → {{ mergeRequest.targetBranch }}</span>
+              </div>
+            </mosaik-card-content>
+          </mosaik-card>
+        </a>
+        } @empty {
+        <mosaik-empty-state
+          [header]="presenter.query() ? tr('loc.symphony.no.matching.pull.requests.4e989f') : tr('loc.symphony.no.pull.requests.2996cb')"
+          [content]="presenter.query() ? tr('loc.symphony.try.a.different.search.2e6d79') : tr('loc.symphony.pull.requests.from.the.desktop.workspace.will.appear.43cc00')"
+        />
+        }
+      </div>
+    </mosaik-page-content>
+  </mosaik-page>
+</ng-container>

@@ -1,6 +1,10 @@
 // #region Imports
 
-import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  ApplicationDatePipe as DatePipe,
+  ApplicationDecimalPipe as DecimalPipe,
+} from '@symphony/frontend-intl';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -9,6 +13,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   ChoiceComponent,
   ChoiceGroupComponent,
@@ -43,6 +48,7 @@ import { DeliverySettingsEditorViewPresenter } from './DeliverySettingsEditorVie
   selector: 'symphony-delivery-settings-editor-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BooleanVariantPipe,
     ButtonComponent,
     ChoiceComponent,

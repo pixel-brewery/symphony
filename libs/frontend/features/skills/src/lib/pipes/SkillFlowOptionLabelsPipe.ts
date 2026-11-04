@@ -11,7 +11,7 @@ import type { ISkillFlowOption } from '../view-presenters/skillFlowPresentation/
  *
  * @public
  */
-@Pipe({ name: 'skillFlowOptionLabels', standalone: true, pure: true })
+@Pipe({ name: 'skillFlowOptionLabels', standalone: true, pure: false })
 export class SkillFlowOptionLabelsPipe implements PipeTransform {
   // #region Methods
 

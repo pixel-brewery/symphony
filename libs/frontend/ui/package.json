@@ -37,6 +37,7 @@
     "@symphony/domain-team": "workspace:*",
     "@symphony/domain-workflow": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
+    "@symphony/frontend-intl": "workspace:*",
     "@symphony/ipc-contracts-composition": "workspace:*",
     "@symphony/ipc-contracts-platform": "workspace:*",
     "marked": "18.0.14",

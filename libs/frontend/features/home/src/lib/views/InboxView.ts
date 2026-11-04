@@ -1,9 +1,11 @@
 // #region Imports
 
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   ButtonComponent,
@@ -45,6 +47,7 @@ import { InboxViewPresenter } from '../view-presenters/InboxViewPresenter';
   selector: 'symphony-inbox-view',
   host: { class: 'flex min-h-0 min-w-0 flex-1' },
   imports: [
+    TranslateDirective,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,

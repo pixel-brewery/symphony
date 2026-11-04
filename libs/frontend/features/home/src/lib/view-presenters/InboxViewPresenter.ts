@@ -14,6 +14,7 @@ import { isAcceptanceOption } from '../inbox/isAcceptanceOption';
 import { projectInboxSteps } from '../inbox/projectInboxSteps';
 import { HOME_CONTEXT } from '../ports/HomeContextToken';
 import { InboxStore } from '../state/InboxStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -342,8 +343,10 @@ export class InboxViewPresenter extends ViewPresenter {
     const repositories = repositoryBindingsFor(settings, item);
     if (repositories.length !== 1) {
       this._notifications.showWarning(
-        'Choose one repository.',
-        'Local AI execution requires one unambiguous repository binding.',
+        translateLabel('loc.symphony.labels.choose.one.repository.15d4217'),
+        translateLabel(
+          'loc.symphony.labels.local.ai.execution.requires.one.unambiguous.reposito.0380c3e',
+        ),
       );
       return false;
     }
@@ -357,13 +360,23 @@ export class InboxViewPresenter extends ViewPresenter {
     if (status.preparation.state !== 'unprepared') return true;
     const preparation = this._messageBoxes.show({
       id: `prepare-repository-${repository.id}`,
-      header: `Prepare ${repository.owner}/${repository.name} locally?`,
-      message:
-        'Symphony will clone or refresh this configured repository without running project code, dependency installers, Git hooks, or tests. AI tasks may use it after preparation.',
+      header: translateLabel(
+        'loc.symphony.labels.prepare.locally.c333e4c',
+        repository.owner,
+        repository.name,
+      ),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.symphony.will.clone.or.refresh.this.configured.repos.e56bbca',
+        );
+      },
       buttons: 'yesNo',
       variant: 'primary',
       pressEscapeToClose: true,
-      intl: { yesLabel: 'Prepare locally', noLabel: 'Cancel' },
+      intl: {
+        yesLabel: translateLabel('loc.symphony.labels.prepare.locally.29498e1'),
+        noLabel: translateLabel('loc.symphony.labels.cancel.19766ed'),
+      },
     });
     const decision = await firstValueFrom(preparation.closed);
     if (decision.reason !== 'positive') return false;

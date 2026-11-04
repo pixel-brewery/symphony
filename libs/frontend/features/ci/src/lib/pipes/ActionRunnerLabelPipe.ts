@@ -2,6 +2,7 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { ActionRunner } from '../actions/view-presenters/actionsOverview/ActionRunner';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -10,7 +11,7 @@ import type { ActionRunner } from '../actions/view-presenters/actionsOverview/Ac
  *
  * @public
  */
-@Pipe({ name: 'actionRunnerLabel', standalone: true, pure: true })
+@Pipe({ name: 'actionRunnerLabel', standalone: true, pure: false })
 export class ActionRunnerLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -26,9 +27,9 @@ export class ActionRunnerLabelPipe implements PipeTransform {
       case 'github':
         return 'GitHub';
       case 'local':
-        return 'Local runner';
+        return translateLabel('loc.symphony.labels.local.runner.eef4f85');
       case 'github-local':
-        return 'GitHub + local';
+        return translateLabel('loc.symphony.labels.github.local.64c0458');
     }
   }
 

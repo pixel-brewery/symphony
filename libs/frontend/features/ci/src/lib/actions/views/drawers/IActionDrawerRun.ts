@@ -7,7 +7,8 @@ import type { IActionDrawerSourceState } from './IActionDrawerSourceState';
 /** Only the existing run facts consumed by the CI Action drawer. @public */
 export interface IActionDrawerRun {
   readonly kind: 'agent' | 'cloud-action' | 'local-action';
-  readonly sourceLabel: 'Agent' | 'GitHub' | 'Local runner' | 'Action';
+  /** Localized display copy; decisions use the stable `kind` discriminator. */
+  readonly sourceLabel: string;
   readonly sources?: readonly IActionDrawerSourceState[];
   readonly title: string;
   readonly message: string;

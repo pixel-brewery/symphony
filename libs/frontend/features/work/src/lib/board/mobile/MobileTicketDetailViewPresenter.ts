@@ -11,6 +11,7 @@ import type {
   MobileTicketAction,
 } from '@symphony/mobile-contracts';
 import type { IMobileMoveTarget } from './IMobileMoveTarget';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -156,7 +157,9 @@ export class MobileTicketDetailViewPresenter extends ViewPresenter {
    * @public
    * @readonly
    */
-  public readonly forwardLabel = computed(() => moveLabel('Forward', this.nextColumn()?.label));
+  public readonly forwardLabel = computed(() =>
+    moveLabel(translateLabel('loc.symphony.labels.forward.f1c65e1'), this.nextColumn()?.label),
+  );
 
   /**
    * The backward label.
@@ -164,7 +167,9 @@ export class MobileTicketDetailViewPresenter extends ViewPresenter {
    * @public
    * @readonly
    */
-  public readonly backwardLabel = computed(() => moveLabel('Back', this.previousColumn()?.label));
+  public readonly backwardLabel = computed(() =>
+    moveLabel(translateLabel('loc.symphony.labels.back.76900f1'), this.previousColumn()?.label),
+  );
 
   private readonly _prompt = computed(
     () => (action: MobileTicketAction) => this.resolvePrompt(action),

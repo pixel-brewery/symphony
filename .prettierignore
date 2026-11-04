@@ -29,3 +29,6 @@ COMPONENTS.md
 DESIGN.md
 # Design canvas exports keep the exact bytes the canvas serves.
 docs/workitems/macos-redesign/artboards
+
+# Wortlaut pins the original shipped rule-pack bytes.
+.wortlaut/rule-packs/**

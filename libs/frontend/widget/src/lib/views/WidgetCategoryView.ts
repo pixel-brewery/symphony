@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  TranslateDirective,
   AnimateDirective,
   ButtonComponent,
   CardComponent,
@@ -27,6 +28,7 @@ import { WidgetCategoryViewPresenter } from '../view-presenters/WidgetCategoryVi
   selector: 'symphony-widget-category',
   host: { class: 'contents' },
   imports: [
+    TranslateDirective,
     AnimateDirective,
     ButtonComponent,
     CardComponent,

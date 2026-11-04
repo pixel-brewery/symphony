@@ -6,6 +6,7 @@ import {
   withSettingsViews,
   type SettingsFeatureKind,
 } from '@symphony/frontend-setting';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -27,23 +28,42 @@ export function withUpdateSettings(): IFeature<SettingsFeatureKind> {
           scope: 'global',
           id: 'system',
           label: 'System',
-          description: 'This Mac: tools, storage, virtual machines, updates and sleep.',
+          get description() {
+            return translateLabel(
+              'loc.symphony.labels.this.mac.tools.storage.virtual.machines.updates.and..e89ed8d',
+            );
+          },
           order: 40,
         },
         search: [
           {
             id: 'check',
-            label: 'Check for updates',
-            description: 'The installed version and whether a new one is available.',
-            group: 'Updates',
+            get label() {
+              return translateLabel('loc.symphony.labels.check.for.updates.f26f327');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.the.installed.version.and.whether.a.new.one.is.avail.9ad26ed',
+              );
+            },
+            get group() {
+              return translateLabel('loc.symphony.labels.updates.22e2bad');
+            },
             keywords: ['version', 'release', 'download', 'install'],
           },
           {
             id: 'channel',
-            label: 'Release channel',
-            description:
-              'Stable receives tested releases. Canary receives every successful main build and may change more frequently.',
-            group: 'Updates',
+            get label() {
+              return translateLabel('loc.symphony.labels.release.channel.d89ba8a');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.stable.receives.tested.releases.canary.receives.ever.b380e5a',
+              );
+            },
+            get group() {
+              return translateLabel('loc.symphony.labels.updates.22e2bad');
+            },
             keywords: ['stable', 'canary'],
           },
         ],

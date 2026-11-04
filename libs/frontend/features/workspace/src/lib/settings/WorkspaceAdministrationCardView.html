@@ -1,113 +1,124 @@
-@if (presenter.workspace(); as item) {
-<div class="flex min-w-0 flex-col gap-3" [attr.test-id]="'workspace-card-' + item.id">
-  @let storage = presenter.storage();
-  <symphony-settings-group [heading]="'Storage'" [attr.test-id]="'workspace-storage-' + item.id">
-    <div part="settings-row" class="flex min-w-0 flex-col gap-1.25 px-2 py-1.5">
-      <symphony-storage-breakdown
-        [usage]="storage"
-        [measured]="presenter.storageMeasured()"
-        [limitGiB]="presenter.storageLimit()"
-        [sizeTestId]="'workspace-storage-size-' + item.id"
-        [barTestId]="'workspace-storage-progress-' + item.id"
-      />
-    </div>
-    <symphony-settings-row
-      [label]="'Maximum workspace size (GB)'"
-      [description]="'Between 2 and 1024 GB.'"
+<ng-container *mosaikTranslate="let tr">
+  @if (presenter.workspace(); as item) {
+  <div class="flex min-w-0 flex-col gap-3" [attr.test-id]="'workspace-card-' + item.id">
+    @let storage = presenter.storage();
+    <symphony-settings-group
+      [heading]="tr('loc.symphony.storage.a69c4d')"
+      [attr.test-id]="'workspace-storage-' + item.id"
     >
-      <mosaik-numberbox
-        class="w-[110px]"
-        aria-label="Maximum workspace size (GB)"
-        [attr.test-id]="'workspace-storage-limit-' + item.id"
-        [min]="2"
-        [max]="1024"
-        [value]="presenter.storageLimit()"
-        [disabled]="presenter.configurationBusy()"
-        (change)="presenter.commitWorkspaceStorageLimitCommand.execute($event)"
-      />
-    </symphony-settings-row>
-  </symphony-settings-group>
-  @if (storage?.pressure === 'critical') {
-  <symphony-settings-conditional [condition]="'When the limit is reached'">
-    <mosaik-message
-      class="block w-full"
-      [attr.test-id]="'workspace-storage-blocked-' + item.id"
-      [appearance]="'soft'"
-      [variant]="'danger'"
-      [fit]="'width'"
-      [icon]="'errorCircle'"
-      [iconSize]="'small'"
-      [header]="'Storage limit reached - new writes are blocked'"
-      [content]="'Clear inactive workspaces or raise the limit only after confirming enough free disk space.'"
-    />
-  </symphony-settings-conditional>
-  }
-  <symphony-settings-group
-    [heading]="'Delivery grouping'"
-    [description]="'Analyzer suggestions are always shown on the board. Opt in only when fully compatible tickets may start one shared delivery workflow without a second confirmation.'"
-    [attr.test-id]="'workspace-delivery-grouping-' + item.id"
-  >
-    <symphony-settings-row [label]="'Automatically activate safe groups'">
-      <mosaik-toggle-switch
-        aria-label="Automatically activate safe groups"
-        [variant]="'primary'"
-        [attr.test-id]="'workspace-automatic-delivery-grouping-' + item.id"
-        [isChecked]="presenter.automaticDeliveryGrouping()"
-        [disabled]="presenter.configurationBusy()"
-        (checked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, true])"
-        (unchecked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, false])"
-      />
-    </symphony-settings-row>
-  </symphony-settings-group>
-  <symphony-settings-group [heading]="'Workspace'" [attr.test-id]="'workspace-actions-' + item.id">
-    <symphony-settings-row [label]="'Edit workspace'" [description]="'Name, icon, and color.'">
-      <mosaik-button
-        [attr.test-id]="'edit-workspace-' + item.id"
-        [label]="'Edit workspace'"
-        [appearance]="'outline'"
-        (click)="presenter.openWorkspaceCommand.execute(item.id)"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row
-      [label]="'Use only this workspace'"
-      [description]="'Scope Symphony to ' + item.displayName + '.'"
-    >
-      <mosaik-button
-        [attr.test-id]="'focus-workspace-' + item.id"
-        [label]="'Use only this workspace'"
-        [appearance]="'outline'"
-        (click)="presenter.focusWorkspaceCommand.execute(item.id)"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row
-      [label]="'Export workspace'"
-      [description]="'Stored credential fields and machine-local paths are excluded.'"
-    >
-      <mosaik-button
-        [attr.test-id]="'export-workspace-' + item.id"
-        [label]="'Export workspace'"
-        [appearance]="'outline'"
-        [isBusy]="presenter.store.workspaceTransferBusy() === item.id"
-        [disabled]="!!presenter.store.workspaceTransferBusy()"
-        (click)="presenter.chooseWorkspaceExportCommand.execute(item)"
-      />
-    </symphony-settings-row>
-    <symphony-settings-row
-      [label]="'Delete workspace'"
-      [description]="'Permanently removes its connections, execution history, managed worktrees, and isolated AI account data.'"
-    >
-      <mosaik-button
-        [attr.test-id]="'delete-workspace-' + item.id"
-        [label]="'Delete workspace'"
-        [icon]="'delete'"
-        [iconSize]="'small'"
-        [appearance]="'outline'"
+      <div part="settings-row" class="flex min-w-0 flex-col gap-1.25 px-2 py-1.5">
+        <symphony-storage-breakdown
+          [usage]="storage"
+          [measured]="presenter.storageMeasured()"
+          [limitGiB]="presenter.storageLimit()"
+          [sizeTestId]="'workspace-storage-size-' + item.id"
+          [barTestId]="'workspace-storage-progress-' + item.id"
+        />
+      </div>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.maximum.workspace.size.gb.56a742')"
+        [description]="tr('loc.symphony.between.2.and.1024.gb.08c9a6')"
+      >
+        <mosaik-numberbox
+          class="w-[110px]"
+          [attr.aria-label]="tr('loc.symphony.maximum.workspace.size.gb.56a742')"
+          [attr.test-id]="'workspace-storage-limit-' + item.id"
+          [min]="2"
+          [max]="1024"
+          [value]="presenter.storageLimit()"
+          [disabled]="presenter.configurationBusy()"
+          (change)="presenter.commitWorkspaceStorageLimitCommand.execute($event)"
+        />
+      </symphony-settings-row>
+    </symphony-settings-group>
+    @if (storage?.pressure === 'critical') {
+    <symphony-settings-conditional [condition]="'When the limit is reached'">
+      <mosaik-message
+        class="block w-full"
+        [attr.test-id]="'workspace-storage-blocked-' + item.id"
+        [appearance]="'soft'"
         [variant]="'danger'"
-        [isBusy]="presenter.store.workspaceDeletionBusy() === item.id"
-        [disabled]="presenter.workspaces().length === 1 || !!presenter.store.workspaceDeletionBusy()"
-        (click)="presenter.confirmDeleteWorkspaceCommand.execute(item)"
+        [fit]="'width'"
+        [icon]="'errorCircle'"
+        [iconSize]="'small'"
+        [header]="tr('loc.symphony.storage.limit.reached.new.writes.are.blocked.bc5264')"
+        [content]="tr('loc.symphony.clear.inactive.workspaces.or.raise.the.limit.only.af.c1c3c7')"
       />
-    </symphony-settings-row>
-  </symphony-settings-group>
-</div>
-}
+    </symphony-settings-conditional>
+    }
+    <symphony-settings-group
+      [heading]="tr('loc.symphony.delivery.grouping.ffe4e2')"
+      [description]="tr('loc.symphony.analyzer.suggestions.are.always.shown.on.the.board.o.d304b4')"
+      [attr.test-id]="'workspace-delivery-grouping-' + item.id"
+    >
+      <symphony-settings-row [label]="tr('loc.symphony.automatically.activate.safe.groups.c1d56c')">
+        <mosaik-toggle-switch
+          [attr.aria-label]="tr('loc.symphony.automatically.activate.safe.groups.c1d56c')"
+          [variant]="'primary'"
+          [attr.test-id]="'workspace-automatic-delivery-grouping-' + item.id"
+          [isChecked]="presenter.automaticDeliveryGrouping()"
+          [disabled]="presenter.configurationBusy()"
+          (checked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, true])"
+          (unchecked)="presenter.setAutomaticDeliveryGroupingCommand.execute([item.id, false])"
+        />
+      </symphony-settings-row>
+    </symphony-settings-group>
+    <symphony-settings-group
+      [heading]="tr('loc.symphony.workspace.87bb59')"
+      [attr.test-id]="'workspace-actions-' + item.id"
+    >
+      <symphony-settings-row
+        [label]="tr('loc.symphony.edit.workspace.52e3ba')"
+        [description]="tr('loc.symphony.name.icon.and.color.f3c3ef')"
+      >
+        <mosaik-button
+          [attr.test-id]="'edit-workspace-' + item.id"
+          [label]="tr('loc.symphony.edit.workspace.52e3ba')"
+          [appearance]="'outline'"
+          (click)="presenter.openWorkspaceCommand.execute(item.id)"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.use.only.this.workspace.0b0a94')"
+        [description]="tr('loc.symphony.scope.symphony.to.83cc17', [item.displayName])"
+      >
+        <mosaik-button
+          [attr.test-id]="'focus-workspace-' + item.id"
+          [label]="tr('loc.symphony.use.only.this.workspace.0b0a94')"
+          [appearance]="'outline'"
+          (click)="presenter.focusWorkspaceCommand.execute(item.id)"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.export.workspace.ae2965')"
+        [description]="tr('loc.symphony.stored.credential.fields.and.machine.local.paths.are.3dd9de')"
+      >
+        <mosaik-button
+          [attr.test-id]="'export-workspace-' + item.id"
+          [label]="tr('loc.symphony.export.workspace.ae2965')"
+          [appearance]="'outline'"
+          [isBusy]="presenter.store.workspaceTransferBusy() === item.id"
+          [disabled]="!!presenter.store.workspaceTransferBusy()"
+          (click)="presenter.chooseWorkspaceExportCommand.execute(item)"
+        />
+      </symphony-settings-row>
+      <symphony-settings-row
+        [label]="tr('loc.symphony.delete.workspace.55f033')"
+        [description]="tr('loc.symphony.permanently.removes.its.connections.execution.histor.085f5d')"
+      >
+        <mosaik-button
+          [attr.test-id]="'delete-workspace-' + item.id"
+          [label]="tr('loc.symphony.delete.workspace.55f033')"
+          [icon]="'delete'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          [variant]="'danger'"
+          [isBusy]="presenter.store.workspaceDeletionBusy() === item.id"
+          [disabled]="presenter.workspaces().length === 1 || !!presenter.store.workspaceDeletionBusy()"
+          (click)="presenter.confirmDeleteWorkspaceCommand.execute(item)"
+        />
+      </symphony-settings-row>
+    </symphony-settings-group>
+  </div>
+  }
+</ng-container>

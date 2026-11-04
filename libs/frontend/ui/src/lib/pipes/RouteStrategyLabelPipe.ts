@@ -1,22 +1,23 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-const labels: Readonly<Record<string, string>> = {
-  priority: 'Priority order',
-  'quality-first': 'Quality first',
-  'last-known-good': 'Last known good',
-  'lowest-cost': 'Lowest cost',
-  'lowest-latency': 'Lowest latency',
-  'most-reliable': 'Most reliable',
-  'least-used': 'Least used',
-  'reset-aware': 'Reset aware',
-  balanced: 'Balanced routing',
+const labels: Readonly<Record<string, Parameters<typeof translateLabel>[0]>> = {
+  priority: 'loc.symphony.labels.routingStrategy.priorityOrder',
+  'quality-first': 'loc.symphony.labels.routingStrategy.qualityFirst',
+  'last-known-good': 'loc.symphony.labels.routingStrategy.lastKnownGood',
+  'lowest-cost': 'loc.symphony.labels.routingStrategy.lowestCost',
+  'lowest-latency': 'loc.symphony.labels.routingStrategy.lowestLatency',
+  'most-reliable': 'loc.symphony.labels.routingStrategy.mostReliable',
+  'least-used': 'loc.symphony.labels.routingStrategy.leastUsed',
+  'reset-aware': 'loc.symphony.labels.routingStrategy.resetAware',
+  balanced: 'loc.symphony.labels.routingStrategy.balancedRouting',
 };
 
-@Pipe({ name: 'routeStrategyLabel', standalone: true, pure: true })
+@Pipe({ name: 'routeStrategyLabel', standalone: true, pure: false })
 export class RouteStrategyLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -27,7 +28,8 @@ export class RouteStrategyLabelPipe implements PipeTransform {
    * @public
    */
   public transform(strategy: string): string {
-    return labels[strategy] ?? strategy;
+    const key = labels[strategy];
+    return key ? translateLabel(key) : strategy;
   }
 
   // #endregion
