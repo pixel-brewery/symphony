@@ -16,6 +16,16 @@ This repository contains a local-first desktop orchestration platform for Codex-
 - Invoke `$reuse-existing-patterns` before and after implementation work.
 - Apply `$symphony-architect` for Symphony engineering work. It explicitly derives from `.agents/skills/architecture/SKILL.md`, installed from `pixel-brewery/skills` at the immutable revision and content digest in root `skills-lock.json`. Symphony-specific rules remain in `.agents/skills/symphony-architect`. Shared changes belong upstream; update the locked base through the Skills CLI, then run `yarn agents:sync` and `yarn agents:check`. `architect-desktop-platform` remains a compatibility entrypoint.
 
+## Git delivery and completion
+
+- A request to implement or fix authorizes task-scoped commits and pushes to the intended development branch, including a feature branch and pull request when branch protection requires them. Analysis, review, draft and local-only requests do not authorize delivery. Follow any narrower instruction from the owner.
+- Use the owner-designated primary checkout. Keep one Git owner per repository; parallel agents may edit disjoint paths but must not concurrently stage, commit, switch branches or push. Create another clone or worktree only for a specific task requirement or owner request.
+- Inspect existing changes, worktrees, stashes, upstreams and branch protection before changing Git state. Preserve other writers' work and coordinate ownership; do not silently include or discard it.
+- Run the available repository-local Ship-it review before creating a PR and resolve its blocking findings. Use the permitted development branch directly when protection allows it; otherwise use a PR and remain responsible until GitHub reports it as `MERGED`. Verify required checks on the latest head and resolve conflicts without bypassing protection.
+- Finish with a clean primary checkout on the intended integration branch and zero commits ahead of or behind its fetched upstream. Report commit SHAs, merged PRs, actual checks and any remaining blocker; a pushed branch or open PR alone does not complete delivery.
+- Preserve recovery evidence before cleanup. Remove temporary branches and worktrees only after proving their commits or exact contents are integrated; keep permanent integration branches, and account for stashes instead of hiding unfinished work there.
+- Manual releases, deployments, package publication, history rewriting, visibility changes and credential changes require separate owner authorization. Existing workflows triggered by an authorized source merge remain part of normal delivery.
+
 ## Architecture invariants
 
 - OmniRoute is research-only reference material. Never add it as a dependency, provider, runtime, account, catalog source, gateway, integration, default, example, or user-visible label. Symphony owns its provider/model catalog, routing, and failover; CLI execution adapters remain replaceable implementation details and never own the visible catalog.
@@ -25,7 +35,7 @@ This repository contains a local-first desktop orchestration platform for Codex-
 - Run orchestration, Git, GitHub, Codex, workspace, and persistence work only in `apps/orchestrator` or provider libraries.
 - Do not add a general internal HTTP server, NestJS, Express, another UI framework, or a cloud runtime. The accepted local mobile-companion exception may run only in the orchestrator Utility Process, bind to one selected private local-network interface, serve the packaged `apps/mobile` assets, and expose the dedicated versioned mobile contract with pairing, authorization, limits, and lifecycle supervision described by ADR-006.
 - Keep domain libraries framework- and provider-neutral. GitHub API types do not cross provider boundaries.
-- Use isolated Git worktrees for executable target-project work. Never mutate a user's ordinary checkout, push a default branch, or merge automatically.
+- Symphony's runtime must use managed isolated Git worktrees and leases for executable work in configured target projects. It must never mutate the target's ordinary checkout, push a default branch or merge automatically. This product invariant is separate from the Git delivery rules for maintaining Symphony itself.
 - Analyzer-stage production adapters are read-only with respect to target source files.
 
 ## Frontend conventions

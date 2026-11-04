@@ -1,5 +1,6 @@
 # .gitignore
 .angular/
+.codex-work/
 .local/
 .nx/
 .yarn/*

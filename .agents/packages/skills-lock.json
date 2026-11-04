@@ -195,7 +195,7 @@
       "source": ".agents/skills/symphony-architect",
       "archive": ".agents/packages/symphony-architect.skill",
       "claude": ".claude/skills/symphony-architect/SKILL.md",
-      "sha256": "9d3f45cd5e43edea24fc347b3381ba2f6d929efdcb916810b77c84975b4966e5"
+      "sha256": "9882d75dd3a565bab31ef6b4d96eaa553a73a9c1a0dc80cffe6d72bd890fd1d4"
     },
     {
       "name": "symphony-docs",

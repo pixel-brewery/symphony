@@ -119,8 +119,6 @@ describe('documentation-only CI classification', () => {
     '.github/assets/notes.md',
     'resources/config.txt',
     'apps/desktop/assets/icon.png',
-    'docs/guide\nscript.js',
-    'README.md\nsource.ts',
   ])('keeps full verification for executable, operational or unknown path %s', (path) => {
     // arrange
     write(path);
@@ -132,6 +130,58 @@ describe('documentation-only CI classification', () => {
     // assert
     expect(result.documentationOnly).toBe(false);
   });
+
+  it.each(['docs/guide\nscript.js', 'README.md\nsource.ts'])(
+    'keeps full verification for a Git filename containing a newline (%s)',
+    (path) => {
+      // arrange
+      // Git can store these paths even when the host filesystem cannot create them.
+      const blob = git('hash-object', 'README.md');
+      const segments = path.split('/');
+      const filename = segments.pop();
+      const directory = segments.join('/');
+      const tree = (entries: string): string =>
+        execFileSync('git', ['mktree', '-z'], {
+          cwd: root,
+          encoding: 'utf8',
+          input: entries,
+        }).trim();
+      const entries = (revision: string): string =>
+        execFileSync('git', ['ls-tree', '-z', revision], { cwd: root, encoding: 'utf8' });
+      let changedTree = tree(
+        `${entries(directory ? `${base}:${directory}` : base)}100644 blob ${blob}\t${filename}\0`,
+      );
+      if (directory) {
+        const previousTree = git('rev-parse', `${base}:${directory}`);
+        changedTree = tree(
+          entries(base).replace(
+            `040000 tree ${previousTree}\t${directory}\0`,
+            `040000 tree ${changedTree}\t${directory}\0`,
+          ),
+        );
+      }
+      const head = git(
+        '-c',
+        'user.name=CI test',
+        '-c',
+        'user.email=ci-test@example.invalid',
+        '-c',
+        'commit.gpgsign=false',
+        'commit-tree',
+        changedTree,
+        '-p',
+        base,
+        '-m',
+        'Fixture with a Git-only filename',
+      );
+
+      // act
+      const result = classify(head);
+
+      // assert
+      expect(result.documentationOnly).toBe(false);
+    },
+  );
 
   it('includes all commits in a multi-commit push', () => {
     // arrange
