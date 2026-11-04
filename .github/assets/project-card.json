@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "project": {
+    "name": "Symphony",
+    "slug": "symphony",
+    "website": "https://github.com/pixel-brewery/symphony",
+    "repository": "https://github.com/pixel-brewery/symphony"
+  },
+  "description": "Symphony connects project boards, coding agents and delivery work in one desktop workspace. Isolated worktrees and resumable runs keep each task linked to its pull requests, checks and review evidence.",
+  "image": {
+    "file": "project-card.webp",
+    "format": "webp",
+    "width": 960,
+    "height": 540,
+    "alt": "Symphony's red posthorn beside branching delivery tracks and reviewed task tiles."
+  },
+  "artwork": {
+    "kind": "illustration",
+    "generator": "Built-in Imagegen",
+    "generatedOn": "2026-11-03",
+    "prompt": "Use case: ads-marketing. Asset: compact portfolio project card in a SEVEN-PROJECT MATCHED SERIES. Image 1 is the Mosaik MASTER CARD: match its 16:9 landscape framing, composition, typography scale, pure white / very light warm-gray seamless background, soft studio lighting, grounded shadows, restrained tactile ceramic/glass materials, generous 7% safe margins and premium editorial quality. Request target 1280x720. Brand lockup occupies LEFT THIRD with large exact black project name and existing mark when available, sculptural product-specific still life occupies RIGHT TWO THIRDS. Match the master; do not repeat its mosaic subject. Physical metaphor artwork, NOT a screenshot or proposed interface; no operating UI controls, dense text or dashboards. The text must remain readable at 600px wide. No tagline, subtitles, other prose, people, robot, brains, stock clip art, watermark, unrelated logos or background gradients.\n\nPROJECT SPECIFICATION:\nImage2 provides Symphony's existing red posthorn mark and software context. Preserve the exact established red posthorn silhouette above the large exact black word \"Symphony\" in the left brand area. Right: an orderly sculptural project delivery workspace of thin off-white ceramic task cards and a few translucent panels, arranged as a small sequential board with precisely branching metal tracks and understated checkmark grooves. Represent a project board, isolated work branches and reviewed delivery with a calm composed still life, not a new dashboard UI. Brand red accents with off-white, pale gray and matte black. No actual task text, fake customer data, agent-provider logos or red posthorn variations."
+  },
+  "blogDescription": "A coding agent run is only one part of getting a change delivered. Tickets, working copies, agent sessions, pull requests and verification still need to line up. Symphony brings those pieces into one desktop workspace, keeping each work item connected to its implementation and review evidence.\n\n- **Project context:** GitHub boards, work items and delivery status.\n- **Isolated work:** managed Git worktrees for each item.\n- **Durable execution:** resumable agent runs, pull requests and checks together."
+}

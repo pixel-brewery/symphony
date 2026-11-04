@@ -34,9 +34,32 @@ env:
   YARN_VERSION: 4.10.3
 
 jobs:
+  changes:
+    name: Classify release changes
+    if: github.repository_id == '1440122208' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      documentation_only: ${{ steps.scope.outputs.documentation_only }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Classify the event diff
+        id: scope
+        run: node tools/ClassifyCiChanges.mjs
+
   configure:
     name: Resolve release identity
-    if: github.repository_id == '1440122208' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: changes
+    if: github.repository_id == '1440122208' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.changes.outputs.documentation_only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

@@ -71,6 +71,17 @@ processes with isolated simulated state. `forge:package` verifies the packaged a
 Use `yarn nx show project <project> --json` to discover the actual focused target.
 Coordinate heavy checks with other work in the checkout.
 
+For documentation-only pull requests, merge groups and pushes, CI classifies the
+complete diff before installing dependencies. Prose, documentation artwork and
+license notices use the lightweight documentation-link check. The three required
+OS-labelled contexts report a lightweight explanation on Linux, without checking
+out source or installing packages; source verification, Electron tests and package
+smoke are skipped. Code, configuration,
+agent instructions, prompts, executable documentation examples and mixed changes
+retain the complete pipeline. Manual runs and unavailable history also retain full
+verification. See [repository quality](docs/architecture/repository-quality/README.md)
+for the exact allowlist and event comparisons.
+
 Before a pull request, run the repository's local Ship-it review when available and
 resolve blocking findings. Do not claim a review or test that did not run.
 
@@ -78,23 +89,28 @@ resolve blocking findings. Do not claim a review or test that did not run.
 
 Branch from `main`, use conventional commit subjects and keep changes focused. Follow
 the pull request template and update the owning documentation when a contract or
-workflow changes. The complete `Repository Quality` contract has five required job
-contexts for the current revision:
+workflow changes. The `Repository Quality` contract has five conditional heavy job
+contexts and one always-reported aggregate context for the current revision:
 
 - `Agents, Format, Lint, Typecheck, Test and Build (ubuntu-latest)`
 - `Agents, Format, Lint, Typecheck, Test and Build (macos-latest)`
 - `Agents, Format, Lint, Typecheck, Test and Build (windows-latest)`
 - `Electron E2E`
 - `Package smoke test`
+- `Quality Gate`
 
 The three source-quality jobs run `yarn verify` as one OS matrix with
 `fail-fast: false`. Electron E2E and package smoke both run on macOS and depend on
 the complete successful source matrix; they may then run alongside each other.
-These are three source jobs plus two native acceptance jobs, rather than a count
-of individual verification steps.
+Documentation-only changes retain all three matrix context names with successful
+explanation jobs and skip Electron E2E and package smoke. `Quality Gate` requires
+successful change classification and documentation validation, then accepts exactly
+that explicitly selected lightweight path or the complete successful source/native path.
+Failed or cancelled classification, failed validation and unexplained skipped
+verification cannot produce a successful gate.
 
 Pull-request creation is restricted to collaborators, and human changes to `main`
-require a PR. The main PR/check rule must require the five exact contexts above;
+require a PR. The main PR/check rule requires the six exact contexts above;
 its live configuration is verified separately from the workflow source. Required
 approving reviews are zero because `RueDeRennes` is the sole maintainer. Only
 installed release App `5547670` bypasses the PR/check rule. Force-push and deletion
@@ -119,8 +135,12 @@ is itself evidence that this path has completed a live merge.
 
 ## How a change ships
 
-In the public Pixel Brewery repository, a main change requests a patch release.
-Explicit `patch`, `minor` and `major` dispatches use the same workflow:
+In the public Pixel Brewery repository, a main change affecting code, configuration
+or operational instructions requests a patch release. Documentation-only pushes
+skip release preparation, native builds and publication. An explicit dispatch
+always runs the complete release pipeline, including when the latest source change
+only updates documentation. Explicit `patch`, `minor` and `major` dispatches use
+the same workflow:
 
 ```bash
 yarn release:patch
