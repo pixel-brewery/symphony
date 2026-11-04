@@ -1,3 +1,18 @@
+## 0.1.31 (2026-11-04)
+
+### 🩹 Fixes
+
+- **ci:** support runners with 4 GiB memory ([c635169](https://github.com/pixel-brewery/symphony/commit/c635169))
+- **ci:** align verification policy tests and complete project copy ([31e64a5](https://github.com/pixel-brewery/symphony/commit/31e64a5))
+- **ci:** make classification fixtures portable and complete Git delivery ([c1763c1](https://github.com/pixel-brewery/symphony/commit/c1763c1))
+- **orchestration:** keep CI and delivery refreshes responsive ([e1fc1af](https://github.com/pixel-brewery/symphony/commit/e1fc1af))
+- **orchestration:** isolate CI polling and support 4 GiB runners ([#43](https://github.com/pixel-brewery/symphony/pull/43))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+- RueDeRennes @RueDeRennes
+
 ## 0.1.30 (2026-11-03)
 
 ### 🩹 Fixes
