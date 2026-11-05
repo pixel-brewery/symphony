@@ -6,9 +6,10 @@ import {
   CdkOverlayOrigin,
   type ConnectedPosition,
 } from '@angular/cdk/overlay';
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   BadgeComponent,
   ButtonComponent,
   DotComponent,
@@ -36,6 +37,7 @@ import { NotificationBellViewPresenter } from '../view-presenters/NotificationBe
   selector: 'symphony-notification-bell',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BadgeComponent,
     ButtonComponent,
     CdkConnectedOverlay,

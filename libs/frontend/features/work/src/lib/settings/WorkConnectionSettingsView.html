@@ -1,23 +1,25 @@
-@if(presenter.account(); as account){
-<symphony-settings-row
-  [attr.test-id]="'configured-account-' + account.id"
-  [label]="account.displayName"
-  [description]="account.kind === 'azure-devops' ? 'Azure DevOps · ' + account.organization : account.kind === 'github' ? 'GitHub · ' + account.hostname + (account.accountLogin ? ' · @' + account.accountLogin : '') : ''"
->
-  <mosaik-avatar
-    slot="leading"
-    [size]="'small'"
-    [appearance]="'soft'"
-    [icon]="account.kind | connectionIcon"
-  />
-  <mosaik-button
-    [attr.test-id]="'edit-account-' + account.id"
-    [label]="'Edit'"
-    [icon]="'edit'"
-    [iconSize]="'small'"
-    [disabled]="!presenter.canEditAccount()"
-    [appearance]="'plain'"
-    (click)="presenter.openAccountCommand.execute(account)"
-  />
-</symphony-settings-row>
-}
+<ng-container *mosaikTranslate="let tr">
+  @if(presenter.account(); as account){
+  <symphony-settings-row
+    [attr.test-id]="'configured-account-' + account.id"
+    [label]="account.displayName"
+    [description]="account.kind === 'azure-devops' ? tr('loc.symphony.azure.devops.5f166a', [account.organization]) : account.kind === 'github' ? tr('loc.symphony.github.a23f44', [account.hostname, (account.accountLogin ? ' · @' + account.accountLogin : '')]) : ''"
+  >
+    <mosaik-avatar
+      slot="leading"
+      [size]="'small'"
+      [appearance]="'soft'"
+      [icon]="account.kind | connectionIcon"
+    />
+    <mosaik-button
+      [attr.test-id]="'edit-account-' + account.id"
+      [label]="tr('loc.symphony.edit.464c4f')"
+      [icon]="'edit'"
+      [iconSize]="'small'"
+      [disabled]="!presenter.canEditAccount()"
+      [appearance]="'plain'"
+      (click)="presenter.openAccountCommand.execute(account)"
+    />
+  </symphony-settings-row>
+  }
+</ng-container>

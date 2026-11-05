@@ -20,6 +20,7 @@ import { SKILLS_ASSIGNMENTS } from '../ports/SkillsAssignmentsToken';
 import { SKILLS_CLIENT } from '../ports/SkillsClientToken';
 import { SKILLS_CONTEXT } from '../ports/SkillsContextToken';
 import { SKILLS_SNAPSHOT_REFRESH } from '../ports/SkillsSnapshotRefreshToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -231,7 +232,9 @@ export class SkillStore implements ISkillsOperations {
     if (!changes.length) return true;
     const saved = await this._assignments.saveAssignments(changes);
     if (saved) {
-      this._notifications.showSuccess('Skill deactivated.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.skill.deactivated.d0a909e'),
+      );
       await this._snapshot.refresh();
     }
     return saved;
@@ -252,7 +255,7 @@ export class SkillStore implements ISkillsOperations {
       this._skillCatalog.set(catalog);
       this._builtinSkills.set(builtin.skills);
     } catch (cause) {
-      this.showError(cause, 'Unable to load skills.');
+      this.showError(cause, translateLabel('loc.symphony.labels.unable.to.load.skills.117e88b'));
     } finally {
       this._skillsBusy.set(false);
     }
@@ -275,9 +278,15 @@ export class SkillStore implements ISkillsOperations {
       this._builtinSkills.update((skills) =>
         skills.map((skill) => (skill.role === role ? { ...skill, additionalInstructions } : skill)),
       );
-      this._notifications.showSuccess('Instructions saved.', 'The role uses them on its next run.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.instructions.saved.e415bcb'),
+        translateLabel('loc.symphony.labels.the.role.uses.them.on.its.next.run.e979a8a'),
+      );
     } catch (cause) {
-      this.showError(cause, 'Unable to save the additional instructions.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.save.the.additional.instructions.fca91e7'),
+      );
     } finally {
       this._skillsBusy.set(false);
     }
@@ -295,7 +304,7 @@ export class SkillStore implements ISkillsOperations {
       this._activeSkill.set(await this._client.request('skills.get', { id }));
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to open skill.');
+      this.showError(cause, translateLabel('loc.symphony.labels.unable.to.open.skill.eab4485'));
       return false;
     } finally {
       this._skillsBusy.set(false);
@@ -313,13 +322,13 @@ export class SkillStore implements ISkillsOperations {
     try {
       this._activeSkill.set(await this._client.request('skills.save', { skill }));
       this._notifications.showSuccess(
-        'Skill saved.',
-        'The portable package is available in Symphony.',
+        translateLabel('loc.symphony.labels.skill.saved.0db2009'),
+        translateLabel('loc.symphony.labels.the.portable.package.is.available.in.symphony.a1b00a7'),
       );
       await this.refreshSkills();
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to save skill.');
+      this.showError(cause, translateLabel('loc.symphony.labels.unable.to.save.skill.571f020'));
       return false;
     } finally {
       this._skillsBusy.set(false);
@@ -337,13 +346,13 @@ export class SkillStore implements ISkillsOperations {
     try {
       this._activeSkill.set(await this._client.request('skills.import', { sourcePath }));
       this._notifications.showSuccess(
-        'Skill imported.',
-        'The portable package is available in Symphony.',
+        translateLabel('loc.symphony.labels.skill.imported.73514c0'),
+        translateLabel('loc.symphony.labels.the.portable.package.is.available.in.symphony.a1b00a7'),
       );
       await this.refreshSkills();
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to import skill.');
+      this.showError(cause, translateLabel('loc.symphony.labels.unable.to.import.skill.329d8ee'));
       return false;
     } finally {
       this._skillsBusy.set(false);
@@ -389,7 +398,7 @@ export class SkillStore implements ISkillsOperations {
     const stepLabel = step?.label ?? role;
     if (!staffed.length) {
       this._notifications.showWarning(
-        `Nobody works on ${stepLabel}`,
+        translateLabel('loc.symphony.labels.nobody.works.on.c14b378', stepLabel),
         teams.length
           ? `No AI team has someone on ${stepLabel}. Assign an agent to it under AI team, then attach the skill.`
           : 'Add a workspace with an AI team first, then attach the skill.',
@@ -449,7 +458,7 @@ export class SkillStore implements ISkillsOperations {
       this._notifications.showSuccess(result.message);
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to update skill.');
+      this.showError(cause, translateLabel('loc.symphony.labels.unable.to.update.skill.7a47e25'));
       return false;
     } finally {
       this._skillsBusy.set(false);

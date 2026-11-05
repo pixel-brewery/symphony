@@ -19,6 +19,7 @@
     "@pixel-brewery/mosaik-elements-angular": "0.1.183",
     "@symphony/domain-platform": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
+    "@symphony/frontend-intl": "workspace:*",
     "@symphony/frontend-notification": "workspace:*",
     "@symphony/frontend-setting": "workspace:*",
     "@symphony/frontend-ui": "workspace:*",

@@ -1,0 +1,30 @@
+{
+  "name": "frontend-intl",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frontend/intl/src",
+  "projectType": "library",
+  "tags": ["scope:frontend", "type:intl"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/frontend/intl/tsconfig.lib.json --noEmit"
+      }
+    },
+    "intl": {
+      "executor": "@pixel-brewery/wortlaut-nx-tasks:wortlaut"
+    },
+    "intl-lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint \"libs/frontend/intl/src/lib/**/*.json\" \"apps/desktop/src/intl/resources/*.json\""
+      }
+    },
+    "intl-references": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/verify-localization.mjs"
+      }
+    }
+  }
+}

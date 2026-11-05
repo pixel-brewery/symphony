@@ -1,155 +1,147 @@
-@let item = workspace();
-<div class="flex min-w-0 flex-col gap-3" test-id="workspace-local-ci-card">
-  <symphony-settings-group
-    test-id="local-ci-activation-settings-group"
-    [heading]="'Activation'"
-    [description]="'Enable local runs for this workspace. Symphony then offers local actions and automatically picks up queued workflows explicitly marked for its local runner in GitHub. The machine they boot is configured once under System › Virtual machines.'"
-  >
-    <symphony-settings-row [label]="'Enable local runs'">
-      <mosaik-toggle-switch
-        aria-label="Enable local runs"
-        [variant]="'primary'"
-        [attr.test-id]="'workspace-local-ci-enabled-' + item.id"
-        [isChecked]="presenter.workspaceLocalCiEnabled()(item.id)"
-        [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
-        (checked)="presenter.updateWorkspaceLocalCiCommand.execute([item.id, true])"
-        (unchecked)="presenter.updateWorkspaceLocalCiCommand.execute([item.id, false])"
-      />
-    </symphony-settings-row>
-  </symphony-settings-group>
+<ng-container *mosaikTranslate="let tr">
+  @let item = workspace();
+  <div class="flex min-w-0 flex-col gap-3" test-id="workspace-local-ci-card">
+    <symphony-settings-group
+      test-id="local-ci-activation-settings-group"
+      [heading]="tr('loc.symphony.activation.5d939d')"
+      [description]="tr('loc.symphony.enable.local.runs.for.this.workspace.symphony.then.o.042d88')"
+    >
+      <symphony-settings-row [label]="tr('loc.symphony.enable.local.runs.b6fcd2')">
+        <mosaik-toggle-switch
+          [attr.aria-label]="tr('loc.symphony.enable.local.runs.b6fcd2')"
+          [variant]="'primary'"
+          [attr.test-id]="'workspace-local-ci-enabled-' + item.id"
+          [isChecked]="presenter.workspaceLocalCiEnabled()(item.id)"
+          [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+          (checked)="presenter.updateWorkspaceLocalCiCommand.execute([item.id, true])"
+          (unchecked)="presenter.updateWorkspaceLocalCiCommand.execute([item.id, false])"
+        />
+      </symphony-settings-row>
+    </symphony-settings-group>
 
-  @let selected = presenter.runnerImageSelection()(item.id); @let imageHint =
-  presenter.runnerImageHint()(item.id);
-  <symphony-settings-group
-    test-id="local-ci-image-settings-group"
-    [heading]="'Guest image'"
-    [description]="'The GitHub runner image release this workspace reproduces. Symphony reads the published software report and installs the declared packages, Node.js runtime, and environment inside the virtual machine.'"
-  >
-    <mosaik-button
-      slot="actions"
-      test-id="refresh-runner-images"
-      [label]="'Refresh catalog'"
-      [icon]="'sync'"
-      [iconSize]="'small'"
-      [appearance]="'plain'"
-      [variant]="'primary'"
-      [isBusy]="presenter.runnerImageBusy()"
-      [disabled]="presenter.runnerImageBusy()"
-      (click)="presenter.refreshRunnerImagesCommand.execute()"
-    />
-    <symphony-settings-row [label]="'Runner image'">
-      @if (imageHint) {
-      <mosaik-text
-        slot="detail"
-        test-id="runner-image-hint"
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="imageHint"
+    @let selected = presenter.runnerImageSelection()(item.id); @let imageHint =
+    presenter.runnerImageHint()(item.id);
+    <symphony-settings-group
+      test-id="local-ci-image-settings-group"
+      [heading]="tr('loc.symphony.guest.image.93a4ae')"
+      [description]="tr('loc.symphony.the.github.runner.image.release.this.workspace.repro.c85bc9')"
+    >
+      <mosaik-button
+        slot="actions"
+        test-id="refresh-runner-images"
+        [label]="tr('loc.symphony.refresh.catalog.fae750')"
+        [icon]="'sync'"
+        [iconSize]="'small'"
+        [appearance]="'plain'"
+        [variant]="'primary'"
+        [isBusy]="presenter.runnerImageBusy()"
+        [disabled]="presenter.runnerImageBusy()"
+        (click)="presenter.refreshRunnerImagesCommand.execute()"
       />
-      }
-      <mosaik-select
-        class="w-[300px]"
-        aria-label="Runner image"
-        [attr.test-id]="'runner-image-' + item.id"
-        [value]="presenter.effectiveRunnerImageReleaseTag()(item.id)"
-        [disabled]="
+      <symphony-settings-row [label]="tr('loc.symphony.runner.image.c83372')">
+        @if (imageHint) {
+        <mosaik-text
+          slot="detail"
+          test-id="runner-image-hint"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="imageHint"
+        />
+        }
+        <mosaik-select
+          class="w-[300px]"
+          [attr.aria-label]="tr('loc.symphony.runner.image.c83372')"
+          [attr.test-id]="'runner-image-' + item.id"
+          [value]="presenter.effectiveRunnerImageReleaseTag()(item.id)"
+          [disabled]="
           presenter.runnerImageBusy() ||
           !presenter.runnerImageEntries().length ||
           !!presenter.store.localCiRunningRunId()
         "
-        (selectionChanged)="presenter.selectRunnerImageCommand.execute([item.id, $event])"
+          (selectionChanged)="presenter.selectRunnerImageCommand.execute([item.id, $event])"
+        >
+          @for (entry of presenter.runnerImageEntries(); track entry.releaseTag) {
+          <mosaik-select-item
+            [label]="
+            tr('loc.symphony.ubuntu.967f5f', [entry.ubuntuVersion, entry.imageVersion, (entry.latest ? tr('loc.symphony.latest.bf769e') : '')])"
+            [value]="entry.releaseTag"
+            (click)="presenter.selectRunnerImageCommand.execute([item.id, entry.releaseTag])"
+          />
+          }
+        </mosaik-select>
+      </symphony-settings-row>
+      @if (selected) {
+      <symphony-settings-row
+        [attr.test-id]="'runner-image-summary-' + item.id"
+        [label]="tr('loc.symphony.ubuntu.e853b6', [selected.ubuntuVersion, selected.architecture])"
+        [description]="
+        tr('loc.symphony.declared.packages.node.js.cloud.image.e74c48', [selected.aptPackages.length, selected.nodeVersion, selected.cloudImageRelease])"
       >
-        @for (entry of presenter.runnerImageEntries(); track entry.releaseTag) {
-        <mosaik-select-item
-          [label]="
-            'Ubuntu ' +
-            entry.ubuntuVersion +
-            ' · ' +
-            entry.imageVersion +
-            (entry.latest ? ' · latest' : '')
-          "
-          [value]="entry.releaseTag"
-          (click)="presenter.selectRunnerImageCommand.execute([item.id, entry.releaseTag])"
+        <mosaik-avatar
+          slot="leading"
+          [size]="'small'"
+          [appearance]="'soft'"
+          [icon]="'executionOutline'"
         />
-        }
-      </mosaik-select>
-    </symphony-settings-row>
-    @if (selected) {
-    <symphony-settings-row
-      [attr.test-id]="'runner-image-summary-' + item.id"
-      [label]="'Ubuntu ' + selected.ubuntuVersion + ' · ' + selected.architecture"
-      [description]="
-        selected.aptPackages.length +
-        ' declared packages · Node.js ' +
-        selected.nodeVersion +
-        ' · cloud image ' +
-        selected.cloudImageRelease
-      "
-    >
-      <mosaik-avatar
-        slot="leading"
-        [size]="'small'"
+      </symphony-settings-row>
+      } @else {
+      <symphony-settings-row
+        [attr.test-id]="'runner-image-unpinned-' + item.id"
+        [label]="tr('loc.symphony.not.pinned.yet.the.newest.release.is.preselected.and.61bb14')"
+      />
+      }
+    </symphony-settings-group>
+
+    @let catalog = presenter.runnerImageCatalog(); @if (catalog?.staleReason) {
+    <symphony-settings-conditional [condition]="'When GitHub cannot be reached'">
+      <mosaik-message
+        class="block w-full"
+        test-id="runner-image-catalog-stale"
         [appearance]="'soft'"
-        [icon]="'executionOutline'"
+        [variant]="'warning'"
+        [fit]="'width'"
+        [icon]="'warning'"
+        [iconSize]="'small'"
+        [header]="tr('loc.symphony.showing.the.cached.image.catalog.c361d9')"
+        [content]="catalog!.staleReason!"
       />
-    </symphony-settings-row>
-    } @else {
-    <symphony-settings-row
-      [attr.test-id]="'runner-image-unpinned-' + item.id"
-      [label]="'Not pinned yet — the newest release is preselected and is pinned on the first run.'"
-    />
+    </symphony-settings-conditional>
     }
-  </symphony-settings-group>
 
-  @let catalog = presenter.runnerImageCatalog(); @if (catalog?.staleReason) {
-  <symphony-settings-conditional [condition]="'When GitHub cannot be reached'">
-    <mosaik-message
-      class="block w-full"
-      test-id="runner-image-catalog-stale"
-      [appearance]="'soft'"
-      [variant]="'warning'"
-      [fit]="'width'"
-      [icon]="'warning'"
-      [iconSize]="'small'"
-      [header]="'Showing the cached image catalog'"
-      [content]="catalog!.staleReason!"
-    />
-  </symphony-settings-conditional>
-  }
-
-  <symphony-settings-group
-    test-id="local-ci-setup-script-group"
-    [heading]="'Repository setup'"
-    [description]="'Optional. Commands each repository of this workspace runs inside the guest after the image baseline and before any workflow step. Leave empty unless the repository needs something the selected image does not provide — a Yarn release declared through packageManager is installed automatically.'"
-  >
-    @for (repository of presenter.workspaceRepositories()(item.id); track repository.id) {
-    <div part="settings-row" class="flex min-w-0 flex-col gap-1 px-2 py-1.5">
-      <mosaik-text
-        [mosaikTypography]="'body2'"
-        [wrap]="true"
-        [text]="repository.owner + '/' + repository.name + ' setup script'"
+    <symphony-settings-group
+      test-id="local-ci-setup-script-group"
+      [heading]="tr('loc.symphony.repository.setup.8dc2de')"
+      [description]="tr('loc.symphony.optional.commands.each.repository.of.this.workspace.fb1c10')"
+    >
+      @for (repository of presenter.workspaceRepositories()(item.id); track repository.id) {
+      <div part="settings-row" class="flex min-w-0 flex-col gap-1 px-2 py-1.5">
+        <mosaik-text
+          [mosaikTypography]="'body2'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.setup.script.4533d2', [repository.owner, repository.name])"
+        />
+        <mosaik-textbox
+          class="w-full"
+          [attr.test-id]="'local-ci-setup-script-' + repository.id"
+          [attr.aria-label]="tr('loc.symphony.setup.script.4533d2', [repository.owner, repository.name])"
+          [placeholder]="'# Optional, runs as bash inside the guest, for example:\n# sudo apt-get install -y libvips'"
+          [value]="presenter.setupScript()(repository.id)"
+          [multiline]="true"
+          [multilineRows]="4"
+          [multilineMaxRows]="16"
+          [maxlength]="32768"
+          [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
+          (input)="presenter.updateSetupScriptCommand.execute([repository.id, $event])"
+          (focusout)="presenter.commitSetupScriptCommand.execute(repository.id)"
+        />
+      </div>
+      } @empty {
+      <symphony-settings-row
+        [attr.test-id]="'local-ci-setup-script-empty-' + item.id"
+        [label]="tr('loc.symphony.this.workspace.has.no.repository.yet.add.one.under.r.192c8a')"
       />
-      <mosaik-textbox
-        class="w-full"
-        [attr.test-id]="'local-ci-setup-script-' + repository.id"
-        [attr.aria-label]="repository.owner + '/' + repository.name + ' setup script'"
-        [placeholder]="'# Optional, runs as bash inside the guest, for example:\n# sudo apt-get install -y libvips'"
-        [value]="presenter.setupScript()(repository.id)"
-        [multiline]="true"
-        [multilineRows]="4"
-        [multilineMaxRows]="16"
-        [maxlength]="32768"
-        [disabled]="presenter.configurationBusy() || !!presenter.store.localCiRunningRunId()"
-        (input)="presenter.updateSetupScriptCommand.execute([repository.id, $event])"
-        (focusout)="presenter.commitSetupScriptCommand.execute(repository.id)"
-      />
-    </div>
-    } @empty {
-    <symphony-settings-row
-      [attr.test-id]="'local-ci-setup-script-empty-' + item.id"
-      [label]="'This workspace has no repository yet. Add one under Repositories.'"
-    />
-    }
-  </symphony-settings-group>
-</div>
+      }
+    </symphony-settings-group>
+  </div>
+</ng-container>

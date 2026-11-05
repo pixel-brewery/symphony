@@ -2,18 +2,35 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { TeamsFeedbackValidationIssue } from './TeamsFeedbackValidationIssue';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
 const LABELS: Readonly<Record<TeamsFeedbackValidationIssue, string>> = {
-  'display-name': 'Display name',
-  'tenant-id': 'Microsoft Entra tenant ID',
-  'client-id': 'Application / client ID',
-  'credential-ref': 'Client secret credential reference',
-  'team-id': 'Team ID',
-  'channel-id': 'Channel ID',
-  'target-project': 'Target GitHub Project',
-  'target-repository': 'Target GitHub repository',
+  get 'display-name'() {
+    return translateLabel('loc.symphony.labels.display.name.2b7f6a8');
+  },
+  get 'tenant-id'() {
+    return translateLabel('loc.symphony.labels.microsoft.entra.tenant.id.f7b29cc');
+  },
+  get 'client-id'() {
+    return translateLabel('loc.symphony.labels.application.client.id.bb92f9c');
+  },
+  get 'credential-ref'() {
+    return translateLabel('loc.symphony.labels.client.secret.credential.reference.9cb1596');
+  },
+  get 'team-id'() {
+    return translateLabel('loc.symphony.labels.team.id.fa2758a');
+  },
+  get 'channel-id'() {
+    return translateLabel('loc.symphony.labels.channel.id.8edd65c');
+  },
+  get 'target-project'() {
+    return translateLabel('loc.symphony.labels.target.github.project.0cb23d1');
+  },
+  get 'target-repository'() {
+    return translateLabel('loc.symphony.labels.target.github.repository.bdc4f37');
+  },
 };
 
 /**
@@ -22,7 +39,7 @@ const LABELS: Readonly<Record<TeamsFeedbackValidationIssue, string>> = {
  *
  * @public
  */
-@Pipe({ name: 'teamsFeedbackValidationIssuesLabel', standalone: true, pure: true })
+@Pipe({ name: 'teamsFeedbackValidationIssuesLabel', standalone: true, pure: false })
 export class TeamsFeedbackValidationIssuesLabelPipe implements PipeTransform {
   // #region Methods
 

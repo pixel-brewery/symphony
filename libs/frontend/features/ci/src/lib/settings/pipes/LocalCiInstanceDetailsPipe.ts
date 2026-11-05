@@ -3,6 +3,7 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { LocalCiInstanceDto } from '@symphony/ipc-contracts-ci';
 import { storageSize } from '@symphony/frontend-ui';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -11,7 +12,7 @@ import { storageSize } from '@symphony/frontend-ui';
  * kept on purpose and one an interrupted teardown abandoned look identical on disk, so the
  * reason has to be spelled out before the numbers.
  */
-@Pipe({ name: 'localCiInstanceDetails', standalone: true, pure: true })
+@Pipe({ name: 'localCiInstanceDetails', standalone: true, pure: false })
 export class LocalCiInstanceDetailsPipe implements PipeTransform {
   // #region Methods
 
@@ -35,9 +36,12 @@ export class LocalCiInstanceDetailsPipe implements PipeTransform {
 }
 
 function state(instance: LocalCiInstanceDto): string {
-  if (instance.busy) return 'in use by the current run';
-  if (instance.keptWarm) return 'kept warm for the next run';
-  if (instance.status === 'running') return 'running without a Symphony run';
-  if (instance.status === 'missing') return 'left behind, no longer tracked';
-  return 'stopped, removable';
+  if (instance.busy) return translateLabel('loc.symphony.labels.in.use.by.the.current.run.30c6a82');
+  if (instance.keptWarm)
+    return translateLabel('loc.symphony.labels.kept.warm.for.the.next.run.a59005b');
+  if (instance.status === 'running')
+    return translateLabel('loc.symphony.labels.running.without.a.symphony.run.5e8f912');
+  if (instance.status === 'missing')
+    return translateLabel('loc.symphony.labels.left.behind.no.longer.tracked.5c10024');
+  return translateLabel('loc.symphony.labels.stopped.removable.7edd2ba');
 }

@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  TranslateDirective,
   BadgeComponent,
   CardComponent,
   CardContentComponent,
@@ -17,6 +18,7 @@ import type { MobileTicket } from '@symphony/mobile-contracts';
   selector: 'symphony-mobile-ticket-card',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BadgeComponent,
     CardComponent,
     CardContentComponent,

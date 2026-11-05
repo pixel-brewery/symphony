@@ -31,6 +31,7 @@ import {
   type MobileWorkItemCreateRequest,
   type MobileWorkItemCreationContext,
 } from '@symphony/mobile-contracts';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -441,7 +442,9 @@ export class MobileCompanionStore {
           mobileEventSchema.parse(JSON.parse(String(data)));
           void this.refreshSnapshot();
         } catch {
-          this._errorState.set('The desktop sent an unsupported update.');
+          this._errorState.set(
+            translateLabel('loc.symphony.labels.the.desktop.sent.an.unsupported.update.8e9c671'),
+          );
         }
       },
       close: () => {
@@ -475,7 +478,9 @@ export class MobileCompanionStore {
   }
 
   private errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : 'Mobile access is temporarily unavailable.';
+    return error instanceof Error
+      ? error.message
+      : translateLabel('loc.symphony.labels.mobile.access.is.temporarily.unavailable.f5a4ef2');
   }
 
   private dispose(): void {

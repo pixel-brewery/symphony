@@ -3,6 +3,7 @@
 import { AsyncPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   IconNameDirective,
@@ -27,6 +28,7 @@ import { SettingsViewPresenter } from '../view-presenters/SettingsViewPresenter'
   selector: 'symphony-settings-sidebar-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AsyncPipe,
     AvatarComponent,
     ButtonComponent,

@@ -7,6 +7,7 @@ import {
   type NavigationFeatureKind,
 } from '@symphony/frontend-core';
 import { DELIVERY_VIEW_CONTEXT } from '../ports/DeliveryViewContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -24,12 +25,16 @@ export function withDeliveryNavigation(order: number): IFeature<NavigationFeatur
       const context = inject(DELIVERY_VIEW_CONTEXT);
       return {
         key: 'pull-requests',
-        label: 'Pull requests',
+        get label() {
+          return translateLabel('loc.symphony.labels.pull.requests.d9e3f26');
+        },
         icon: 'branch',
         route: '/main/pull-requests',
         order,
         region: 'desktop-main',
-        group: 'Delivery',
+        get group() {
+          return translateLabel('loc.symphony.labels.delivery.52bfe58');
+        },
         countTone: 'quiet',
         count: () => {
           const pullRequests = context.snapshot()?.pullRequests;

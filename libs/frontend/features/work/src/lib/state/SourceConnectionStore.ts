@@ -10,6 +10,7 @@ import type { IWorkConnectionRefresh } from '../ports/IWorkConnectionRefresh';
 import { WORK_CONNECTION_CLIENT } from '../ports/WorkConnectionClientToken';
 import { WORK_CONNECTION_PROJECTION } from '../ports/WorkConnectionProjectionToken';
 import { WORK_CONNECTION_REFRESH } from '../ports/WorkConnectionRefreshToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -141,7 +142,10 @@ export class SourceConnectionStore implements IWorkConnectionOperations {
       }
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to update provider connection.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.update.provider.connection.4785568'),
+      );
       return false;
     } finally {
       this._connectionBusy.set(false);

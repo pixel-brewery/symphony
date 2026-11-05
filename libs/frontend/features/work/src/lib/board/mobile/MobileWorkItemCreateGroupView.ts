@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  TranslateDirective,
   CellComponent,
   CellGroupComponent,
   TextComponent,
@@ -16,6 +17,7 @@ import { PseudoLinkDirective } from '@symphony/frontend-ui/mobile';
   selector: 'symphony-mobile-work-item-create-group',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     CellComponent,
     CellGroupComponent,
     PseudoLinkDirective,

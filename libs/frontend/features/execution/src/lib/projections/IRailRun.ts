@@ -8,7 +8,8 @@ import type { IRailRunSourceState } from './IRailRunSourceState';
 export interface IRailRun {
   readonly id: string;
   readonly kind: RailRunKind;
-  readonly sourceLabel: 'Agent' | 'GitHub' | 'Local runner' | 'Action';
+  /** Localized display copy; decisions use the stable `kind` discriminator. */
+  readonly sourceLabel: string;
   readonly sources?: readonly IRailRunSourceState[];
   readonly title: string;
   readonly message: string;

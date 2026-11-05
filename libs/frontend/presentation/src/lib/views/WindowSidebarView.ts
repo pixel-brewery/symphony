@@ -4,6 +4,7 @@ import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   ButtonComponent,
@@ -34,6 +35,7 @@ import { RunPanelView } from './RunPanelView';
   selector: 'symphony-window-sidebar',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AsyncPipe,
     AvatarComponent,
     BadgeComponent,

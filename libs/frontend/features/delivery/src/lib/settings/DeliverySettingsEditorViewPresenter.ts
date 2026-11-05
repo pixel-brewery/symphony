@@ -28,6 +28,7 @@ import { DELIVERY_SETTINGS_CLIENT } from '../ports/DeliverySettingsClientToken';
 import { DELIVERY_CI_OPERATIONS } from '../ports/DeliveryCiOperationsToken';
 import type { DeliverySettingsEditorRequest } from './DeliverySettingsEditorRequest';
 import type { RepositoryValidationIssue } from './RepositoryValidationIssue';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -360,7 +361,9 @@ export class DeliverySettingsEditorViewPresenter extends Hydratable(ViewPresente
   private async onExecuteChooseRepositoryDirectoryCommand(): Promise<void> {
     const result = await this._client.selectPath({
       kind: 'directory',
-      title: 'Choose local repository',
+      get title() {
+        return translateLabel('loc.symphony.labels.choose.local.repository.a98d449');
+      },
       defaultPath: this.repository.localPath || undefined,
     });
     if (!result.canceled && result.paths[0]) {

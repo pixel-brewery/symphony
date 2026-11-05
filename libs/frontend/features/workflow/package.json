@@ -20,6 +20,7 @@
     "@symphony/domain-work": "workspace:*",
     "@symphony/domain-workflow": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
+    "@symphony/frontend-intl": "workspace:*",
     "@symphony/frontend-notification": "workspace:*",
     "@symphony/frontend-ui": "workspace:*",
     "@symphony/ipc-contracts-composition": "workspace:*",

@@ -7,6 +7,7 @@ import type {
 } from '@pixel-brewery/mosaik-elements-angular';
 import type { ISettingsSearchEntry } from '@symphony/frontend-setting';
 import { ArcadeGameIds } from '../games/ArcadeGameIds';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -36,19 +37,35 @@ export class ArcadeSettingsViewSlotProvider implements IViewSlotProvider {
         search: [
           {
             id: 'show-arcade',
-            label: 'Show Arcade',
-            description: `Add all ${ArcadeGameIds.length} bundled games to the main navigation.`,
-            group: 'Navigation',
+            get label() {
+              return translateLabel('loc.symphony.labels.show.arcade.b48bb78');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.add.all.bundled.games.to.the.main.navigation.19e1239',
+                ArcadeGameIds.length,
+              );
+            },
+            get group() {
+              return translateLabel('loc.symphony.labels.navigation.3db65f8');
+            },
             keywords: ['games', 'arcade'],
             loadControl: () =>
               import('./ArcadeEnabledToggleView').then((module) => module.ArcadeEnabledToggleView),
           },
           {
             id: 'god-mode',
-            label: 'God mode',
-            description:
-              'Press the keys in order. Progress resets after two seconds without a key.',
-            group: 'Navigation',
+            get label() {
+              return translateLabel('loc.symphony.labels.god.mode.c2a056f');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.press.the.keys.in.order.progress.resets.after.two.se.d216387',
+              );
+            },
+            get group() {
+              return translateLabel('loc.symphony.labels.navigation.3db65f8');
+            },
           },
         ],
         loadComponent: () =>

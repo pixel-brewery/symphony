@@ -110,7 +110,12 @@ import {
 import { simpleClaude, simpleGithub } from '@pixel-brewery/mosaik-icons/simple-icons';
 import { svglOpenai } from '@pixel-brewery/mosaik-icons/svgl';
 import { SohoTheme, type ThemeMode } from '@pixel-brewery/mosaik-themes';
-import { provideNavigation, readThemePreference, resolveThemeMode } from '@symphony/frontend-core';
+import {
+  browserStorage,
+  provideNavigation,
+  readThemePreference,
+  resolveThemeMode,
+} from '@symphony/frontend-core';
 import { provideNotifications } from '@symphony/frontend-notification';
 import { presentationRoutes } from '@symphony/frontend-presentation';
 import { provideSearch } from '@symphony/frontend-search';
@@ -121,6 +126,7 @@ import { withPowerSettings } from '@symphony/frontend-interaction';
 import { provideUpdate, withUpdateSettings } from '@symphony/frontend-update';
 import { applicationThemeOverrides } from '@symphony/frontend-ui';
 import { applicationProductComposition } from './ApplicationProductComposition';
+import { provideApplicationLocalization } from '@symphony/frontend-intl';
 
 // #endregion
 
@@ -145,6 +151,7 @@ MosaikThemeService.configure({ defaultThemeMode: initialThemeMode });
 
 export const shellConfig: ApplicationConfig = {
   providers: [
+    provideApplicationLocalization({ storage: browserStorage() }),
     provideZonelessChangeDetection(),
     provideUpdate(),
     provideSettings(withUpdateSettings(), withPowerSettings()),

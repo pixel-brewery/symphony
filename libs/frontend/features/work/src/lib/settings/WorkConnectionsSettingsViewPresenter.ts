@@ -13,6 +13,8 @@ import {
 } from '@symphony/frontend-setting';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
 import { workSourceOrigin } from './workSourceOrigin';
+import { translateLabel } from '@symphony/frontend-intl/labels';
+
 // #endregion
 type ProviderConnection = ApplicationSettingsDto['connections'][number];
 /** Owns Work source rows and delegates their actual editors through the native Settings registry. @public */
@@ -183,7 +185,7 @@ export class WorkConnectionsSettingsViewPresenter {
    * @private
    */
   private resolveBoardSummary(source: ApplicationSettingsDto['workItemSources'][number]): string {
-    return `${workSourceOrigin(source)} · ${source.enabled ? 'Enabled' : 'Disabled'}`;
+    return `${workSourceOrigin(source)} · ${source.enabled ? translateLabel('loc.symphony.labels.enabled.92c1cdf') : translateLabel('loc.symphony.labels.disabled.75081b5')}`;
   }
 
   /**

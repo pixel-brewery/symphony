@@ -1,8 +1,12 @@
 // #region Imports
 
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {
+  ApplicationDatePipe as DatePipe,
+  ApplicationDecimalPipe as DecimalPipe,
+} from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   CellComponent,
   CellGroupComponent,
@@ -22,6 +26,7 @@ import { ArcadeLeaderboardDialogViewPresenter } from './ArcadeLeaderboardDialogV
 @Component({
   selector: 'symphony-arcade-leaderboard-dialog-view',
   imports: [
+    TranslateDirective,
     BoxingContenderNamePipe,
     ButtonComponent,
     CellComponent,

@@ -1,6 +1,7 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -20,7 +21,7 @@ const ROLE_VERBS: Readonly<Record<string, string>> = {
  *
  * @public
  */
-@Pipe({ name: 'agentActivityLabel', standalone: true, pure: true })
+@Pipe({ name: 'agentActivityLabel', standalone: true, pure: false })
 export class AgentActivityLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -37,19 +38,19 @@ export class AgentActivityLabelPipe implements PipeTransform {
       case 'working':
         return ROLE_VERBS[role ?? ''] ?? 'Working on';
       case 'queued':
-        return 'Queued for';
+        return translateLabel('loc.symphony.labels.queued.for.b1189be');
       case 'needs-input':
-        return 'Waiting for you on';
+        return translateLabel('loc.symphony.labels.waiting.for.you.on.b5ac5fb');
       case 'paused':
-        return 'Paused on';
+        return translateLabel('loc.symphony.labels.paused.on.baa57b1');
       case 'blocked':
-        return 'Blocked on';
+        return translateLabel('loc.symphony.labels.blocked.on.40b4ec8');
       case 'failed':
-        return 'Failed on';
+        return translateLabel('loc.symphony.labels.failed.on.bbd3765');
       case 'completed':
-        return 'Finished';
+        return translateLabel('loc.symphony.labels.finished.7804f7a');
       default:
-        return 'Idle';
+        return translateLabel('loc.symphony.labels.idle.ab0171c');
     }
   }
 

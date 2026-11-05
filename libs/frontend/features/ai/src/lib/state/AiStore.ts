@@ -14,6 +14,7 @@ import type { IAiConfiguration } from '../ports/IAiConfiguration';
 import { AI_CLIENT } from '../ports/AiClientToken';
 import { AI_CONTEXT } from '../ports/AiContextToken';
 import { AI_CONFIGURATION } from '../ports/AiConfigurationToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -226,7 +227,10 @@ export class AiStore implements IAiOperations {
       return true;
     } catch (cause) {
       if (requestId === this._codexConfigurationRequestId) {
-        this.showError(cause, 'Unable to load Codex models and usage.');
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.load.codex.models.and.usage.78b3fed'),
+        );
       }
       return false;
     } finally {
@@ -279,7 +283,10 @@ export class AiStore implements IAiOperations {
     } catch (cause) {
       if (this._aiUsageRequestIds.get(connectionId) === requestId) {
         this._aiUsageByConnectionId.update((current) => new Map(current).set(connectionId, []));
-        this.showError(cause, 'Unable to load AI usage.');
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.load.ai.usage.55793f9'),
+        );
       }
       return false;
     } finally {
@@ -327,7 +334,10 @@ export class AiStore implements IAiOperations {
       this._availableAiModels.set(models);
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to load models from the AI runtime.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.models.from.the.ai.runtime.d63ce79'),
+      );
       return false;
     } finally {
       this._availableAiModelsBusy.set(false);
@@ -349,7 +359,10 @@ export class AiStore implements IAiOperations {
       this._modelIntelligence.set(report);
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to load model intelligence scores.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.model.intelligence.scores.d10515b'),
+      );
       return false;
     } finally {
       this._modelIntelligenceBusy.set(false);
@@ -476,7 +489,10 @@ export class AiStore implements IAiOperations {
       }
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to update provider connection.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.update.provider.connection.4785568'),
+      );
       return false;
     } finally {
       this._connectionBusy.set(false);

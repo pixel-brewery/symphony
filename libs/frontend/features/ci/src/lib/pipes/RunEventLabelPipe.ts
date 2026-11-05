@@ -1,6 +1,7 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -9,7 +10,7 @@ import { Pipe, type PipeTransform } from '@angular/core';
  *
  * @public
  */
-@Pipe({ name: 'runEventLabel', standalone: true, pure: true })
+@Pipe({ name: 'runEventLabel', standalone: true, pure: false })
 export class RunEventLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -26,14 +27,14 @@ export class RunEventLabelPipe implements PipeTransform {
       case '':
         return '';
       case 'workflow_dispatch':
-        return 'manual';
+        return translateLabel('loc.symphony.labels.manual.36bde66');
       case 'pull_request':
       case 'pull_request_target':
-        return 'pull request';
+        return translateLabel('loc.symphony.labels.pull.request.763fae5');
       case 'schedule':
-        return 'scheduled';
+        return translateLabel('loc.symphony.labels.scheduled.6aef76c');
       case 'merge_group':
-        return 'merge queue';
+        return translateLabel('loc.symphony.labels.merge.queue.81b65f0');
       default:
         return event.replaceAll('_', ' ');
     }

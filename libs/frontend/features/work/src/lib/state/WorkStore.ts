@@ -29,6 +29,7 @@ import type { IWorkflowOperations } from '@symphony/frontend-core/workflow';
 import { WORK_WORKFLOW } from '../ports/WorkWorkflowToken';
 import { WORK_PROJECTION } from '../ports/WorkProjectionToken';
 import { WORK_REFRESH } from '../ports/WorkRefreshToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -178,7 +179,10 @@ export class WorkStore implements IWorkOperations {
       this._projection.replaceItem(workItem);
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to load work-item details.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.work.item.details.0432b40'),
+      );
       return false;
     }
   }
@@ -206,7 +210,10 @@ export class WorkStore implements IWorkOperations {
       this._workItemMetadata.set(await this._client.request('work-items.metadata', scope));
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to load work-item metadata.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.work.item.metadata.02cf301'),
+      );
       return false;
     } finally {
       this._workItemsBusy.set(false);
@@ -238,7 +245,11 @@ export class WorkStore implements IWorkOperations {
       });
       return metadata.assignees;
     } catch (cause) {
-      if (notifyOnFailure) this.showError(cause, 'Unable to load the assignable users.');
+      if (notifyOnFailure)
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.load.the.assignable.users.f6983e4'),
+        );
       return undefined;
     }
   }
@@ -280,10 +291,15 @@ export class WorkStore implements IWorkOperations {
     try {
       const commented = await this._client.request('work-items.comment', { workItemId, body });
       this._projection.replaceItem(commented);
-      this._notifications.showSuccess('Comment published.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.comment.published.a7c513f'),
+      );
       return commented;
     } catch (cause) {
-      this.showError(cause, 'Unable to publish the comment.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.publish.the.comment.8fb54d0'),
+      );
       return undefined;
     } finally {
       this._workItemCommentBusy.set(false);
@@ -320,7 +336,10 @@ export class WorkStore implements IWorkOperations {
       return true;
     } catch (cause) {
       if (previous) this._projection.replaceItem(previous);
-      this.showError(cause, 'Unable to move the work item.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.move.the.work.item.7f926f7'),
+      );
       return false;
     } finally {
       overtakenRefresh();
@@ -344,11 +363,17 @@ export class WorkStore implements IWorkOperations {
         ...payload,
         operationId,
       });
-      this._notifications.showSuccess('Issue draft ready.', 'Review it before saving.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.issue.draft.ready.58f72a0'),
+        translateLabel('loc.symphony.labels.review.it.before.saving.c2a80c9'),
+      );
       return draft;
     } catch (cause) {
       if (!this._cancelledIssueDrafts.has(operationId)) {
-        this.showError(cause, 'Unable to draft the work item.');
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.draft.the.work.item.2ff3a0d'),
+        );
       }
       return undefined;
     } finally {
@@ -372,12 +397,17 @@ export class WorkStore implements IWorkOperations {
     try {
       const result = await this._client.request('work-items.draft.cancel', { operationId });
       if (result.cancelled) {
-        this._notifications.showInfo('Issue drafting cancelled.');
+        this._notifications.showInfo(
+          translateLabel('loc.symphony.labels.issue.drafting.cancelled.0f0df73'),
+        );
       }
       return result.cancelled;
     } catch (cause) {
       this._cancelledIssueDrafts.delete(operationId);
-      this.showError(cause, 'Unable to cancel issue drafting.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.cancel.issue.drafting.53fb598'),
+      );
       return false;
     }
   }
@@ -443,7 +473,10 @@ export class WorkStore implements IWorkOperations {
       return updated;
     } catch (cause) {
       this._workItemMutationError.set(operatorErrorMessage(cause));
-      this.showError(cause, 'Unable to save the work item.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.save.the.work.item.93bd74b'),
+      );
       return undefined;
     } finally {
       this._workItemsBusy.set(false);

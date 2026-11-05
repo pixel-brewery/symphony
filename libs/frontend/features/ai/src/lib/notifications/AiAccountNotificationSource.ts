@@ -5,12 +5,14 @@ import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
 import type { INotificationItem, INotificationSource } from '@symphony/frontend-notification';
 import { AI_RUNTIME_LABELS } from '@symphony/frontend-ui';
 import { AiStore } from '../state/AiStore';
+import { labelLocale, translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
 const ITEM_PREFIX = 'ai-account:';
 
-const LIST_FORMAT = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
+const listFormat = (): Intl.ListFormat =>
+  new Intl.ListFormat(labelLocale(), { style: 'long', type: 'conjunction' });
 
 /**
  * Reports connected AI accounts whose sign-in has expired or never completed. Accounts whose CLI
@@ -66,19 +68,46 @@ export class AiAccountNotificationSource implements INotificationSource {
         {
           id: `${ITEM_PREFIX}${connection.id}`,
           severity: 'warning',
-          title: /\baccount\b/iu.test(connection.displayName)
-            ? `${connection.displayName} is not signed in`
-            : connection.displayName === label
-              ? `${label} account is not signed in`
-              : `${label} account ${connection.displayName} is not signed in`,
+          get title() {
+            return /\baccount\b/iu.test(connection.displayName)
+              ? translateLabel(
+                  'loc.symphony.labels.is.not.signed.in.f4c9655',
+                  connection.displayName,
+                )
+              : connection.displayName === label
+                ? translateLabel('loc.symphony.labels.account.is.not.signed.in.3487eec', label)
+                : translateLabel(
+                    'loc.symphony.labels.account.is.not.signed.in.9e21465',
+                    label,
+                    connection.displayName,
+                  );
+          },
           location: [workspaceName, 'Connected services'],
           ...(agents.length
             ? {
-                detail: `${LIST_FORMAT.format(agents)} run${agents.length === 1 ? 's' : ''} on this account`,
+                get detail() {
+                  return agents.length === 1
+                    ? translateLabel(
+                        'loc.symphony.labels.runs.on.this.account.1c72b96',
+                        listFormat().format(agents),
+                      )
+                    : translateLabel(
+                        'loc.symphony.labels.run.on.this.account.69c4c6b',
+                        listFormat().format(agents),
+                      );
+                },
               }
             : {}),
           scope: { kind: 'workspace', workspaceId: connection.workspaceId, name: workspaceName },
-          actions: [{ id: 'sign-in', label: 'Sign in', emphasis: 'secondary' }],
+          actions: [
+            {
+              id: 'sign-in',
+              get label() {
+                return translateLabel('loc.symphony.labels.sign.in.bfd402b');
+              },
+              emphasis: 'secondary',
+            },
+          ],
         },
       ];
     });

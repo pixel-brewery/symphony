@@ -14,6 +14,7 @@ import {
   workItemIdsNeedingAttention,
 } from '@symphony/frontend-core';
 import { scorePaletteMatch, type IPaletteResult } from '@symphony/frontend-search';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -25,7 +26,9 @@ const NEW_WORK_ITEM: IPaletteResult = {
   id: 'command:new-work-item',
   group: 'commands',
   icon: 'add',
-  title: 'New work item…',
+  get title() {
+    return translateLabel('loc.symphony.labels.new.work.item.d52372a');
+  },
   shortcut: 'N',
   rank: 0,
   action: { kind: 'navigate', path: '/main/board', queryParams: { create: 'true' } },

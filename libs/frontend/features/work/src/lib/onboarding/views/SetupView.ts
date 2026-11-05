@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  TranslateDirective,
   ButtonComponent,
   CardComponent,
   CardContentComponent,
@@ -34,6 +35,7 @@ import { SetupViewPresenter } from '../view-presenters/SetupViewPresenter';
 @Component({
   selector: 'symphony-setup-view',
   imports: [
+    TranslateDirective,
     AgentFigureComponent,
     ButtonComponent,
     CardComponent,

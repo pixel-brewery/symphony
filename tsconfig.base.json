@@ -176,7 +176,10 @@
         "libs/frontend/features/ci/src/presentation.ts"
       ],
       "@symphony/frontend-notification/views": ["libs/frontend/notification/src/views.ts"],
-      "@symphony/frontend-search/views": ["libs/frontend/search/src/views.ts"]
-    }
+      "@symphony/frontend-search/views": ["libs/frontend/search/src/views.ts"],
+      "@symphony/frontend-intl": ["./libs/frontend/intl/src/index.ts"],
+      "@symphony/frontend-intl/labels": ["libs/frontend/intl/src/labels.ts"]
+    },
+    "resolveJsonModule": true
   }
 }

@@ -1,32 +1,34 @@
-@if(presenter.account(); as account){
-<symphony-settings-row
-  [attr.test-id]="'configured-account-' + account.id"
-  [label]="account.displayName"
-  [description]="presenter.aiAccountSummary()(account)"
->
-  <mosaik-avatar
-    slot="leading"
-    [size]="'small'"
-    [appearance]="'soft'"
-    [icon]="account.kind | connectionIcon"
-  />
-  <mosaik-button
-    [attr.test-id]="'edit-account-' + account.id"
-    [label]="'Edit'"
-    [icon]="'edit'"
-    [iconSize]="'small'"
-    [appearance]="'plain'"
-    (click)="presenter.openAccountCommand.execute(account)"
-  />
-  <mosaik-button
-    [attr.test-id]="'remove-account-' + account.id"
-    [icon]="'delete'"
-    [iconSize]="'small'"
-    [appearance]="'plain'"
-    [variant]="'danger'"
-    [attr.aria-label]="'Remove account: ' + account.displayName"
-    [disabled]="presenter.store.configurationBusy()"
-    (click)="presenter.confirmRemoveAiAccountCommand.execute(account)"
-  />
-</symphony-settings-row>
-}
+<ng-container *mosaikTranslate="let tr">
+  @if(presenter.account(); as account){
+  <symphony-settings-row
+    [attr.test-id]="'configured-account-' + account.id"
+    [label]="account.displayName"
+    [description]="presenter.aiAccountSummary()(account)"
+  >
+    <mosaik-avatar
+      slot="leading"
+      [size]="'small'"
+      [appearance]="'soft'"
+      [icon]="account.kind | connectionIcon"
+    />
+    <mosaik-button
+      [attr.test-id]="'edit-account-' + account.id"
+      [label]="tr('loc.symphony.edit.464c4f')"
+      [icon]="'edit'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      (click)="presenter.openAccountCommand.execute(account)"
+    />
+    <mosaik-button
+      [attr.test-id]="'remove-account-' + account.id"
+      [icon]="'delete'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [variant]="'danger'"
+      [attr.aria-label]="tr('loc.symphony.remove.account.01a7c9', [account.displayName])"
+      [disabled]="presenter.store.configurationBusy()"
+      (click)="presenter.confirmRemoveAiAccountCommand.execute(account)"
+    />
+  </symphony-settings-row>
+  }
+</ng-container>

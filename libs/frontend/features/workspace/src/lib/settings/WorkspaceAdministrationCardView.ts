@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   MessageComponent,
   NumberBoxComponent,
@@ -27,6 +28,7 @@ import { WorkspaceSettingsViewPresenter } from './WorkspaceSettingsViewPresenter
   selector: 'symphony-workspace-administration-card',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     MessageComponent,
     NumberBoxComponent,

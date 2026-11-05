@@ -6,6 +6,7 @@ import { RUN_STATUSES, actionStatusLabel } from '@symphony/frontend-core/deliver
 import type { IWidgetTile } from '@symphony/frontend-widget';
 import type { ICiContext } from '../ports/ICiContext';
 import { CI_CONTEXT } from '../ports/CiContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -31,7 +32,10 @@ export class CiWidgetSource {
         count,
         route: ACTIONS_ROUTE,
         queryParams: { status },
-        ariaLabel: `Open the workflow runs filtered to ${label}`,
+        ariaLabel: translateLabel(
+          'loc.symphony.labels.open.the.workflow.runs.filtered.to.58cbb8d',
+          label,
+        ),
         live: status === 'in-progress' && count > 0,
         attention: false,
       } satisfies IWidgetTile;

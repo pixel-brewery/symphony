@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   ButtonComponent,
@@ -30,6 +31,7 @@ import { SkillsSettingsViewPresenter } from './SkillsSettingsViewPresenter';
   selector: 'symphony-skills-settings-view',
   host: { class: 'block min-w-0' },
   imports: [
+    TranslateDirective,
     AddedLineCountPipe,
     AvatarComponent,
     BadgeComponent,

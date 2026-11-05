@@ -1,17 +1,24 @@
-@if(presenter.workspace(); as item){
-<symphony-settings-row
-  [attr.test-id]="'azure-account-' + item.id"
-  [label]="'Azure DevOps'"
-  [description]="'Add a work-item account'"
->
-  <mosaik-avatar slot="leading" [size]="'small'" [appearance]="'outline'" [icon]="'azureDevOps'" />
-  <mosaik-button
-    [attr.test-id]="'add-azure-source-' + item.id"
-    [label]="'Connect'"
-    [icon]="'add'"
-    [iconSize]="'small'"
-    [appearance]="'outline'"
-    (click)="presenter.openAzureCommand.execute([item.id])"
-  />
-</symphony-settings-row>
-}
+<ng-container *mosaikTranslate="let tr">
+  @if(presenter.workspace(); as item){
+  <symphony-settings-row
+    [attr.test-id]="'azure-account-' + item.id"
+    [label]="'Azure DevOps'"
+    [description]="tr('loc.symphony.add.a.work.item.account.865f5e')"
+  >
+    <mosaik-avatar
+      slot="leading"
+      [size]="'small'"
+      [appearance]="'outline'"
+      [icon]="'azureDevOps'"
+    />
+    <mosaik-button
+      [attr.test-id]="'add-azure-source-' + item.id"
+      [label]="tr('loc.symphony.connect.1a2303')"
+      [icon]="'add'"
+      [iconSize]="'small'"
+      [appearance]="'outline'"
+      (click)="presenter.openAzureCommand.execute([item.id])"
+    />
+  </symphony-settings-row>
+  }
+</ng-container>

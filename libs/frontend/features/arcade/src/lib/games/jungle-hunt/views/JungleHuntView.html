@@ -1,278 +1,285 @@
-<mosaik-page
-  class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden"
-  test-id="jungle-hunt-view"
-  [attr.data-screen]="screen()"
->
-  <mosaik-page-header [text]="'Jungle Hunt'" [inset]="'all'" test-id="jungle-hunt-header">
-    <mosaik-button
-      slot="prefix"
-      test-id="jungle-hunt-back-arcade"
-      [label]="'All games'"
-      [appearance]="'plain'"
-      [variant]="'neutral'"
-      [command]="{ click: backArcadeCommand }"
-    />
-    @if (screen() === 'game' && state().status !== 'gameOver') {
-    <div
-      slot="subHeader"
-      id="jungle-hunt-controls"
-      class="flex flex-wrap items-center gap-x-4 gap-y-1"
-      [mosaikTypography]="'body2'"
-    >
-      <div class="flex items-center gap-2">
-        <mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" /><span>Move</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <mosaik-kbd [value]="['Space']" /><span>Jump / knife</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <mosaik-kbd [value]="['↑']" /><span>Swim up / higher jump</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <mosaik-kbd [value]="['↓']" /><span>Dive / duck</span>
-      </div>
-      <div class="flex items-center gap-2"><mosaik-kbd [value]="['P']" /><span>Pause</span></div>
-    </div>
-    }
-    <div slot="suffix" class="flex flex-wrap items-center gap-2">
-      <mosaik-button
-        test-id="jungle-hunt-sound"
-        [label]="soundMuted() ? 'Sound off' : 'Sound on'"
-        [attr.aria-pressed]="!soundMuted()"
-        [appearance]="'plain'"
-        [variant]="'neutral'"
-        [command]="{ click: toggleSoundCommand }"
-        (click)="enableAudio()"
-      />
-      @if (screen() === 'game') {
-      <mosaik-button
-        test-id="jungle-hunt-menu"
-        [label]="'Menu'"
-        [appearance]="'plain'"
-        [variant]="'neutral'"
-        [command]="{ click: menuCommand }"
-      />
-      @if (state().status !== 'gameOver') {
-      <mosaik-button
-        test-id="jungle-hunt-pause"
-        [label]="state().status === 'paused' ? 'Resume' : 'Pause'"
-        [appearance]="'plain'"
-        [variant]="'neutral'"
-        [command]="{ click: togglePauseCommand }"
-        (click)="focusScreen()"
-      />
-      }
-      <mosaik-button
-        test-id="jungle-hunt-reset"
-        [label]="'New game'"
-        [appearance]="'outline'"
-        [variant]="'primary'"
-        [command]="{ click: newGameCommand }"
-        (click)="focusScreen()"
-      />
-      }
-    </div>
-  </mosaik-page-header>
-  <mosaik-page-content
-    [inset]="'none'"
-    class="relative flex min-h-0 w-full min-w-0 flex-1 overflow-hidden"
-    test-id="jungle-hunt-playfield"
+<ng-container *mosaikTranslate="let tr">
+  <mosaik-page
+    class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+    test-id="jungle-hunt-view"
+    [attr.data-screen]="screen()"
   >
-    <canvas
-      #playfieldCanvas
-      test-id="jungle-hunt-screen"
-      class="absolute inset-0 block h-full w-full"
-      [attr.tabindex]="screen() === 'game' ? 0 : -1"
-      role="img"
-      aria-label="Jungle Hunt playfield. Move left through the jungle. Space jumps or stabs. Arrow keys move, swim, duck and extend jumps. P pauses."
-      [attr.aria-describedby]="screen() === 'game' ? 'jungle-hunt-controls' : null"
-      (click)="focusScreen()"
-    ></canvas>
-    <span
-      class="sr-only"
-      test-id="jungle-hunt-status"
-      [attr.data-status]="state().status"
-      [attr.data-stage]="state().stage"
-      [attr.data-score]="state().score"
-      [attr.data-lives]="state().lives"
-      [attr.data-timer]="state().timer"
-      [attr.data-air]="state().air"
-      [attr.data-level]="state().level"
-      [attr.data-skill]="state().options.skill"
-      [attr.data-progress]="state().progress"
-      [attr.data-rescues]="state().rescues"
-      >Score {{ state().score | number }}, {{ state().lives }} lives, {{ state().timer }}
-      seconds.</span
+    <mosaik-page-header
+      [text]="tr('loc.symphony.jungle.hunt.13f103')"
+      [inset]="'all'"
+      test-id="jungle-hunt-header"
     >
-    @if (!screenAvailable()) {
-    <div class="absolute inset-x-4 top-4" role="alert">
-      <mosaik-text
-        [text]="'The playfield could not be loaded. Return to Arcade and try again.'"
-        [wrap]="true"
+      <mosaik-button
+        slot="prefix"
+        test-id="jungle-hunt-back-arcade"
+        [label]="tr('loc.symphony.all.games.cf2bf1')"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: backArcadeCommand }"
       />
-    </div>
-    } @if (screen() !== 'game' || state().status === 'gameOver' || state().status === 'paused') {
-    <div class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
-      <mosaik-card class="my-auto w-full max-w-2xl shrink-0">
-        @if (screen() === 'instructions') {
-        <mosaik-card-header
-          [text]="'How to play'"
-          [subText]="'Rescue Lady Penelope through four jungle dangers.'"
+      @if (screen() === 'game' && state().status !== 'gameOver') {
+      <div
+        slot="subHeader"
+        id="jungle-hunt-controls"
+        class="flex flex-wrap items-center gap-x-4 gap-y-1"
+        [mosaikTypography]="'body2'"
+      >
+        <div class="flex items-center gap-2">
+          <mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" /><span
+            >{{ tr('loc.symphony.move.6ecc3d') }}</span
+          >
+        </div>
+        <div class="flex items-center gap-2">
+          <mosaik-kbd [value]="['Space']" /><span>{{ tr('loc.symphony.jump.knife.e8be96') }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <mosaik-kbd [value]="['↑']" /><span
+            >{{ tr('loc.symphony.swim.up.higher.jump.0e4a19') }}</span
+          >
+        </div>
+        <div class="flex items-center gap-2">
+          <mosaik-kbd [value]="['↓']" /><span>{{ tr('loc.symphony.dive.duck.6bdc25') }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <mosaik-kbd [value]="['P']" /><span>{{ tr('loc.symphony.pause.858e4b') }}</span>
+        </div>
+      </div>
+      }
+      <div slot="suffix" class="flex flex-wrap items-center gap-2">
+        <mosaik-button
+          test-id="jungle-hunt-sound"
+          [label]="soundMuted() ? tr('loc.symphony.sound.off.3f5d70') : tr('loc.symphony.sound.on.8c477e')"
+          [attr.aria-pressed]="!soundMuted()"
+          [appearance]="'plain'"
+          [variant]="'neutral'"
+          [command]="{ click: toggleSoundCommand }"
+          (click)="enableAudio()"
         />
-        <mosaik-card-content>
-          <div class="flex flex-col gap-4" [mosaikTypography]="'body2'">
-            <p>
-              Travel from right to left. Arrow keys or WASD control the joystick. Space is the fire
-              button; P or Escape pauses.
-            </p>
-            <p>
-              <strong>Deadly Forest.</strong> Press Space to leap from the swinging vines. Watch the
-              next vine before letting go. Jump once more from the last vine to enter the river.
-            </p>
-            <p>
-              <strong>Reptile River.</strong> Swim in all directions and press Space to use the
-              knife. Surface to refill your air. Stab from beneath a crocodile; a head-on approach
-              is unsafe. A crocodile with its jaws fully open cannot be stabbed. Lone crocodiles
-              change depth unexpectedly.
-            </p>
-            <p>
-              <strong>Boulder Field.</strong> Move left or right. Jump over rolling rocks, and jump,
-              run or duck beneath the large bouncing boulders. Hold Down to duck. Hold Up after
-              jumping for extra height and airtime.
-            </p>
-            <p>
-              <strong>Rescue.</strong> Leap over both spear-carrying guards, then run into Lady
-              Penelope's arms. Each rescue starts a harder trip through the jungle.
-            </p>
-            <p>
-              Start with five lives and 500 seconds. Time runs across the four stages; it resets
-              after a rescue. The timer running out ends the game. Earn one extra life at 10,000
-              points.
-            </p>
-            <p>
-              Vine: 100. Crocodiles: 100 with closed jaws, 200 partly open, 300 for a lone
-              crocodile. Boulders: 50 for running underneath, 100 for ducking, 200 for jumping over.
-              Guards: 200 each. Every stage exit: 500. Rescue bonus: three times the on-screen timer
-              value.
-            </p>
-            <p>
-              Menus preserve your run. End game saves your score to the Arcade leaderboard. New game
-              restarts from the forest.
-            </p>
-          </div>
-        </mosaik-card-content>
-        <mosaik-card-actions
-          ><mosaik-button
-            test-id="jungle-hunt-back-title"
-            [label]="'Back to title'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            [command]="{ click: menuCommand }"
-        /></mosaik-card-actions>
-        } @else if (screen() === 'game' && state().status === 'gameOver') {
-        <mosaik-card-header [text]="'Game over'" />
-        <mosaik-card-content
-          ><div class="flex flex-col gap-3">
-            <p [mosaikTypography]="'h3'">{{ state().score | number }} points</p>
-            <p>{{ state().rescues }} rescues · Round {{ state().level }}</p>
-            <mosaik-text
-              [text]="'Your score is saved in the Arcade leaderboard.'"
-              [wrap]="true"
-            /></div
-        ></mosaik-card-content>
-        <mosaik-card-actions
-          ><div class="flex flex-wrap gap-2">
-            <mosaik-button
-              test-id="jungle-hunt-play-again"
-              [label]="'Play again'"
-              [appearance]="'solid'"
-              [variant]="'primary'"
-              [command]="{ click: newGameCommand }"
-              (click)="focusScreen()"
-            /><mosaik-button
-              [label]="'Back to title'"
-              [appearance]="'plain'"
-              [variant]="'neutral'"
-              [command]="{ click: menuCommand }"
-            /></div
-        ></mosaik-card-actions>
-        } @else if (screen() === 'game' && state().status === 'paused') {
-        <mosaik-card-header [text]="'Paused'" />
-        <mosaik-card-actions
-          ><div class="flex flex-wrap gap-2">
-            <mosaik-button
-              test-id="jungle-hunt-resume-paused"
-              [label]="'Resume'"
-              [appearance]="'solid'"
-              [variant]="'primary'"
-              [command]="{ click: resumeCommand }"
-              (click)="focusScreen()"
-            /><mosaik-button
-              test-id="jungle-hunt-end"
-              [label]="'End game'"
-              [appearance]="'outline'"
-              [variant]="'neutral'"
-              [command]="{ click: endGameCommand }"
-            /></div
-        ></mosaik-card-actions>
-        } @else {
-        <mosaik-card-header [text]="'Jungle Hunt'" [subText]="'Atari · 1983'" />
-        <mosaik-card-content
-          ><div class="flex flex-col gap-5">
-            <mosaik-text
-              [text]="'Swing, swim and leap to the rescue.'"
-              [wrap]="true"
-              [mosaikTypography]="'h4'"
-            /><mosaik-text
-              [text]="'Cross the vines, brave the crocodile-filled river, dodge the boulders and jump the guards to reach Lady Penelope. Five lives. Four dangers. Every rescue brings a harder round.'"
-              [wrap]="true"
-              [mosaikTypography]="'body2'"
-            /><mosaik-button
-              test-id="jungle-hunt-skill"
-              [label]="skill() === 1 ? 'Skill 1 · Easy' : 'Skill 2 · Expert'"
-              [appearance]="'outline'"
-              [variant]="'neutral'"
-              [command]="{ click: selectSkillCommand }"
-            /></div
-        ></mosaik-card-content>
-        <mosaik-card-actions
-          ><div class="flex flex-wrap gap-2">
-            @if (canContinue()) {<mosaik-button
-              test-id="jungle-hunt-resume"
-              [label]="'Continue'"
-              [appearance]="'solid'"
-              [variant]="'primary'"
-              [command]="{ click: resumeCommand }"
-              (click)="focusScreen()"
-            />}
-            <mosaik-button
-              test-id="jungle-hunt-start"
-              [label]="canContinue() ? 'New game' : 'Play'"
-              [iconName]="'play'"
-              [appearance]="canContinue() ? 'outline' : 'solid'"
-              [variant]="'primary'"
-              [command]="{ click: newGameCommand }"
-              (click)="focusScreen()"
-            />
-            <mosaik-button
-              test-id="jungle-hunt-instructions"
-              [label]="'How to play'"
-              [appearance]="'plain'"
-              [variant]="'neutral'"
-              [command]="{ click: instructionsCommand }"
-            />
-            @if (canContinue()) {<mosaik-button
-              test-id="jungle-hunt-end-menu"
-              [label]="'End game'"
-              [appearance]="'plain'"
-              [variant]="'neutral'"
-              [command]="{ click: endGameCommand }"
-            />}
-          </div></mosaik-card-actions
-        >
+        @if (screen() === 'game') {
+        <mosaik-button
+          test-id="jungle-hunt-menu"
+          [label]="tr('loc.symphony.menu.99af66')"
+          [appearance]="'plain'"
+          [variant]="'neutral'"
+          [command]="{ click: menuCommand }"
+        />
+        @if (state().status !== 'gameOver') {
+        <mosaik-button
+          test-id="jungle-hunt-pause"
+          [label]="state().status === 'paused' ? tr('loc.symphony.resume.d640c7') : tr('loc.symphony.pause.858e4b')"
+          [appearance]="'plain'"
+          [variant]="'neutral'"
+          [command]="{ click: togglePauseCommand }"
+          (click)="focusScreen()"
+        />
         }
-      </mosaik-card>
-    </div>
-    }
-  </mosaik-page-content>
-</mosaik-page>
+        <mosaik-button
+          test-id="jungle-hunt-reset"
+          [label]="tr('loc.symphony.new.game.946ed7')"
+          [appearance]="'outline'"
+          [variant]="'primary'"
+          [command]="{ click: newGameCommand }"
+          (click)="focusScreen()"
+        />
+        }
+      </div>
+    </mosaik-page-header>
+    <mosaik-page-content
+      [inset]="'none'"
+      class="relative flex min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+      test-id="jungle-hunt-playfield"
+    >
+      <canvas
+        #playfieldCanvas
+        test-id="jungle-hunt-screen"
+        class="absolute inset-0 block h-full w-full"
+        [attr.tabindex]="screen() === 'game' ? 0 : -1"
+        role="img"
+        [attr.aria-label]="tr('loc.symphony.jungle.hunt.playfield.move.left.through.the.jungle.s.3855a9')"
+        [attr.aria-describedby]="screen() === 'game' ? 'jungle-hunt-controls' : null"
+        (click)="focusScreen()"
+      ></canvas>
+      <span
+        class="sr-only"
+        test-id="jungle-hunt-status"
+        [attr.data-status]="state().status"
+        [attr.data-stage]="state().stage"
+        [attr.data-score]="state().score"
+        [attr.data-lives]="state().lives"
+        [attr.data-timer]="state().timer"
+        [attr.data-air]="state().air"
+        [attr.data-level]="state().level"
+        [attr.data-skill]="state().options.skill"
+        [attr.data-progress]="state().progress"
+        [attr.data-rescues]="state().rescues"
+        >{{ tr('loc.symphony.score.lives.seconds.ed48d8', [state().score | number, state().lives,
+        state().timer]) }}</span
+      >
+      @if (!screenAvailable()) {
+      <div class="absolute inset-x-4 top-4" role="alert">
+        <mosaik-text
+          [text]="tr('loc.symphony.the.playfield.could.not.be.loaded.return.to.arcade.a.42eb0f')"
+          [wrap]="true"
+        />
+      </div>
+      } @if (screen() !== 'game' || state().status === 'gameOver' || state().status === 'paused') {
+      <div class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+        <mosaik-card class="my-auto w-full max-w-2xl shrink-0">
+          @if (screen() === 'instructions') {
+          <mosaik-card-header
+            [text]="tr('loc.symphony.how.to.play.13a6b2')"
+            [subText]="tr('loc.symphony.rescue.lady.penelope.through.four.jungle.dangers.34d5f0')"
+          />
+          <mosaik-card-content>
+            <div class="flex flex-col gap-4" [mosaikTypography]="'body2'">
+              <p>
+                {{ tr('loc.symphony.travel.from.right.to.left.arrow.keys.or.wasd.control.b7151f') }}
+              </p>
+              <p>
+                <strong>{{ tr('loc.symphony.deadly.forest.7ffff3') }}</strong> {{
+                tr('loc.symphony.press.space.to.leap.from.the.swinging.vines.watch.th.d66ef8') }}
+              </p>
+              <p>
+                <strong>{{ tr('loc.symphony.reptile.river.44262b') }}</strong> {{
+                tr('loc.symphony.swim.in.all.directions.and.press.space.to.use.the.kn.44fc4b') }}
+              </p>
+              <p>
+                <strong>{{ tr('loc.symphony.boulder.field.25e5bc') }}</strong> {{
+                tr('loc.symphony.move.left.or.right.jump.over.rolling.rocks.and.jump.b2eafb') }}
+              </p>
+              <p>
+                <strong>{{ tr('loc.symphony.rescue.d414de') }}</strong> {{
+                tr('loc.symphony.leap.over.both.spear.carrying.guards.then.run.into.l.9d9cdc') }}
+              </p>
+              <p>
+                {{ tr('loc.symphony.start.with.five.lives.and.500.seconds.time.runs.acro.0b6bd9') }}
+              </p>
+              <p>
+                {{ tr('loc.symphony.vine.100.crocodiles.100.with.closed.jaws.200.partly.548a8b') }}
+              </p>
+              <p>
+                {{ tr('loc.symphony.menus.preserve.your.run.end.game.saves.your.score.to.eb06e5') }}
+              </p>
+            </div>
+          </mosaik-card-content>
+          <mosaik-card-actions
+            ><mosaik-button
+              test-id="jungle-hunt-back-title"
+              [label]="tr('loc.symphony.back.to.title.2bc63f')"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: menuCommand }"
+          /></mosaik-card-actions>
+          } @else if (screen() === 'game' && state().status === 'gameOver') {
+          <mosaik-card-header [text]="tr('loc.symphony.game.over.8690cf')" />
+          <mosaik-card-content
+            ><div class="flex flex-col gap-3">
+              <p [mosaikTypography]="'h3'">
+                {{ tr('loc.symphony.points.b71788', [state().score | number]) }}
+              </p>
+              <p>{{ tr('loc.symphony.rescues.round.2affa7', [state().rescues, state().level]) }}</p>
+              <mosaik-text
+                [text]="tr('loc.symphony.your.score.is.saved.in.the.arcade.leaderboard.280092')"
+                [wrap]="true"
+              /></div
+          ></mosaik-card-content>
+          <mosaik-card-actions
+            ><div class="flex flex-wrap gap-2">
+              <mosaik-button
+                test-id="jungle-hunt-play-again"
+                [label]="tr('loc.symphony.play.again.5ef30d')"
+                [appearance]="'solid'"
+                [variant]="'primary'"
+                [command]="{ click: newGameCommand }"
+                (click)="focusScreen()"
+              /><mosaik-button
+                [label]="tr('loc.symphony.back.to.title.2bc63f')"
+                [appearance]="'plain'"
+                [variant]="'neutral'"
+                [command]="{ click: menuCommand }"
+              /></div
+          ></mosaik-card-actions>
+          } @else if (screen() === 'game' && state().status === 'paused') {
+          <mosaik-card-header [text]="tr('loc.symphony.paused.e159b0')" />
+          <mosaik-card-actions
+            ><div class="flex flex-wrap gap-2">
+              <mosaik-button
+                test-id="jungle-hunt-resume-paused"
+                [label]="tr('loc.symphony.resume.d640c7')"
+                [appearance]="'solid'"
+                [variant]="'primary'"
+                [command]="{ click: resumeCommand }"
+                (click)="focusScreen()"
+              /><mosaik-button
+                test-id="jungle-hunt-end"
+                [label]="tr('loc.symphony.end.game.1d2c93')"
+                [appearance]="'outline'"
+                [variant]="'neutral'"
+                [command]="{ click: endGameCommand }"
+              /></div
+          ></mosaik-card-actions>
+          } @else {
+          <mosaik-card-header
+            [text]="tr('loc.symphony.jungle.hunt.13f103')"
+            [subText]="tr('loc.symphony.atari.1983.54e103')"
+          />
+          <mosaik-card-content
+            ><div class="flex flex-col gap-5">
+              <mosaik-text
+                [text]="tr('loc.symphony.swing.swim.and.leap.to.the.rescue.d0dfba')"
+                [wrap]="true"
+                [mosaikTypography]="'h4'"
+              /><mosaik-text
+                [text]="tr('loc.symphony.cross.the.vines.brave.the.crocodile.filled.river.dod.908f78')"
+                [wrap]="true"
+                [mosaikTypography]="'body2'"
+              /><mosaik-button
+                test-id="jungle-hunt-skill"
+                [label]="skill() === 1 ? tr('loc.symphony.skill.1.easy.884ecd') : tr('loc.symphony.skill.2.expert.595e35')"
+                [appearance]="'outline'"
+                [variant]="'neutral'"
+                [command]="{ click: selectSkillCommand }"
+              /></div
+          ></mosaik-card-content>
+          <mosaik-card-actions
+            ><div class="flex flex-wrap gap-2">
+              @if (canContinue()) {<mosaik-button
+                test-id="jungle-hunt-resume"
+                [label]="tr('loc.symphony.continue.31fbef')"
+                [appearance]="'solid'"
+                [variant]="'primary'"
+                [command]="{ click: resumeCommand }"
+                (click)="focusScreen()"
+              />}
+              <mosaik-button
+                test-id="jungle-hunt-start"
+                [label]="canContinue() ? tr('loc.symphony.new.game.946ed7') : tr('loc.symphony.play.436e61')"
+                [iconName]="'play'"
+                [appearance]="canContinue() ? 'outline' : 'solid'"
+                [variant]="'primary'"
+                [command]="{ click: newGameCommand }"
+                (click)="focusScreen()"
+              />
+              <mosaik-button
+                test-id="jungle-hunt-instructions"
+                [label]="tr('loc.symphony.how.to.play.13a6b2')"
+                [appearance]="'plain'"
+                [variant]="'neutral'"
+                [command]="{ click: instructionsCommand }"
+              />
+              @if (canContinue()) {<mosaik-button
+                test-id="jungle-hunt-end-menu"
+                [label]="tr('loc.symphony.end.game.1d2c93')"
+                [appearance]="'plain'"
+                [variant]="'neutral'"
+                [command]="{ click: endGameCommand }"
+              />}
+            </div></mosaik-card-actions
+          >
+          }
+        </mosaik-card>
+      </div>
+      }
+    </mosaik-page-content>
+  </mosaik-page>
+</ng-container>

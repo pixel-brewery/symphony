@@ -1,7 +1,10 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ViewSlotOutletComponent } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  TranslateDirective,
+  ViewSlotOutletComponent,
+} from '@pixel-brewery/mosaik-elements-angular';
 import {
   SettingsGroupComponent,
   SettingsSelectionDirective,
@@ -20,7 +23,12 @@ import { WorkspaceServicesViewPresenter } from './WorkspaceServicesViewPresenter
 @Component({
   selector: 'symphony-workspace-services-card-view',
   host: { class: 'block' },
-  imports: [SettingsGroupComponent, SettingsSelectionDirective, ViewSlotOutletComponent],
+  imports: [
+    TranslateDirective,
+    SettingsGroupComponent,
+    SettingsSelectionDirective,
+    ViewSlotOutletComponent,
+  ],
   providers: [WorkspaceServicesViewPresenter],
   templateUrl: './WorkspaceServicesCardView.html',
   styleUrl: './WorkspaceServicesCardView.scss',

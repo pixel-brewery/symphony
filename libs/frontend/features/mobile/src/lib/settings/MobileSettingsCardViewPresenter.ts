@@ -6,6 +6,7 @@ import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
 import { createImmediateSetting, SettingsAlertService } from '@symphony/frontend-setting';
 import type { MobileAccessStatus, MobilePairingChallenge } from '@symphony/mobile-contracts';
 import { MobileAccessStore } from '../state/MobileAccessStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -208,12 +209,15 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
     if (!device) return;
     const confirmed = await this._alerts.confirm({
       id: `revoke-mobile-device-${deviceId}`,
-      header: `Revoke ${device.name}?`,
-      message:
-        'The phone loses access at once and its connection ends. Pair it again to use Symphony on it.',
+      header: translateLabel('loc.symphony.labels.revoke.fa89b5d', device.name),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.the.phone.loses.access.at.once.and.its.connection.en.153f244',
+        );
+      },
       tone: 'danger',
-      confirmLabel: 'Revoke',
-      cancelLabel: 'Keep access',
+      confirmLabel: translateLabel('loc.symphony.labels.revoke.87e6d00'),
+      cancelLabel: translateLabel('loc.symphony.labels.keep.access.68cfc92'),
       destructive: true,
     });
     if (confirmed) await this.store.revokeMobileDevice(deviceId);
@@ -224,12 +228,15 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
     if (!count) return;
     const confirmed = await this._alerts.confirm({
       id: 'revoke-all-mobile-devices',
-      header: `Revoke all ${count} phones?`,
-      message:
-        'Every paired phone loses access at once and its connection ends. Pair each phone again to use Symphony on it.',
+      header: translateLabel('loc.symphony.labels.revoke.all.phones.85f9237', count),
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.every.paired.phone.loses.access.at.once.and.its.conn.64f3774',
+        );
+      },
       tone: 'danger',
-      confirmLabel: 'Revoke all phones',
-      cancelLabel: 'Keep access',
+      confirmLabel: translateLabel('loc.symphony.labels.revoke.all.phones.7bfa7ab'),
+      cancelLabel: translateLabel('loc.symphony.labels.keep.access.68cfc92'),
       destructive: true,
     });
     if (confirmed) await this.store.revokeAllMobileDevices();

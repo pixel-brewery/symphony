@@ -3,13 +3,14 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { ShellViewPresenter } from '../view-presenters/ShellViewPresenter';
+import { TranslateDirective } from '@pixel-brewery/mosaik-elements-angular';
 
 // #endregion
 
 @Component({
   selector: 'symphony-shell',
   host: { class: 'block' },
-  imports: [RouterOutlet],
+  imports: [TranslateDirective, RouterOutlet],
   providers: [ShellViewPresenter],
   templateUrl: './ShellView.html',
   styleUrl: './ShellView.scss',

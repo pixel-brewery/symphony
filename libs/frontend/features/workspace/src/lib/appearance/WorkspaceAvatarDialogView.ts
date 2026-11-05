@@ -3,6 +3,7 @@
 import { AsyncPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   ColorPickerComponent,
@@ -43,6 +44,7 @@ import { WorkspaceAvatarIconsPipe } from './WorkspaceAvatarIconsPipe';
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: VIEW_PRESENTER, useClass: WorkspaceAvatarDialogViewPresenter }],
   imports: [
+    TranslateDirective,
     AsyncPipe,
     AvatarComponent,
     ButtonComponent,

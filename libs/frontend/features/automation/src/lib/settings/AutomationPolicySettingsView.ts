@@ -3,6 +3,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   CodeComponent,
   IconComponent,
@@ -32,6 +33,7 @@ import { AutomationPolicySettingsViewPresenter } from './AutomationPolicySetting
   selector: 'symphony-automation-policy-settings',
   host: { class: 'block min-w-0' },
   imports: [
+    TranslateDirective,
     AgenticSwitchLabelPipe,
     ButtonComponent,
     CodeComponent,

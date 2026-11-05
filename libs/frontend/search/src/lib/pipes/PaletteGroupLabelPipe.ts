@@ -2,6 +2,7 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { PaletteResultGroup } from '../models/PaletteResultGroup';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -11,7 +12,7 @@ import type { PaletteResultGroup } from '../models/PaletteResultGroup';
  *
  * @public
  */
-@Pipe({ name: 'paletteGroupLabel' })
+@Pipe({ pure: false, name: 'paletteGroupLabel' })
 export class PaletteGroupLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -25,13 +26,13 @@ export class PaletteGroupLabelPipe implements PipeTransform {
   public transform(group: PaletteResultGroup): string {
     switch (group) {
       case 'work-items':
-        return 'WORK ITEMS';
+        return translateLabel('loc.symphony.labels.work.items.0388f67');
       case 'pull-requests':
-        return 'PULL REQUESTS';
+        return translateLabel('loc.symphony.labels.pull.requests.334b280');
       case 'action-runs':
-        return 'ACTION RUNS';
+        return translateLabel('loc.symphony.labels.action.runs.fe229f9');
       case 'commands':
-        return 'COMMANDS';
+        return translateLabel('loc.symphony.labels.commands.92e37c5');
     }
   }
 

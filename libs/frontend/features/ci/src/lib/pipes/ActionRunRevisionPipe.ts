@@ -13,7 +13,7 @@ import { ShortRevisionPipe } from './ShortRevisionPipe';
  *
  * @public
  */
-@Pipe({ name: 'actionRunRevision', standalone: true, pure: true })
+@Pipe({ name: 'actionRunRevision', standalone: true, pure: false })
 export class ActionRunRevisionPipe implements PipeTransform {
   // #region Fields
 

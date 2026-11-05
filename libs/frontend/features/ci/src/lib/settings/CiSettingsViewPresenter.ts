@@ -32,6 +32,7 @@ import { CI_SETTINGS_CONFIGURATION } from '../ports/CiSettingsConfigurationToken
 import { CI_RUNTIME_WORKSPACE_ROOT } from '../ports/CiRuntimeWorkspaceRootToken';
 import { CiStore } from '../state/CiStore';
 import { ciSettingsDraftFor } from './ciSettingsDraftFor';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -864,12 +865,19 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
    * @private
    */
   private resolveRunnerImageHint(workspaceId: string): string | undefined {
-    if (this.runnerImageBusy()) return 'Loading the published runner image releases…';
+    if (this.runnerImageBusy())
+      return translateLabel(
+        'loc.symphony.labels.loading.the.published.runner.image.releases.85ac0d5',
+      );
     if (this.runnerImageEntries().length) return undefined;
     if (!this.resolveWorkspaceLocalCiEnabled(workspaceId)) {
-      return 'Enable local runs for this workspace to load the published runner image releases.';
+      return translateLabel(
+        'loc.symphony.labels.enable.local.runs.for.this.workspace.to.load.the.pub.f6bd5a7',
+      );
     }
-    return 'No releases loaded yet. Choose Refresh catalog to read them from GitHub.';
+    return translateLabel(
+      'loc.symphony.labels.no.releases.loaded.yet.choose.refresh.catalog.to.rea.56727f7',
+    );
   }
 
   /**
@@ -937,11 +945,16 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
     void this._alerts
       .confirm({
         id: 'remove-local-ci-instance-confirmation',
-        header: 'Remove this machine?',
-        message: `${name} and its disk will be deleted. The next run that needs it provisions a new machine.`,
+        header: translateLabel('loc.symphony.labels.remove.this.machine.1aa0296'),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.and.its.disk.will.be.deleted.the.next.run.that.needs.7507d25',
+            name,
+          );
+        },
         tone: 'danger',
-        confirmLabel: 'Remove machine',
-        cancelLabel: 'Keep machine',
+        confirmLabel: translateLabel('loc.symphony.labels.remove.machine.6e83cca'),
+        cancelLabel: translateLabel('loc.symphony.labels.keep.machine.ac69bb6'),
         destructive: true,
       })
       .then((confirmed) => {
@@ -991,12 +1004,15 @@ export class CiSettingsViewPresenter extends Hydratable(ViewPresenter) {
     void this._alerts
       .confirm({
         id: 'clear-local-ci-data-confirmation',
-        header: 'Clear local runner data?',
-        message:
-          'Inactive Linux instances, cached base images, and runner tools will be removed. The next local run downloads the verified tooling and image again.',
+        header: translateLabel('loc.symphony.labels.clear.local.runner.data.a5a4dee'),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.inactive.linux.instances.cached.base.images.and.runn.3a4d5b3',
+          );
+        },
         tone: 'danger',
-        confirmLabel: 'Clear runner data',
-        cancelLabel: 'Keep data',
+        confirmLabel: translateLabel('loc.symphony.labels.clear.runner.data.a93ff4a'),
+        cancelLabel: translateLabel('loc.symphony.labels.keep.data.ad6dbc5'),
         destructive: true,
       })
       .then((confirmed) => {

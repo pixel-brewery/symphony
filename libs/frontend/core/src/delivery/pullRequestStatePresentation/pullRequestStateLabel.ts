@@ -1,6 +1,7 @@
 // #region Imports
 
 import type { PullRequestState } from './PullRequestState';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -14,12 +15,12 @@ import type { PullRequestState } from './PullRequestState';
 export function pullRequestStateLabel(state: PullRequestState): string {
   switch (state) {
     case 'open':
-      return 'Open';
+      return translateLabel('loc.symphony.labels.open.ed077f3');
     case 'draft':
-      return 'Draft';
+      return translateLabel('loc.symphony.labels.draft.ebf12ef');
     case 'merged':
-      return 'Merged';
+      return translateLabel('loc.symphony.labels.merged.bd0a062');
     case 'closed':
-      return 'Closed';
+      return translateLabel('loc.symphony.labels.closed.c21ead0');
   }
 }

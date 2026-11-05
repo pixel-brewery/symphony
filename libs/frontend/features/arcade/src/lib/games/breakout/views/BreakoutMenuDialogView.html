@@ -1,237 +1,234 @@
-<ng-template mosaikDialogHeader>
-  <mosaik-dialog-header
-    [text]="presenter.screen() === 'setup' ? 'Breakout' : 'How to play'"
-    [subText]="
+<ng-container *mosaikTranslate="let tr">
+  <ng-template mosaikDialogHeader>
+    <mosaik-dialog-header
+      [text]="presenter.screen() === 'setup' ? tr('loc.symphony.breakout.921b14') : tr('loc.symphony.how.to.play.13a6b2')"
+      [subText]="
       presenter.screen() === 'setup'
-        ? 'Atari 2600 · 1978'
-        : 'Choose from all twelve Atari 2600 variations.'
-    "
-  />
-</ng-template>
-
-<ng-template mosaikDialogContent>
-  <div
-    class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto py-1"
-    test-id="breakout-menu-dialog"
-  >
-    @if (presenter.screen() === 'setup') {
-    <div class="flex flex-col gap-5">
-      <mosaik-text
-        [text]="'Two walls. Five balls. Make every rebound count.'"
-        [wrap]="true"
-        [mosaikTypography]="'h4'"
-      />
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <mosaik-form-field [fieldState]="presenter.setupForm.variation()">
-          <mosaik-select
-            test-id="breakout-variation"
-            [label]="'Game variation'"
-            [formField]="presenter.setupForm.variation"
-          >
-            @for (variation of presenter.variations; track variation.id) {
-            <mosaik-select-item
-              [attr.test-id]="'breakout-variation-' + variation.id"
-              [label]="variation.id + '. ' + variation.label"
-              [value]="'' + variation.id"
-            />
-            }
-          </mosaik-select>
-        </mosaik-form-field>
-        <mosaik-form-field [fieldState]="presenter.setupForm.players()">
-          <mosaik-select
-            test-id="breakout-players"
-            [label]="'Players'"
-            [formField]="presenter.setupForm.players"
-          >
-            <mosaik-select-item test-id="breakout-players-1" [label]="'1 · Solo'" [value]="'1'" />
-            <mosaik-select-item
-              test-id="breakout-players-2"
-              [label]="'2 · One versus one'"
-              [value]="'2'"
-            />
-            <mosaik-select-item
-              test-id="breakout-players-3"
-              [label]="'3 · Two versus one'"
-              [value]="'3'"
-            />
-            <mosaik-select-item
-              test-id="breakout-players-4"
-              [label]="'4 · Two versus two'"
-              [value]="'4'"
-            />
-          </mosaik-select>
-        </mosaik-form-field>
-        <mosaik-form-field [fieldState]="presenter.setupForm.difficultyA()">
-          <mosaik-select
-            test-id="breakout-difficulty-a"
-            [label]="presenter.selectedPlayers() === 1 ? 'Paddle difficulty' : 'Team 1 difficulty'"
-            [formField]="presenter.setupForm.difficultyA"
-          >
-            <mosaik-select-item
-              test-id="breakout-team-a-difficulty-a"
-              [label]="'A · Wide paddle'"
-              [value]="'A'"
-            />
-            <mosaik-select-item
-              test-id="breakout-team-a-difficulty-b"
-              [label]="'B · Narrow paddle'"
-              [value]="'B'"
-            />
-          </mosaik-select>
-        </mosaik-form-field>
-        @if (presenter.selectedPlayers() > 1) {
-        <mosaik-form-field [fieldState]="presenter.setupForm.difficultyB()">
-          <mosaik-select
-            test-id="breakout-difficulty-b"
-            [label]="'Team 2 difficulty'"
-            [formField]="presenter.setupForm.difficultyB"
-          >
-            <mosaik-select-item
-              test-id="breakout-team-b-difficulty-a"
-              [label]="'A · Wide paddle'"
-              [value]="'A'"
-            />
-            <mosaik-select-item
-              test-id="breakout-team-b-difficulty-b"
-              [label]="'B · Narrow paddle'"
-              [value]="'B'"
-            />
-          </mosaik-select>
-        </mosaik-form-field>
-        }
-      </div>
-      <div
-        class="flex flex-col gap-2"
-        [mosaikTypography]="'body2'"
-        test-id="breakout-variation-rules"
-      >
-        @if (presenter.selectedVariation().breakthrough) {
-        <span>The ball passes through bricks. Clear a path through both walls.</span>
-        } @else {
-        <span>Rebound into the six rows of bricks. Clear both walls for 864 points.</span>
-        } @if (presenter.selectedVariation().steer) {
-        <span>Moving your paddle also bends the ball's flight.</span>
-        } @if (presenter.selectedVariation().catchBall) {
-        <span
-          >Hold the serve button as the ball reaches your paddle to catch it. Move into position,
-          then release to launch.</span
-        >
-        } @if (presenter.selectedVariation().invisible) {
-        <span>The wall appears briefly when a brick is hit. Remember the gaps.</span>
-        } @if (presenter.selectedVariation().timed) {
-        <span
-          >The clock counts upward while the ball is in play. Clear both walls in the shortest total
-          time.</span
-        >
-        } @if (presenter.selectedPlayers() > 1) {
-        <span
-          >Teams take turns after each lost ball. Each team keeps its own wall and five balls.</span
-        >
-        } @if (presenter.selectedPlayers() > 2) {
-        <span
-          >Players 1 and 2 share Team 1. Each partner controls half the field. @if
-          (presenter.selectedPlayers() === 4) { Players 3 and 4 share Team 2. } @else { Player 3
-          plays alone for Team 2. }</span
-        >
-        }
-      </div>
-    </div>
-    } @else {
-    <div class="flex flex-col gap-4" [mosaikTypography]="'body2'">
-      <div class="grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-3">
-        <div class="flex gap-1"><mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" /></div>
-        <span>Move the active paddle. A and D also work.</span>
-        <mosaik-kbd [value]="['Space']" /><span
-          >Serve a ball. In Catch games, hold to catch and release to launch.</span
-        >
-        <div class="flex gap-1">
-          <mosaik-kbd [value]="['J']" /><mosaik-kbd [value]="['L']" /><mosaik-kbd [value]="['K']" />
-        </div>
-        <span>Move and serve with the right partner paddle.</span>
-        <mosaik-kbd [value]="['P']" /><span>Pause or resume. Escape also works.</span>
-      </div>
-      <p>
-        Move the mouse to place a paddle directly. Click to serve; hold and release to catch and
-        relaunch. With partners, the pointer controls the paddle in its half of the field.
-      </p>
-      <p>
-        Each team has five balls and two walls to clear. Each wall has six rows of eighteen bricks.
-        From the bottom up, the rows score 1, 1, 4, 4, 7 and 7 points per brick: 432 per wall, 864
-        in total.
-      </p>
-      <p>
-        The part of the paddle you hit changes the rebound angle. The angle also changes as the
-        rally continues. The ball speeds up after twelve paddle hits or when it strikes a brick in
-        the top three rows.
-      </p>
-      <p>
-        Variations 1–4 are Breakout, Steerable, Catch and Invisible. Variations 5–8 add a cumulative
-        timer to the same four games. Variations 9–12 are their Breakthru versions: the ball travels
-        through bricks instead of bouncing off them.
-      </p>
-      <p>
-        In a timed game, the clock counts up during play, including a held catch; there is no time
-        limit. Clear both walls as quickly as possible. Untimed games reward the highest score; at
-        the maximum score, use the fewest balls.
-      </p>
-      <p>
-        One player plays alone. Two players oppose each other. Three players form a pair against
-        one; four players form two pairs. Opposing teams alternate after losing a ball. Partners
-        play together, with one paddle in each half of the field.
-      </p>
-      <p>
-        Difficulty A gives a wide paddle. Difficulty B reduces its width to three quarters. Choose
-        the two teams' difficulty switches separately.
-      </p>
-    </div>
-    }
-  </div>
-</ng-template>
-
-<ng-template mosaikDialogFooter>
-  <div class="flex flex-wrap items-center justify-between gap-2">
-    <mosaik-button
-      test-id="breakout-all-games"
-      [label]="'All games'"
-      [appearance]="'plain'"
-      [variant]="'neutral'"
-      [command]="{ click: presenter.allGamesCommand }"
+        ? tr('loc.symphony.atari.2600.1978.e4acf9')
+        : tr('loc.symphony.choose.from.all.twelve.atari.2600.variations.63b1b2')"
     />
-    <div class="flex flex-wrap items-center justify-end gap-2">
-      @if (presenter.screen() === 'instructions') {
-      <mosaik-button
-        test-id="breakout-back-title"
-        [label]="'Back'"
-        [appearance]="'outline'"
-        [variant]="'neutral'"
-        [command]="{ click: presenter.showSetupCommand }"
-      />
+  </ng-template>
+
+  <ng-template mosaikDialogContent>
+    <div
+      class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto py-1"
+      test-id="breakout-menu-dialog"
+    >
+      @if (presenter.screen() === 'setup') {
+      <div class="flex flex-col gap-5">
+        <mosaik-text
+          [text]="tr('loc.symphony.two.walls.five.balls.make.every.rebound.count.42e51a')"
+          [wrap]="true"
+          [mosaikTypography]="'h4'"
+        />
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mosaik-form-field [fieldState]="presenter.setupForm.variation()">
+            <mosaik-select
+              test-id="breakout-variation"
+              [label]="tr('loc.symphony.game.variation.72fc4d')"
+              [formField]="presenter.setupForm.variation"
+            >
+              @for (variation of presenter.variations; track variation.id) {
+              <mosaik-select-item
+                [attr.test-id]="'breakout-variation-' + variation.id"
+                [label]="variation.id + '. ' + variation.label"
+                [value]="'' + variation.id"
+              />
+              }
+            </mosaik-select>
+          </mosaik-form-field>
+          <mosaik-form-field [fieldState]="presenter.setupForm.players()">
+            <mosaik-select
+              test-id="breakout-players"
+              [label]="tr('loc.symphony.players.84e12a')"
+              [formField]="presenter.setupForm.players"
+            >
+              <mosaik-select-item
+                test-id="breakout-players-1"
+                [label]="tr('loc.symphony.1.solo.e8fe50')"
+                [value]="'1'"
+              />
+              <mosaik-select-item
+                test-id="breakout-players-2"
+                [label]="tr('loc.symphony.2.one.versus.one.0e1eb9')"
+                [value]="'2'"
+              />
+              <mosaik-select-item
+                test-id="breakout-players-3"
+                [label]="tr('loc.symphony.3.two.versus.one.b7e3f0')"
+                [value]="'3'"
+              />
+              <mosaik-select-item
+                test-id="breakout-players-4"
+                [label]="tr('loc.symphony.4.two.versus.two.1dcc21')"
+                [value]="'4'"
+              />
+            </mosaik-select>
+          </mosaik-form-field>
+          <mosaik-form-field [fieldState]="presenter.setupForm.difficultyA()">
+            <mosaik-select
+              test-id="breakout-difficulty-a"
+              [label]="presenter.selectedPlayers() === 1 ? tr('loc.symphony.paddle.difficulty.25ccbc') : tr('loc.symphony.team.1.difficulty.e1ffdd')"
+              [formField]="presenter.setupForm.difficultyA"
+            >
+              <mosaik-select-item
+                test-id="breakout-team-a-difficulty-a"
+                [label]="tr('loc.symphony.a.wide.paddle.58d27e')"
+                [value]="'A'"
+              />
+              <mosaik-select-item
+                test-id="breakout-team-a-difficulty-b"
+                [label]="tr('loc.symphony.b.narrow.paddle.8a143d')"
+                [value]="'B'"
+              />
+            </mosaik-select>
+          </mosaik-form-field>
+          @if (presenter.selectedPlayers() > 1) {
+          <mosaik-form-field [fieldState]="presenter.setupForm.difficultyB()">
+            <mosaik-select
+              test-id="breakout-difficulty-b"
+              [label]="tr('loc.symphony.team.2.difficulty.74c453')"
+              [formField]="presenter.setupForm.difficultyB"
+            >
+              <mosaik-select-item
+                test-id="breakout-team-b-difficulty-a"
+                [label]="tr('loc.symphony.a.wide.paddle.58d27e')"
+                [value]="'A'"
+              />
+              <mosaik-select-item
+                test-id="breakout-team-b-difficulty-b"
+                [label]="tr('loc.symphony.b.narrow.paddle.8a143d')"
+                [value]="'B'"
+              />
+            </mosaik-select>
+          </mosaik-form-field>
+          }
+        </div>
+        <div
+          class="flex flex-col gap-2"
+          [mosaikTypography]="'body2'"
+          test-id="breakout-variation-rules"
+        >
+          @if (presenter.selectedVariation().breakthrough) {
+          <span
+            >{{ tr('loc.symphony.the.ball.passes.through.bricks.clear.a.path.through.636f18')
+            }}</span
+          >
+          } @else {
+          <span
+            >{{ tr('loc.symphony.rebound.into.the.six.rows.of.bricks.clear.both.walls.01fd0c')
+            }}</span
+          >
+          } @if (presenter.selectedVariation().steer) {
+          <span
+            >{{ tr('loc.symphony.moving.your.paddle.also.bends.the.ball.s.flight.6858c8') }}</span
+          >
+          } @if (presenter.selectedVariation().catchBall) {
+          <span
+            >{{ tr('loc.symphony.hold.the.serve.button.as.the.ball.reaches.your.paddl.1d691f')
+            }}</span
+          >
+          } @if (presenter.selectedVariation().invisible) {
+          <span
+            >{{ tr('loc.symphony.the.wall.appears.briefly.when.a.brick.is.hit.remembe.8679bf')
+            }}</span
+          >
+          } @if (presenter.selectedVariation().timed) {
+          <span
+            >{{ tr('loc.symphony.the.clock.counts.upward.while.the.ball.is.in.play.cl.70f4a9')
+            }}</span
+          >
+          } @if (presenter.selectedPlayers() > 1) {
+          <span
+            >{{ tr('loc.symphony.teams.take.turns.after.each.lost.ball.each.team.keep.ec65ca')
+            }}</span
+          >
+          } @if (presenter.selectedPlayers() > 2) {
+          <span
+            >{{ tr('loc.symphony.players.1.and.2.share.team.1.each.partner.controls.h.1168fd') }}
+            @if (presenter.selectedPlayers() === 4) { {{
+            tr('loc.symphony.players.3.and.4.share.team.2.5de86c') }} } @else { {{
+            tr('loc.symphony.player.3.plays.alone.for.team.2.aac8bb') }} }</span
+          >
+          }
+        </div>
+      </div>
       } @else {
+      <div class="flex flex-col gap-4" [mosaikTypography]="'body2'">
+        <div class="grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-3">
+          <div class="flex gap-1"><mosaik-kbd [value]="['←']" /><mosaik-kbd [value]="['→']" /></div>
+          <span>{{ tr('loc.symphony.move.the.active.paddle.a.and.d.also.work.a130b0') }}</span>
+          <mosaik-kbd [value]="['Space']" /><span
+            >{{ tr('loc.symphony.serve.a.ball.in.catch.games.hold.to.catch.and.releas.beea09')
+            }}</span
+          >
+          <div class="flex gap-1">
+            <mosaik-kbd [value]="['J']" /><mosaik-kbd [value]="['L']" /><mosaik-kbd
+              [value]="['K']"
+            />
+          </div>
+          <span>{{ tr('loc.symphony.move.and.serve.with.the.right.partner.paddle.568cf9') }}</span>
+          <mosaik-kbd [value]="['P']" /><span
+            >{{ tr('loc.symphony.pause.or.resume.escape.also.works.587d40') }}</span
+          >
+        </div>
+        <p>{{ tr('loc.symphony.move.the.mouse.to.place.a.paddle.directly.click.to.s.fac67c') }}</p>
+        <p>{{ tr('loc.symphony.each.team.has.five.balls.and.two.walls.to.clear.each.d90c9e') }}</p>
+        <p>{{ tr('loc.symphony.the.part.of.the.paddle.you.hit.changes.the.rebound.a.df2ad8') }}</p>
+        <p>{{ tr('loc.symphony.variations.1.4.are.breakout.steerable.catch.and.invi.2329cc') }}</p>
+        <p>{{ tr('loc.symphony.in.a.timed.game.the.clock.counts.up.during.play.incl.e4d61c') }}</p>
+        <p>{{ tr('loc.symphony.one.player.plays.alone.two.players.oppose.each.other.7d1533') }}</p>
+        <p>{{ tr('loc.symphony.difficulty.a.gives.a.wide.paddle.difficulty.b.reduce.0cb7d9') }}</p>
+      </div>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template mosaikDialogFooter>
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <mosaik-button
-        test-id="breakout-instructions"
-        [label]="'How to play'"
+        test-id="breakout-all-games"
+        [label]="tr('loc.symphony.all.games.cf2bf1')"
         [appearance]="'plain'"
         [variant]="'neutral'"
-        [command]="{ click: presenter.showInstructionsCommand }"
+        [command]="{ click: presenter.allGamesCommand }"
       />
-      @if (presenter.canContinue) {
-      <mosaik-button
-        test-id="breakout-continue"
-        [label]="'Continue'"
-        [appearance]="'solid'"
-        [variant]="'primary'"
-        [command]="{ click: presenter.continueCommand }"
-      />
-      }
-      <mosaik-button
-        test-id="breakout-start"
-        [label]="presenter.canContinue ? 'New match' : 'Play'"
-        [iconName]="'play'"
-        [appearance]="presenter.canContinue ? 'outline' : 'solid'"
-        [variant]="'primary'"
-        [command]="{ click: presenter.playCommand }"
-      />
-      }
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        @if (presenter.screen() === 'instructions') {
+        <mosaik-button
+          test-id="breakout-back-title"
+          [label]="tr('loc.symphony.back.76900f')"
+          [appearance]="'outline'"
+          [variant]="'neutral'"
+          [command]="{ click: presenter.showSetupCommand }"
+        />
+        } @else {
+        <mosaik-button
+          test-id="breakout-instructions"
+          [label]="tr('loc.symphony.how.to.play.13a6b2')"
+          [appearance]="'plain'"
+          [variant]="'neutral'"
+          [command]="{ click: presenter.showInstructionsCommand }"
+        />
+        @if (presenter.canContinue) {
+        <mosaik-button
+          test-id="breakout-continue"
+          [label]="tr('loc.symphony.continue.31fbef')"
+          [appearance]="'solid'"
+          [variant]="'primary'"
+          [command]="{ click: presenter.continueCommand }"
+        />
+        }
+        <mosaik-button
+          test-id="breakout-start"
+          [label]="presenter.canContinue ? tr('loc.symphony.new.match.bd1e5e') : tr('loc.symphony.play.436e61')"
+          [iconName]="'play'"
+          [appearance]="presenter.canContinue ? 'outline' : 'solid'"
+          [variant]="'primary'"
+          [command]="{ click: presenter.playCommand }"
+        />
+        }
+      </div>
     </div>
-  </div>
-</ng-template>
+  </ng-template>
+</ng-container>

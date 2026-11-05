@@ -7,6 +7,7 @@ import type { RuntimeHealthDto } from '@symphony/ipc-contracts-platform';
 import type { IRuntimeDependencyView } from '../models/IRuntimeDependencyView';
 import type { RuntimeDependencyCommand } from '../models/RuntimeDependencyCommand';
 import { PlatformStore } from '../state/PlatformStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -122,11 +123,16 @@ export class DeveloperToolsSettingsViewPresenter extends Hydratable(ViewPresente
     void this._alerts
       .confirm({
         id: `install-runtime-dependency-${item.id}`,
-        header: `Install ${label}?`,
-        message: `Homebrew will download and install ${label} on this Mac. Symphony uses a fixed package recipe and verifies the command after installation.`,
+        header: translateLabel('loc.symphony.labels.install.2cfbc93', label),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.homebrew.will.download.and.install.on.this.mac.symph.ad0a72f',
+            label,
+          );
+        },
         tone: 'warning',
-        confirmLabel: 'Install with Homebrew',
-        cancelLabel: 'Cancel',
+        confirmLabel: translateLabel('loc.symphony.labels.install.with.homebrew.7affa76'),
+        cancelLabel: translateLabel('loc.symphony.labels.cancel.19766ed'),
       })
       .then((confirmed) => {
         if (confirmed) void this.store.installRuntimeDependency(command);

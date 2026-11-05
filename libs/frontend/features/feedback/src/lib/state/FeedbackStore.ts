@@ -6,6 +6,7 @@ import { NotificationService, operatorErrorMessage } from '@symphony/frontend-no
 import type { RequestPayload } from '@symphony/ipc-contracts-composition';
 import { FEEDBACK_CLIENT } from '../ports/FeedbackClientToken';
 import type { IFeedbackClient } from '../ports/IFeedbackClient';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -47,7 +48,9 @@ export class FeedbackStore implements IFeedbackOperations {
       return true;
     } catch (cause) {
       this._notifications.showError(
-        'Unable to read the configured Microsoft Teams channel.',
+        translateLabel(
+          'loc.symphony.labels.unable.to.read.the.configured.microsoft.teams.channe.96d234a',
+        ),
         operatorErrorMessage(cause),
       );
       return false;

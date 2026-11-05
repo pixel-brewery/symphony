@@ -1744,7 +1744,7 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
       };
     });
     expect(failedAgentId).toBeTruthy();
-    await app.evaluate(({ app: electronApp, dialog }) => {
+    const nativeLocale = await app.evaluate(({ app: electronApp, dialog }) => {
       const lifecycleState = globalThis as typeof globalThis & {
         quitWarning?: { title?: string; message?: string; detail?: string; buttons?: string[] };
       };
@@ -1759,7 +1759,29 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
         return { response: 0, checkboxChecked: false };
       }) as typeof dialog.showMessageBox;
       electronApp.quit();
+      return electronApp.getLocale();
     });
+    const quitWarning = /^de(?:[-_]|$)/iu.test(nativeLocale)
+      ? {
+          title: 'Aufgaben werden noch ausgeführt',
+          message: '1 Hintergrundaufgabe wird noch ausgeführt.',
+          buttons: [
+            'Im Hintergrund weiterlaufen lassen',
+            'Beenden und später fortsetzen',
+            'Aufgaben abbrechen und beenden',
+            'Nicht beenden',
+          ],
+        }
+      : {
+          title: 'Tasks are still running',
+          message: '1 background task is still running.',
+          buttons: [
+            'Keep running in background',
+            'Quit and resume later',
+            'Cancel tasks and quit',
+            "Don't quit",
+          ],
+        };
     const mainWindowUrl = page.url();
     await expect
       .poll(() =>
@@ -1782,16 +1804,7 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
         }, mainWindowUrl),
       )
       .toMatchObject({
-        warning: {
-          title: 'Tasks are still running',
-          message: '1 background task is still running.',
-          buttons: [
-            'Keep running in background',
-            'Quit and resume later',
-            'Cancel tasks and quit',
-            "Don't quit",
-          ],
-        },
+        warning: quitWarning,
         windowVisible: false,
       });
     await app.evaluate(({ app: electronApp }) => {

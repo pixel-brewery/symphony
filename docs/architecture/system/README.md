@@ -16,8 +16,10 @@ Garantien:
 
 ## Geltungsbereich und Nicht-Ziele
 
-- Enthalten: Bereichsregistrierung und Suchbeiträge der drei Bereiche; Karten **Storage**, **Developer tools**, **Virtual machines**, **Updates**, **Sleep**; **Mobile access**; **Color theme** und der Appearance-Slot mit **Navigation** (Arcade).
+- Enthalten: Bereichsregistrierung und Suchbeiträge der drei Bereiche; Karten **Storage**, **Developer tools**, **Virtual machines**, **Updates**, **Sleep**; **Mobile access**; **Application language**, **Color theme** und der Appearance-Slot mit **Navigation** (Arcade).
 - Nicht enthalten: die gemeinsame Mechanik der Einstellungen ([Einstellungen im Hauptfenster](../window-and-navigation/settings.md)), CLI-Erkennung und -Installation ([Entwicklerwerkzeuge](../developer-tools/README.md)), Updatezustände, Download und Installation ([Anwendungsupdates](../application-updates/README.md)), Ausführung und Isolation der lokalen Runner ([Managed Local CI](../actions/managed-local-ci.md)), das Kopplungs- und Sitzungsprotokoll des Telefons ([Mobile companion phase 1](../mobile-companion-phase-1.md)), die Arcade-Spiele ([Arcade](../arcade/README.md)) und die Workspace-eigene Speichergrenze in **Administration** ([Workspaces](../workspaces/README.md)).
+
+Die Anwendungssprache ist eine Browserprofil-Präferenz mit eigener Auswahl für Desktop und Telefon. Sie wird über den bestehenden Profil-Speicher an die unabhängige Lokalisierungs-Capability übergeben und verändert keine Workspace- oder Anwendungseinstellungen. Der vollständige Vertrag steht unter [Anwendungssprache und Katalogprüfung](../localization/README.md).
 
 ## Verantwortungsgrenzen
 
@@ -37,11 +39,11 @@ Garantien:
 
 Jede Karte ist ein `ISettingsViewDefinition` im globalen Slot. Alle Karten eines Bereichs tragen identische Bereichsmetadaten, sonst bricht der Katalog mit einem Fehler ab. Eine Karte wird gezeigt, wenn `canActivate` für `{ sectionId, workspaceId: null }` zutrifft; die Reihenfolge innerhalb des Bereichs folgt `order`.
 
-| Bereich (`id`, Reihenfolge) | Beschreibung                                                     | Karten (`order`)                                                                                                                           |
-| --------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `system`, 40                | `This Mac: tools, storage, virtual machines, updates and sleep.` | Storage (10, Automation-Feature), Developer tools (20, Platform), Virtual machines (30, CI), Updates (40, Update), Sleep (50, Interaction) |
-| `mobile`, 50                | `Pair phones on the local network.`                              | Mobile access (10, Mobile)                                                                                                                 |
-| `appearance`, 60            | `Choose how Symphony looks.`                                     | Color theme (10, Platform); darin der Slot `settings.global.appearance` mit optionalen Karten, derzeit Arcade (100)                        |
+| Bereich (`id`, Reihenfolge) | Beschreibung                                                     | Karten (`order`)                                                                                                                             |
+| --------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `system`, 40                | `This Mac: tools, storage, virtual machines, updates and sleep.` | Storage (10, Automation-Feature), Developer tools (20, Platform), Virtual machines (30, CI), Updates (40, Update), Sleep (50, Interaction)   |
+| `mobile`, 50                | `Pair phones on the local network.`                              | Mobile access (10, Mobile)                                                                                                                   |
+| `appearance`, 60            | `Choose how Symphony looks.`                                     | Application language und Color theme (10, Platform); darin der Slot `settings.global.appearance` mit optionalen Karten, derzeit Arcade (100) |
 
 Suchbeiträge (`search`) dieser Bereiche:
 

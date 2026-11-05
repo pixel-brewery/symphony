@@ -7,6 +7,7 @@ import {
   type NavigationFeatureKind,
 } from '@symphony/frontend-core';
 import { InboxStore } from '../state/InboxStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -26,7 +27,9 @@ export function withHomeNavigation(order: number): IFeature<NavigationFeatureKin
       return [
         {
           key: 'home',
-          label: 'Overview',
+          get label() {
+            return translateLabel('loc.symphony.labels.overview.d4b1ea5');
+          },
           icon: 'homeOutline',
           route: '/main/home',
           order,
@@ -34,12 +37,16 @@ export function withHomeNavigation(order: number): IFeature<NavigationFeatureKin
         },
         {
           key: 'inbox',
-          label: 'Inbox',
+          get label() {
+            return translateLabel('loc.symphony.labels.inbox.94835ea');
+          },
           icon: 'info',
           route: '/main/inbox',
           order: order + 10,
           region: 'desktop-main',
-          group: 'Delivery',
+          get group() {
+            return translateLabel('loc.symphony.labels.delivery.52bfe58');
+          },
           countTone: 'attention',
           // Hidden while the snapshot loads and when nothing waits, never a misleading zero.
           count: () => inbox.decisionCount() || undefined,
@@ -51,7 +58,9 @@ export function withHomeNavigation(order: number): IFeature<NavigationFeatureKin
           route: '/main/orbit',
           order: order + 45,
           region: 'desktop-main',
-          group: 'Delivery',
+          get group() {
+            return translateLabel('loc.symphony.labels.delivery.52bfe58');
+          },
         },
       ];
     },

@@ -1,239 +1,241 @@
-<ng-template
-  symphonyWindowToolbar
-  [toolbarTitle]="'Actions'"
-  [toolbarSubtitle]="(presenter.repositoryNames().length === 1
+<ng-container *mosaikTranslate="let tr">
+  <ng-template
+    symphonyWindowToolbar
+    [toolbarTitle]="tr('loc.symphony.actions.ff8059')"
+    [toolbarSubtitle]="(presenter.repositoryNames().length === 1
     ? presenter.repositoryNames()[0]
     : presenter.repositoryNames().length + ' repositories')
     + (presenter.activeRunCount() ? ' · ' + presenter.activeRunCount() + ' running' : '')
     + (presenter.failingWorkflowCount() ? ' · ' + presenter.failingWorkflowCount() + ' failing' : '')"
->
-  <mosaik-dropdown-button
-    #filterMenu
-    test-id="actions-filter"
-    aria-label="Filter Actions"
-    [iconName]="'filter'"
-    [caretVisible]="false"
-    [disabled]="presenter.isHydrating()"
-    [appearance]="presenter.isFiltered() ? 'soft' : 'plain'"
-    [dropDownPlacement]="'bottom-end'"
-    [dropDownMaxHeight]="'20rem'"
-    [mosaikTooltip]="'Filter and sort runs'"
   >
-    <mosaik-menu>
-      @for (menu of presenter.filterMenus(); track menu.id) {
-      <mosaik-menu-item
-        [attr.test-id]="menu.testId ?? null"
-        [label]="menu.label"
-        [subLabel]="menu.subLabel"
-        menu-mode="popover"
-      >
-        <mosaik-menu slot="submenu">
-          @for (option of menu.options; track option.id) {
-          <mosaik-menu-item
-            force-close="true"
-            [attr.test-id]="option.testId ?? null"
-            [label]="option.label"
-            [isChecked]="option.checked"
-            (activated)="presenter.activateListMenuOptionCommand.execute({ menuId: menu.id, optionId: option.id }); filterMenu.invoke('close')"
-          />
-          }
-        </mosaik-menu>
-      </mosaik-menu-item>
-      }
-    </mosaik-menu>
-  </mosaik-dropdown-button>
-  <mosaik-button
-    test-id="refresh-actions"
-    aria-label="Refresh"
-    [iconName]="'sync'"
-    [iconSize]="'small'"
-    [appearance]="'plain'"
-    [disabled]="presenter.isHydrating() || presenter.refreshing()"
-    [mosaikTooltip]="'Refresh workflows and runs'"
-    (click)="presenter.refreshCommand.execute()"
-  />
-</ng-template>
-
-<!-- The workflow source list sits on a neutral-50 pane; the split divider is the hairline to the
-     content and resizes the list. Each pane scrolls on its own. -->
-<mosaik-split
-  part="pane-split"
-  test-id="actions-view"
-  class="min-h-0 min-w-0 flex-1"
-  symphonyPaneSize="actions.workflows"
-  [paneSize]="220"
-  [lock]="'start'"
-  [min]="'180px'"
-  [max]="'40%'"
-  [attr.aria-busy]="presenter.isHydrating()"
->
-  <nav
-    slot="start"
-    part="actions-workflow-pane"
-    aria-label="Workflows"
-    test-id="actions-workflow-list"
-    class="flex h-full min-h-0 min-w-0 flex-col gap-[2px] overflow-y-auto overscroll-contain px-[10px] py-2"
-  >
-    <div class="mb-1 flex min-w-0">
-      <mosaik-button
-        class="w-full"
-        test-id="actions-scope-all"
-        [label]="'All runs'"
-        [iconName]="'executionOutline'"
-        [iconSize]="'small'"
-        [fit]="'width'"
-        [horizontalContentAlignment]="'left'"
-        [appearance]="presenter.selectedWorkflow() ? 'plain' : 'soft'"
-        [attr.aria-current]="presenter.selectedWorkflow() ? null : 'page'"
-        (click)="presenter.selectWorkflowCommand.execute('all')"
-      />
-    </div>
-    <mosaik-text
-      class="px-[10px] py-0.5"
-      [mosaikTypography]="'caption'"
-      [variant]="'neutral'"
-      [text]="'WORKFLOWS'"
+    <mosaik-dropdown-button
+      #filterMenu
+      test-id="actions-filter"
+      [attr.aria-label]="tr('loc.symphony.filter.actions.48ca53')"
+      [iconName]="'filter'"
+      [caretVisible]="false"
+      [disabled]="presenter.isHydrating()"
+      [appearance]="presenter.isFiltered() ? 'soft' : 'plain'"
+      [dropDownPlacement]="'bottom-end'"
+      [dropDownMaxHeight]="'20rem'"
+      [mosaikTooltip]="tr('loc.symphony.filter.and.sort.runs.e73994')"
+    >
+      <mosaik-menu>
+        @for (menu of presenter.filterMenus(); track menu.id) {
+        <mosaik-menu-item
+          [attr.test-id]="menu.testId ?? null"
+          [label]="menu.label"
+          [subLabel]="menu.subLabel"
+          menu-mode="popover"
+        >
+          <mosaik-menu slot="submenu">
+            @for (option of menu.options; track option.id) {
+            <mosaik-menu-item
+              force-close="true"
+              [attr.test-id]="option.testId ?? null"
+              [label]="option.label"
+              [isChecked]="option.checked"
+              (activated)="presenter.activateListMenuOptionCommand.execute({ menuId: menu.id, optionId: option.id }); filterMenu.invoke('close')"
+            />
+            }
+          </mosaik-menu>
+        </mosaik-menu-item>
+        }
+      </mosaik-menu>
+    </mosaik-dropdown-button>
+    <mosaik-button
+      test-id="refresh-actions"
+      [attr.aria-label]="tr('loc.symphony.refresh.0e9161')"
+      [iconName]="'sync'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      [disabled]="presenter.isHydrating() || presenter.refreshing()"
+      [mosaikTooltip]="tr('loc.symphony.refresh.workflows.and.runs.44046e')"
+      (click)="presenter.refreshCommand.execute()"
     />
-    @if (presenter.isHydrating()) { @for (row of [1, 2, 3, 4]; track row) {
-    <div class="flex h-4 min-w-0 items-center gap-1 pl-1.5" aria-hidden="true">
-      <mosaik-skeleton [shape]="'circle'" [width]="'8px'" [height]="'8px'" [shimmer]="true" />
-      <mosaik-skeleton [width]="row % 2 ? '6.5rem' : '8rem'" [height]="'14px'" [shimmer]="true" />
-    </div>
-    } } @else { @for (entry of presenter.workflowEntries(); track entry.workflow.id) {
-    <div class="flex min-w-0">
-      <mosaik-tooltip
-        [attr.test-id]="'actions-workflow-tooltip-' + entry.workflow.id"
-        [content]="entry.workflow.name + (entry.workflow.state === 'disabled' ? ' · Disabled on GitHub' : '')"
-        [placement]="'right'"
-        [attr.trigger]="'hover focus'"
-      >
+  </ng-template>
+
+  <!-- The workflow source list sits on a neutral-50 pane; the split divider is the hairline to the
+     content and resizes the list. Each pane scrolls on its own. -->
+  <mosaik-split
+    part="pane-split"
+    test-id="actions-view"
+    class="min-h-0 min-w-0 flex-1"
+    symphonyPaneSize="actions.workflows"
+    [paneSize]="220"
+    [lock]="'start'"
+    [min]="'180px'"
+    [max]="'40%'"
+    [attr.aria-busy]="presenter.isHydrating()"
+  >
+    <nav
+      slot="start"
+      part="actions-workflow-pane"
+      [attr.aria-label]="tr('loc.symphony.workflows.e20736')"
+      test-id="actions-workflow-list"
+      class="flex h-full min-h-0 min-w-0 flex-col gap-[2px] overflow-y-auto overscroll-contain px-[10px] py-2"
+    >
+      <div class="mb-1 flex min-w-0">
         <mosaik-button
-          class="min-w-0 flex-1"
-          [attr.test-id]="'actions-workflow-' + entry.workflow.id"
-          [label]="entry.workflow.name"
-          [attr.aria-label]="entry.workflow.name + ' · ' + (entry.health | workflowHealthPresentation).label
-          + (entry.workflow.state === 'disabled' ? ' · Disabled on GitHub' : '')"
+          class="w-full"
+          test-id="actions-scope-all"
+          [label]="tr('loc.symphony.all.runs.33866a')"
+          [iconName]="'executionOutline'"
+          [iconSize]="'small'"
           [fit]="'width'"
           [horizontalContentAlignment]="'left'"
-          [appearance]="presenter.selectedWorkflowId() === entry.workflow.id ? 'soft' : 'plain'"
-          [attr.aria-current]="presenter.selectedWorkflowId() === entry.workflow.id ? 'page' : null"
-          (click)="presenter.selectWorkflowCommand.execute(entry.workflow.id)"
-        >
-          <mosaik-dot
-            slot="icon"
-            class="flex-none"
-            role="img"
-            [attr.test-id]="'actions-workflow-health-' + entry.workflow.id"
-            [attr.aria-label]="(entry.health | workflowHealthPresentation).label"
-            [variant]="(entry.health | workflowHealthPresentation).variant"
-            [size]="'small'"
-          />
-          <mosaik-text
-            slot="label"
-            class="min-w-0 flex-1"
-            [truncate]="true"
-            [text]="entry.workflow.name"
-          />
-        </mosaik-button>
-      </mosaik-tooltip>
-    </div>
-    } @empty {
-    <mosaik-text
-      class="px-[10px] py-0.5"
-      test-id="actions-workflows-empty"
-      [mosaikTypography]="'caption'"
-      [variant]="'neutral'"
-      [wrap]="true"
-      [text]="'Workflows of the workspace’s GitHub repositories appear here.'"
-    />
-    } }
-  </nav>
-
-  <div
-    slot="end"
-    class="flex h-full min-h-0 min-w-0 flex-col overflow-clip"
-    test-id="actions-content"
-  >
-    <div class="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-clip px-3.5 py-3">
-      @if (!presenter.isHydrating()) { @if (presenter.remoteData(); as remoteData) { @if
-      (remoteData.state !== 'current') {
-      <mosaik-banner
-        test-id="actions-stale-data"
-        [isOpen]="true"
-        [appearance]="'soft'"
-        [variant]="'warning'"
-        [iconName]="'warning'"
-        [iconSize]="'small'"
-      >
-        <mosaik-banner-header
-          [text]="remoteData.reason === 'rate-limited'
-            ? 'GitHub request limit reached'
-            : remoteData.state === 'stale'
-              ? 'Runs are not current'
-              : 'GitHub runs are unavailable'"
+          [appearance]="presenter.selectedWorkflow() ? 'plain' : 'soft'"
+          [attr.aria-current]="presenter.selectedWorkflow() ? null : 'page'"
+          (click)="presenter.selectWorkflowCommand.execute('all')"
         />
-        <mosaik-banner-sub-header
-          [text]="(remoteData.state === 'stale' && remoteData.lastSuccessfulRefreshAt
+      </div>
+      <mosaik-text
+        class="px-[10px] py-0.5"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="tr('loc.symphony.workflows.844bcb')"
+      />
+      @if (presenter.isHydrating()) { @for (row of [1, 2, 3, 4]; track row) {
+      <div class="flex h-4 min-w-0 items-center gap-1 pl-1.5" aria-hidden="true">
+        <mosaik-skeleton [shape]="'circle'" [width]="'8px'" [height]="'8px'" [shimmer]="true" />
+        <mosaik-skeleton [width]="row % 2 ? '6.5rem' : '8rem'" [height]="'14px'" [shimmer]="true" />
+      </div>
+      } } @else { @for (entry of presenter.workflowEntries(); track entry.workflow.id) {
+      <div class="flex min-w-0">
+        <mosaik-tooltip
+          [attr.test-id]="'actions-workflow-tooltip-' + entry.workflow.id"
+          [content]="entry.workflow.name + (entry.workflow.state === 'disabled' ? ' · Disabled on GitHub' : '')"
+          [placement]="'right'"
+          [attr.trigger]="'hover focus'"
+        >
+          <mosaik-button
+            class="min-w-0 flex-1"
+            [attr.test-id]="'actions-workflow-' + entry.workflow.id"
+            [label]="entry.workflow.name"
+            [attr.aria-label]="entry.workflow.name + ' · ' + (entry.health | workflowHealthPresentation).label
+          + (entry.workflow.state === 'disabled' ? ' · Disabled on GitHub' : '')"
+            [fit]="'width'"
+            [horizontalContentAlignment]="'left'"
+            [appearance]="presenter.selectedWorkflowId() === entry.workflow.id ? 'soft' : 'plain'"
+            [attr.aria-current]="presenter.selectedWorkflowId() === entry.workflow.id ? 'page' : null"
+            (click)="presenter.selectWorkflowCommand.execute(entry.workflow.id)"
+          >
+            <mosaik-dot
+              slot="icon"
+              class="flex-none"
+              role="img"
+              [attr.test-id]="'actions-workflow-health-' + entry.workflow.id"
+              [attr.aria-label]="(entry.health | workflowHealthPresentation).label"
+              [variant]="(entry.health | workflowHealthPresentation).variant"
+              [size]="'small'"
+            />
+            <mosaik-text
+              slot="label"
+              class="min-w-0 flex-1"
+              [truncate]="true"
+              [text]="entry.workflow.name"
+            />
+          </mosaik-button>
+        </mosaik-tooltip>
+      </div>
+      } @empty {
+      <mosaik-text
+        class="px-[10px] py-0.5"
+        test-id="actions-workflows-empty"
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [wrap]="true"
+        [text]="tr('loc.symphony.workflows.of.the.workspace.s.github.repositories.app.f0d334')"
+      />
+      } }
+    </nav>
+
+    <div
+      slot="end"
+      class="flex h-full min-h-0 min-w-0 flex-col overflow-clip"
+      test-id="actions-content"
+    >
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-clip px-3.5 py-3">
+        @if (!presenter.isHydrating()) { @if (presenter.remoteData(); as remoteData) { @if
+        (remoteData.state !== 'current') {
+        <mosaik-banner
+          test-id="actions-stale-data"
+          [isOpen]="true"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [iconName]="'warning'"
+          [iconSize]="'small'"
+        >
+          <mosaik-banner-header
+            [text]="remoteData.reason === 'rate-limited'
+            ? tr('loc.symphony.github.request.limit.reached.9d2ba0')
+            : remoteData.state === 'stale'
+              ? tr('loc.symphony.runs.are.not.current.f0463a')
+              : tr('loc.symphony.github.runs.are.unavailable.c334c0')"
+          />
+          <mosaik-banner-sub-header
+            [text]="(remoteData.state === 'stale' && remoteData.lastSuccessfulRefreshAt
             ? 'Last updated ' + (remoteData.lastSuccessfulRefreshAt | relativeTime: presenter.now() : 'ago') + '. '
             : 'GitHub could not refresh the runs. ')
             + (remoteData.reason === 'rate-limited' && remoteData.retryAt
               ? 'Try again after ' + (remoteData.retryAt | date: 'shortTime') + '.'
               : 'Try again now or later.')"
-        />
-        <mosaik-button
-          slot="actions"
-          test-id="actions-sync-retry"
-          [label]="'Retry'"
-          [iconName]="'sync'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          [isBusy]="presenter.refreshing()"
-          [disabled]="presenter.refreshing()"
-          (click)="presenter.refreshCommand.execute()"
-        />
-      </mosaik-banner>
-      } } } @if (presenter.isHydrating()) {
-      <!-- The loaded layout with its text as skeleton lines: the heading, then two framed lists. -->
-      <div
-        class="flex min-w-0 flex-col gap-2.5"
-        test-id="actions-loading-skeleton"
-        role="status"
-        aria-label="Loading workflow runs"
-      >
-        <div class="flex flex-col gap-0.5">
-          <mosaik-skeleton [width]="'8rem'" [height]="'28px'" [shimmer]="true" />
-          <mosaik-skeleton [width]="'22rem'" [height]="'14px'" [shimmer]="true" />
-        </div>
-        @for (frame of [[1, 2], [1, 2, 3, 4, 5, 6]]; track $index) {
-        <div class="flex flex-col gap-1">
-          <mosaik-skeleton [width]="'9rem'" [height]="'16px'" [shimmer]="true" />
-          <div part="actions-frame" class="flex flex-col">
-            @for (row of frame; track row) {
-            <div class="flex h-6 items-center gap-1.5 px-1.75">
-              <mosaik-skeleton [width]="'4rem'" [height]="'20px'" [shimmer]="true" />
-              <mosaik-skeleton
-                [width]="row % 2 ? '14rem' : '18rem'"
-                [height]="'14px'"
-                [shimmer]="true"
-              />
-            </div>
-            }
+          />
+          <mosaik-button
+            slot="actions"
+            test-id="actions-sync-retry"
+            [label]="tr('loc.symphony.retry.942087')"
+            [iconName]="'sync'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            [isBusy]="presenter.refreshing()"
+            [disabled]="presenter.refreshing()"
+            (click)="presenter.refreshCommand.execute()"
+          />
+        </mosaik-banner>
+        } } } @if (presenter.isHydrating()) {
+        <!-- The loaded layout with its text as skeleton lines: the heading, then two framed lists. -->
+        <div
+          class="flex min-w-0 flex-col gap-2.5"
+          test-id="actions-loading-skeleton"
+          role="status"
+          [attr.aria-label]="tr('loc.symphony.loading.workflow.runs.3f2126')"
+        >
+          <div class="flex flex-col gap-0.5">
+            <mosaik-skeleton [width]="'8rem'" [height]="'28px'" [shimmer]="true" />
+            <mosaik-skeleton [width]="'22rem'" [height]="'14px'" [shimmer]="true" />
           </div>
+          @for (frame of [[1, 2], [1, 2, 3, 4, 5, 6]]; track $index) {
+          <div class="flex flex-col gap-1">
+            <mosaik-skeleton [width]="'9rem'" [height]="'16px'" [shimmer]="true" />
+            <div part="actions-frame" class="flex flex-col">
+              @for (row of frame; track row) {
+              <div class="flex h-6 items-center gap-1.5 px-1.75">
+                <mosaik-skeleton [width]="'4rem'" [height]="'20px'" [shimmer]="true" />
+                <mosaik-skeleton
+                  [width]="row % 2 ? '14rem' : '18rem'"
+                  [height]="'14px'"
+                  [shimmer]="true"
+                />
+              </div>
+              }
+            </div>
+          </div>
+          }
         </div>
+        } @else if (presenter.selectedWorkflow()) {
+        <symphony-actions-workflow-view />
+        } @else if (presenter.workflows().length || presenter.runRows().length) {
+        <symphony-actions-all-runs-view />
+        } @else {
+        <mosaik-empty-state
+          test-id="actions-empty"
+          [iconName]="'executionOutline'"
+          [header]="tr('loc.symphony.no.actions.workflows.42fd09')"
+          [content]="tr('loc.symphony.workflows.from.the.selected.github.repositories.will.e1b0d0')"
+        />
         }
       </div>
-      } @else if (presenter.selectedWorkflow()) {
-      <symphony-actions-workflow-view />
-      } @else if (presenter.workflows().length || presenter.runRows().length) {
-      <symphony-actions-all-runs-view />
-      } @else {
-      <mosaik-empty-state
-        test-id="actions-empty"
-        [iconName]="'executionOutline'"
-        [header]="'No Actions workflows'"
-        [content]="'Workflows from the selected GitHub repositories will appear here.'"
-      />
-      }
     </div>
-  </div>
-</mosaik-split>
+  </mosaik-split>
+</ng-container>

@@ -4,6 +4,7 @@ import { DestroyRef, Inject, inject, Injectable, signal, type Signal } from '@an
 import type { IDesktopApi, PowerState } from '@symphony/ipc-contracts-desktop';
 import { DESKTOP_CLIENT } from '@symphony/frontend-core/desktop';
 import { NotificationService } from '@symphony/frontend-notification';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -86,8 +87,10 @@ export class DesktopPowerStore {
       this._state.set(await this._desktop.request('power.keep-awake.set', { enabled }));
     } catch (cause) {
       this._notifications.showError(
-        'Sleep prevention could not be changed.',
-        cause instanceof Error ? cause.message : 'Unknown power configuration failure.',
+        translateLabel('loc.symphony.labels.sleep.prevention.could.not.be.changed.5b5d280'),
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.unknown.power.configuration.failure.3657204'),
       );
     } finally {
       this._busy.set(false);
@@ -100,8 +103,12 @@ export class DesktopPowerStore {
       this._state.set(await this._desktop.request('power.get', {}));
     } catch (cause) {
       this._notifications.showError(
-        'Sleep prevention is unavailable.',
-        cause instanceof Error ? cause.message : 'Symphony could not read its power settings.',
+        translateLabel('loc.symphony.labels.sleep.prevention.is.unavailable.aa167b7'),
+        cause instanceof Error
+          ? cause.message
+          : translateLabel(
+              'loc.symphony.labels.symphony.could.not.read.its.power.settings.f1581b7',
+            ),
       );
     }
   }

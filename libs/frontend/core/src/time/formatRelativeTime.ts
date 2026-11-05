@@ -1,3 +1,9 @@
+// #region Imports
+import { translateLabel } from '@symphony/frontend-intl/labels';
+import { labelLocale } from '@symphony/frontend-intl/labels';
+
+// #endregion
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -24,15 +30,27 @@ export function formatRelativeTime(
   const time = typeof value === 'number' ? value : Date.parse(value);
   if (!Number.isFinite(time)) return '';
   const elapsed = Math.max(0, now - time);
-  if (elapsed < MINUTE) return withSuffix ? 'just now' : 'now';
-  if (elapsed < HOUR) return `${Math.floor(elapsed / MINUTE)} min${withSuffix ? ' ago' : ''}`;
-  if (elapsed < DAY) return `${Math.floor(elapsed / HOUR)} h${withSuffix ? ' ago' : ''}`;
+  if (elapsed < MINUTE)
+    return withSuffix
+      ? translateLabel('loc.symphony.labels.just.now.7ddb44d')
+      : translateLabel('loc.symphony.labels.now.ed5eb9a');
+  if (elapsed < HOUR)
+    return withSuffix
+      ? translateLabel('loc.symphony.labels.min.ago.dcf6607', Math.floor(elapsed / MINUTE))
+      : translateLabel('loc.symphony.labels.min.96d15cf', Math.floor(elapsed / MINUTE));
+  if (elapsed < DAY)
+    return withSuffix
+      ? translateLabel('loc.symphony.labels.h.ago.20d2827', Math.floor(elapsed / HOUR))
+      : translateLabel('loc.symphony.labels.h.477a1b5', Math.floor(elapsed / HOUR));
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   const startOfToday = today.getTime();
-  if (time >= startOfToday - DAY) return 'Yesterday';
+  if (time >= startOfToday - DAY) return translateLabel('loc.symphony.labels.yesterday.5661812');
   const days = Math.ceil((startOfToday - time) / DAY);
-  if (days < 7) return `${days} days${withSuffix ? ' ago' : ''}`;
-  const date = new Date(time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  return withSuffix ? `on ${date}` : date;
+  if (days < 7)
+    return withSuffix
+      ? translateLabel('loc.symphony.labels.days.ago.bef5eec', days)
+      : translateLabel('loc.symphony.labels.days.af78beb', days);
+  const date = new Date(time).toLocaleDateString(labelLocale(), { month: 'short', day: 'numeric' });
+  return withSuffix ? translateLabel('loc.symphony.labels.on.e1950d9', date) : date;
 }

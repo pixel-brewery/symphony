@@ -2,6 +2,7 @@
 
 import type { EnvironmentProviders } from '@angular/core';
 import { provideNavigationItems } from '@symphony/frontend-core/mobile';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -15,7 +16,9 @@ export function provideMobileWorkNavigation(): EnvironmentProviders {
   return provideNavigationItems([
     {
       key: 'home',
-      label: 'Home',
+      get label() {
+        return translateLabel('loc.symphony.labels.home.3a78695');
+      },
       icon: 'home',
       route: '/home',
       order: 10,
@@ -23,7 +26,9 @@ export function provideMobileWorkNavigation(): EnvironmentProviders {
     },
     {
       key: 'board',
-      label: 'Board',
+      get label() {
+        return translateLabel('loc.symphony.labels.board.4816cbf');
+      },
       icon: 'board',
       route: '/board',
       order: 20,

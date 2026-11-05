@@ -1,6 +1,7 @@
 // #region Imports
 
 import type { IContinuousIntegrationUsageSummary } from './IContinuousIntegrationUsageSummary';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -68,8 +69,12 @@ export function summarizeContinuousIntegrationUsage(
       accounts.size === 1
         ? [...accounts][0]!
         : accounts.size > 1
-          ? `${accounts.size} accounts`
-          : `${accountReports.length} configured ${accountReports.length === 1 ? 'repository' : 'repositories'}`,
+          ? translateLabel('loc.symphony.labels.accounts.0576f2c', accounts.size)
+          : translateLabel(
+              'loc.symphony.labels.configured.0045d9b',
+              accountReports.length,
+              accountReports.length === 1 ? 'repository' : 'repositories',
+            ),
     ...(used === undefined ? {} : { used }),
     ...(included === undefined ? {} : { included }),
     ...(remaining === undefined ? {} : { remaining }),

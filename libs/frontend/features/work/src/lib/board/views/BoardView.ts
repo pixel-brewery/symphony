@@ -1,10 +1,11 @@
 // #region Imports
 
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { type CdkDragDrop, CdkDrag, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { CdkVirtualForOf, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   BannerComponent,
   BannerHeaderComponent,
   BannerSubHeaderComponent,
@@ -37,6 +38,7 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
   selector: 'symphony-board-view',
   host: { class: 'flex min-h-0 min-w-0 flex-1 flex-col' },
   imports: [
+    TranslateDirective,
     BannerComponent,
     BannerHeaderComponent,
     BannerSubHeaderComponent,

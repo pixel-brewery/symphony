@@ -35,6 +35,7 @@ vi.mock('@pixel-brewery/mosaik-elements-angular', () => ({
   ButtonComponent: class {},
   CardComponent: class {},
   TextComponent: class {},
+  TranslateDirective: class {},
   TypographyDirective: class {},
 }));
 

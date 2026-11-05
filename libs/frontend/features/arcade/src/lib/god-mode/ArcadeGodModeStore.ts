@@ -3,6 +3,7 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Inject, Injectable, signal } from '@angular/core';
 import { NotificationService } from '@symphony/frontend-notification';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -108,7 +109,9 @@ export class ArcadeGodModeStore {
       }
       this.clearResetTimer();
       this._enabled.set(true);
-      this._notifications.showSuccess('God mode activated');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.god.mode.activated.ef9fae0'),
+      );
       this.post({ kind: 'enabled' });
       return;
     }

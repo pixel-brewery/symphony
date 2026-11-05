@@ -1,104 +1,105 @@
-<ng-template
-  symphonyWindowToolbar
-  [toolbarTitle]="'Arcade'"
-  [toolbarSubtitle]="presenter.games.length + ' games'"
->
-  <mosaik-button
-    test-id="arcade-open-leaderboard"
-    [label]="'Leaderboard'"
-    [icon]="'checkCircle'"
-    [iconSize]="'small'"
-    [appearance]="'plain'"
-    (click)="presenter.showLeaderboardCommand.execute()"
-  />
-</ng-template>
+<ng-container *mosaikTranslate="let tr">
+  <ng-template
+    symphonyWindowToolbar
+    [toolbarTitle]="tr('loc.symphony.arcade.df79c0')"
+    [toolbarSubtitle]="tr('loc.symphony.games.7ed346', [presenter.games.length])"
+  >
+    <mosaik-button
+      test-id="arcade-open-leaderboard"
+      [label]="tr('loc.symphony.leaderboard.31b471')"
+      [icon]="'checkCircle'"
+      [iconSize]="'small'"
+      [appearance]="'plain'"
+      (click)="presenter.showLeaderboardCommand.execute()"
+    />
+  </ng-template>
 
-<div
-  class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-auto"
-  test-id="arcade-view"
-  role="region"
-  aria-label="Arcade"
->
-  <section class="flex flex-col gap-2.5 p-3.5" test-id="arcade-gallery">
-    <div class="flex flex-col gap-0.5">
-      <mosaik-text
-        role="heading"
-        aria-level="2"
-        test-id="arcade-header"
-        [mosaikTypography]="'headline5'"
-        [text]="'Choose a game'"
-      />
-      <mosaik-text
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="'A short break while your AI team works. Esc pauses a running game.'"
-      />
-    </div>
+  <div
+    class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-auto"
+    test-id="arcade-view"
+    role="region"
+    [attr.aria-label]="tr('loc.symphony.arcade.df79c0')"
+  >
+    <section class="flex flex-col gap-2.5 p-3.5" test-id="arcade-gallery">
+      <div class="flex flex-col gap-0.5">
+        <mosaik-text
+          role="heading"
+          aria-level="2"
+          test-id="arcade-header"
+          [mosaikTypography]="'headline5'"
+          [text]="tr('loc.symphony.choose.a.game.3b3dd4')"
+        />
+        <mosaik-text
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.a.short.break.while.your.ai.team.works.esc.pauses.a.d1940d')"
+        />
+      </div>
 
-    <!-- At most four equal columns as drawn; narrower windows wrap to fewer columns of at least
+      <!-- At most four equal columns as drawn; narrower windows wrap to fewer columns of at least
          240px so a card never shrinks below its cover and Play button. -->
-    <div
-      role="list"
-      aria-label="Games"
-      test-id="arcade-tiles"
-      class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,max(240px,calc((100%_-_48px)/4))),1fr))] gap-2"
-    >
-      @for (game of presenter.games; track game.id) {
-      <mosaik-card
-        part="arcade-card"
-        role="listitem"
-        class="min-w-0"
-        [attr.test-id]="'arcade-game-' + game.id"
-        [elevation]="'none'"
+      <div
+        role="list"
+        [attr.aria-label]="tr('loc.symphony.games.d9dae7')"
+        test-id="arcade-tiles"
+        class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,max(240px,calc((100%_-_48px)/4))),1fr))] gap-2"
       >
-        <div slot="content" class="flex min-w-0 flex-col gap-[14px] p-[14px]">
-          <div class="relative aspect-[16/10] w-full">
-            <mosaik-image
-              part="arcade-cover"
-              class="absolute inset-0"
-              [attr.test-id]="'arcade-cover-' + game.id"
-              [src]="game.cover"
-              [alt]="''"
-              [width]="'100%'"
-              [height]="'100%'"
-              [fit]="'contain'"
-              [showFailed]="true"
-            />
-          </div>
-          <div class="flex min-w-0 items-center gap-1">
-            <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-              <mosaik-text
-                [attr.test-id]="'arcade-title-' + game.id"
-                [mosaikTypography]="'subtitle2'"
-                [truncate]="true"
-                [text]="game.title"
-              />
-              <mosaik-text
-                [attr.test-id]="'arcade-players-' + game.id"
-                [mosaikTypography]="'caption'"
-                [variant]="'neutral'"
-                [truncate]="true"
-                [text]="
-                  game.minPlayers === game.maxPlayers
-                    ? game.maxPlayers + (game.maxPlayers === 1 ? ' player' : ' players')
-                    : game.minPlayers + '–' + game.maxPlayers + ' players'
-                "
+        @for (game of presenter.games; track game.id) {
+        <mosaik-card
+          part="arcade-card"
+          role="listitem"
+          class="min-w-0"
+          [attr.test-id]="'arcade-game-' + game.id"
+          [elevation]="'none'"
+        >
+          <div slot="content" class="flex min-w-0 flex-col gap-[14px] p-[14px]">
+            <div class="relative aspect-[16/10] w-full">
+              <mosaik-image
+                part="arcade-cover"
+                class="absolute inset-0"
+                [attr.test-id]="'arcade-cover-' + game.id"
+                [src]="game.cover"
+                [alt]="''"
+                [width]="'100%'"
+                [height]="'100%'"
+                [fit]="'contain'"
+                [showFailed]="true"
               />
             </div>
-            <mosaik-button
-              class="flex-none"
-              [attr.test-id]="'arcade-play-' + game.id"
-              [attr.aria-label]="'Play ' + game.fullTitle"
-              [label]="'Play'"
-              [icon]="'play'"
-              [iconSize]="'small'"
-              [appearance]="'outline'"
-              (click)="game.play.execute()"
-            />
+            <div class="flex min-w-0 items-center gap-1">
+              <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+                <mosaik-text
+                  [attr.test-id]="'arcade-title-' + game.id"
+                  [mosaikTypography]="'subtitle2'"
+                  [truncate]="true"
+                  [text]="game.title"
+                />
+                <mosaik-text
+                  [attr.test-id]="'arcade-players-' + game.id"
+                  [mosaikTypography]="'caption'"
+                  [variant]="'neutral'"
+                  [truncate]="true"
+                  [text]="
+                  game.minPlayers === game.maxPlayers
+                    ? game.maxPlayers + (game.maxPlayers === 1 ? ' player' : ' players')
+                    : tr('loc.symphony.players.c5727f', [game.minPlayers, game.maxPlayers])"
+                />
+              </div>
+              <mosaik-button
+                class="flex-none"
+                [attr.test-id]="'arcade-play-' + game.id"
+                [attr.aria-label]="tr('loc.symphony.play.c1513a', [game.fullTitle])"
+                [label]="tr('loc.symphony.play.436e61')"
+                [icon]="'play'"
+                [iconSize]="'small'"
+                [appearance]="'outline'"
+                (click)="game.play.execute()"
+              />
+            </div>
           </div>
-        </div>
-      </mosaik-card>
-      }
-    </div>
-  </section>
-</div>
+        </mosaik-card>
+        }
+      </div>
+    </section>
+  </div>
+</ng-container>

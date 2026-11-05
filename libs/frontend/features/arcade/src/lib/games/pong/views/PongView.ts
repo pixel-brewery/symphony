@@ -14,6 +14,7 @@ import {
 import { form, FormField } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import {
+  TranslateDirective,
   ButtonComponent,
   CardActionsComponent,
   CardComponent,
@@ -55,6 +56,7 @@ const INPUTS: Readonly<Record<string, PongInput>> = {
   standalone: true,
   host: { class: 'flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     CardActionsComponent,
     CardComponent,

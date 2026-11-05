@@ -3,6 +3,7 @@
 import type { ICiRun, ICiWorkflow } from '@symphony/domain-ci';
 import { actionStatusLabel } from '@symphony/frontend-core/delivery';
 import { scorePaletteMatch, type IPaletteResult } from '@symphony/frontend-search';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -17,7 +18,9 @@ const RUN_WORKFLOW: IPaletteResult = {
   id: 'command:run-workflow',
   group: 'commands',
   icon: 'play',
-  title: 'Run workflow…',
+  get title() {
+    return translateLabel('loc.symphony.labels.run.workflow.90b6461');
+  },
   rank: 0,
   action: { kind: 'navigate', path: '/main/actions' },
 };
@@ -88,7 +91,9 @@ export function projectCiPaletteResults(
       id: `command:run-workflow:${workflow.id}`,
       group: 'commands',
       icon: 'play',
-      title: `Run ${workflow.name} on GitHub`,
+      get title() {
+        return translateLabel('loc.symphony.labels.run.on.github.0314c3a', workflow.name);
+      },
       rank,
       action: {
         kind: 'navigate',

@@ -7,6 +7,7 @@ import {
   type NavigationFeatureKind,
 } from '@symphony/frontend-core';
 import { ARCADE_SETTINGS_CONTEXT } from '../settings/ArcadeSettingsContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -24,12 +25,16 @@ export function withArcadeNavigation(order: number): IFeature<NavigationFeatureK
       const context = inject(ARCADE_SETTINGS_CONTEXT);
       return {
         key: 'arcade',
-        label: 'Arcade',
+        get label() {
+          return translateLabel('loc.symphony.labels.arcade.df79c0f');
+        },
         icon: 'games',
         route: '/main/arcade',
         order,
         region: 'desktop-main',
-        group: 'More',
+        get group() {
+          return translateLabel('loc.symphony.labels.more.d47d7cb');
+        },
         isVisible: () => context.enabled(),
       };
     },

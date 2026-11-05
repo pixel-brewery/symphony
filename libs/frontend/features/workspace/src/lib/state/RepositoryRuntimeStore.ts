@@ -11,6 +11,7 @@ import { NotificationService, operatorErrorMessage } from '@symphony/frontend-no
 import type { ResponsePayload } from '@symphony/ipc-contracts-composition';
 import type { IRepositoryRuntimeClient } from '../ports/IRepositoryRuntimeClient';
 import { REPOSITORY_RUNTIME_CLIENT } from '../ports/RepositoryRuntimeClientToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -153,7 +154,7 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
         }
         inspected = false;
         this._notifications.showError(
-          'Unable to inspect the local repository.',
+          translateLabel('loc.symphony.labels.unable.to.inspect.the.local.repository.ee62947'),
           `${this.workspaceName(status.workspaceId)} › ${status.displayName}: ${operatorErrorMessage(status.preparation.inspectionError)}`,
           this.inspectionErrorKey(status),
         );
@@ -165,9 +166,9 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
         ?.repositoryBindings.find((candidate) => candidate.id === repositoryBindingId);
       const context = repository
         ? `${this.workspaceName(repository.workspaceId)} › ${repository.displayName}`
-        : 'All configured workspaces';
+        : translateLabel('loc.symphony.labels.all.configured.workspaces.9a9fbe1');
       this._notifications.showError(
-        'Unable to refresh local repository statuses.',
+        translateLabel('loc.symphony.labels.unable.to.refresh.local.repository.statuses.f37f9d9'),
         `${context}: ${operatorErrorMessage(cause)}`,
         this.refreshErrorKey(repositoryBindingId),
       );
@@ -189,10 +190,15 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
       this.upsertRepositoryRuntimeStatus(status);
       await this._configuration.refreshSettings();
       this._preparation?.notifyUnpreparedAutomaticExecution();
-      this._notifications.showSuccess('Repository prepared locally.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.repository.prepared.locally.0331d54'),
+      );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to prepare the repository locally.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.prepare.the.repository.locally.970bb64'),
+      );
       return false;
     } finally {
       this._repositoryRuntimeBusy.set(undefined);
@@ -214,7 +220,10 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to create a local verification plan.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.create.a.local.verification.plan.4174765'),
+      );
       return false;
     } finally {
       this._repositoryRuntimeBusy.set(undefined);
@@ -245,17 +254,25 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
       });
       this._verificationRun.set(run);
       await this.refreshRepositoryRuntime(repositoryBindingId);
-      if (run.state === 'succeeded') this._notifications.showSuccess('Local verification passed.');
+      if (run.state === 'succeeded')
+        this._notifications.showSuccess(
+          translateLabel('loc.symphony.labels.local.verification.passed.cb7c2b1'),
+        );
       else
         this._notifications.showWarning(
           run.state === 'cancelled'
             ? 'Local verification cancelled.'
             : 'Local verification failed.',
-          'Review the verification results before continuing.',
+          translateLabel(
+            'loc.symphony.labels.review.the.verification.results.before.continuing.37d1350',
+          ),
         );
       return run.state === 'succeeded';
     } catch (cause) {
-      this.showError(cause, 'Unable to run local verification.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.run.local.verification.cb8c461'),
+      );
       return false;
     } finally {
       this._verificationRunningRepositoryId.set(undefined);
@@ -273,7 +290,10 @@ export class RepositoryRuntimeStore implements IRepositoryRuntimeOperations {
     try {
       await this._client.request('verification.cancel', { repositoryBindingId });
     } catch (cause) {
-      this.showError(cause, 'Unable to cancel local verification.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.cancel.local.verification.28dba57'),
+      );
     }
   }
 

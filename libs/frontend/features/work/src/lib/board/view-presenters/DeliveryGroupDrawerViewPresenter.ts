@@ -10,6 +10,7 @@ import { ExternalLinkService, ViewPresenter } from '@symphony/frontend-core';
 import type { IDeliveryGroupDrawerData } from './IDeliveryGroupDrawerData';
 import { WorkStore } from '../../state/WorkStore';
 import { WORK_DELIVERY_GROUP_CONTEXT } from '../../ports/WorkDeliveryGroupContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -184,7 +185,12 @@ export class DeliveryGroupDrawerViewPresenter extends ViewPresenter {
     const additions = proposal.workItemIds.filter(
       (workItemId) => !group.workItemIds.includes(workItemId),
     );
-    return `${group.workItemIds.map(label).join(', ')} already deliver together. Confirming adds ${additions.map(label).join(', ')} to that group; the root stays ${label(group.rootWorkItemId)}.`;
+    return translateLabel(
+      'loc.symphony.labels.already.deliver.together.confirming.adds.to.that.gro.894041e',
+      group.workItemIds.map(label).join(', '),
+      additions.map(label).join(', '),
+      label(group.rootWorkItemId),
+    );
   });
 
   /**
@@ -194,9 +200,13 @@ export class DeliveryGroupDrawerViewPresenter extends ViewPresenter {
    * @readonly
    */
   public readonly confirmLabel = computed(() => {
-    if (this.requiresAttestation()) return 'Deliver together anyway';
-    if (this.existingGroup()) return 'Add to existing group';
-    return this.requestedColumnLabel ? 'Group and move together' : 'Take tickets together';
+    if (this.requiresAttestation())
+      return translateLabel('loc.symphony.labels.deliver.together.anyway.ba160ca');
+    if (this.existingGroup())
+      return translateLabel('loc.symphony.labels.add.to.existing.group.d28341f');
+    return this.requestedColumnLabel
+      ? translateLabel('loc.symphony.labels.group.and.move.together.71d95d0')
+      : translateLabel('loc.symphony.labels.take.tickets.together.1c9ccd2');
   });
 
   // #endregion

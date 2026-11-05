@@ -10,6 +10,7 @@ import {
   type INotificationSource,
 } from '@symphony/frontend-notification';
 import { storageSize } from '@symphony/frontend-ui';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -20,7 +21,15 @@ const LOCAL_CI_ITEM_ID = 'storage:local-ci';
 const WORKSPACE_ITEM_PREFIX = 'storage:workspace:';
 const ENABLED_POLL_MILLISECONDS = 10_000;
 const DISABLED_POLL_MILLISECONDS = 60_000;
-const REVIEW_ACTIONS = [{ id: 'review', label: 'Review storage', emphasis: 'secondary' }] as const;
+const REVIEW_ACTIONS = [
+  {
+    id: 'review',
+    get label() {
+      return translateLabel('loc.symphony.labels.review.storage.48dfe55');
+    },
+    emphasis: 'secondary',
+  },
+] as const;
 
 /**
  * Reports storage pressure from the single storage measurement: managed Symphony data near or at
@@ -70,14 +79,23 @@ export class StoragePressureNotificationSource implements INotificationSource {
       items.push({
         id: MANAGED_ITEM_ID,
         severity: managedPressure === 'critical' ? 'error' : 'warning',
-        title:
-          managedPressure === 'critical'
-            ? 'Managed storage is full'
+        get title() {
+          return managedPressure === 'critical'
+            ? translateLabel('loc.symphony.labels.managed.storage.is.full.9e5a1e3')
             : managedPressure === 'danger'
-              ? 'Managed storage is almost full'
-              : 'Managed storage is approaching its limit',
+              ? translateLabel('loc.symphony.labels.managed.storage.is.almost.full.7b35aad')
+              : translateLabel(
+                  'loc.symphony.labels.managed.storage.is.approaching.its.limit.c4cd82c',
+                );
+        },
         location: ['System', 'Storage'],
-        detail: `${storageSize(managed.allocatedBytes)} of ${storageSize(managed.limitBytes)} in use`,
+        get detail() {
+          return translateLabel(
+            'loc.symphony.labels.of.in.use.5d3ce65',
+            storageSize(managed.allocatedBytes),
+            storageSize(managed.limitBytes),
+          );
+        },
         scope: { kind: 'mac' },
         actions: REVIEW_ACTIONS,
       });
@@ -90,12 +108,21 @@ export class StoragePressureNotificationSource implements INotificationSource {
       items.push({
         id: FILESYSTEM_ITEM_ID,
         severity: filesystem.pressure === 'critical' ? 'error' : 'warning',
-        title:
-          filesystem.pressure === 'critical'
-            ? 'This Mac has reached its free-space reserve'
-            : 'This Mac is low on free space',
+        get title() {
+          return filesystem.pressure === 'critical'
+            ? translateLabel(
+                'loc.symphony.labels.this.mac.has.reached.its.free.space.reserve.cb6c188',
+              )
+            : translateLabel('loc.symphony.labels.this.mac.is.low.on.free.space.0009111');
+        },
         location: ['System', 'Storage'],
-        detail: `${storageSize(filesystem.availableBytes)} free · Symphony keeps ${storageSize(filesystem.reserveBytes)} free`,
+        get detail() {
+          return translateLabel(
+            'loc.symphony.labels.free.symphony.keeps.free.9552ce8',
+            storageSize(filesystem.availableBytes),
+            storageSize(filesystem.reserveBytes),
+          );
+        },
         scope: { kind: 'mac' },
         actions: REVIEW_ACTIONS,
       });
@@ -111,9 +138,15 @@ export class StoragePressureNotificationSource implements INotificationSource {
       items.push({
         id: BLOCKED_ITEM_ID,
         severity: 'error',
-        title: 'New disk-writing work is blocked',
+        get title() {
+          return translateLabel('loc.symphony.labels.new.disk.writing.work.is.blocked.36b2863');
+        },
         location: ['System', 'Storage'],
-        detail: 'new AI tasks, worktrees and Local GitHub Actions wait until data is cleared',
+        get detail() {
+          return translateLabel(
+            'loc.symphony.labels.new.ai.tasks.worktrees.and.local.github.actions.wait.1c6ed54',
+          );
+        },
         scope: { kind: 'mac' },
         actions: REVIEW_ACTIONS,
       });
@@ -129,12 +162,19 @@ export class StoragePressureNotificationSource implements INotificationSource {
       items.push({
         id: `${WORKSPACE_ITEM_PREFIX}${usage.workspaceId}`,
         severity: usage.pressure === 'critical' ? 'error' : 'warning',
-        title:
-          usage.pressure === 'critical'
-            ? `${name} has reached its storage limit`
-            : `${name} is approaching its storage limit`,
+        get title() {
+          return usage.pressure === 'critical'
+            ? translateLabel('loc.symphony.labels.has.reached.its.storage.limit.b53f733', name)
+            : translateLabel('loc.symphony.labels.is.approaching.its.storage.limit.158ef7a', name);
+        },
         location: [name, 'Administration'],
-        detail: `${storageSize(usage.allocatedBytes)} of ${storageSize(usage.limitBytes)} in use`,
+        get detail() {
+          return translateLabel(
+            'loc.symphony.labels.of.in.use.5d3ce65',
+            storageSize(usage.allocatedBytes),
+            storageSize(usage.limitBytes),
+          );
+        },
         scope: { kind: 'workspace', workspaceId: usage.workspaceId, name },
         actions: REVIEW_ACTIONS,
       });
@@ -230,9 +270,18 @@ export class StoragePressureNotificationSource implements INotificationSource {
       return {
         id: LOCAL_CI_ITEM_ID,
         severity: 'error',
-        title: 'Local GitHub Actions cannot check storage',
+        get title() {
+          return translateLabel(
+            'loc.symphony.labels.local.github.actions.cannot.check.storage.13414ff',
+          );
+        },
         location: ['System', 'Storage'],
-        detail: `Storage could not be measured. Local runs wait until it can be checked. Protected Mac reserve: ${storageSize(admission.reserveBytes)}.`,
+        get detail() {
+          return translateLabel(
+            'loc.symphony.labels.storage.could.not.be.measured.local.runs.wait.until..034fa89',
+            storageSize(admission.reserveBytes),
+          );
+        },
         scope: { kind: 'mac' },
         actions: REVIEW_ACTIONS,
       };
@@ -302,7 +351,10 @@ export class StoragePressureNotificationSource implements INotificationSource {
     untracked(() =>
       this._notifications.showError(
         problem.title,
-        `${problem.detail ?? ''} Review storage in Settings.`,
+        translateLabel(
+          'loc.symphony.labels.review.storage.in.settings.835a8d9',
+          problem.detail ?? '',
+        ),
       ),
     );
   }

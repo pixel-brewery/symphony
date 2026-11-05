@@ -3,6 +3,7 @@
 import { computed, inject, type Signal } from '@angular/core';
 import { ConfigurationStore } from '@symphony/frontend-core/configuration';
 import type { ISettingsSearchEntry } from '@symphony/frontend-setting';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -24,7 +25,9 @@ export function agentSearchEntries(): Signal<readonly ISettingsSearchEntry[]> {
         id: `agent-${agent.id}`,
         label: agent.displayName,
         ...(position ? { description: position.displayName } : {}),
-        group: 'Agents',
+        get group() {
+          return translateLabel('loc.symphony.labels.agents.279b44d');
+        },
         keywords: ['agent'],
         ...(agent.enabled ? {} : { value: 'Disabled' }),
         workspaceId: agent.workspaceId,

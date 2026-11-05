@@ -18,6 +18,7 @@ import { createSetupTeam } from '@symphony/frontend-feature-team';
 import { WORK_ONBOARDING_CONTEXT } from '../ports/WorkOnboardingContextToken';
 import { WORK_ONBOARDING_CLIENT } from '../ports/WorkOnboardingClientToken';
 import type { ISetupSheetRequest } from '../models/ISetupSheetRequest';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -534,7 +535,11 @@ export class SetupViewPresenter extends ViewPresenter {
       this.connections.set(await this._client.request('connections.get', {}));
       this.githubAccountId.set(this.githubAccounts()[0]?.id ?? '');
     } catch {
-      this.error.set('Accounts could not be detected. Retry or open account settings.');
+      this.error.set(
+        translateLabel(
+          'loc.symphony.labels.accounts.could.not.be.detected.retry.or.open.account.b9db528',
+        ),
+      );
     } finally {
       this.busy.set(false);
     }
@@ -593,7 +598,9 @@ export class SetupViewPresenter extends ViewPresenter {
       this.error.set(
         cause instanceof Error
           ? cause.message
-          : 'Repository discovery failed. Check the GitHub account.',
+          : translateLabel(
+              'loc.symphony.labels.repository.discovery.failed.check.the.github.account.6a232a7',
+            ),
       );
     } finally {
       this.busy.set(false);
@@ -627,7 +634,11 @@ export class SetupViewPresenter extends ViewPresenter {
         this.ticketId.set(this.tickets()[0]?.id ?? '');
       }
     } catch (cause) {
-      this.error.set(cause instanceof Error ? cause.message : 'The proposal could not be saved.');
+      this.error.set(
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.the.proposal.could.not.be.saved.f388c27'),
+      );
     } finally {
       this.busy.set(false);
     }
@@ -645,7 +656,9 @@ export class SetupViewPresenter extends ViewPresenter {
       const repository = this.repository(settings);
       if (!this.store.prepareRepository || !(await this.store.prepareRepository(repository.id))) {
         this.error.set(
-          'Repository preparation failed. Open repository settings to fix the folder or account, then retry.',
+          translateLabel(
+            'loc.symphony.labels.repository.preparation.failed.open.repository.settin.7a2a574',
+          ),
         );
         return;
       }
@@ -656,7 +669,9 @@ export class SetupViewPresenter extends ViewPresenter {
         this.showAnalysis();
       else
         this.error.set(
-          'The analysis could not start. Check the selected ticket, account and skill in expert settings, then retry.',
+          translateLabel(
+            'loc.symphony.labels.the.analysis.could.not.start.check.the.selected.tick.229f44c',
+          ),
         );
     } finally {
       this.busy.set(false);
@@ -674,7 +689,9 @@ export class SetupViewPresenter extends ViewPresenter {
       await this.load();
     } catch {
       this._notifications.showError(
-        'CLI installation failed. Open account settings to resolve it.',
+        translateLabel(
+          'loc.symphony.labels.cli.installation.failed.open.account.settings.to.res.31d003d',
+        ),
       );
     } finally {
       this.busy.set(false);

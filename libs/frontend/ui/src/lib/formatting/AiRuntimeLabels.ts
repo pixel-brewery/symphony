@@ -4,6 +4,7 @@ import type { AiRuntimeKind } from '@symphony/frontend-core/ai';
 
 // #endregion
 
+/** Canonical public runtime names, also used to seed persisted account names. */
 export const AI_RUNTIME_LABELS: Readonly<Record<AiRuntimeKind, string>> = {
   codex: 'Codex',
   claude: 'Claude Code',

@@ -1,821 +1,830 @@
-<ng-template mosaikDialogHeader>
-  <mosaik-dialog-header
-    slot="header"
-    [text]="presenter.data.connectionId || presenter.data.agentProfileId ? 'Edit AI agent' : 'Add AI agent'"
-    [subText]="'Workspace team member'"
-  >
-    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
-  </mosaik-dialog-header>
-</ng-template>
-<ng-template mosaikDialogContent>
-  <div
-    test-id="settings-editor-drawer"
-    class="grid max-h-[calc(100dvh-240px)] min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_260px] items-start gap-[22px] overflow-y-auto py-0.5 max-[760px]:grid-cols-1"
-  >
-    <div class="flex min-w-0 flex-col gap-[18px]" test-id="agent-wizard">
-      <!-- 1 · Which AI does this agent use? -->
-      <section class="flex min-w-0 flex-col gap-[10px]" test-id="agent-step-ai">
-        <div class="flex min-w-0 items-start gap-[10px]">
-          <mosaik-avatar
-            part="question-number"
-            aria-hidden="true"
-            [text]="'1'"
-            [size]="'tiny'"
-            [appearance]="'soft'"
-            [variant]="'neutral'"
-          />
-          <div class="flex min-w-0 flex-col gap-[2px]">
-            <mosaik-text
-              part="question-heading"
-              role="heading"
-              aria-level="3"
-              [mosaikTypography]="'subtitle2'"
-              [wrap]="true"
-              [text]="'Which AI does this agent use?'"
-            />
-            <mosaik-text
-              [mosaikTypography]="'caption'"
+<ng-container *mosaikTranslate="let tr">
+  <ng-template mosaikDialogHeader>
+    <mosaik-dialog-header
+      slot="header"
+      [text]="presenter.data.connectionId || presenter.data.agentProfileId ? tr('loc.symphony.edit.ai.agent.1f27a2') : tr('loc.symphony.add.ai.agent.52ff41')"
+      [subText]="tr('loc.symphony.workspace.team.member.93b682')"
+    >
+      <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+    </mosaik-dialog-header>
+  </ng-template>
+  <ng-template mosaikDialogContent>
+    <div
+      test-id="settings-editor-drawer"
+      class="grid max-h-[calc(100dvh-240px)] min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_260px] items-start gap-[22px] overflow-y-auto py-0.5 max-[760px]:grid-cols-1"
+    >
+      <div class="flex min-w-0 flex-col gap-[18px]" test-id="agent-wizard">
+        <!-- 1 · Which AI does this agent use? -->
+        <section class="flex min-w-0 flex-col gap-[10px]" test-id="agent-step-ai">
+          <div class="flex min-w-0 items-start gap-[10px]">
+            <mosaik-avatar
+              part="question-number"
+              aria-hidden="true"
+              [text]="'1'"
+              [size]="'tiny'"
+              [appearance]="'soft'"
               [variant]="'neutral'"
-              [wrap]="true"
-              [text]="'Pick a connected AI account, then the model and effort it should run with.'"
             />
-          </div>
-        </div>
-        @if (presenter.aiAccounts().length) {
-        <div part="choice-cards" class="min-w-0">
-          <mosaik-choice-group
-            test-id="ai-account"
-            class="w-full min-w-0"
-            [name]="'ai-account'"
-            [orientation]="'horizontal'"
-            [appearance]="'outline'"
-            [variant]="'primary'"
-            [value]="presenter.ai.accountId"
-            (choiceChanged)="presenter.updateAiAccountCommand.execute($event)"
-          >
-            @for (account of presenter.aiAccounts(); track account.id) {
-            <mosaik-choice
-              [attr.test-id]="'ai-account-' + account.id"
-              [value]="account.id"
-              [appearance]="'outline'"
-              [variant]="'primary'"
-              [iconName]="account.kind | connectionIcon"
-              [label]="account.displayName"
-              [additional]="presenter.aiRuntimeLabel()(account.kind) + ' · ' + (account.id | aiAccountStatus: account.kind: presenter.store.connections())"
-              (click)="presenter.updateAiAccountCommand.execute(account.id)"
-            />
-            }
-          </mosaik-choice-group>
-        </div>
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [wrap]="true"
-          [text]="'Accounts are connected once under Connected services and shared by all agents of this workspace.'"
-        />
-        } @else {
-        <mosaik-message
-          test-id="ai-accounts-missing"
-          [appearance]="'soft'"
-          [variant]="'info'"
-          [fit]="'width'"
-          [iconName]="'info'"
-          [iconSize]="'small'"
-          [header]="'No AI account connected yet'"
-          [content]="'Connect Codex, Claude Code, or OpenCode under Connected services first. The agent can then run on that account.'"
-        />
-        <div class="flex min-w-0 justify-end">
-          <mosaik-button
-            test-id="open-ai-account-editor"
-            [label]="'Connect an AI account'"
-            [iconName]="'add'"
-            [iconSize]="'small'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            (click)="presenter.openAiAccountEditorCommand.execute()"
-          />
-        </div>
-        } @if (presenter.ai.accountId) { @if (presenter.selectedAccountProblem() === 'cli-missing')
-        {
-        <mosaik-message
-          test-id="selected-ai-runtime-unavailable"
-          [appearance]="'soft'"
-          [variant]="'warning'"
-          [fit]="'width'"
-          [iconName]="'warning'"
-          [iconSize]="'small'"
-          [header]="presenter.aiRuntimeLabel()(presenter.ai.kind) + ' CLI is not installed'"
-          [content]="'Install it before this agent can be saved or used.'"
-        />
-        <div class="flex min-w-0 justify-end">
-          <mosaik-button
-            test-id="install-selected-ai-runtime"
-            [label]="'Install with Homebrew'"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            [isBusy]="presenter.store.runtimeDependencyInstallBusy() === presenter.ai.kind"
-            [disabled]="!presenter.store.nativeInstallAvailable || !presenter.store.runtimeHealth()?.homebrew?.available || !!presenter.store.runtimeDependencyInstallBusy()"
-            (click)="presenter.confirmInstallAiRuntimeCommand.execute([presenter.ai.kind, presenter.aiRuntimeLabel()(presenter.ai.kind)])"
-          />
-        </div>
-        } @else {
-        <mosaik-text
-          role="heading"
-          aria-level="4"
-          part="question-heading"
-          [mosaikTypography]="'subtitle2'"
-          [text]="'Model'"
-        />
-        @if (presenter.openCodeProviderChoices().length) {
-        <div class="flex min-w-0 flex-wrap gap-1" aria-label="AI providers">
-          @for (provider of presenter.openCodeProviderChoices(); track provider.id) {
-          <mosaik-button
-            class="min-w-0"
-            [attr.test-id]="'opencode-provider-' + provider.id"
-            [label]="provider.label | settingName"
-            [appearance]="presenter.selectedAiProviderId() === provider.id | selectionAppearance"
-            [variant]="'primary'"
-            (click)="presenter.updateOpenCodeProviderCommand.execute(provider.id)"
-          />
-          }
-        </div>
-        } @if (presenter.aiModelSearchVisible()) {
-        <mosaik-textbox
-          test-id="ai-model-search"
-          [label]="'Filter models'"
-          [placeholder]="'Model name…'"
-          [value]="presenter.aiModelSearch()"
-          (input)="presenter.aiModelSearch.set(presenter.eventText()($event))"
-        />
-        } @if (presenter.aiModelChoices().length) {
-        <div part="choice-cards" class="min-w-0">
-          <mosaik-choice-group
-            test-id="ai-model"
-            class="w-full min-w-0"
-            [name]="'ai-model'"
-            [orientation]="'horizontal'"
-            [appearance]="'outline'"
-            [variant]="'primary'"
-            [value]="presenter.selectedAiModelChoice()"
-            (choiceChanged)="presenter.updateAiModelChoiceCommand.execute($event)"
-          >
-            @for (choice of presenter.aiModelChoices(); track choice.id) {
-            <mosaik-choice
-              [attr.test-id]="'ai-model-' + (choice.id || 'default')"
-              [value]="choice.id"
-              [appearance]="'outline'"
-              [variant]="'primary'"
-              [label]="choice.label"
-              [additional]="choice.description ?? ''"
-              (click)="presenter.updateAiModelChoiceCommand.execute(choice.id)"
-            />
-            }
-          </mosaik-choice-group>
-        </div>
-        } @else if (presenter.aiModelsPending()) {
-        <mosaik-message
-          test-id="ai-models-unavailable"
-          [appearance]="'soft'"
-          [variant]="'info'"
-          [fit]="'width'"
-          [iconName]="'info'"
-          [iconSize]="'small'"
-          [header]="presenter.ai.kind === 'codex' ? 'Models appear once the account is signed in' : 'OpenCode has not reported any models yet'"
-          [content]="presenter.ai.kind === 'codex' ? 'Sign in to this Codex account under Connected services. Symphony then shows only models the account can use.' : 'Import the OpenCode sign-ins under Connected services, then check again.'"
-        />
-        <div class="flex min-w-0 justify-end">
-          <mosaik-button
-            test-id="refresh-ai-models"
-            [label]="'Check again'"
-            [iconName]="'sync'"
-            [iconSize]="'small'"
-            [appearance]="'plain'"
-            [isBusy]="presenter.store.availableAiModelsBusy()"
-            [disabled]="presenter.store.availableAiModelsBusy() || presenter.store.configurationBusy()"
-            (click)="presenter.refreshAiConfigurationCommand.execute()"
-          />
-        </div>
-        } @if (presenter.aiEffortChoices().length) {
-        <mosaik-text
-          role="heading"
-          aria-level="4"
-          part="question-heading"
-          [mosaikTypography]="'subtitle2'"
-          [text]="'Effort'"
-        />
-        <div part="choice-cards" class="min-w-0">
-          <mosaik-choice-group
-            test-id="ai-reasoning"
-            class="w-full min-w-0"
-            [name]="'ai-reasoning'"
-            [orientation]="'horizontal'"
-            [appearance]="'outline'"
-            [variant]="'primary'"
-            [value]="presenter.selectedAiEffortChoice()"
-            (choiceChanged)="presenter.updateAiEffortChoiceCommand.execute($event)"
-          >
-            @for (choice of presenter.aiEffortChoices(); track choice.id) {
-            <mosaik-choice
-              [attr.test-id]="'ai-reasoning-' + (choice.id || 'default')"
-              [value]="choice.id"
-              [appearance]="'outline'"
-              [variant]="'primary'"
-              [label]="choice.label"
-              [additional]="choice.description ?? ''"
-              (click)="presenter.updateAiEffortChoiceCommand.execute(choice.id)"
-            />
-            }
-          </mosaik-choice-group>
-        </div>
-        } } }
-      </section>
-
-      <mosaik-divider />
-
-      <!-- 2 · Who is this agent? -->
-      <section class="flex min-w-0 flex-col gap-[10px]" test-id="agent-step-identity">
-        <div class="flex min-w-0 items-start gap-[10px]">
-          <mosaik-avatar
-            part="question-number"
-            aria-hidden="true"
-            [text]="'2'"
-            [size]="'tiny'"
-            [appearance]="'soft'"
-            [variant]="'neutral'"
-          />
-          <div class="flex min-w-0 flex-col gap-[2px]">
-            <mosaik-text
-              part="question-heading"
-              role="heading"
-              aria-level="3"
-              [mosaikTypography]="'subtitle2'"
-              [wrap]="true"
-              [text]="'Who is this agent?'"
-            />
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="'Give it a name, a job title and a figure your team can recognize.'"
-            />
-          </div>
-        </div>
-        <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5 max-[640px]:grid-cols-1">
-          <mosaik-textbox
-            test-id="ai-display-name"
-            [label]="'Agent name'"
-            [placeholder]="'Architecture Agent'"
-            [value]="presenter.ai.displayName"
-            (input)="presenter.ai.displayName = presenter.eventText()($event)"
-          />
-          <mosaik-textbox
-            test-id="ai-position-name"
-            [label]="'Job title'"
-            [placeholder]="'Solution Architect'"
-            [value]="presenter.ai.positionName"
-            (input)="presenter.ai.positionName = presenter.eventText()($event)"
-          />
-        </div>
-        <mosaik-textbox
-          test-id="ai-position-description"
-          [label]="'Job description'"
-          [placeholder]="'Plans robust solutions and hands implementation-ready instructions to the delivery agent.'"
-          [value]="presenter.ai.positionDescription"
-          (input)="presenter.ai.positionDescription = presenter.eventText()($event)"
-        />
-        <mosaik-text
-          id="agent-appearance-label"
-          role="heading"
-          aria-level="4"
-          part="question-heading"
-          [mosaikTypography]="'subtitle2'"
-          [text]="'Appearance'"
-        />
-        <div part="choice-cards" class="min-w-0" test-id="agent-appearance">
-          <mosaik-choice-group
-            test-id="agent-character-picker"
-            class="w-full min-w-0"
-            aria-labelledby="agent-appearance-label"
-            [name]="'agent-character'"
-            [orientation]="'horizontal'"
-            [appearance]="'outline'"
-            [variant]="'primary'"
-            [disabled]="presenter.busy()"
-            [value]="presenter.ai.appearance.image ? undefined : presenter.ai.appearance.color"
-            (choiceChanged)="presenter.chooseAppearanceCommand.execute($event)"
-          >
-            @for (colour of presenter.characterColors; track colour) {
-            <mosaik-choice
-              [attr.test-id]="'agent-character-' + colour"
-              [value]="colour"
-              [disabled]="presenter.busy()"
-              [appearance]="'outline'"
-              [variant]="'primary'"
-            >
-              <div slot="label" class="flex min-w-0 items-center gap-1">
-                <symphony-agent-figure
-                  class="flex-none"
-                  aria-hidden="true"
-                  [attr.test-id]="'agent-character-preview-' + colour"
-                  [agentId]="presenter.ai.profileId"
-                  [appearance]="{ figure: 'dot', color: colour, accessories: [] }"
-                  [animated]="false"
-                  [interactive]="false"
-                  [size]="40"
-                />
-                <span
-                  >@switch (colour) { @case ('blue') { Blue } @case ('mint') { Mint } @case
-                  ('coral') { Orange } @case ('violet') { Violet } @case ('gold') { Spark } @case
-                  ('rose') { Loop } }</span
-                >
-              </div>
-            </mosaik-choice>
-            }
-          </mosaik-choice-group>
-        </div>
-      </section>
-
-      <mosaik-divider />
-
-      <!-- 3 · What does this agent do? -->
-      <section class="flex min-w-0 flex-col gap-[10px]" test-id="agent-step-responsibilities">
-        <div class="flex min-w-0 items-start gap-[10px]">
-          <mosaik-avatar
-            part="question-number"
-            aria-hidden="true"
-            [text]="'3'"
-            [size]="'tiny'"
-            [appearance]="'soft'"
-            [variant]="'neutral'"
-          />
-          <div class="flex min-w-0 flex-col gap-[2px]">
-            <mosaik-text
-              part="question-heading"
-              role="heading"
-              aria-level="3"
-              [mosaikTypography]="'subtitle2'"
-              [wrap]="true"
-              [text]="'What does this agent do?'"
-            />
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="'Pick its steps of the delivery flow. How each step works is set once under Settings · Skills.'"
-            />
-          </div>
-        </div>
-        <div
-          class="grid min-w-0 grid-cols-3 gap-1 max-[640px]:grid-cols-2"
-          test-id="ai-agent-responsibilities"
-        >
-          @for (role of presenter.aiRoles; track role) { @let step = role | deliveryFlowStep; @let
-          assigned = presenter.aiRoleEnabled()(role);
-          <div
-            part="responsibility-card"
-            class="flex min-w-0 px-1.5 py-[10px]"
-            [attr.data-checked]="assigned"
-          >
-            <mosaik-checkbox
-              class="w-full min-w-0"
-              [attr.test-id]="'ai-role-' + role"
-              [attr.aria-label]="role | skillFlowRoleLabel"
-              [isChecked]="assigned"
-              (checked)="presenter.setAiRoleCommand.execute([role, true])"
-              (unchecked)="presenter.setAiRoleCommand.execute([role, false])"
-            >
-              <span slot="label" class="flex min-w-0 flex-col gap-[2px]">
-                <mosaik-text
-                  [mosaikTypography]="'body2'"
-                  [wrap]="true"
-                  [text]="role | skillFlowRoleLabel"
-                />
-                @if (step) {
-                <span class="flex min-w-0 items-center gap-0.5">
-                  <mosaik-icon aria-hidden="true" [iconName]="step.icon" [size]="'tiny'" />
-                  <mosaik-text
-                    [mosaikTypography]="'caption'"
-                    [variant]="'neutral'"
-                    [wrap]="true"
-                    [text]="step.label"
-                  />
-                </span>
-                }
-              </span>
-            </mosaik-checkbox>
-          </div>
-          }
-        </div>
-        @if (!presenter.ai.roles.length) {
-        <mosaik-message
-          test-id="agent-responsibility-required"
-          [appearance]="'soft'"
-          [variant]="'info'"
-          [fit]="'width'"
-          [iconName]="'info'"
-          [iconSize]="'small'"
-          [header]="'Choose at least one responsibility'"
-          [content]="'Specialized agents are easier to understand and route more reliably.'"
-        />
-        }
-      </section>
-
-      <mosaik-divider />
-
-      <!-- 4 · What happens when the AI is unavailable? -->
-      <section class="flex min-w-0 flex-col gap-[10px]" test-id="agent-step-failover">
-        <div class="flex min-w-0 items-start gap-[10px]">
-          <mosaik-avatar
-            part="question-number"
-            aria-hidden="true"
-            [text]="'4'"
-            [size]="'tiny'"
-            [appearance]="'soft'"
-            [variant]="'neutral'"
-          />
-          <div class="flex min-w-0 flex-col gap-[2px]">
-            <mosaik-text
-              part="question-heading"
-              role="heading"
-              aria-level="3"
-              [mosaikTypography]="'subtitle2'"
-              [wrap]="true"
-              [text]="'What happens when the AI is unavailable?'"
-            />
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="'Choose backup accounts. Symphony routes around quotas, outages, and limits by itself.'"
-            />
-          </div>
-        </div>
-        @if (presenter.aiFallbackAccounts().length) {
-        <div part="settings-group-rows" class="flex min-w-0 flex-col">
-          @for (account of presenter.aiFallbackAccounts(); track account.id) { @let enabled =
-          presenter.aiFallbackEnabled()(account.id);
-          <div class="flex min-w-0 items-center gap-2 px-2 py-1.5">
-            <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+            <div class="flex min-w-0 flex-col gap-[2px]">
               <mosaik-text
-                [mosaikTypography]="'body2'"
+                part="question-heading"
+                role="heading"
+                aria-level="3"
+                [mosaikTypography]="'subtitle2'"
                 [wrap]="true"
-                [text]="account.displayName"
+                [text]="tr('loc.symphony.which.ai.does.this.agent.use.697219')"
               />
               <mosaik-text
                 [mosaikTypography]="'caption'"
                 [variant]="'neutral'"
                 [wrap]="true"
-                [text]="'Continue with this account if the preferred route fails' + (enabled && !presenter.fallbackModelChoices()(account).length ? ' · Reading the models this account offers…' : '')"
+                [text]="tr('loc.symphony.pick.a.connected.ai.account.then.the.model.and.effor.fb6f95')"
               />
             </div>
-            <mosaik-toggle-switch
-              class="flex-none"
-              [attr.test-id]="'ai-fallback-account-' + account.id"
-              [attr.aria-label]="account.displayName"
+          </div>
+          @if (presenter.aiAccounts().length) {
+          <div part="choice-cards" class="min-w-0">
+            <mosaik-choice-group
+              test-id="ai-account"
+              class="w-full min-w-0"
+              [name]="'ai-account'"
+              [orientation]="'horizontal'"
+              [appearance]="'outline'"
               [variant]="'primary'"
-              [isChecked]="enabled"
-              (checked)="presenter.setAiFallbackCommand.execute([account.id, true])"
-              (unchecked)="presenter.setAiFallbackCommand.execute([account.id, false])"
+              [value]="presenter.ai.accountId"
+              (choiceChanged)="presenter.updateAiAccountCommand.execute($event)"
+            >
+              @for (account of presenter.aiAccounts(); track account.id) {
+              <mosaik-choice
+                [attr.test-id]="'ai-account-' + account.id"
+                [value]="account.id"
+                [appearance]="'outline'"
+                [variant]="'primary'"
+                [iconName]="account.kind | connectionIcon"
+                [label]="account.displayName"
+                [additional]="presenter.aiRuntimeLabel()(account.kind) + ' · ' + (account.id | aiAccountStatus: account.kind: presenter.store.connections())"
+                (click)="presenter.updateAiAccountCommand.execute(account.id)"
+              />
+              }
+            </mosaik-choice-group>
+          </div>
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [wrap]="true"
+            [text]="tr('loc.symphony.accounts.are.connected.once.under.connected.services.21ad73')"
+          />
+          } @else {
+          <mosaik-message
+            test-id="ai-accounts-missing"
+            [appearance]="'soft'"
+            [variant]="'info'"
+            [fit]="'width'"
+            [iconName]="'info'"
+            [iconSize]="'small'"
+            [header]="tr('loc.symphony.no.ai.account.connected.yet.c14f2f')"
+            [content]="tr('loc.symphony.connect.codex.claude.code.or.opencode.under.connecte.90dbe8')"
+          />
+          <div class="flex min-w-0 justify-end">
+            <mosaik-button
+              test-id="open-ai-account-editor"
+              [label]="tr('loc.symphony.connect.an.ai.account.f26273')"
+              [iconName]="'add'"
+              [iconSize]="'small'"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              (click)="presenter.openAiAccountEditorCommand.execute()"
             />
+          </div>
+          } @if (presenter.ai.accountId) { @if (presenter.selectedAccountProblem() ===
+          'cli-missing') {
+          <mosaik-message
+            test-id="selected-ai-runtime-unavailable"
+            [appearance]="'soft'"
+            [variant]="'warning'"
+            [fit]="'width'"
+            [iconName]="'warning'"
+            [iconSize]="'small'"
+            [header]="tr('loc.symphony.cli.is.not.installed.7d6361', [presenter.aiRuntimeLabel()(presenter.ai.kind)])"
+            [content]="tr('loc.symphony.install.it.before.this.agent.can.be.saved.or.used.0e2321')"
+          />
+          <div class="flex min-w-0 justify-end">
+            <mosaik-button
+              test-id="install-selected-ai-runtime"
+              [label]="tr('loc.symphony.install.with.homebrew.7affa7')"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [isBusy]="presenter.store.runtimeDependencyInstallBusy() === presenter.ai.kind"
+              [disabled]="!presenter.store.nativeInstallAvailable || !presenter.store.runtimeHealth()?.homebrew?.available || !!presenter.store.runtimeDependencyInstallBusy()"
+              (click)="presenter.confirmInstallAiRuntimeCommand.execute([presenter.ai.kind, presenter.aiRuntimeLabel()(presenter.ai.kind)])"
+            />
+          </div>
+          } @else {
+          <mosaik-text
+            role="heading"
+            aria-level="4"
+            part="question-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="tr('loc.symphony.model.5e2c61')"
+          />
+          @if (presenter.openCodeProviderChoices().length) {
+          <div
+            class="flex min-w-0 flex-wrap gap-1"
+            [attr.aria-label]="tr('loc.symphony.ai.providers.2c4aed')"
+          >
+            @for (provider of presenter.openCodeProviderChoices(); track provider.id) {
+            <mosaik-button
+              class="min-w-0"
+              [attr.test-id]="'opencode-provider-' + provider.id"
+              [label]="provider.label | settingName"
+              [appearance]="presenter.selectedAiProviderId() === provider.id | selectionAppearance"
+              [variant]="'primary'"
+              (click)="presenter.updateOpenCodeProviderCommand.execute(provider.id)"
+            />
+            }
+          </div>
+          } @if (presenter.aiModelSearchVisible()) {
+          <mosaik-textbox
+            test-id="ai-model-search"
+            [label]="tr('loc.symphony.filter.models.9a35e6')"
+            [placeholder]="tr('loc.symphony.model.name.8cb45d')"
+            [value]="presenter.aiModelSearch()"
+            (input)="presenter.aiModelSearch.set(presenter.eventText()($event))"
+          />
+          } @if (presenter.aiModelChoices().length) {
+          <div part="choice-cards" class="min-w-0">
+            <mosaik-choice-group
+              test-id="ai-model"
+              class="w-full min-w-0"
+              [name]="'ai-model'"
+              [orientation]="'horizontal'"
+              [appearance]="'outline'"
+              [variant]="'primary'"
+              [value]="presenter.selectedAiModelChoice()"
+              (choiceChanged)="presenter.updateAiModelChoiceCommand.execute($event)"
+            >
+              @for (choice of presenter.aiModelChoices(); track choice.id) {
+              <mosaik-choice
+                [attr.test-id]="'ai-model-' + (choice.id || 'default')"
+                [value]="choice.id"
+                [appearance]="'outline'"
+                [variant]="'primary'"
+                [label]="choice.label"
+                [additional]="choice.description ?? ''"
+                (click)="presenter.updateAiModelChoiceCommand.execute(choice.id)"
+              />
+              }
+            </mosaik-choice-group>
+          </div>
+          } @else if (presenter.aiModelsPending()) {
+          <mosaik-message
+            test-id="ai-models-unavailable"
+            [appearance]="'soft'"
+            [variant]="'info'"
+            [fit]="'width'"
+            [iconName]="'info'"
+            [iconSize]="'small'"
+            [header]="presenter.ai.kind === 'codex' ? tr('loc.symphony.models.appear.once.the.account.is.signed.in.c86ac6') : tr('loc.symphony.opencode.has.not.reported.any.models.yet.4da599')"
+            [content]="presenter.ai.kind === 'codex' ? tr('loc.symphony.sign.in.to.this.codex.account.under.connected.servic.2c886e') : tr('loc.symphony.import.the.opencode.sign.ins.under.connected.service.7c46e2')"
+          />
+          <div class="flex min-w-0 justify-end">
+            <mosaik-button
+              test-id="refresh-ai-models"
+              [label]="tr('loc.symphony.check.again.fb7099')"
+              [iconName]="'sync'"
+              [iconSize]="'small'"
+              [appearance]="'plain'"
+              [isBusy]="presenter.store.availableAiModelsBusy()"
+              [disabled]="presenter.store.availableAiModelsBusy() || presenter.store.configurationBusy()"
+              (click)="presenter.refreshAiConfigurationCommand.execute()"
+            />
+          </div>
+          } @if (presenter.aiEffortChoices().length) {
+          <mosaik-text
+            role="heading"
+            aria-level="4"
+            part="question-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="tr('loc.symphony.effort.4387e5')"
+          />
+          <div part="choice-cards" class="min-w-0">
+            <mosaik-choice-group
+              test-id="ai-reasoning"
+              class="w-full min-w-0"
+              [name]="'ai-reasoning'"
+              [orientation]="'horizontal'"
+              [appearance]="'outline'"
+              [variant]="'primary'"
+              [value]="presenter.selectedAiEffortChoice()"
+              (choiceChanged)="presenter.updateAiEffortChoiceCommand.execute($event)"
+            >
+              @for (choice of presenter.aiEffortChoices(); track choice.id) {
+              <mosaik-choice
+                [attr.test-id]="'ai-reasoning-' + (choice.id || 'default')"
+                [value]="choice.id"
+                [appearance]="'outline'"
+                [variant]="'primary'"
+                [label]="choice.label"
+                [additional]="choice.description ?? ''"
+                (click)="presenter.updateAiEffortChoiceCommand.execute(choice.id)"
+              />
+              }
+            </mosaik-choice-group>
+          </div>
+          } } }
+        </section>
+
+        <mosaik-divider />
+
+        <!-- 2 · Who is this agent? -->
+        <section class="flex min-w-0 flex-col gap-[10px]" test-id="agent-step-identity">
+          <div class="flex min-w-0 items-start gap-[10px]">
+            <mosaik-avatar
+              part="question-number"
+              aria-hidden="true"
+              [text]="'2'"
+              [size]="'tiny'"
+              [appearance]="'soft'"
+              [variant]="'neutral'"
+            />
+            <div class="flex min-w-0 flex-col gap-[2px]">
+              <mosaik-text
+                part="question-heading"
+                role="heading"
+                aria-level="3"
+                [mosaikTypography]="'subtitle2'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.who.is.this.agent.7daea6')"
+              />
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.give.it.a.name.a.job.title.and.a.figure.your.team.ca.20898e')"
+              />
+            </div>
+          </div>
+          <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5 max-[640px]:grid-cols-1">
+            <mosaik-textbox
+              test-id="ai-display-name"
+              [label]="tr('loc.symphony.agent.name.1cfb21')"
+              [placeholder]="tr('loc.symphony.architecture.agent.db838f')"
+              [value]="presenter.ai.displayName"
+              (input)="presenter.ai.displayName = presenter.eventText()($event)"
+            />
+            <mosaik-textbox
+              test-id="ai-position-name"
+              [label]="tr('loc.symphony.job.title.86db80')"
+              [placeholder]="tr('loc.symphony.solution.architect.f0774e')"
+              [value]="presenter.ai.positionName"
+              (input)="presenter.ai.positionName = presenter.eventText()($event)"
+            />
+          </div>
+          <mosaik-textbox
+            test-id="ai-position-description"
+            [label]="tr('loc.symphony.job.description.f649ea')"
+            [placeholder]="tr('loc.symphony.plans.robust.solutions.and.hands.implementation.read.aedfcd')"
+            [value]="presenter.ai.positionDescription"
+            (input)="presenter.ai.positionDescription = presenter.eventText()($event)"
+          />
+          <mosaik-text
+            id="agent-appearance-label"
+            role="heading"
+            aria-level="4"
+            part="question-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="tr('loc.symphony.appearance.3907fa')"
+          />
+          <div part="choice-cards" class="min-w-0" test-id="agent-appearance">
+            <mosaik-choice-group
+              test-id="agent-character-picker"
+              class="w-full min-w-0"
+              aria-labelledby="agent-appearance-label"
+              [name]="'agent-character'"
+              [orientation]="'horizontal'"
+              [appearance]="'outline'"
+              [variant]="'primary'"
+              [disabled]="presenter.busy()"
+              [value]="presenter.ai.appearance.image ? undefined : presenter.ai.appearance.color"
+              (choiceChanged)="presenter.chooseAppearanceCommand.execute($event)"
+            >
+              @for (colour of presenter.characterColors; track colour) {
+              <mosaik-choice
+                [attr.test-id]="'agent-character-' + colour"
+                [value]="colour"
+                [disabled]="presenter.busy()"
+                [appearance]="'outline'"
+                [variant]="'primary'"
+              >
+                <div slot="label" class="flex min-w-0 items-center gap-1">
+                  <symphony-agent-figure
+                    class="flex-none"
+                    aria-hidden="true"
+                    [attr.test-id]="'agent-character-preview-' + colour"
+                    [agentId]="presenter.ai.profileId"
+                    [appearance]="{ figure: 'dot', color: colour, accessories: [] }"
+                    [animated]="false"
+                    [interactive]="false"
+                    [size]="40"
+                  />
+                  <span
+                    >@switch (colour) { @case ('blue') { Blue } @case ('mint') { Mint } @case
+                    ('coral') { Orange } @case ('violet') { Violet } @case ('gold') { Spark } @case
+                    ('rose') { Loop } }</span
+                  >
+                </div>
+              </mosaik-choice>
+              }
+            </mosaik-choice-group>
+          </div>
+        </section>
+
+        <mosaik-divider />
+
+        <!-- 3 · What does this agent do? -->
+        <section class="flex min-w-0 flex-col gap-[10px]" test-id="agent-step-responsibilities">
+          <div class="flex min-w-0 items-start gap-[10px]">
+            <mosaik-avatar
+              part="question-number"
+              aria-hidden="true"
+              [text]="'3'"
+              [size]="'tiny'"
+              [appearance]="'soft'"
+              [variant]="'neutral'"
+            />
+            <div class="flex min-w-0 flex-col gap-[2px]">
+              <mosaik-text
+                part="question-heading"
+                role="heading"
+                aria-level="3"
+                [mosaikTypography]="'subtitle2'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.what.does.this.agent.do.b22303')"
+              />
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.pick.its.steps.of.the.delivery.flow.how.each.step.wo.294655')"
+              />
+            </div>
+          </div>
+          <div
+            class="grid min-w-0 grid-cols-3 gap-1 max-[640px]:grid-cols-2"
+            test-id="ai-agent-responsibilities"
+          >
+            @for (role of presenter.aiRoles; track role) { @let step = role | deliveryFlowStep; @let
+            assigned = presenter.aiRoleEnabled()(role);
+            <div
+              part="responsibility-card"
+              class="flex min-w-0 px-1.5 py-[10px]"
+              [attr.data-checked]="assigned"
+            >
+              <mosaik-checkbox
+                class="w-full min-w-0"
+                [attr.test-id]="'ai-role-' + role"
+                [attr.aria-label]="role | skillFlowRoleLabel"
+                [isChecked]="assigned"
+                (checked)="presenter.setAiRoleCommand.execute([role, true])"
+                (unchecked)="presenter.setAiRoleCommand.execute([role, false])"
+              >
+                <span slot="label" class="flex min-w-0 flex-col gap-[2px]">
+                  <mosaik-text
+                    [mosaikTypography]="'body2'"
+                    [wrap]="true"
+                    [text]="role | skillFlowRoleLabel"
+                  />
+                  @if (step) {
+                  <span class="flex min-w-0 items-center gap-0.5">
+                    <mosaik-icon aria-hidden="true" [iconName]="step.icon" [size]="'tiny'" />
+                    <mosaik-text
+                      [mosaikTypography]="'caption'"
+                      [variant]="'neutral'"
+                      [wrap]="true"
+                      [text]="step.label"
+                    />
+                  </span>
+                  }
+                </span>
+              </mosaik-checkbox>
+            </div>
+            }
+          </div>
+          @if (!presenter.ai.roles.length) {
+          <mosaik-message
+            test-id="agent-responsibility-required"
+            [appearance]="'soft'"
+            [variant]="'info'"
+            [fit]="'width'"
+            [iconName]="'info'"
+            [iconSize]="'small'"
+            [header]="tr('loc.symphony.choose.at.least.one.responsibility.3ef436')"
+            [content]="tr('loc.symphony.specialized.agents.are.easier.to.understand.and.rout.379aed')"
+          />
+          }
+        </section>
+
+        <mosaik-divider />
+
+        <!-- 4 · What happens when the AI is unavailable? -->
+        <section class="flex min-w-0 flex-col gap-[10px]" test-id="agent-step-failover">
+          <div class="flex min-w-0 items-start gap-[10px]">
+            <mosaik-avatar
+              part="question-number"
+              aria-hidden="true"
+              [text]="'4'"
+              [size]="'tiny'"
+              [appearance]="'soft'"
+              [variant]="'neutral'"
+            />
+            <div class="flex min-w-0 flex-col gap-[2px]">
+              <mosaik-text
+                part="question-heading"
+                role="heading"
+                aria-level="3"
+                [mosaikTypography]="'subtitle2'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.what.happens.when.the.ai.is.unavailable.5f84df')"
+              />
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.choose.backup.accounts.symphony.routes.around.quotas.578423')"
+              />
+            </div>
+          </div>
+          @if (presenter.aiFallbackAccounts().length) {
+          <div part="settings-group-rows" class="flex min-w-0 flex-col">
+            @for (account of presenter.aiFallbackAccounts(); track account.id) { @let enabled =
+            presenter.aiFallbackEnabled()(account.id);
+            <div class="flex min-w-0 items-center gap-2 px-2 py-1.5">
+              <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+                <mosaik-text
+                  [mosaikTypography]="'body2'"
+                  [wrap]="true"
+                  [text]="account.displayName"
+                />
+                <mosaik-text
+                  [mosaikTypography]="'caption'"
+                  [variant]="'neutral'"
+                  [wrap]="true"
+                  [text]="tr('loc.symphony.continue.with.this.account.if.the.preferred.route.fa.6e80f3', [(enabled && !presenter.fallbackModelChoices()(account).length ? tr('loc.symphony.reading.the.models.this.account.offers.c693fc') : '')])"
+                />
+              </div>
+              <mosaik-toggle-switch
+                class="flex-none"
+                [attr.test-id]="'ai-fallback-account-' + account.id"
+                [attr.aria-label]="account.displayName"
+                [variant]="'primary'"
+                [isChecked]="enabled"
+                (checked)="presenter.setAiFallbackCommand.execute([account.id, true])"
+                (unchecked)="presenter.setAiFallbackCommand.execute([account.id, false])"
+              />
+            </div>
+            }
+          </div>
+          @for (account of presenter.aiFallbackAccounts(); track account.id) { @if
+          (presenter.aiFallbackEnabled()(account.id)) { @if
+          (presenter.fallbackModelChoices()(account).length) {
+          <mosaik-text
+            role="heading"
+            aria-level="4"
+            part="question-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="presenter.aiFallbackAccounts().length > 1 ? tr('loc.symphony.backup.model.52400a', [account.displayName]) : tr('loc.symphony.backup.model.34e990')"
+          />
+          <div part="choice-cards" class="min-w-0">
+            <mosaik-choice-group
+              class="w-full min-w-0"
+              [attr.test-id]="'ai-fallback-model-' + account.id"
+              [name]="'ai-fallback-model-' + account.id"
+              [orientation]="'horizontal'"
+              [appearance]="'outline'"
+              [variant]="'primary'"
+              [value]="presenter.fallbackModel()(account.id)"
+              (choiceChanged)="presenter.updateFallbackModelCommand.execute([account.id, $event])"
+            >
+              @for (choice of presenter.fallbackModelChoices()(account); track choice.id) {
+              <mosaik-choice
+                [attr.test-id]="'ai-fallback-model-' + account.id + '-' + choice.id"
+                [value]="choice.id"
+                [appearance]="'outline'"
+                [variant]="'primary'"
+                [label]="choice.label"
+                (click)="presenter.updateFallbackModelCommand.execute([account.id, choice.id])"
+              />
+              }
+            </mosaik-choice-group>
           </div>
           }
-        </div>
-        @for (account of presenter.aiFallbackAccounts(); track account.id) { @if
-        (presenter.aiFallbackEnabled()(account.id)) { @if
-        (presenter.fallbackModelChoices()(account).length) {
-        <mosaik-text
-          role="heading"
-          aria-level="4"
-          part="question-heading"
-          [mosaikTypography]="'subtitle2'"
-          [text]="presenter.aiFallbackAccounts().length > 1 ? 'Backup model · ' + account.displayName : 'Backup model'"
-        />
-        <div part="choice-cards" class="min-w-0">
-          <mosaik-choice-group
-            class="w-full min-w-0"
-            [attr.test-id]="'ai-fallback-model-' + account.id"
-            [name]="'ai-fallback-model-' + account.id"
-            [orientation]="'horizontal'"
-            [appearance]="'outline'"
-            [variant]="'primary'"
-            [value]="presenter.fallbackModel()(account.id)"
-            (choiceChanged)="presenter.updateFallbackModelCommand.execute([account.id, $event])"
-          >
-            @for (choice of presenter.fallbackModelChoices()(account); track choice.id) {
-            <mosaik-choice
-              [attr.test-id]="'ai-fallback-model-' + account.id + '-' + choice.id"
-              [value]="choice.id"
+          <mosaik-text
+            role="heading"
+            aria-level="4"
+            part="question-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="presenter.aiFallbackAccounts().length > 1 ? tr('loc.symphony.backup.effort.99f59f', [account.displayName]) : tr('loc.symphony.backup.effort.25a5da')"
+          />
+          <div part="choice-cards" class="min-w-0">
+            <mosaik-choice-group
+              class="w-full min-w-0"
+              [attr.test-id]="'ai-fallback-effort-' + account.id"
+              [name]="'ai-fallback-effort-' + account.id"
+              [orientation]="'horizontal'"
               [appearance]="'outline'"
               [variant]="'primary'"
-              [label]="choice.label"
-              (click)="presenter.updateFallbackModelCommand.execute([account.id, choice.id])"
-            />
-            }
-          </mosaik-choice-group>
-        </div>
-        }
-        <mosaik-text
-          role="heading"
-          aria-level="4"
-          part="question-heading"
-          [mosaikTypography]="'subtitle2'"
-          [text]="presenter.aiFallbackAccounts().length > 1 ? 'Backup effort · ' + account.displayName : 'Backup effort'"
-        />
-        <div part="choice-cards" class="min-w-0">
-          <mosaik-choice-group
-            class="w-full min-w-0"
-            [attr.test-id]="'ai-fallback-effort-' + account.id"
-            [name]="'ai-fallback-effort-' + account.id"
-            [orientation]="'horizontal'"
-            [appearance]="'outline'"
-            [variant]="'primary'"
-            [value]="presenter.fallbackEffort()(account.id)"
-            (choiceChanged)="presenter.updateFallbackEffortCommand.execute([account.id, $event])"
-          >
-            @for (choice of presenter.fallbackEffortChoices(); track choice.id) {
-            <mosaik-choice
-              [attr.test-id]="'ai-fallback-effort-' + account.id + '-' + choice.id"
-              [value]="choice.id"
-              [appearance]="'outline'"
-              [variant]="'primary'"
-              [label]="choice.label"
-              [additional]="choice.description ?? ''"
-              (click)="presenter.updateFallbackEffortCommand.execute([account.id, choice.id])"
-            />
-            }
-          </mosaik-choice-group>
-        </div>
-        } } } @else {
-        <mosaik-message
-          [appearance]="'soft'"
-          [variant]="'info'"
-          [fit]="'width'"
-          [iconName]="'info'"
-          [iconSize]="'small'"
-          [header]="'No separate backup account yet'"
-          [content]="'Add another workspace AI account to enable failover. Until then, the selected account remains this agent’s only execution route.'"
-        />
-        }
-        <mosaik-expander
-          test-id="ai-advanced-settings"
-          class="block min-w-0"
-          [header]="'Expert settings'"
-          [subHeader]="'Routing goal, allowed paths, and execution limits'"
-          [appearance]="'plain'"
-        >
-          <div class="flex min-w-0 flex-col gap-1.5 pt-1">
-            <mosaik-select
-              test-id="ai-route-strategy"
-              [label]="'Routing goal'"
-              [value]="presenter.ai.strategy"
-              (selectionChanged)="presenter.updateAiRouteStrategyCommand.execute($event)"
+              [value]="presenter.fallbackEffort()(account.id)"
+              (choiceChanged)="presenter.updateFallbackEffortCommand.execute([account.id, $event])"
             >
-              <mosaik-select-item
-                test-id="ai-route-strategy-balanced"
-                [label]="'Balanced'"
-                [value]="'balanced'"
-                (click)="presenter.updateAiRouteStrategyCommand.execute('balanced')"
+              @for (choice of presenter.fallbackEffortChoices(); track choice.id) {
+              <mosaik-choice
+                [attr.test-id]="'ai-fallback-effort-' + account.id + '-' + choice.id"
+                [value]="choice.id"
+                [appearance]="'outline'"
+                [variant]="'primary'"
+                [label]="choice.label"
+                [additional]="choice.description ?? ''"
+                (click)="presenter.updateFallbackEffortCommand.execute([account.id, choice.id])"
               />
-              <mosaik-select-item
-                test-id="ai-route-strategy-quality-first"
-                [label]="'Best quality'"
-                [value]="'quality-first'"
-                (click)="presenter.updateAiRouteStrategyCommand.execute('quality-first')"
+              }
+            </mosaik-choice-group>
+          </div>
+          } } } @else {
+          <mosaik-message
+            [appearance]="'soft'"
+            [variant]="'info'"
+            [fit]="'width'"
+            [iconName]="'info'"
+            [iconSize]="'small'"
+            [header]="tr('loc.symphony.no.separate.backup.account.yet.36c8a2')"
+            [content]="tr('loc.symphony.add.another.workspace.ai.account.to.enable.failover.3e0943')"
+          />
+          }
+          <mosaik-expander
+            test-id="ai-advanced-settings"
+            class="block min-w-0"
+            [header]="tr('loc.symphony.expert.settings.ff3025')"
+            [subHeader]="tr('loc.symphony.routing.goal.allowed.paths.and.execution.limits.54a5f8')"
+            [appearance]="'plain'"
+          >
+            <div class="flex min-w-0 flex-col gap-1.5 pt-1">
+              <mosaik-select
+                test-id="ai-route-strategy"
+                [label]="tr('loc.symphony.routing.goal.ed55be')"
+                [value]="presenter.ai.strategy"
+                (selectionChanged)="presenter.updateAiRouteStrategyCommand.execute($event)"
+              >
+                <mosaik-select-item
+                  test-id="ai-route-strategy-balanced"
+                  [label]="tr('loc.symphony.balanced.5386ea')"
+                  [value]="'balanced'"
+                  (click)="presenter.updateAiRouteStrategyCommand.execute('balanced')"
+                />
+                <mosaik-select-item
+                  test-id="ai-route-strategy-quality-first"
+                  [label]="tr('loc.symphony.best.quality.207949')"
+                  [value]="'quality-first'"
+                  (click)="presenter.updateAiRouteStrategyCommand.execute('quality-first')"
+                />
+                <mosaik-select-item
+                  test-id="ai-route-strategy-lowest-cost"
+                  [label]="tr('loc.symphony.lowest.cost.c9d10b')"
+                  [value]="'lowest-cost'"
+                  (click)="presenter.updateAiRouteStrategyCommand.execute('lowest-cost')"
+                />
+                <mosaik-select-item
+                  test-id="ai-route-strategy-reset-aware"
+                  [label]="tr('loc.symphony.protect.account.quotas.8275ed')"
+                  [value]="'reset-aware'"
+                  (click)="presenter.updateAiRouteStrategyCommand.execute('reset-aware')"
+                />
+                <mosaik-select-item
+                  test-id="ai-route-strategy-most-reliable"
+                  [label]="tr('loc.symphony.most.reliable.905f22')"
+                  [value]="'most-reliable'"
+                  (click)="presenter.updateAiRouteStrategyCommand.execute('most-reliable')"
+                />
+                <mosaik-select-item
+                  test-id="ai-route-strategy-priority"
+                  [label]="tr('loc.symphony.fixed.priority.52fd65')"
+                  [value]="'priority'"
+                  (click)="presenter.updateAiRouteStrategyCommand.execute('priority')"
+                />
+              </mosaik-select>
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.balanced.is.right.for.almost.everyone.change.it.only.e00f73')"
               />
-              <mosaik-select-item
-                test-id="ai-route-strategy-lowest-cost"
-                [label]="'Lowest cost'"
-                [value]="'lowest-cost'"
-                (click)="presenter.updateAiRouteStrategyCommand.execute('lowest-cost')"
+              <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5 max-[640px]:grid-cols-1">
+                <mosaik-textbox
+                  test-id="ai-allowed-paths"
+                  [label]="tr('loc.symphony.allowed.paths.f79614')"
+                  [value]="presenter.ai.allowedPathPatterns"
+                  (input)="presenter.ai.allowedPathPatterns = presenter.eventText()($event)"
+                />
+                <mosaik-textbox
+                  test-id="ai-forbidden-paths"
+                  [label]="tr('loc.symphony.forbidden.paths.d2b355')"
+                  [value]="presenter.ai.forbiddenPathPatterns"
+                  (input)="presenter.ai.forbiddenPathPatterns = presenter.eventText()($event)"
+                />
+                <mosaik-numberbox
+                  test-id="ai-maximum-files"
+                  [label]="tr('loc.symphony.maximum.changed.files.bf3182')"
+                  [min]="0"
+                  [max]="10000"
+                  [value]="presenter.ai.maximumChangedFiles"
+                  (input)="presenter.ai.maximumChangedFiles = presenter.eventNumber()($event)"
+                />
+                <mosaik-numberbox
+                  test-id="ai-maximum-iterations"
+                  [label]="tr('loc.symphony.maximum.iterations.4e1bbd')"
+                  [min]="1"
+                  [max]="100"
+                  [value]="presenter.ai.maximumIterations"
+                  (input)="presenter.ai.maximumIterations = presenter.eventNumber()($event)"
+                />
+              </div>
+            </div>
+          </mosaik-expander>
+          @if (presenter.aiValidationIssues().length) {
+          <mosaik-message
+            test-id="agent-validation-summary"
+            [appearance]="'soft'"
+            [variant]="'warning'"
+            [fit]="'width'"
+            [iconName]="'warning'"
+            [iconSize]="'small'"
+            [header]="tr('loc.symphony.finish.these.details.before.saving.eb7332')"
+            [content]="presenter.aiValidationIssues() | aiValidationIssuesLabel"
+          />
+          }
+        </section>
+      </div>
+
+      <!-- Live preview of the agent card being built. -->
+      <aside
+        class="sticky top-0 flex min-w-0 flex-col gap-[10px] max-[760px]:static"
+        [attr.aria-label]="tr('loc.symphony.preview.324b13')"
+        test-id="agent-preview"
+      >
+        <mosaik-text
+          [mosaikTypography]="'overline'"
+          [variant]="'neutral'"
+          [text]="tr('loc.symphony.preview.324b13')"
+        />
+        <mosaik-card class="block min-w-0">
+          <div slot="content" class="flex min-w-0 flex-col">
+            <div class="flex min-w-0 flex-col items-center gap-1 px-[14px] pt-[18px] pb-[14px]">
+              <symphony-agent-figure
+                test-id="agent-appearance-preview"
+                aria-hidden="true"
+                [agentId]="presenter.ai.profileId"
+                [appearance]="presenter.ai.appearance"
+                [animated]="false"
+                [interactive]="false"
+                [size]="88"
               />
-              <mosaik-select-item
-                test-id="ai-route-strategy-reset-aware"
-                [label]="'Protect account quotas'"
-                [value]="'reset-aware'"
-                (click)="presenter.updateAiRouteStrategyCommand.execute('reset-aware')"
+              <mosaik-text
+                part="question-heading"
+                test-id="agent-preview-name"
+                [mosaikTypography]="'subtitle1'"
+                [wrap]="true"
+                [text]="presenter.ai.displayName.trim() || tr('loc.symphony.unnamed.agent.9a0378')"
               />
-              <mosaik-select-item
-                test-id="ai-route-strategy-most-reliable"
-                [label]="'Most reliable'"
-                [value]="'most-reliable'"
-                (click)="presenter.updateAiRouteStrategyCommand.execute('most-reliable')"
+              <mosaik-text
+                test-id="agent-preview-job-title"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [wrap]="true"
+                [text]="presenter.ai.positionName.trim() || tr('loc.symphony.no.job.title.yet.af467e')"
               />
-              <mosaik-select-item
-                test-id="ai-route-strategy-priority"
-                [label]="'Fixed priority'"
-                [value]="'priority'"
-                (click)="presenter.updateAiRouteStrategyCommand.execute('priority')"
+              <div class="flex min-w-0 flex-wrap justify-center gap-[6px]">
+                @if (presenter.selectedAiAccount(); as account) {
+                <mosaik-chip
+                  [label]="account.displayName"
+                  [iconName]="account.kind | connectionIcon"
+                  [size]="'small'"
+                  [appearance]="'soft'"
+                  [variant]="'neutral'"
+                />
+                } @else {
+                <mosaik-chip
+                  [label]="tr('loc.symphony.no.ai.account.8e469e')"
+                  [size]="'small'"
+                  [appearance]="'soft'"
+                  [variant]="'warning'"
+                />
+                } @if (presenter.previewModel(); as model) {
+                <mosaik-chip
+                  [label]="model.label"
+                  [size]="'small'"
+                  [appearance]="'soft'"
+                  [variant]="'neutral'"
+                />
+                } @if (presenter.previewEffort(); as effort) {
+                <mosaik-chip
+                  [label]="effort.label"
+                  [size]="'small'"
+                  [appearance]="'soft'"
+                  [variant]="'neutral'"
+                />
+                }
+              </div>
+            </div>
+            <mosaik-divider />
+            <div class="flex min-w-0 flex-col gap-1 px-[14px] py-1.5" test-id="agent-preview-steps">
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="tr('loc.symphony.in.the.delivery.flow.4fc86c')"
               />
-            </mosaik-select>
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="'Balanced is right for almost everyone. Change it only when cost, quality, or account quotas must dominate the choice of backup.'"
-            />
-            <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5 max-[640px]:grid-cols-1">
-              <mosaik-textbox
-                test-id="ai-allowed-paths"
-                [label]="'Allowed paths'"
-                [value]="presenter.ai.allowedPathPatterns"
-                (input)="presenter.ai.allowedPathPatterns = presenter.eventText()($event)"
+              @for (step of presenter.deliveryFlowSteps(); track step.id) {
+              <span class="flex min-w-0 items-center gap-1">
+                <mosaik-icon aria-hidden="true" [iconName]="step.icon" [size]="'tiny'" />
+                <mosaik-text [mosaikTypography]="'body2'" [text]="step.label" />
+              </span>
+              } @empty {
+              <mosaik-text
+                [mosaikTypography]="'body2'"
+                [variant]="'neutral'"
+                [text]="tr('loc.symphony.no.step.yet.46383e')"
               />
-              <mosaik-textbox
-                test-id="ai-forbidden-paths"
-                [label]="'Forbidden paths'"
-                [value]="presenter.ai.forbiddenPathPatterns"
-                (input)="presenter.ai.forbiddenPathPatterns = presenter.eventText()($event)"
+              }
+            </div>
+            <mosaik-divider />
+            <div
+              class="flex min-w-0 flex-col gap-[6px] px-[14px] py-1.5"
+              test-id="agent-preview-backup"
+            >
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="tr('loc.symphony.when.unavailable.0687a0')"
               />
-              <mosaik-numberbox
-                test-id="ai-maximum-files"
-                [label]="'Maximum changed files'"
-                [min]="0"
-                [max]="10000"
-                [value]="presenter.ai.maximumChangedFiles"
-                (input)="presenter.ai.maximumChangedFiles = presenter.eventNumber()($event)"
+              @if (presenter.previewFallback(); as fallback) {
+              <mosaik-text
+                [mosaikTypography]="'body2'"
+                [wrap]="true"
+                [text]="fallback.account.displayName + (fallback.effort ? ' · ' + fallback.effort.label : '')"
               />
-              <mosaik-numberbox
-                test-id="ai-maximum-iterations"
-                [label]="'Maximum iterations'"
-                [min]="1"
-                [max]="100"
-                [value]="presenter.ai.maximumIterations"
-                (input)="presenter.ai.maximumIterations = presenter.eventNumber()($event)"
+              } @else {
+              <mosaik-text
+                [mosaikTypography]="'body2'"
+                [variant]="'neutral'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.no.backup.account.9e39a5')"
               />
+              }
             </div>
           </div>
-        </mosaik-expander>
-        @if (presenter.aiValidationIssues().length) {
+        </mosaik-card>
+        @if (presenter.selectedAiAccount(); as account) { @if (presenter.selectedAccountProblem()
+        === 'not-signed-in') {
         <mosaik-message
-          test-id="agent-validation-summary"
+          test-id="agent-preview-warning"
           [appearance]="'soft'"
           [variant]="'warning'"
           [fit]="'width'"
           [iconName]="'warning'"
           [iconSize]="'small'"
-          [header]="'Finish these details before saving'"
-          [content]="presenter.aiValidationIssues() | aiValidationIssuesLabel"
+          [header]="tr('loc.symphony.is.not.signed.in.f4c965', [account.displayName])"
+          [content]="tr('loc.symphony.sign.in.under.connected.services.before.this.agent.r.d3d2c1')"
         />
-        }
-      </section>
+        } @else if (presenter.selectedAccountProblem() === 'cli-missing') {
+        <mosaik-message
+          test-id="agent-preview-warning"
+          [appearance]="'soft'"
+          [variant]="'warning'"
+          [fit]="'width'"
+          [iconName]="'warning'"
+          [iconSize]="'small'"
+          [header]="tr('loc.symphony.cli.is.not.installed.7d6361', [presenter.aiRuntimeLabel()(account.kind)])"
+          [content]="tr('loc.symphony.install.it.before.this.agent.can.be.saved.or.used.0e2321')"
+        />
+        } }
+      </aside>
     </div>
-
-    <!-- Live preview of the agent card being built. -->
-    <aside
-      class="sticky top-0 flex min-w-0 flex-col gap-[10px] max-[760px]:static"
-      aria-label="Preview"
-      test-id="agent-preview"
-    >
-      <mosaik-text [mosaikTypography]="'overline'" [variant]="'neutral'" [text]="'Preview'" />
-      <mosaik-card class="block min-w-0">
-        <div slot="content" class="flex min-w-0 flex-col">
-          <div class="flex min-w-0 flex-col items-center gap-1 px-[14px] pt-[18px] pb-[14px]">
-            <symphony-agent-figure
-              test-id="agent-appearance-preview"
-              aria-hidden="true"
-              [agentId]="presenter.ai.profileId"
-              [appearance]="presenter.ai.appearance"
-              [animated]="false"
-              [interactive]="false"
-              [size]="88"
-            />
-            <mosaik-text
-              part="question-heading"
-              test-id="agent-preview-name"
-              [mosaikTypography]="'subtitle1'"
-              [wrap]="true"
-              [text]="presenter.ai.displayName.trim() || 'Unnamed agent'"
-            />
-            <mosaik-text
-              test-id="agent-preview-job-title"
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="presenter.ai.positionName.trim() || 'No job title yet'"
-            />
-            <div class="flex min-w-0 flex-wrap justify-center gap-[6px]">
-              @if (presenter.selectedAiAccount(); as account) {
-              <mosaik-chip
-                [label]="account.displayName"
-                [iconName]="account.kind | connectionIcon"
-                [size]="'small'"
-                [appearance]="'soft'"
-                [variant]="'neutral'"
-              />
-              } @else {
-              <mosaik-chip
-                [label]="'No AI account'"
-                [size]="'small'"
-                [appearance]="'soft'"
-                [variant]="'warning'"
-              />
-              } @if (presenter.previewModel(); as model) {
-              <mosaik-chip
-                [label]="model.label"
-                [size]="'small'"
-                [appearance]="'soft'"
-                [variant]="'neutral'"
-              />
-              } @if (presenter.previewEffort(); as effort) {
-              <mosaik-chip
-                [label]="effort.label"
-                [size]="'small'"
-                [appearance]="'soft'"
-                [variant]="'neutral'"
-              />
-              }
-            </div>
-          </div>
-          <mosaik-divider />
-          <div class="flex min-w-0 flex-col gap-1 px-[14px] py-1.5" test-id="agent-preview-steps">
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="'In the delivery flow'"
-            />
-            @for (step of presenter.deliveryFlowSteps(); track step.id) {
-            <span class="flex min-w-0 items-center gap-1">
-              <mosaik-icon aria-hidden="true" [iconName]="step.icon" [size]="'tiny'" />
-              <mosaik-text [mosaikTypography]="'body2'" [text]="step.label" />
-            </span>
-            } @empty {
-            <mosaik-text
-              [mosaikTypography]="'body2'"
-              [variant]="'neutral'"
-              [text]="'No step yet'"
-            />
-            }
-          </div>
-          <mosaik-divider />
-          <div
-            class="flex min-w-0 flex-col gap-[6px] px-[14px] py-1.5"
-            test-id="agent-preview-backup"
-          >
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="'When unavailable'"
-            />
-            @if (presenter.previewFallback(); as fallback) {
-            <mosaik-text
-              [mosaikTypography]="'body2'"
-              [wrap]="true"
-              [text]="fallback.account.displayName + (fallback.effort ? ' · ' + fallback.effort.label : '')"
-            />
-            } @else {
-            <mosaik-text
-              [mosaikTypography]="'body2'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="'No backup account'"
-            />
-            }
-          </div>
-        </div>
-      </mosaik-card>
-      @if (presenter.selectedAiAccount(); as account) { @if (presenter.selectedAccountProblem() ===
-      'not-signed-in') {
-      <mosaik-message
-        test-id="agent-preview-warning"
-        [appearance]="'soft'"
-        [variant]="'warning'"
-        [fit]="'width'"
-        [iconName]="'warning'"
-        [iconSize]="'small'"
-        [header]="account.displayName + ' is not signed in'"
-        [content]="'Sign in under Connected services before this agent runs.'"
+  </ng-template>
+  <ng-template mosaikDialogFooter>
+    <div class="flex w-full min-w-0 items-center justify-end gap-1">
+      <mosaik-button
+        test-id="cancel-settings-editor"
+        [label]="tr('loc.symphony.cancel.19766e')"
+        [appearance]="'plain'"
+        (click)="presenter.closeCommand.execute()"
       />
-      } @else if (presenter.selectedAccountProblem() === 'cli-missing') {
-      <mosaik-message
-        test-id="agent-preview-warning"
-        [appearance]="'soft'"
-        [variant]="'warning'"
-        [fit]="'width'"
-        [iconName]="'warning'"
-        [iconSize]="'small'"
-        [header]="presenter.aiRuntimeLabel()(account.kind) + ' CLI is not installed'"
-        [content]="'Install it before this agent can be saved or used.'"
+      <mosaik-button
+        test-id="save-settings-editor"
+        [label]="tr('loc.symphony.save.1509f5')"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.busy()"
+        [disabled]="!presenter.store.aiAvailable || !presenter.canSave() || presenter.busy() || presenter.store.editorBusy()"
+        (click)="presenter.saveCommand.execute()"
       />
-      } }
-    </aside>
-  </div>
-</ng-template>
-<ng-template mosaikDialogFooter>
-  <div class="flex w-full min-w-0 items-center justify-end gap-1">
-    <mosaik-button
-      test-id="cancel-settings-editor"
-      [label]="'Cancel'"
-      [appearance]="'plain'"
-      (click)="presenter.closeCommand.execute()"
-    />
-    <mosaik-button
-      test-id="save-settings-editor"
-      [label]="'Save'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      [isBusy]="presenter.busy()"
-      [disabled]="!presenter.store.aiAvailable || !presenter.canSave() || presenter.busy() || presenter.store.editorBusy()"
-      (click)="presenter.saveCommand.execute()"
-    />
-  </div>
-</ng-template>
+    </div>
+  </ng-template>
+</ng-container>

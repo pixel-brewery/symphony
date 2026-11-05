@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   AnchorComponent,
   AvatarComponent,
   CardComponent,
@@ -23,7 +24,7 @@ import {
   TimelineItemComponent,
   TimelineMarkerComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { ExecutionDrawerTitlePipe } from '../../pipes/ExecutionDrawerTitlePipe';
 import { ExecutionEventIconPipe } from '../../pipes/ExecutionEventIconPipe';
 import { ExecutionEventLabelPipe } from '../../pipes/ExecutionEventLabelPipe';
@@ -43,6 +44,7 @@ import { ExecutionDrawerViewPresenter } from '../../view-presenters/ExecutionDra
   selector: 'symphony-execution-drawer-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AgentFigureComponent,
     AgentStateLabelPipe,
     AnchorComponent,

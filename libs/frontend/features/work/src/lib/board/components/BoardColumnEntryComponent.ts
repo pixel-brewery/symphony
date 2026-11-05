@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   ButtonComponent,
@@ -39,6 +40,7 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
   selector: 'symphony-board-column-entry',
   host: { class: 'block w-full min-w-0 max-w-full pb-[6px]' },
   imports: [
+    TranslateDirective,
     AvatarComponent,
     BadgeComponent,
     BoardCardStatusPresentationPipe,

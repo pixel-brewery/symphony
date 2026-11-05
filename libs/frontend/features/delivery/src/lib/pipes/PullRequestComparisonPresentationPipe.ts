@@ -9,7 +9,7 @@ import {
 
 // #endregion
 
-@Pipe({ name: 'pullRequestComparisonPresentation', standalone: true, pure: true })
+@Pipe({ name: 'pullRequestComparisonPresentation', standalone: true, pure: false })
 export class PullRequestComparisonPresentationPipe implements PipeTransform {
   // #region Methods
 

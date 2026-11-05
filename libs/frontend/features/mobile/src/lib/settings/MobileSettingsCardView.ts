@@ -1,8 +1,9 @@
 // #region Imports
 
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   DotComponent,
   IconNameDirective,
@@ -30,6 +31,7 @@ import { MobileSettingsCardViewPresenter } from './MobileSettingsCardViewPresent
   selector: 'symphony-mobile-settings-card',
   host: { class: 'contents' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     DatePipe,
     DotComponent,

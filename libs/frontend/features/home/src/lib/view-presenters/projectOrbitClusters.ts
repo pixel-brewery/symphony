@@ -5,6 +5,7 @@ import type { IWorkItem } from '@symphony/domain-work';
 import type { IOrchestrationSnapshot } from '@symphony/ipc-contracts-composition';
 import type { IOrbitCluster } from './IOrbitCluster';
 import type { IOrbitClusterProjection } from './IOrbitClusterProjection';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -68,7 +69,9 @@ export function projectOrbitClusters(
     clusters.push({
       id: 'attention',
       kind: 'attention',
-      label: 'Needs attention',
+      get label() {
+        return translateLabel('loc.symphony.labels.needs.attention.c1ebc78');
+      },
       tone: 'danger',
       memberIds: newestFirst(attentionMembers),
     });

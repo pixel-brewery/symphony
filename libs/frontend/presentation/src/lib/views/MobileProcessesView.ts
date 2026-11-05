@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   CardComponent,
   CardContentComponent,
@@ -21,6 +22,7 @@ import { MobileProcessesViewPresenter } from '../view-presenters/MobileProcesses
   selector: 'symphony-mobile-processes-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     CardComponent,
     CardContentComponent,

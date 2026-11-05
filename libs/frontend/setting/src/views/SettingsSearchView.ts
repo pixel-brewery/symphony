@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   IconComponent,
   IconNameDirective,
@@ -27,6 +28,7 @@ import { SettingsViewPresenter } from '../view-presenters/SettingsViewPresenter'
   selector: 'symphony-settings-search-view',
   host: { class: 'flex min-w-0 flex-col gap-3' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     IconComponent,
     IconNameDirective,

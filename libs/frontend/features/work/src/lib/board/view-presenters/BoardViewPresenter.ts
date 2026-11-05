@@ -69,6 +69,7 @@ import { WORK_CI_OPERATIONS } from '../../ports/WorkCiOperationsToken';
 import { WORK_EXECUTION_READ } from '../../ports/WorkExecutionReadToken';
 import { WORK_BOARD_ROUTE } from '../../ports/WorkBoardRouteToken';
 import { WORK_BOARD_SELECTION } from '../../ports/WorkBoardSelectionToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -1921,8 +1922,12 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     if (!target) {
       const label = this.allColumns().find((column) => column.id === toColumnKey)?.label;
       this._notifications.showInfo(
-        'Not moved',
-        `The board of ${item.externalId} has no ${label ?? 'such'} column.`,
+        translateLabel('loc.symphony.labels.not.moved.92f72a1'),
+        translateLabel(
+          'loc.symphony.labels.the.board.of.has.no.column.c2334e9',
+          item.externalId,
+          label ?? 'such',
+        ),
       );
       return;
     }
@@ -2744,8 +2749,16 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     const url = item.externalUrl;
     if (!url) return;
     // A silent clipboard rejection would leave the operator pasting whatever was there before.
-    if (await this._clipboard.writeText(url)) this._notifications.showSuccess('Link copied.', url);
-    else this._notifications.showError('Link not copied.', 'The clipboard is not available.');
+    if (await this._clipboard.writeText(url))
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.link.copied.71af38a'),
+        url,
+      );
+    else
+      this._notifications.showError(
+        translateLabel('loc.symphony.labels.link.not.copied.b450284'),
+        translateLabel('loc.symphony.labels.the.clipboard.is.not.available.dd05139'),
+      );
   }
 
   /**
@@ -2820,18 +2833,24 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     const workspaces = settings?.activeViewScope.workspaceIds.length ?? 0;
     if (this._context.availableBoards().length > 1)
       this._notifications.showWarning(
-        'Select one board to create a work item',
-        'Several boards are in view. Choose one under Filter › Board, then create the work item.',
+        translateLabel('loc.symphony.labels.select.one.board.to.create.a.work.item.ed35c25'),
+        translateLabel(
+          'loc.symphony.labels.several.boards.are.in.view.choose.one.under.filter.b.b706837',
+        ),
       );
     else if (!workspaces)
       this._notifications.showWarning(
-        'Select one board to create a work item',
-        'No workspace is selected. Choose a workspace in the sidebar, then create the work item.',
+        translateLabel('loc.symphony.labels.select.one.board.to.create.a.work.item.ed35c25'),
+        translateLabel(
+          'loc.symphony.labels.no.workspace.is.selected.choose.a.workspace.in.the.s.521d4b4',
+        ),
       );
     else
       this._notifications.showWarning(
-        'Select one board to create a work item',
-        'None of the selected workspaces has a board. Connect one in Settings › Connected services, or use only one workspace.',
+        translateLabel('loc.symphony.labels.select.one.board.to.create.a.work.item.ed35c25'),
+        translateLabel(
+          'loc.symphony.labels.none.of.the.selected.workspaces.has.a.board.connect..af5e3a2',
+        ),
       );
   }
 

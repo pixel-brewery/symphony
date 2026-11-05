@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 import {
+  TranslateDirective,
   ButtonComponent,
   DialogContentDirective,
   DialogFooterDirective,
@@ -27,6 +28,7 @@ import { BreakoutMenuDialogViewPresenter } from './BreakoutMenuDialogViewPresent
 @Component({
   selector: 'symphony-breakout-menu-dialog-view',
   imports: [
+    TranslateDirective,
     ButtonComponent,
     CommandDirective,
     DialogContentDirective,

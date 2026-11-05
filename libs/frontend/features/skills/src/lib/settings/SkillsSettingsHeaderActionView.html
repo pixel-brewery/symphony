@@ -1,33 +1,35 @@
-<mosaik-button
-  test-id="refresh-skills"
-  [iconName]="'sync'"
-  [iconSize]="'small'"
-  [appearance]="'plain'"
-  [disabled]="presenter.skillsBusy()"
-  [attr.aria-label]="'Refresh installed skills'"
-  [mosaikTooltip]="'Refresh installed skills'"
-  (click)="presenter.refreshSkillsCommand.execute()"
-/>
-<mosaik-button
-  test-id="open-skill-import"
-  [label]="'Import skill'"
-  [appearance]="'outline'"
-  (click)="presenter.openSkillImportCommand.execute()"
-/>
-<mosaik-button
-  test-id="open-skill-catalog"
-  [label]="'Add skills'"
-  [iconName]="'skills'"
-  [iconSize]="'small'"
-  [appearance]="'outline'"
-  (click)="presenter.openSkillCatalogCommand.execute()"
-/>
-<mosaik-button
-  test-id="new-skill"
-  [label]="'New skill'"
-  [iconName]="'add'"
-  [iconSize]="'small'"
-  [appearance]="'solid'"
-  [variant]="'primary'"
-  (click)="presenter.newSkillCommand.execute()"
-/>
+<ng-container *mosaikTranslate="let tr">
+  <mosaik-button
+    test-id="refresh-skills"
+    [iconName]="'sync'"
+    [iconSize]="'small'"
+    [appearance]="'plain'"
+    [disabled]="presenter.skillsBusy()"
+    [attr.aria-label]="tr('loc.symphony.refresh.installed.skills.206608')"
+    [mosaikTooltip]="tr('loc.symphony.refresh.installed.skills.206608')"
+    (click)="presenter.refreshSkillsCommand.execute()"
+  />
+  <mosaik-button
+    test-id="open-skill-import"
+    [label]="tr('loc.symphony.import.skill.42eea9')"
+    [appearance]="'outline'"
+    (click)="presenter.openSkillImportCommand.execute()"
+  />
+  <mosaik-button
+    test-id="open-skill-catalog"
+    [label]="tr('loc.symphony.add.skills.7e02e1')"
+    [iconName]="'skills'"
+    [iconSize]="'small'"
+    [appearance]="'outline'"
+    (click)="presenter.openSkillCatalogCommand.execute()"
+  />
+  <mosaik-button
+    test-id="new-skill"
+    [label]="tr('loc.symphony.new.skill.9bf06a')"
+    [iconName]="'add'"
+    [iconSize]="'small'"
+    [appearance]="'solid'"
+    [variant]="'primary'"
+    (click)="presenter.newSkillCommand.execute()"
+  />
+</ng-container>

@@ -25,6 +25,7 @@ import { continuousIntegrationRefreshDelay } from '@symphony/frontend-core/deliv
 import type { ContinuousIntegrationUsageReportDto } from '@symphony/ipc-contracts-ci';
 import type { ICiUsageContext } from '../ports/ICiUsageContext';
 import { CI_USAGE_CONTEXT } from '../ports/CiUsageContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -327,10 +328,15 @@ export class CiStore implements ICiOperations {
   public async cancelCiRun(runId: string): Promise<void> {
     try {
       await this._client.request('ci.cancel', { runId });
-      this._notifications.showSuccess('CI run cancellation requested.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.ci.run.cancellation.requested.967dd80'),
+      );
       await this.refreshContinuousIntegrationRuns();
     } catch (cause) {
-      this.showError(cause, 'Unable to cancel the CI run.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.cancel.the.ci.run.07a936c'),
+      );
     }
   }
 
@@ -343,10 +349,15 @@ export class CiStore implements ICiOperations {
   public async rerunCiRun(runId: string): Promise<void> {
     try {
       await this._client.request('ci.rerun', { runId });
-      this._notifications.showSuccess('CI rerun requested.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.ci.rerun.requested.22ea4f4'),
+      );
       await this.refreshContinuousIntegrationRuns();
     } catch (cause) {
-      this.showError(cause, 'Unable to rerun the CI run.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.rerun.the.ci.run.0f10f53'),
+      );
     }
   }
 
@@ -365,10 +376,15 @@ export class CiStore implements ICiOperations {
     try {
       const run = await this._client.request('ci.workflow.dispatch', { workflowId, ref, inputs });
       this._projection.prependRun(run);
-      this._notifications.showSuccess('The workflow was started on GitHub Actions.');
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.the.workflow.was.started.on.github.actions.1e161af'),
+      );
       this.scheduleContinuousIntegrationRefresh();
     } catch (cause) {
-      this.showError(cause, 'Unable to start the workflow.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.start.the.workflow.0880542'),
+      );
     }
   }
 
@@ -388,14 +404,23 @@ export class CiStore implements ICiOperations {
     try {
       const execution = await this._client.request('ci.workflow.local.run', { workflowId, ref });
       if (execution.state === 'succeeded') {
-        this._notifications.showSuccess('The workflow passed on the local runner.');
+        this._notifications.showSuccess(
+          translateLabel('loc.symphony.labels.the.workflow.passed.on.the.local.runner.b5e9027'),
+        );
       } else if (execution.state === 'cancelled') {
-        this._notifications.showSuccess('The local workflow run was stopped.');
+        this._notifications.showSuccess(
+          translateLabel('loc.symphony.labels.the.local.workflow.run.was.stopped.0a3f1ad'),
+        );
       } else {
-        this._notifications.showError('The workflow failed on the local runner.');
+        this._notifications.showError(
+          translateLabel('loc.symphony.labels.the.workflow.failed.on.the.local.runner.4cc2919'),
+        );
       }
     } catch (cause) {
-      this.showError(cause, 'Unable to run the workflow locally.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.run.the.workflow.locally.58c1975'),
+      );
     } finally {
       if (this._localCiRequestRunId === requestId) this._localCiRequestRunId = undefined;
       if (this._localCiRunningRunId() === requestId) {
@@ -421,14 +446,23 @@ export class CiStore implements ICiOperations {
     try {
       const execution = await this._client.request('ci.local.run', { runId });
       if (execution.state === 'succeeded') {
-        this._notifications.showSuccess('The CI workflow passed on the local runner.');
+        this._notifications.showSuccess(
+          translateLabel('loc.symphony.labels.the.ci.workflow.passed.on.the.local.runner.8a45851'),
+        );
       } else if (execution.state === 'cancelled') {
-        this._notifications.showSuccess('The local CI run was stopped.');
+        this._notifications.showSuccess(
+          translateLabel('loc.symphony.labels.the.local.ci.run.was.stopped.af20021'),
+        );
       } else {
-        this._notifications.showError('The CI workflow failed on the local runner.');
+        this._notifications.showError(
+          translateLabel('loc.symphony.labels.the.ci.workflow.failed.on.the.local.runner.f2279a6'),
+        );
       }
     } catch (cause) {
-      this.showError(cause, 'Unable to run the CI workflow locally.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.run.the.ci.workflow.locally.449ecee'),
+      );
     } finally {
       if (this._localCiRequestRunId === runId) this._localCiRequestRunId = undefined;
       if (this._localCiRunningRunId() === runId) {
@@ -449,7 +483,10 @@ export class CiStore implements ICiOperations {
     try {
       await this._client.request('ci.local.cancel', { runId });
     } catch (cause) {
-      this.showError(cause, 'Unable to stop the local CI runner.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.stop.the.local.ci.runner.9247e76'),
+      );
     }
   }
 
@@ -467,7 +504,10 @@ export class CiStore implements ICiOperations {
       this._runnerImageCatalog.set(await this._client.request('local-ci.images.list', { refresh }));
       this._runnerImageAutoRefreshBlocked = false;
     } catch (cause) {
-      this.showError(cause, 'Unable to load the runner image catalog.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.the.runner.image.catalog.5a32e74'),
+      );
     } finally {
       this._runnerImageBusy.set(false);
     }
@@ -501,12 +541,20 @@ export class CiStore implements ICiOperations {
           : catalog,
       );
       this._notifications.showSuccess(
-        'Guest image updated.',
-        `Ubuntu ${result.image.ubuntuVersion} with ${result.image.aptPackages.length} declared packages and Node.js ${result.image.nodeVersion}.`,
+        translateLabel('loc.symphony.labels.guest.image.updated.1402d34'),
+        translateLabel(
+          'loc.symphony.labels.ubuntu.with.declared.packages.and.node.js.aa1a2e1',
+          result.image.ubuntuVersion,
+          result.image.aptPackages.length,
+          result.image.nodeVersion,
+        ),
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to select the runner image.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.select.the.runner.image.3f4bf74'),
+      );
       return false;
     } finally {
       this._runnerImageBusy.set(false);
@@ -529,7 +577,10 @@ export class CiStore implements ICiOperations {
       this._localCiInstances.set(await this._client.request('local-ci.instances.list', {}));
       this._localCiInstancesAutoRefreshBlocked = false;
     } catch (cause) {
-      this.showError(cause, 'Unable to list the local runner machines.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.list.the.local.runner.machines.3060802'),
+      );
     } finally {
       this._localCiInstancesBusy.set(false);
     }
@@ -549,10 +600,16 @@ export class CiStore implements ICiOperations {
       this._localCiInstances.update((current) =>
         current ? { ...current, instances: result.instances } : current,
       );
-      this._notifications.showSuccess('Machine removed.', `${name} no longer uses disk.`);
+      this._notifications.showSuccess(
+        translateLabel('loc.symphony.labels.machine.removed.cd09763'),
+        translateLabel('loc.symphony.labels.no.longer.uses.disk.bd32d8f', name),
+      );
       return result.removed;
     } catch (cause) {
-      this.showError(cause, 'Unable to remove the machine.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.remove.the.machine.ee27ea6'),
+      );
       return false;
     } finally {
       this._localCiInstanceRemoving.set(undefined);
@@ -572,12 +629,15 @@ export class CiStore implements ICiOperations {
       const result = await this._client.request('ci.local.cleanup', {});
       const removed = result.removedInstances + result.removedConfigurationFiles;
       this._notifications.showSuccess(
-        'Local runner data cleared.',
+        translateLabel('loc.symphony.labels.local.runner.data.cleared.f94a31a'),
         removed ? `${removed} inactive runner item${removed === 1 ? '' : 's'} removed.` : undefined,
       );
       return result.cacheCleared;
     } catch (cause) {
-      this.showError(cause, 'Unable to clear local runner data.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.clear.local.runner.data.6776a4c'),
+      );
       return false;
     } finally {
       this._localCiCleanupBusy.set(false);
@@ -607,7 +667,10 @@ export class CiStore implements ICiOperations {
           }
           this._projection.applyRefresh(result);
         } catch (cause) {
-          this.showError(cause, 'Unable to refresh CI runs.');
+          this.showError(
+            cause,
+            translateLabel('loc.symphony.labels.unable.to.refresh.ci.runs.ba3a55f'),
+          );
         }
       } while (this._refreshRequested);
     } finally {
@@ -640,7 +703,11 @@ export class CiStore implements ICiOperations {
     try {
       this._projection.updateStorageStatus(await this._client.request('storage.status.get', {}));
     } catch (cause) {
-      if (!silent) this.showError(cause, 'Unable to load storage status.');
+      if (!silent)
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.load.storage.status.acda8c5'),
+        );
     }
   }
 
@@ -688,7 +755,11 @@ export class CiStore implements ICiOperations {
       return true;
     } catch (cause) {
       this._continuousIntegrationUsage.set([]);
-      if (!silent) this.showError(cause, 'Unable to load GitHub Actions usage.');
+      if (!silent)
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.load.github.actions.usage.38b91b2'),
+        );
       return false;
     } finally {
       this._continuousIntegrationUsageBusy.set(false);

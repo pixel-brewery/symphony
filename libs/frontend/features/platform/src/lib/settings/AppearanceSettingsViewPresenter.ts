@@ -1,7 +1,8 @@
 // #region Imports
 
 import { inject, Injectable } from '@angular/core';
-import { Hydratable, ViewPresenter } from '@symphony/frontend-core';
+import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
+import { ApplicationLocalization, type ApplicationLanguage } from '@symphony/frontend-intl';
 import { PLATFORM_SETTINGS_CONTEXT } from '../ports/PlatformSettingsContextToken';
 import { AppearanceSettingsStore } from '../state/AppearanceSettingsStore';
 
@@ -18,6 +19,25 @@ export class AppearanceSettingsViewPresenter extends Hydratable(ViewPresenter) {
 
   private readonly _store = inject(AppearanceSettingsStore);
   private readonly _context = inject(PLATFORM_SETTINGS_CONTEXT);
+  private readonly _localization = inject(ApplicationLocalization);
+
+  /**
+   * The browser-profile language, independent of a workspace's content.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly language = this._localization.language;
+
+  /**
+   * Applies and remembers the selected language.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly updateLanguageCommand = new Command<ApplicationLanguage>((language) =>
+    this._localization.setLanguage(language),
+  );
 
   /**
    * The chosen theme.

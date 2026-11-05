@@ -4,6 +4,7 @@ import { computed, inject, type Signal } from '@angular/core';
 import type { ISettingsSearchEntry } from '@symphony/frontend-setting';
 import { WORK_SOURCE_SETTINGS_CONTEXT } from '../ports/WorkSourceSettingsContextToken';
 import { workSourceOrigin } from './workSourceOrigin';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -27,7 +28,9 @@ export function workSettingsSearchEntries(): Signal<readonly ISettingsSearchEntr
               id: `board-${source.id}`,
               label: source.displayName,
               description: workSourceOrigin(source),
-              group: 'Boards',
+              get group() {
+                return translateLabel('loc.symphony.labels.boards.4fcd39d');
+              },
               keywords: [
                 'board',
                 source.provider === 'azure-devops' ? 'Azure DevOps' : 'GitHub Projects',
@@ -44,11 +47,18 @@ export function workSettingsSearchEntries(): Signal<readonly ISettingsSearchEntr
             {
               id: `account-${account.id}`,
               label: account.displayName,
-              description:
-                account.kind === 'azure-devops'
-                  ? `Azure DevOps · ${account.organization}`
-                  : `GitHub · ${account.hostname}${account.accountLogin ? ` · @${account.accountLogin}` : ''}`,
-              group: 'Accounts',
+              get description() {
+                return account.kind === 'azure-devops'
+                  ? translateLabel('loc.symphony.labels.azure.devops.5f166ac', account.organization)
+                  : translateLabel(
+                      'loc.symphony.labels.github.a23f449',
+                      account.hostname,
+                      account.accountLogin ? ` · @${account.accountLogin}` : '',
+                    );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.accounts.8a7c8b6');
+              },
               keywords: [
                 'account',
                 account.kind === 'azure-devops' ? 'Azure DevOps' : 'GitHub',

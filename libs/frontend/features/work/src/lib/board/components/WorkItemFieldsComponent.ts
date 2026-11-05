@@ -3,6 +3,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 import {
+  TranslateDirective,
   AvatarComponent,
   CheckboxComponent,
   DateBoxComponent,
@@ -30,6 +31,7 @@ import type { WorkItemForm } from '../view-presenters/workItemForm';
   selector: 'symphony-work-item-fields',
   host: { class: 'flex min-w-0 flex-col gap-2' },
   imports: [
+    TranslateDirective,
     FormFieldDirective,
     AiDirective,
     AvatarComponent,

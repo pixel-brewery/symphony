@@ -3,6 +3,7 @@
 import type { INavigationItem } from '@symphony/frontend-core';
 import type { IPaletteResult } from '../models/IPaletteResult';
 import { scorePaletteMatch } from './scorePaletteMatch';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -11,7 +12,9 @@ const SETTINGS: IPaletteResult = {
   id: 'command:settings',
   group: 'commands',
   icon: 'settings',
-  title: 'Settings…',
+  get title() {
+    return translateLabel('loc.symphony.labels.settings.7a04083');
+  },
   shortcut: ',',
   rank: 0,
   action: { kind: 'navigate', path: '/main/settings' },
@@ -50,7 +53,9 @@ export function projectNavigationPaletteResults(
             id: `navigation:${item.key}`,
             group: 'commands',
             icon: item.icon,
-            title: `Go to ${item.label}`,
+            get title() {
+              return translateLabel('loc.symphony.labels.go.to.a7fc569', item.label);
+            },
             rank: 0,
             action: { kind: 'navigate', path: item.route },
           },

@@ -3,6 +3,7 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { IWorkItem } from '@symphony/domain-work';
 import type { IWorkItemLinkPresentation } from './IWorkItemLinkPresentation';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -11,7 +12,7 @@ import type { IWorkItemLinkPresentation } from './IWorkItemLinkPresentation';
  * labels because the operator picks the action by where it leads; an item whose tracker the
  * board does not recognise still gets both actions, just without a brand claim.
  */
-@Pipe({ name: 'workItemLinkPresentation', standalone: true, pure: true })
+@Pipe({ name: 'workItemLinkPresentation', standalone: true, pure: false })
 export class WorkItemLinkPresentationPipe implements PipeTransform {
   // #region Methods
 
@@ -29,22 +30,22 @@ export class WorkItemLinkPresentationPipe implements PipeTransform {
       case 'github-projects':
         return {
           url: item.externalUrl,
-          copyLabel: 'Copy GitHub URL',
-          openLabel: 'Open in GitHub',
+          copyLabel: translateLabel('loc.symphony.labels.copy.github.url.9686e61'),
+          openLabel: translateLabel('loc.symphony.labels.open.in.github.4fb7881'),
           openIconName: 'github',
         };
       case 'azure-devops':
         return {
           url: item.externalUrl,
-          copyLabel: 'Copy Azure DevOps URL',
-          openLabel: 'Open in Azure DevOps',
+          copyLabel: translateLabel('loc.symphony.labels.copy.azure.devops.url.125ed7c'),
+          openLabel: translateLabel('loc.symphony.labels.open.in.azure.devops.c9bd3c4'),
           openIconName: 'azureDevOps',
         };
       default:
         return {
           url: item.externalUrl,
-          copyLabel: 'Copy URL',
-          openLabel: 'Open in browser',
+          copyLabel: translateLabel('loc.symphony.labels.copy.url.b26d103'),
+          openLabel: translateLabel('loc.symphony.labels.open.in.browser.62a2dc1'),
           openIconName: 'open',
         };
     }

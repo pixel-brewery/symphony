@@ -4,6 +4,7 @@ import { Inject, inject, Injectable } from '@angular/core';
 import { DELIVERY_VIEW_CONTEXT } from '../ports/DeliveryViewContextToken';
 import type { IDeliveryQuickCreateContext } from './IDeliveryQuickCreateContext';
 import type { IQuickCreateItem, IQuickCreateItemSource } from '@symphony/frontend-quick-create';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -36,13 +37,19 @@ export class DeliveryQuickCreateSource implements IQuickCreateItemSource {
       {
         id: 'delivery.create',
         navigationItemKey: 'pull-requests',
-        label: 'New pull request',
+        get label() {
+          return translateLabel('loc.symphony.labels.new.pull.request.263c798');
+        },
         testId: 'home-create-pull-request',
         route: '/main/pull-requests',
         disabled: !this._context.canCreatePullRequest(),
         tooltip: this._context.canCreatePullRequest()
-          ? 'Open a pull request on a repository in scope.'
-          : 'Bind a GitHub repository to open a pull request.',
+          ? translateLabel(
+              'loc.symphony.labels.open.a.pull.request.on.a.repository.in.scope.0d2b849',
+            )
+          : translateLabel(
+              'loc.symphony.labels.bind.a.github.repository.to.open.a.pull.request.d8ae44a',
+            ),
       },
     ];
   }

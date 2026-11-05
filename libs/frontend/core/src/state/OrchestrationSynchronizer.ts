@@ -8,6 +8,7 @@ import { WORK_SELECTION } from './WorkSelectionToken';
 import { OrchestrationOperation } from './OrchestrationOperation';
 import type { IExecutionActivity } from './IExecutionActivity';
 import { EXECUTION_ACTIVITY } from './ExecutionActivityToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -123,7 +124,10 @@ export class OrchestrationSynchronizer extends OrchestrationOperation {
           }
         } catch (cause) {
           this._executionActivity?.markActivityFresh(false);
-          this.showError(cause, 'Unable to load orchestration state.');
+          this.showError(
+            cause,
+            translateLabel('loc.symphony.labels.unable.to.load.orchestration.state.5ae57ae'),
+          );
         } finally {
           this._state.loading.set(false);
         }

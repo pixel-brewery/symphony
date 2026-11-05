@@ -3,6 +3,7 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { IBoardCardState } from '../view-presenters/boardCard';
 import type { IBoardCardStatusPresentation } from './IBoardCardStatusPresentation';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -14,7 +15,7 @@ const deliveryStepLabels = ['Analysis', 'Solution', 'Implementation', 'Checks', 
  *
  * @public
  */
-@Pipe({ name: 'boardCardStatusPresentation', standalone: true, pure: true })
+@Pipe({ name: 'boardCardStatusPresentation', standalone: true, pure: false })
 export class BoardCardStatusPresentationPipe implements PipeTransform {
   // #region Methods
 
@@ -30,53 +31,102 @@ export class BoardCardStatusPresentationPipe implements PipeTransform {
     switch (state.status) {
       case 'waiting-for-you':
         return {
-          label: 'Waiting for you',
+          get label() {
+            return translateLabel('loc.symphony.labels.waiting.for.you.9f760ab');
+          },
           appearance: 'soft',
           variant: 'danger',
           iconName: 'errorCircle',
         };
       case 'failed':
         return {
-          label: `${step} failed`,
+          get label() {
+            return translateLabel('loc.symphony.labels.failed.d5de6f7', step);
+          },
           appearance: 'soft',
           variant: 'danger',
           iconName: 'errorCircle',
         };
       case 'checks-failed':
         return {
-          label: 'Checks failed',
+          get label() {
+            return translateLabel('loc.symphony.labels.checks.failed.69ea579');
+          },
           appearance: 'soft',
           variant: 'danger',
           iconName: 'errorCircle',
         };
       case 'elsewhere':
         return {
-          label:
-            (state.coordinationAction === 'analyze' ? 'Analyzing elsewhere' : 'Solving elsewhere') +
-            (state.coordinationOwner ? ` · @${state.coordinationOwner}` : ''),
+          get label() {
+            return (
+              (state.coordinationAction === 'analyze'
+                ? translateLabel('loc.symphony.labels.analyzing.elsewhere.b32cc7c')
+                : translateLabel('loc.symphony.labels.solving.elsewhere.70019b4')) +
+              (state.coordinationOwner ? ` · @${state.coordinationOwner}` : '')
+            );
+          },
           appearance: 'soft',
           variant: 'warning',
           iconName: 'warning',
         };
       case 'running':
-        return { label: `${step} running`, appearance: 'soft', variant: 'info' };
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.running.84978d6', step);
+          },
+          appearance: 'soft',
+          variant: 'info',
+        };
       case 'queued':
-        return { label: `${step} queued`, appearance: 'outline', variant: 'neutral' };
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.queued.0366036', step);
+          },
+          appearance: 'outline',
+          variant: 'neutral',
+        };
       case 'conflicting':
         return {
-          label: 'Conflicts with base',
+          get label() {
+            return translateLabel('loc.symphony.labels.conflicts.with.base.eb2b50b');
+          },
           appearance: 'soft',
           variant: 'warning',
           iconName: 'warning',
         };
       case 'behind-base':
-        return { label: 'Behind base', appearance: 'soft', variant: 'warning' };
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.behind.base.4491815');
+          },
+          appearance: 'soft',
+          variant: 'warning',
+        };
       case 'ready-to-review':
-        return { label: 'Ready to review', appearance: 'soft', variant: 'success' };
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.ready.to.review.ff2547b');
+          },
+          appearance: 'soft',
+          variant: 'success',
+        };
       case 'ready-for-agent':
-        return { label: 'Ready for an agent', appearance: 'outline', variant: 'neutral' };
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.ready.for.an.agent.b5fc298');
+          },
+          appearance: 'outline',
+          variant: 'neutral',
+        };
       case 'done':
-        return { label: 'Done', appearance: 'outline', variant: 'neutral' };
+        return {
+          get label() {
+            return translateLabel('loc.symphony.labels.done.11a6767');
+          },
+          appearance: 'outline',
+          variant: 'neutral',
+        };
       case 'stage':
         return { label: state.stageLabel, appearance: 'outline', variant: 'neutral' };
     }

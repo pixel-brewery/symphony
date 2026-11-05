@@ -9,6 +9,7 @@ import { proposePullRequestTitle, resolveInitialBranchSelection } from './pullRe
 import { resolvePullRequestComparisonPresentation } from './pullRequestComparisonPresentation';
 import { DELIVERY_VIEW_CONTEXT } from '../ports/DeliveryViewContextToken';
 import { PullRequestStore } from '../state/PullRequestStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -51,10 +52,30 @@ export class PullRequestCreateDrawerViewPresenter extends Hydratable(ViewPresent
    * @readonly
    */
   public readonly form: FieldTree<IPullRequestDraftModel> = form(this._model, (schema) => {
-    required(schema.repositoryBindingId, { message: 'Choose a repository.' });
-    required(schema.targetBranch, { message: 'Choose the branch the change is merged into.' });
-    required(schema.sourceBranch, { message: 'Choose the branch that carries the change.' });
-    required(schema.title, { message: 'Enter a pull-request title.' });
+    required(schema.repositoryBindingId, {
+      get message() {
+        return translateLabel('loc.symphony.labels.choose.a.repository.42fb4fb');
+      },
+    });
+    required(schema.targetBranch, {
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.choose.the.branch.the.change.is.merged.into.ac7df4a',
+        );
+      },
+    });
+    required(schema.sourceBranch, {
+      get message() {
+        return translateLabel(
+          'loc.symphony.labels.choose.the.branch.that.carries.the.change.bcc95b2',
+        );
+      },
+    });
+    required(schema.title, {
+      get message() {
+        return translateLabel('loc.symphony.labels.enter.a.pull.request.title.467e6f3');
+      },
+    });
   });
 
   /**

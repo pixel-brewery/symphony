@@ -9,6 +9,7 @@ import {
   inject,
 } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   ChoiceComponent,
   ChoiceGroupComponent,
@@ -43,6 +44,7 @@ import { AiAccountSettingsEditorViewPresenter } from './AiAccountSettingsEditorV
   selector: 'symphony-ai-settings-editor-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AiAccountStatusPipe,
     AiRuntimeStatusPipe,
     AiValidationIssuesLabelPipe,

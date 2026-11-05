@@ -1,9 +1,10 @@
 // #region Imports
 
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 import {
+  TranslateDirective,
   AvatarComponent,
   BadgeComponent,
   BannerComponent,
@@ -86,6 +87,7 @@ import { WorkItemViewPresenter } from '../view-presenters/WorkItemViewPresenter'
   selector: 'symphony-work-item-view',
   host: { class: 'flex min-h-0 min-w-0 flex-1' },
   imports: [
+    TranslateDirective,
     AiDirective,
     AvatarComponent,
     BadgeComponent,

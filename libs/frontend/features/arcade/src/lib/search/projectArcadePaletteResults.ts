@@ -1,6 +1,7 @@
 // #region Imports
 
 import { scorePaletteMatch, type IPaletteResult } from '@symphony/frontend-search';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -41,7 +42,9 @@ export function projectArcadePaletteResults(
       id: `command:play:${slug}`,
       group: 'commands',
       icon: 'games',
-      title: `Play ${title}`,
+      get title() {
+        return translateLabel('loc.symphony.labels.play.c1513a6', title);
+      },
       rank,
       action: { kind: 'navigate', path: `/main/arcade/${slug}` },
     }));

@@ -1,0 +1,30 @@
+{
+  "name": "@symphony/frontend-intl",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json",
+    "./labels": {
+      "types": "./src/labels.ts",
+      "import": "./src/labels.ts",
+      "default": "./src/labels.ts"
+    }
+  },
+  "dependencies": {
+    "@angular/common": "22.2.4",
+    "@angular/core": "22.2.4",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.183"
+  },
+  "devDependencies": {
+    "@angular/platform-browser": "22.2.4",
+    "vitest": "5.0.5"
+  }
+}

@@ -1,135 +1,137 @@
-<mosaik-app
-  part="app"
-  class="absolute inset-0 block h-dvh w-screen"
-  [theme]="presenter.theme()"
-  [hasNav]="false"
->
-  <div
-    slot="content"
-    part="window"
-    test-id="presenter-content"
-    data-mosaik-tour-camera-surface
-    class="relative isolate flex h-full min-h-0 w-full min-w-0 flex-col overflow-clip"
+<ng-container *mosaikTranslate="let tr">
+  <mosaik-app
+    part="app"
+    class="absolute inset-0 block h-dvh w-screen"
+    [theme]="presenter.theme()"
+    [hasNav]="false"
   >
-    <!-- The sidebar is resizable: the hairline between it and the content is a split divider whose
-         position is remembered. A hidden sidebar collapses the start pane and the divider. -->
-    <mosaik-split
-      part="pane-split"
-      test-id="window-split"
-      class="min-h-0 flex-1"
-      symphonyPaneSize="window.sidebar"
-      [paneSize]="240"
-      [lock]="'start'"
-      [min]="presenter.isSidebarCollapsed() ? '0px' : '200px'"
-      [max]="presenter.isSidebarCollapsed() ? '0px' : '360px'"
-      [disabled]="presenter.isSidebarCollapsed()"
-      [style.--split-divider-width]="presenter.isSidebarCollapsed() ? '0px' : null"
+    <div
+      slot="content"
+      part="window"
+      test-id="presenter-content"
+      data-mosaik-tour-camera-surface
+      class="relative isolate flex h-full min-h-0 w-full min-w-0 flex-col overflow-clip"
     >
-      <div slot="start" class="flex h-full min-h-0 min-w-0">
-        @if (!presenter.isSidebarCollapsed()) {
-        <symphony-window-sidebar class="flex min-h-0 w-full min-w-0" />
-        }
-      </div>
+      <!-- The sidebar is resizable: the hairline between it and the content is a split divider whose
+         position is remembered. A hidden sidebar collapses the start pane and the divider. -->
+      <mosaik-split
+        part="pane-split"
+        test-id="window-split"
+        class="min-h-0 flex-1"
+        symphonyPaneSize="window.sidebar"
+        [paneSize]="240"
+        [lock]="'start'"
+        [min]="presenter.isSidebarCollapsed() ? '0px' : '200px'"
+        [max]="presenter.isSidebarCollapsed() ? '0px' : '360px'"
+        [disabled]="presenter.isSidebarCollapsed()"
+        [style.--split-divider-width]="presenter.isSidebarCollapsed() ? '0px' : null"
+      >
+        <div slot="start" class="flex h-full min-h-0 min-w-0">
+          @if (!presenter.isSidebarCollapsed()) {
+          <symphony-window-sidebar class="flex min-h-0 w-full min-w-0" />
+          }
+        </div>
 
-      <div slot="end" part="window-content" class="flex h-full min-h-0 min-w-0 flex-col">
-        <!-- The unified toolbar is the window's title bar: back and forward, the screen's title
+        <div slot="end" part="window-content" class="flex h-full min-h-0 min-w-0 flex-col">
+          <!-- The unified toolbar is the window's title bar: back and forward, the screen's title
              and subtitle, the screen's contextual actions and the search field that opens the
              command palette. With the sidebar hidden it also reserves the macOS traffic lights and
              offers `Show sidebar`. On Windows the native window buttons take the right edge. -->
-        <header
-          part="window-toolbar window-drag-region"
-          test-id="window-toolbar"
-          class="flex h-[52px] flex-none items-center gap-0.5 pr-[calc(12px+var(--window-controls-overlay-right,0px))] pl-1.5"
-          [style.padding-left.px]="presenter.isSidebarCollapsed() && isMacOS ? 80 : null"
-        >
-          @if (presenter.isSidebarCollapsed()) {
-          <mosaik-button
-            test-id="show-sidebar"
-            [iconName]="'panelLeft'"
-            [iconSize]="'small'"
-            [appearance]="'plain'"
-            [attr.aria-label]="'Show sidebar'"
-            [mosaikTooltip]="'Show sidebar'"
-            (click)="presenter.toggleSidebarCommand.execute()"
-          />
-          }
-          <mosaik-button
-            test-id="navigate-back"
-            [iconName]="'chevronLeft'"
-            [iconSize]="'small'"
-            [appearance]="'plain'"
-            [disabled]="!presenter.canGoBack()"
-            [attr.aria-label]="'Back'"
-            [mosaikTooltip]="'Back'"
-            (click)="presenter.goBackCommand.execute()"
-          />
-          <mosaik-button
-            test-id="navigate-forward"
-            [iconName]="'chevronRight'"
-            [iconSize]="'small'"
-            [appearance]="'plain'"
-            [disabled]="!presenter.canGoForward()"
-            [attr.aria-label]="'Forward'"
-            [mosaikTooltip]="'Forward'"
-            (click)="presenter.goForwardCommand.execute()"
-          />
-          <div class="flex min-w-0 flex-1 flex-col pl-[6px]" test-id="window-title">
-            <mosaik-text
-              role="heading"
-              aria-level="1"
-              test-id="window-title-text"
-              [mosaikTypography]="'subtitle2'"
-              [truncate]="true"
-              [text]="toolbar.title() || presenter.activeNavigationLabel()"
-            />
-            @if (toolbar.subtitle()) {
-            <mosaik-text
-              test-id="window-subtitle"
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [truncate]="true"
-              [text]="toolbar.subtitle()"
+          <header
+            part="window-toolbar window-drag-region"
+            test-id="window-toolbar"
+            class="flex h-[52px] flex-none items-center gap-0.5 pr-[calc(12px+var(--window-controls-overlay-right,0px))] pl-1.5"
+            [style.padding-left.px]="presenter.isSidebarCollapsed() && isMacOS ? 80 : null"
+          >
+            @if (presenter.isSidebarCollapsed()) {
+            <mosaik-button
+              test-id="show-sidebar"
+              [iconName]="'panelLeft'"
+              [iconSize]="'small'"
+              [appearance]="'plain'"
+              [attr.aria-label]="tr('loc.symphony.show.sidebar.9e8197')"
+              [mosaikTooltip]="tr('loc.symphony.show.sidebar.9e8197')"
+              (click)="presenter.toggleSidebarCommand.execute()"
             />
             }
-          </div>
-          @if (toolbar.actions(); as actions) {
-          <div
-            part="window-no-drag"
-            test-id="window-toolbar-actions"
-            class="flex flex-none items-center gap-0.5"
+            <mosaik-button
+              test-id="navigate-back"
+              [iconName]="'chevronLeft'"
+              [iconSize]="'small'"
+              [appearance]="'plain'"
+              [disabled]="!presenter.canGoBack()"
+              [attr.aria-label]="tr('loc.symphony.back.76900f')"
+              [mosaikTooltip]="tr('loc.symphony.back.76900f')"
+              (click)="presenter.goBackCommand.execute()"
+            />
+            <mosaik-button
+              test-id="navigate-forward"
+              [iconName]="'chevronRight'"
+              [iconSize]="'small'"
+              [appearance]="'plain'"
+              [disabled]="!presenter.canGoForward()"
+              [attr.aria-label]="tr('loc.symphony.forward.f1c65e')"
+              [mosaikTooltip]="tr('loc.symphony.forward.f1c65e')"
+              (click)="presenter.goForwardCommand.execute()"
+            />
+            <div class="flex min-w-0 flex-1 flex-col pl-[6px]" test-id="window-title">
+              <mosaik-text
+                role="heading"
+                aria-level="1"
+                test-id="window-title-text"
+                [mosaikTypography]="'subtitle2'"
+                [truncate]="true"
+                [text]="toolbar.title() || presenter.activeNavigationLabel()"
+              />
+              @if (toolbar.subtitle()) {
+              <mosaik-text
+                test-id="window-subtitle"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [truncate]="true"
+                [text]="toolbar.subtitle()"
+              />
+              }
+            </div>
+            @if (toolbar.actions(); as actions) {
+            <div
+              part="window-no-drag"
+              test-id="window-toolbar-actions"
+              class="flex flex-none items-center gap-0.5"
+            >
+              <ng-container [ngTemplateOutlet]="actions" />
+            </div>
+            }
+            <mosaik-searchbox
+              test-id="global-search-launcher"
+              class="ml-1 w-[220px] flex-none"
+              [placeholder]="isMacOS ? tr('loc.symphony.search.k.a83fa7') : tr('loc.symphony.search.ctrl.k.cd1bb5')"
+              [value]="''"
+              [mode]="'enter'"
+              [attr.aria-label]="tr('loc.symphony.search.work.items.pull.requests.and.commands.f88afa')"
+              [attr.aria-haspopup]="'dialog'"
+              (focusin)="openPalette($event)"
+              (pointerdown)="openPalette($event)"
+              (keydown)="openPaletteWithText($event)"
+            />
+          </header>
+
+          <main
+            test-id="presenter-route-scroll"
+            part="route-scroll"
+            class="relative flex min-h-0 flex-1 flex-col overflow-auto"
+            [attr.aria-busy]="store.loading()"
           >
-            <ng-container [ngTemplateOutlet]="actions" />
-          </div>
-          }
-          <mosaik-searchbox
-            test-id="global-search-launcher"
-            class="ml-1 w-[220px] flex-none"
-            [placeholder]="isMacOS ? 'Search  ⌘K' : 'Search  Ctrl+K'"
-            [value]="''"
-            [mode]="'enter'"
-            [attr.aria-label]="'Search work items, pull requests and commands'"
-            [attr.aria-haspopup]="'dialog'"
-            (focusin)="openPalette($event)"
-            (pointerdown)="openPalette($event)"
-            (keydown)="openPaletteWithText($event)"
-          />
-        </header>
+            <router-outlet />
+          </main>
+        </div>
+      </mosaik-split>
 
-        <main
-          test-id="presenter-route-scroll"
-          part="route-scroll"
-          class="relative flex min-h-0 flex-1 flex-col overflow-auto"
-          [attr.aria-busy]="store.loading()"
-        >
-          <router-outlet />
-        </main>
-      </div>
-    </mosaik-split>
+      <symphony-window-status-bar class="flex flex-none" />
 
-    <symphony-window-status-bar class="flex flex-none" />
-
-    @if (palette.isOpen()) {
-    <symphony-command-palette />
-    }
-  </div>
-</mosaik-app>
+      @if (palette.isOpen()) {
+      <symphony-command-palette />
+      }
+    </div>
+  </mosaik-app>
+</ng-container>

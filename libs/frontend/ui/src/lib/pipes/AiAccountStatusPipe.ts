@@ -1,6 +1,7 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -22,7 +23,7 @@ interface IProviderConnections {
   };
 }
 
-@Pipe({ name: 'aiAccountStatus', standalone: true, pure: true })
+@Pipe({ name: 'aiAccountStatus', standalone: true, pure: false })
 export class AiAccountStatusPipe implements PipeTransform {
   // #region Methods
 
@@ -39,16 +40,23 @@ export class AiAccountStatusPipe implements PipeTransform {
     kind: string,
     connections: IProviderConnections | undefined,
   ): string {
-    if (kind === 'opencode') return 'Uses imported OpenCode provider sign-ins';
-    if (!accountId) return 'Not connected yet';
+    if (kind === 'opencode')
+      return translateLabel('loc.symphony.labels.uses.imported.opencode.provider.sign.ins.0b0b8b2');
+    if (!accountId) return translateLabel('loc.symphony.labels.not.connected.yet.8985693');
     const provider = kind === 'codex' ? connections?.codex : connections?.claude;
     if (!provider?.cliAvailable) {
-      return `${kind === 'codex' ? 'Codex' : 'Claude Code'} CLI is not installed.`;
+      return translateLabel(
+        'loc.symphony.labels.cli.is.not.installed.0325bac',
+        kind === 'codex' ? 'Codex' : 'Claude Code',
+      );
     }
     const account = provider.accounts.find((candidate) => candidate.id === accountId);
-    if (!account) return 'Sign-in status has not been checked yet.';
+    if (!account)
+      return translateLabel('loc.symphony.labels.sign.in.status.has.not.been.checked.yet.6028547');
     if (!account.authenticated)
-      return account.error ? 'Sign-in status unavailable.' : 'Not signed in';
+      return account.error
+        ? translateLabel('loc.symphony.labels.sign.in.status.unavailable.05b97be')
+        : translateLabel('loc.symphony.labels.not.signed.in.491fc91');
     const method =
       account.method === 'api-key'
         ? 'API key'
@@ -57,7 +65,7 @@ export class AiAccountStatusPipe implements PipeTransform {
           : account.method === 'subscription'
             ? 'Claude subscription'
             : 'Provider account';
-    return `Signed in with ${method}`;
+    return translateLabel('loc.symphony.labels.signed.in.with.a35de47', method);
   }
 
   // #endregion

@@ -10,6 +10,7 @@ import type { IPlatformClient } from '../ports/IPlatformClient';
 import type { IPlatformHealthProjection } from '../ports/IPlatformHealthProjection';
 import { PLATFORM_CLIENT } from '../ports/PlatformClientToken';
 import { PLATFORM_HEALTH_PROJECTION } from '../ports/PlatformHealthProjectionToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -112,7 +113,11 @@ export class PlatformStore implements IPlatformOperations {
       const health = await this._client.request('health.get', {});
       this._projection.updateRuntimeHealth(health);
     } catch (cause) {
-      if (!silent) this.showError(cause, 'Unable to inspect developer tools.');
+      if (!silent)
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.inspect.developer.tools.ae0dba3'),
+        );
     } finally {
       this._runtimeHealthBusy.set(false);
     }
@@ -133,12 +138,21 @@ export class PlatformStore implements IPlatformOperations {
       const health = await this._client.request('runtime-dependencies.install', { command });
       this._projection.updateRuntimeHealth(health);
       this._notifications.showSuccess(
-        `${this.runtimeDependencyLabel(command)} installed.`,
-        'The command is ready for Symphony.',
+        translateLabel(
+          'loc.symphony.labels.installed.b9e1dbb',
+          this.runtimeDependencyLabel(command),
+        ),
+        translateLabel('loc.symphony.labels.the.command.is.ready.for.symphony.9513f99'),
       );
       return true;
     } catch (cause) {
-      this.showError(cause, `Unable to install ${this.runtimeDependencyLabel(command)}.`);
+      this.showError(
+        cause,
+        translateLabel(
+          'loc.symphony.labels.unable.to.install.8883168',
+          this.runtimeDependencyLabel(command),
+        ),
+      );
       return false;
     } finally {
       this._runtimeDependencyInstallBusy.set(undefined);

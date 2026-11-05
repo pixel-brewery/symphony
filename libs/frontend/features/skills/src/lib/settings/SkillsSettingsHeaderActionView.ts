@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   IconNameDirective,
   TooltipDirective,
@@ -19,7 +20,7 @@ import { SkillsSettingsHeaderActionViewPresenter } from './SkillsSettingsHeaderA
 @Component({
   selector: 'symphony-skills-settings-header-action',
   host: { class: 'contents' },
-  imports: [ButtonComponent, IconNameDirective, TooltipDirective],
+  imports: [TranslateDirective, ButtonComponent, IconNameDirective, TooltipDirective],
   providers: [{ provide: VIEW_PRESENTER, useClass: SkillsSettingsHeaderActionViewPresenter }],
   templateUrl: './SkillsSettingsHeaderActionView.html',
   styleUrl: './SkillsSettingsHeaderActionView.scss',

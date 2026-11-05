@@ -1,7 +1,7 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ToggleSwitchComponent } from '@pixel-brewery/mosaik-elements-angular';
+import { TranslateDirective, ToggleSwitchComponent } from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import { ArcadeEnabledToggleViewPresenter } from './ArcadeEnabledToggleViewPresenter';
 
@@ -15,7 +15,7 @@ import { ArcadeEnabledToggleViewPresenter } from './ArcadeEnabledToggleViewPrese
 @Component({
   selector: 'symphony-arcade-enabled-toggle',
   host: { class: 'flex flex-none items-center' },
-  imports: [ToggleSwitchComponent],
+  imports: [TranslateDirective, ToggleSwitchComponent],
   providers: [{ provide: VIEW_PRESENTER, useClass: ArcadeEnabledToggleViewPresenter }],
   templateUrl: './ArcadeEnabledToggleView.html',
   styleUrl: './ArcadeEnabledToggleView.scss',

@@ -1,6 +1,12 @@
 # Appearance
 
-Unter **Appearance** in den [Einstellungen](../window-and-navigation/settings.md) legst du fest, wie Symphony aussieht und ob die optionale **Arcade** in der Navigation erscheint. Die Werkzeugleiste beschreibt den Bereich mit `Choose how Symphony looks.`
+Unter **Appearance** in den [Einstellungen](../window-and-navigation/settings.md) legst du Sprache und Aussehen von Symphony fest und wählst, ob die optionale **Arcade** in der Navigation erscheint. Die Werkzeugleiste beschreibt den Bereich mit `Choose how Symphony looks.`
+
+## Anwendungssprache
+
+Die Gruppe **Application language** enthält **English** und **Deutsch**. Die Auswahl übersetzt die anwendungseigenen Beschriftungen, Hinweise und Bedienhilfen im geöffneten Fenster sofort; Englisch ist die Vorgabe. Inhalt aus Repositories, Kommentare, selbst verfasste Texte, Quellcode und Antworten angebundener Dienste behalten ihre ursprüngliche Sprache.
+
+Die Sprache bleibt im aktuellen Browserprofil gespeichert. Die Desktop-Fenster desselben Profils übernehmen Änderungen gemeinsam; ein gekoppeltes Telefon hat ein eigenes Browserprofil und eine eigene Sprachwahl unter seinen Einstellungen. Ist das Speichern im Browser gesperrt, funktioniert der Wechsel im aktuellen Fenster trotzdem, geht beim nächsten Start aber verloren. Die Sprache nativer Menüs und Systemdialoge folgt weiterhin dem Betriebssystem.
 
 ## Farbschema
 

@@ -1,8 +1,12 @@
 // #region Imports
 
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {
+  ApplicationDatePipe as DatePipe,
+  ApplicationDecimalPipe as DecimalPipe,
+} from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   BadgeComponent,
   BannerComponent,
   BannerHeaderComponent,
@@ -45,6 +49,7 @@ import { HomeViewPresenter } from '../view-presenters/HomeViewPresenter';
   selector: 'symphony-home-view',
   host: { class: 'flex min-w-0 flex-1 flex-col' },
   imports: [
+    TranslateDirective,
     BadgeComponent,
     BannerComponent,
     BannerHeaderComponent,

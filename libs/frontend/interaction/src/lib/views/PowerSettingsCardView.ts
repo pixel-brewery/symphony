@@ -1,7 +1,11 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DotComponent, SkeletonComponent } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  TranslateDirective,
+  DotComponent,
+  SkeletonComponent,
+} from '@pixel-brewery/mosaik-elements-angular';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
 import { SettingsGroupComponent, SettingsRowComponent } from '@symphony/frontend-setting';
 import { KeepAwakeDetailsPipe } from '../pipes/KeepAwakeDetailsPipe';
@@ -20,6 +24,7 @@ import { KeepAwakeToggleView } from './KeepAwakeToggleView';
   selector: 'symphony-power-settings-card',
   host: { class: 'flex min-w-0 flex-col' },
   imports: [
+    TranslateDirective,
     DotComponent,
     KeepAwakeDetailsPipe,
     KeepAwakeStatusLabelPipe,

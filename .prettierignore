@@ -32,3 +32,6 @@ docs/workitems/macos-redesign/artboards
 
 # Private local Varynth folder projection; see DESIGN-SYSTEM.md.
 /design-system/
+
+# Wortlaut pins the original shipped rule-pack bytes.
+.wortlaut/rule-packs/**

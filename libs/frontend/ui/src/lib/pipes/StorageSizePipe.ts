@@ -5,7 +5,7 @@ import { storageSize } from './storageSize';
 
 // #endregion
 
-@Pipe({ name: 'storageSize', standalone: true, pure: true })
+@Pipe({ name: 'storageSize', standalone: true, pure: false })
 export class StorageSizePipe implements PipeTransform {
   // #region Methods
 

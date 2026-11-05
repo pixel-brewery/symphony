@@ -1,8 +1,9 @@
 // #region Imports
 
-import { DatePipe } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   BannerComponent,
   BannerHeaderComponent,
   BannerSubHeaderComponent,
@@ -45,6 +46,7 @@ import { ActionsWorkflowView } from './ActionsWorkflowView';
   selector: 'symphony-actions-view',
   host: { class: 'flex min-h-0 min-w-0 flex-1' },
   imports: [
+    TranslateDirective,
     ActionsAllRunsView,
     ActionsWorkflowView,
     BannerComponent,

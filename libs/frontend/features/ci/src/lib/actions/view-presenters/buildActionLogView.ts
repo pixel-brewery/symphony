@@ -4,6 +4,7 @@ import type { ICiRunJob, ICiRunStep } from '@symphony/domain-ci';
 import type { IActionLogView } from './IActionLogView';
 import type { IActionRunProtocolView } from './IActionRunProtocolView';
 import { trimProtocol } from './trimProtocol';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -80,7 +81,11 @@ export function buildActionLogView(
   if (unmatchedLog) {
     runProtocols.push({
       id: 'workflow-output',
-      title: failureOutput ? 'Workflow failure output' : 'Workflow output',
+      get title() {
+        return failureOutput
+          ? translateLabel('loc.symphony.labels.workflow.failure.output.3f68fed')
+          : translateLabel('loc.symphony.labels.workflow.output.5f82eb8');
+      },
       content: unmatchedLog,
       status: failureOutput ? 'failed' : 'succeeded',
     });
@@ -89,7 +94,9 @@ export function buildActionLogView(
   if (diagnostics) {
     runProtocols.push({
       id: 'local-runner-diagnostics',
-      title: 'Local runner diagnostics',
+      get title() {
+        return translateLabel('loc.symphony.labels.local.runner.diagnostics.0447438');
+      },
       content: diagnostics,
       status: 'queued',
     });

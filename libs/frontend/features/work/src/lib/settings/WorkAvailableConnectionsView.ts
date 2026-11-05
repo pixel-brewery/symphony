@@ -1,7 +1,11 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AvatarComponent, ButtonComponent } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  TranslateDirective,
+  AvatarComponent,
+  ButtonComponent,
+} from '@pixel-brewery/mosaik-elements-angular';
 import { SettingsRowComponent } from '@symphony/frontend-setting';
 import { WorkConnectionsSettingsViewPresenter } from './WorkConnectionsSettingsViewPresenter';
 // #endregion
@@ -9,7 +13,7 @@ import { WorkConnectionsSettingsViewPresenter } from './WorkConnectionsSettingsV
 @Component({
   selector: 'symphony-work-available-connections-view',
   host: { class: 'block min-w-0' },
-  imports: [AvatarComponent, ButtonComponent, SettingsRowComponent],
+  imports: [TranslateDirective, AvatarComponent, ButtonComponent, SettingsRowComponent],
   providers: [WorkConnectionsSettingsViewPresenter],
   templateUrl: './WorkAvailableConnectionsView.html',
   styleUrl: './WorkAvailableConnectionsView.scss',

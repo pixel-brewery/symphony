@@ -15,6 +15,7 @@ import type { IOrbitCamera, IOrbitCrewMember } from '@symphony/frontend-ui';
 import { projectOrbitClusters } from './projectOrbitClusters';
 import { projectOrbitScene } from './projectOrbitScene';
 import { ORBIT_CONTEXT } from '../ports/OrbitContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -570,17 +571,23 @@ export class OrbitViewPresenter extends ViewPresenter {
       if (delivery.status === 'fulfilled') this.delivery.set(delivery.value);
       else
         this.deliveryError.set(
-          'Delivery evidence could not be refreshed. Check the GitHub account and retry.',
+          translateLabel(
+            'loc.symphony.labels.delivery.evidence.could.not.be.refreshed.check.the.g.fb484f3',
+          ),
         );
       if (operations.status === 'fulfilled') this.operations.set(operations.value);
       else
         this._notifications.showWarning(
-          'Delivery operations could not be refreshed. Retry before starting another deployment.',
+          translateLabel(
+            'loc.symphony.labels.delivery.operations.could.not.be.refreshed.retry.bef.c8e5c0c',
+          ),
         );
     } catch {
       if (!this.disposed() && request === this._deliveryRequest && scope === this.scopeKey())
         this.deliveryError.set(
-          'Delivery evidence could not be refreshed. Check the GitHub account and retry.',
+          translateLabel(
+            'loc.symphony.labels.delivery.evidence.could.not.be.refreshed.check.the.g.fb484f3',
+          ),
         );
     } finally {
       if (!this.disposed() && request === this._deliveryRequest && scope === this.scopeKey())
@@ -613,8 +620,10 @@ export class OrbitViewPresenter extends ViewPresenter {
     } catch (cause) {
       if (!this.disposed() && request === this._launchRequest)
         this._notifications.showError(
-          'Unable to prepare delivery.',
-          cause instanceof Error ? cause.message : 'Refresh the target and version.',
+          translateLabel('loc.symphony.labels.unable.to.prepare.delivery.60b4867'),
+          cause instanceof Error
+            ? cause.message
+            : translateLabel('loc.symphony.labels.refresh.the.target.and.version.f3c5602'),
         );
     } finally {
       if (!this.disposed() && request === this._launchRequest) this.launchBusy.set(false);
@@ -634,7 +643,9 @@ export class OrbitViewPresenter extends ViewPresenter {
     ) {
       this.invalidateLaunch();
       this._notifications.showWarning(
-        'The delivery target or version changed. Prepare a new delivery.',
+        translateLabel(
+          'loc.symphony.labels.the.delivery.target.or.version.changed.prepare.a.new.9c38344',
+        ),
       );
       return;
     }
@@ -651,8 +662,10 @@ export class OrbitViewPresenter extends ViewPresenter {
       await this.store.refreshContinuousIntegrationRuns();
     } catch (cause) {
       this._notifications.showError(
-        'Delivery was not started.',
-        cause instanceof Error ? cause.message : 'Review a new proposal.',
+        translateLabel('loc.symphony.labels.delivery.was.not.started.c601d72'),
+        cause instanceof Error
+          ? cause.message
+          : translateLabel('loc.symphony.labels.review.a.new.proposal.60885f4'),
       );
     } finally {
       this._launchMutation = false;
@@ -670,7 +683,9 @@ export class OrbitViewPresenter extends ViewPresenter {
       if (!this.disposed() && scope === this.scopeKey())
         this.operations.update((items) => items.map((item) => (item.id === id ? operation : item)));
     } catch {
-      this._notifications.showError('Unable to reconcile delivery.');
+      this._notifications.showError(
+        translateLabel('loc.symphony.labels.unable.to.reconcile.delivery.ccc6459'),
+      );
     } finally {
       this._launchMutation = false;
       if (!this.disposed()) this.launchBusy.set(false);

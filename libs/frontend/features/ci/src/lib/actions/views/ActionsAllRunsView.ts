@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   BadgeComponent,
   ButtonComponent,
   IconNameDirective,
@@ -37,6 +38,7 @@ import { ActionsViewPresenter } from '../view-presenters/ActionsViewPresenter';
   selector: 'symphony-actions-all-runs-view',
   host: { class: 'flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-clip' },
   imports: [
+    TranslateDirective,
     ActionRunBadgePipe,
     ActionRunDurationPipe,
     ActionRunnerLabelPipe,

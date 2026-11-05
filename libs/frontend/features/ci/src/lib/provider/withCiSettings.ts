@@ -6,6 +6,7 @@ import {
   withSettingsViews,
   type SettingsFeatureKind,
 } from '@symphony/frontend-setting';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -23,30 +24,56 @@ export function withCiSettings(): readonly IFeature<SettingsFeatureKind>[] {
             scope: 'global',
             id: 'system',
             label: 'System',
-            description: 'This Mac: tools, storage, virtual machines, updates and sleep.',
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.this.mac.tools.storage.virtual.machines.updates.and..e89ed8d',
+              );
+            },
             order: 40,
           },
           search: [
             {
               id: 'resource-preset',
-              label: 'Resource preset',
-              description: 'CPUs, memory, virtual disk and shared cache of each machine.',
-              group: 'Virtual machines',
+              get label() {
+                return translateLabel('loc.symphony.labels.resource.preset.83de64e');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.cpus.memory.virtual.disk.and.shared.cache.of.each.ma.9289d2e',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.virtual.machines.0e39459');
+              },
               keywords: ['compact', 'balanced', 'performance', 'custom', 'cpu', 'memory', 'disk'],
             },
             {
               id: 'reuse',
-              label: 'Keep the virtual machine warm',
-              description:
-                'Reuse a provisioned machine instead of recreating it; it keeps its full disk until you remove it.',
-              group: 'Virtual machines',
+              get label() {
+                return translateLabel('loc.symphony.labels.keep.the.virtual.machine.warm.3c8182d');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.reuse.a.provisioned.machine.instead.of.recreating.it.25b9afb',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.virtual.machines.0e39459');
+              },
             },
             {
               id: 'clear-runner-data',
-              label: 'Clear runner data',
-              description:
-                'Inactive Linux instances, cached base images, and runner tools are removed.',
-              group: 'Virtual machines',
+              get label() {
+                return translateLabel('loc.symphony.labels.clear.runner.data.a93ff4a');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.inactive.linux.instances.cached.base.images.and.runn.1cdacc6',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.virtual.machines.0e39459');
+              },
               keywords: ['machines', 'cleanup'],
             },
           ],
@@ -69,30 +96,50 @@ export function withCiSettings(): readonly IFeature<SettingsFeatureKind>[] {
           section: {
             scope: 'workspace',
             id: 'local-ci',
-            label: 'Local GitHub Actions',
-            description:
-              'Run eligible workflows of this workspace in a disposable Linux virtual machine on this Mac.',
+            get label() {
+              return translateLabel('loc.symphony.labels.local.github.actions.f2564d3');
+            },
+            get description() {
+              return translateLabel(
+                'loc.symphony.labels.run.eligible.workflows.of.this.workspace.in.a.dispos.f8ac314',
+              );
+            },
             order: 50,
           },
           search: [
             {
               id: 'enable-local-runs',
-              label: 'Enable local runs',
-              group: 'Activation',
+              get label() {
+                return translateLabel('loc.symphony.labels.enable.local.runs.b6fcd21');
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.activation.5d939d4');
+              },
               keywords: ['local runner', 'GitHub Actions', 'virtual machine'],
             },
             {
               id: 'runner-image',
-              label: 'Runner image',
-              group: 'Guest image',
+              get label() {
+                return translateLabel('loc.symphony.labels.runner.image.c833729');
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.guest.image.93a4ae1');
+              },
               keywords: ['Ubuntu', 'Refresh catalog', 'guest image'],
             },
             {
               id: 'setup-script',
-              label: 'Setup script',
-              description:
-                'Commands each repository of this workspace runs inside the guest after the image baseline and before any workflow step.',
-              group: 'Repository setup',
+              get label() {
+                return translateLabel('loc.symphony.labels.setup.script.af363a0');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.commands.each.repository.of.this.workspace.runs.insi.362a9c3',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.repository.setup.8dc2de4');
+              },
               keywords: ['provision', 'bash', 'apt-get'],
             },
           ],

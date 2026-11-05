@@ -3,13 +3,14 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { IWorkItemHealth } from '@symphony/domain-work';
 import type { IWorkItemHealthPresentation } from './IWorkItemHealthPresentation';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
 /** How many findings the tooltip names before it summarises the rest as a count. */
 const tooltipIssueLimit = 3;
 
-@Pipe({ name: 'workItemHealthPresentation', standalone: true, pure: true })
+@Pipe({ name: 'workItemHealthPresentation', standalone: true, pure: false })
 export class WorkItemHealthPresentationPipe implements PipeTransform {
   // #region Methods
 
@@ -31,8 +32,14 @@ export class WorkItemHealthPresentationPipe implements PipeTransform {
     return {
       iconName: blocker ? 'errorCircle' : 'info',
       variant: blocker ? 'danger' : 'info',
-      tooltip: `${blocker ? 'Blocked' : 'Incomplete'}: ${lines.join(' · ')}. Open the item for details.`,
-      ariaLabel: `${blocker ? 'Blocked' : 'Incomplete'}: ${reported.length} ${
+      get tooltip() {
+        return translateLabel(
+          'loc.symphony.labels.open.the.item.for.details.12955e1',
+          blocker ? 'Blocked' : 'Incomplete',
+          lines.join(' · '),
+        );
+      },
+      ariaLabel: `${blocker ? translateLabel('loc.symphony.labels.blocked.18f2a09') : translateLabel('loc.symphony.labels.incomplete.75f33cd')}: ${reported.length} ${
         reported.length === 1 ? 'issue' : 'issues'
       }`,
     };

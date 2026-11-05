@@ -1,5 +1,7 @@
 # Technische Feature-Dokumentation
 
+- [Anwendungssprache und Katalogprüfung](localization/README.md): englische und deutsche Runtime-Kataloge, Browserpräferenz, gemeinsame Desktop-Fenster, Mosaik-Übersetzungen und die öffentlichen Wortlaut-Qualitätsprüfungen.
+
 - [Anwendungsupdates](application-updates/README.md): Updatezustände, In-App-Download mit Größen- und SHA-256-Prüfung, Installerstart, automatische Downloadseite und Updatefeeds aus Release-Metadaten, Actions-Deployment ohne Veröffentlichungsbranch sowie Paketierung und die getrennte Liveaktivierung.
 - [Befehlspalette](command-palette/README.md): Ergebnisvertrag, Beiträge der Feature-Suchanbieter, Trefferbewertung, feste Gruppen mit Obergrenzen, Kontextfilter über `SearchManager`, Tastaturauswahl und Öffnen ohne Umgehung von Bestätigungen.
 - [Entwicklerwerkzeuge](developer-tools/README.md): Geordnete CLI-Erkennung, begrenzte native Codex-Bundle-Suche, Verfügbarkeitsprüfung und getrennte Installations- und Anmeldeverantwortung.

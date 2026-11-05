@@ -17,8 +17,10 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { DatePipe, DOCUMENT } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
+import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import {
+  TranslateDirective,
   BadgeComponent,
   ButtonComponent,
   CardComponent,
@@ -40,6 +42,7 @@ import { orbitNodeVariant } from './orbitNodeVariant';
 @Component({
   selector: 'symphony-orbit-canvas',
   imports: [
+    TranslateDirective,
     BadgeComponent,
     ButtonComponent,
     CardComponent,

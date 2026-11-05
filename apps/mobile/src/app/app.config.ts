@@ -15,7 +15,11 @@ import {
 } from '@pixel-brewery/mosaik-elements-angular';
 import { ThemeService as MosaikThemeService } from '@pixel-brewery/mosaik-elements-foundation';
 import { SohoTheme, type ThemeMode } from '@pixel-brewery/mosaik-themes';
-import { readThemePreference, resolveThemeMode } from '@symphony/frontend-core/mobile';
+import {
+  browserStorage,
+  readThemePreference,
+  resolveThemeMode,
+} from '@symphony/frontend-core/mobile';
 import {
   provideMobileBrowserFeature,
   MOBILE_THEME_APPLIER,
@@ -25,6 +29,7 @@ import { provideMobileDeliveryNavigation } from '@symphony/frontend-feature-deli
 import { provideMobilePresentationNavigation } from '@symphony/frontend-presentation/mobile';
 import { applicationThemeOverrides, mobileNavigationIcons } from '@symphony/frontend-ui/mobile';
 import { appRoutes } from './AppRoutes';
+import { provideApplicationLocalization } from '@symphony/frontend-intl';
 
 // #endregion
 
@@ -43,6 +48,7 @@ MosaikThemeService.configure({ defaultThemeMode: initialThemeMode });
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideApplicationLocalization({ storage: browserStorage() }),
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideMobileBrowserFeature(),

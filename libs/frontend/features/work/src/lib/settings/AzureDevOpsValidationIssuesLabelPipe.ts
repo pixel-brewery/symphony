@@ -2,14 +2,23 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { AzureDevOpsValidationIssue } from './AzureDevOpsValidationIssue';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
 const LABELS: Readonly<Record<AzureDevOpsValidationIssue, string>> = {
-  'display-name': 'Display name',
-  organization: 'Organization',
-  project: 'Project',
-  query: 'Saved query ID or WIQL',
+  get 'display-name'() {
+    return translateLabel('loc.symphony.labels.display.name.2b7f6a8');
+  },
+  get organization() {
+    return translateLabel('loc.symphony.labels.organization.d764d42');
+  },
+  get project() {
+    return translateLabel('loc.symphony.labels.project.9859597');
+  },
+  get query() {
+    return translateLabel('loc.symphony.labels.saved.query.id.or.wiql.6aaac61');
+  },
 };
 
 /**
@@ -18,7 +27,7 @@ const LABELS: Readonly<Record<AzureDevOpsValidationIssue, string>> = {
  *
  * @public
  */
-@Pipe({ name: 'azureDevOpsValidationIssuesLabel', standalone: true, pure: true })
+@Pipe({ name: 'azureDevOpsValidationIssuesLabel', standalone: true, pure: false })
 export class AzureDevOpsValidationIssuesLabelPipe implements PipeTransform {
   // #region Methods
 

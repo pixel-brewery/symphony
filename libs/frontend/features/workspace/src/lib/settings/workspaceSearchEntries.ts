@@ -3,6 +3,7 @@
 import { computed, inject, type Signal } from '@angular/core';
 import type { ISettingsSearchEntry } from '@symphony/frontend-setting';
 import { WORKSPACE_SETTINGS_CONTEXT } from '../ports/WorkspaceSettingsContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -22,7 +23,9 @@ export function workspaceSearchEntries(): Signal<readonly ISettingsSearchEntry[]
     (context.settings()?.workspaces ?? []).map((workspace): ISettingsSearchEntry => ({
       id: `workspace-${workspace.id}`,
       label: workspace.displayName,
-      description: `Workspace · ${workspace.shortCode}`,
+      get description() {
+        return translateLabel('loc.symphony.labels.workspace.502f665', workspace.shortCode);
+      },
       keywords: ['workspace', 'rename', 'short code', 'color'],
       ...(workspace.enabled ? {} : { value: 'Disabled' }),
       parameters: { edit: workspace.id },

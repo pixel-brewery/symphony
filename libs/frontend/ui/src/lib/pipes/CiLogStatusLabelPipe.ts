@@ -2,10 +2,11 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { CiRunLogState } from '@symphony/domain-ci';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-@Pipe({ name: 'ciLogStatusLabel', standalone: true, pure: true })
+@Pipe({ name: 'ciLogStatusLabel', standalone: true, pure: false })
 export class CiLogStatusLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -17,7 +18,7 @@ export class CiLogStatusLabelPipe implements PipeTransform {
    */
   public transform(status: CiRunLogState): string {
     return status === 'in-progress'
-      ? 'In progress'
+      ? translateLabel('loc.symphony.labels.in.progress.c1f88e9')
       : `${status[0]?.toUpperCase()}${status.slice(1)}`;
   }
 

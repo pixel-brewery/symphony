@@ -13,6 +13,7 @@ import type { IDeliveryClient } from '../ports/IDeliveryClient';
 import type { IDeliveryProjection } from '../ports/IDeliveryProjection';
 import { DELIVERY_CLIENT } from '../ports/DeliveryClientToken';
 import { DELIVERY_PROJECTION } from '../ports/DeliveryProjectionToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -81,7 +82,10 @@ export class PullRequestStore implements IDeliveryOperations {
     try {
       return await this._client.request('pull-request.branches', { repositoryBindingId });
     } catch (cause) {
-      this.showError(cause, 'Unable to load the repository branches.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.load.the.repository.branches.7184a6a'),
+      );
       return undefined;
     }
   }
@@ -98,7 +102,10 @@ export class PullRequestStore implements IDeliveryOperations {
     try {
       return await this._client.request('pull-request.compare', input);
     } catch (cause) {
-      this.showError(cause, 'Unable to compare the selected branches.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.compare.the.selected.branches.3c409d9'),
+      );
       return undefined;
     }
   }
@@ -131,12 +138,15 @@ export class PullRequestStore implements IDeliveryOperations {
           : snapshot,
       );
       this._notifications.showSuccess(
-        'Pull request created.',
-        `PR #${created.number} is open on GitHub.`,
+        translateLabel('loc.symphony.labels.pull.request.created.b67b9db'),
+        translateLabel('loc.symphony.labels.pr.is.open.on.github.516aec3', created.number),
       );
       return created;
     } catch (cause) {
-      this.showError(cause, 'Unable to create the pull request.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.create.the.pull.request.8093f5b'),
+      );
       return undefined;
     } finally {
       this._pullRequestBusy.set(false);
@@ -168,12 +178,18 @@ export class PullRequestStore implements IDeliveryOperations {
           : snapshot,
       );
       this._notifications.showSuccess(
-        'Pull-request branch is up to date.',
-        `PR #${updated.number} includes the latest target-branch changes.`,
+        translateLabel('loc.symphony.labels.pull.request.branch.is.up.to.date.9c7f36c'),
+        translateLabel(
+          'loc.symphony.labels.pr.includes.the.latest.target.branch.changes.d97098d',
+          updated.number,
+        ),
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to update the pull-request branch.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.update.the.pull.request.branch.523f0d4'),
+      );
       return false;
     } finally {
       this._pullRequestBranchUpdatingId.set(undefined);
@@ -202,12 +218,15 @@ export class PullRequestStore implements IDeliveryOperations {
           : snapshot,
       );
       this._notifications.showSuccess(
-        'Pull request created.',
+        translateLabel('loc.symphony.labels.pull.request.created.b67b9db'),
         execution.pullRequest ? `PR #${execution.pullRequest.number} is ready on GitHub.` : '',
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to create the pull request.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.create.the.pull.request.8093f5b'),
+      );
       return false;
     } finally {
       this._pullRequestBusy.set(false);

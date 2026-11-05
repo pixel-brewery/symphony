@@ -41,6 +41,49 @@
     "@angular/build:unit-test": {
       "cache": true,
       "inputs": ["default", "^production"]
+    },
+    "@pixel-brewery/wortlaut-nx-tasks:wortlaut": {
+      "cache": false,
+      "options": {
+        "actions": {
+          "detect": {
+            "root": "../../..",
+            "resourceRoot": ["libs/frontend/intl/src/lib", "apps/desktop/src/intl/resources"],
+            "preset": "angular",
+            "type": "json",
+            "resourceKey": {
+              "prefix": "loc.symphony"
+            },
+            "languages": ["en", "de"]
+          },
+          "analyze": {
+            "baseLocale": "en",
+            "rules": ["empty-values", "missing-translations", "key-consistency", "duplicate-keys"],
+            "severities": {
+              "empty-values": "error",
+              "missing-translations": "warning",
+              "key-consistency": "error",
+              "duplicate-keys": "error"
+            }
+          },
+          "sort": {
+            "order": "asc"
+          }
+        }
+      },
+      "configurations": {
+        "analyze": {
+          "mode": "analyze",
+          "dryRun": true
+        },
+        "detect": {
+          "mode": "detect",
+          "dryRun": true
+        },
+        "sort": {
+          "mode": "sort"
+        }
+      }
     }
   },
   "analytics": false,

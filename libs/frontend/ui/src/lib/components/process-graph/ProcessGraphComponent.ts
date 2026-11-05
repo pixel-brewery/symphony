@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import {
+  TranslateDirective,
   BadgeComponent,
   HintComponent,
   IconComponent,
@@ -31,6 +32,7 @@ import { WorkflowGraphNodePresentationPipe } from '../../pipes/WorkflowGraphNode
   selector: 'symphony-process-graph',
   host: { class: 'block h-full min-h-0 w-full' },
   imports: [
+    TranslateDirective,
     BadgeComponent,
     HintComponent,
     IconComponent,

@@ -6,6 +6,8 @@ import { SkillStore } from '../catalog/SkillStore';
 import type { ISkillImportEditorRequest } from './ISkillImportEditorRequest';
 import { SKILL_IMPORT_PATHS } from './SkillImportPathsToken';
 import { SKILLS_SETTINGS_CONTEXT } from './SkillsSettingsContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
+
 // #endregion
 /** Owns the existing portable package import and sheet lifecycle. @public */
 @Injectable()
@@ -61,7 +63,9 @@ export class SkillImportEditorViewPresenter extends Hydratable(ViewPresenter) {
   private async onExecuteChooseImportDirectoryCommand(): Promise<void> {
     const result = await this._paths.selectPath({
       kind: 'directory',
-      title: 'Choose portable skill folder',
+      get title() {
+        return translateLabel('loc.symphony.labels.choose.portable.skill.folder.258ffbe');
+      },
       defaultPath: this.importPath || undefined,
     });
     if (!result.canceled && result.paths[0]) {

@@ -16,6 +16,7 @@ import { WORKSPACE_CLIENT } from '../ports/WorkspaceClientToken';
 import { WORKSPACE_CONFIGURATION } from '../ports/WorkspaceConfigurationToken';
 import { WORKSPACE_PROJECTION } from '../ports/WorkspaceProjectionToken';
 import { WORKSPACE_REFRESH } from '../ports/WorkspaceRefreshToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -133,28 +134,50 @@ export class WorkspaceStore implements IWorkspaceOperations {
     try {
       const result = await this._client.request('workspaces.clear', {});
       const details = [
-        result.missing ? `${result.missing} already absent` : '',
-        result.skipped ? `${result.skipped} active and skipped` : '',
-        result.failed ? `${result.failed} could not be removed` : '',
+        result.missing
+          ? translateLabel('loc.symphony.labels.already.absent.403cbd9', result.missing)
+          : '',
+        result.skipped
+          ? translateLabel('loc.symphony.labels.active.and.skipped.92a13f6', result.skipped)
+          : '',
+        result.failed
+          ? translateLabel('loc.symphony.labels.could.not.be.removed.5e5e506', result.failed)
+          : '',
       ]
         .filter(Boolean)
         .join(' · ');
       if (result.failed) {
         this._notifications.showWarning(
-          'Workspace cleanup incomplete.',
-          `${result.removed} removed${details ? ` · ${details}` : ''}`,
+          translateLabel('loc.symphony.labels.workspace.cleanup.incomplete.7417446'),
+          translateLabel(
+            'loc.symphony.labels.removed.257ce3a',
+            result.removed,
+            details ? ` · ${details}` : '',
+          ),
         );
       } else if (result.removed) {
         this._notifications.showSuccess(
-          result.removed === 1 ? 'Workspace cleared.' : 'Workspaces cleared.',
-          `${result.removed} removed${details ? ` · ${details}` : ''}`,
+          result.removed === 1
+            ? translateLabel('loc.symphony.labels.workspace.cleared.3daeee5')
+            : translateLabel('loc.symphony.labels.workspaces.cleared.e2088a2'),
+          translateLabel(
+            'loc.symphony.labels.removed.257ce3a',
+            result.removed,
+            details ? ` · ${details}` : '',
+          ),
         );
       } else {
-        this._notifications.showInfo('No inactive workspaces to clear.', details);
+        this._notifications.showInfo(
+          translateLabel('loc.symphony.labels.no.inactive.workspaces.to.clear.d8e08cd'),
+          details,
+        );
       }
       return result.failed === 0;
     } catch (cause) {
-      this.showError(cause, 'Unable to clear managed workspaces.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.clear.managed.workspaces.ba1f033'),
+      );
       return false;
     } finally {
       this._workspaceCleanupBusy.set(false);
@@ -182,12 +205,17 @@ export class WorkspaceStore implements IWorkspaceOperations {
         ...this._refreshParticipants.map((participant) => participant.refresh()),
       ]);
       this._notifications.showSuccess(
-        'Workspace deleted.',
-        'Workspace configuration and Symphony-managed local data were removed.',
+        translateLabel('loc.symphony.labels.workspace.deleted.a4947f0'),
+        translateLabel(
+          'loc.symphony.labels.workspace.configuration.and.symphony.managed.local.d.7e20fc2',
+        ),
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to delete the workspace.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.delete.the.workspace.71fa9c2'),
+      );
       return false;
     } finally {
       this._workspaceDeletionBusy.set(undefined);
@@ -210,15 +238,29 @@ export class WorkspaceStore implements IWorkspaceOperations {
         destinationRoot,
       });
       const skillDetails = result.embeddedSkillCount
-        ? ` ${result.embeddedSkillCount} shared skill${result.embeddedSkillCount === 1 ? ' was' : 's were'} included.`
+        ? result.embeddedSkillCount === 1
+          ? translateLabel(
+              'loc.symphony.labels.shared.skill.was.included.8789aab',
+              result.embeddedSkillCount,
+            )
+          : translateLabel(
+              'loc.symphony.labels.shared.skills.were.included.8288606',
+              result.embeddedSkillCount,
+            )
         : '';
       this._notifications.showSuccess(
-        `${result.workspaceName} exported.`,
-        `Stored credential fields and machine-local paths were excluded.${skillDetails}`,
+        translateLabel('loc.symphony.labels.exported.a2823dd', result.workspaceName),
+        translateLabel(
+          'loc.symphony.labels.stored.credential.fields.and.machine.local.paths.wer.2d90105',
+          skillDetails,
+        ),
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to export the workspace.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.export.the.workspace.f81a65b'),
+      );
       return false;
     } finally {
       this._workspaceTransferBusy.set(undefined);
@@ -246,26 +288,53 @@ export class WorkspaceStore implements IWorkspaceOperations {
       ]);
       const setup = [
         result.requiredConnectionIds.length
-          ? `Sign in to ${result.requiredConnectionIds.length} connection${result.requiredConnectionIds.length === 1 ? '' : 's'}.`
+          ? result.requiredConnectionIds.length === 1
+            ? translateLabel(
+                'loc.symphony.labels.sign.in.to.connection.efcfc89',
+                result.requiredConnectionIds.length,
+              )
+            : translateLabel(
+                'loc.symphony.labels.sign.in.to.connections.0dd9cbc',
+                result.requiredConnectionIds.length,
+              )
           : '',
         result.repositoryBindingIds.length
-          ? `Verify ${result.repositoryBindingIds.length} local repository path${result.repositoryBindingIds.length === 1 ? '' : 's'}.`
+          ? result.repositoryBindingIds.length === 1
+            ? translateLabel(
+                'loc.symphony.labels.verify.local.repository.path.da1466a',
+                result.repositoryBindingIds.length,
+              )
+            : translateLabel(
+                'loc.symphony.labels.verify.local.repository.paths.26c377c',
+                result.repositoryBindingIds.length,
+              )
           : '',
         result.importedSkillCount
-          ? `${result.importedSkillCount} shared skill${result.importedSkillCount === 1 ? ' was' : 's were'} imported.`
+          ? result.importedSkillCount === 1
+            ? translateLabel(
+                'loc.symphony.labels.shared.skill.was.imported.cc03c53',
+                result.importedSkillCount,
+              )
+            : translateLabel(
+                'loc.symphony.labels.shared.skills.were.imported.680e79b',
+                result.importedSkillCount,
+              )
           : '',
       ]
         .filter(Boolean)
         .join(' ');
       this._notifications.showSuccess(
         result.replaced
-          ? `${result.workspaceName} updated from bundle.`
-          : `${result.workspaceName} imported.`,
-        setup || 'The workspace is ready to use.',
+          ? translateLabel('loc.symphony.labels.updated.from.bundle.50defb0', result.workspaceName)
+          : translateLabel('loc.symphony.labels.imported.9675efc', result.workspaceName),
+        setup || translateLabel('loc.symphony.labels.the.workspace.is.ready.to.use.ee53df7'),
       );
       return true;
     } catch (cause) {
-      this.showError(cause, 'Unable to import the workspace.');
+      this.showError(
+        cause,
+        translateLabel('loc.symphony.labels.unable.to.import.the.workspace.918bb8a'),
+      );
       return false;
     } finally {
       this._workspaceTransferBusy.set(undefined);
@@ -276,7 +345,11 @@ export class WorkspaceStore implements IWorkspaceOperations {
     try {
       this._projection.updateStorageStatus(await this._client.request('storage.status.get', {}));
     } catch (cause) {
-      if (!silent) this.showError(cause, 'Unable to load storage status.');
+      if (!silent)
+        this.showError(
+          cause,
+          translateLabel('loc.symphony.labels.unable.to.load.storage.status.acda8c5'),
+        );
     }
   }
 

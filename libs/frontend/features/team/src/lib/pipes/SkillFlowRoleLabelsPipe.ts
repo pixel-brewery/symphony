@@ -10,7 +10,7 @@ import { SkillFlowRoleLabelPipe } from '@symphony/frontend-ui';
  *
  * @public
  */
-@Pipe({ name: 'skillFlowRoleLabels', standalone: true, pure: true })
+@Pipe({ name: 'skillFlowRoleLabels', standalone: true, pure: false })
 export class SkillFlowRoleLabelsPipe implements PipeTransform {
   // #region Fields
 

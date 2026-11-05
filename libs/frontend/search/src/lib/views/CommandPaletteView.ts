@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  TranslateDirective,
   BackdropComponent,
   CardComponent,
   EmptyStateComponent,
@@ -37,6 +38,7 @@ import { CommandPaletteViewPresenter } from '../view-presenters/CommandPaletteVi
   selector: 'symphony-command-palette',
   host: { class: 'absolute inset-0 z-10 block' },
   imports: [
+    TranslateDirective,
     BackdropComponent,
     CardComponent,
     EmptyStateComponent,

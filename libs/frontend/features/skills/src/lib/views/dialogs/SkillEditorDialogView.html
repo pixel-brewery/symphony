@@ -1,295 +1,311 @@
-<ng-template mosaikDialogHeader>
-  <mosaik-dialog-header
-    slot="header"
-    [text]="presenter.data.mode === 'create' ? 'New skill' : 'Skill details'"
-    [subText]="presenter.data.mode === 'create' ? 'Create a portable Symphony skill package.' : 'Review or edit the installed skill package.'"
-  >
-    <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
-  </mosaik-dialog-header>
-</ng-template>
-
-<ng-template mosaikDialogContent>
-  <div
-    test-id="skill-editor-drawer"
-    class="flex max-h-[calc(100dvh-240px)] min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-y-auto py-0.5"
-    [attr.aria-busy]="presenter.isHydrating()"
-  >
-    <!-- The sheet renders while the skill loads: its sections, headings and field labels are static,
-         and the fields stay disabled until the skill's own text is in them. -->
-    @if (presenter.flowRole(); as flowRole) {
-    <mosaik-select
-      test-id="skill-flow-role"
-      [label]="'Use in flow'"
-      [variant]="'primary'"
-      [value]="flowRole"
-      [disabled]="presenter.store.configurationBusy()"
-      (selectionChanged)="presenter.assignFlowCommand.execute($event)"
+<ng-container *mosaikTranslate="let tr">
+  <ng-template mosaikDialogHeader>
+    <mosaik-dialog-header
+      slot="header"
+      [text]="presenter.data.mode === 'create' ? tr('loc.symphony.new.skill.9bf06a') : tr('loc.symphony.skill.details.37c6c8')"
+      [subText]="presenter.data.mode === 'create' ? tr('loc.symphony.create.a.portable.symphony.skill.package.17f195') : tr('loc.symphony.review.or.edit.the.installed.skill.package.b6adca')"
     >
-      @for (option of presenter.flowOptions; track option.role) {
-      <mosaik-select-item [label]="option.label + ' · ' + option.placement" [value]="option.role" />
-      }
-    </mosaik-select>
-    <mosaik-divider />
-    }
-    <section class="flex min-w-0 flex-col gap-1">
-      <div class="flex min-w-0 items-center justify-between gap-1">
-        <mosaik-text part="sheet-heading" [mosaikTypography]="'subtitle2'" [text]="'SKILL.md'" />
-        <mosaik-badge
-          [label]="'Required'"
-          [appearance]="'soft'"
-          [variant]="'highlight'"
-          [size]="'small'"
-        />
-      </div>
-      <mosaik-text
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="'Portable frontmatter and instructions loaded progressively by ChatGPT and Codex.'"
-      />
-      <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5 max-[640px]:grid-cols-1">
-        <mosaik-textbox
-          test-id="skill-name"
-          [label]="'Name'"
-          [variant]="'primary'"
-          [readonly]="!presenter.canEdit()"
-          [disabled]="presenter.isHydrating()"
-          [value]="presenter.draft.name"
-          (input)="presenter.draft.name = presenter.eventText()($event)"
-        />
-        <mosaik-textbox
-          test-id="skill-description"
-          [label]="'Description and trigger conditions'"
-          [variant]="'primary'"
-          [readonly]="!presenter.canEdit()"
-          [disabled]="presenter.isHydrating()"
-          [value]="presenter.draft.description"
-          (input)="presenter.draft.description = presenter.eventText()($event)"
-        />
-      </div>
-      <mosaik-textbox
-        test-id="skill-instructions"
-        [label]="'Markdown instructions'"
+      <mosaik-dismiss slot="suffix" (click)="presenter.closeCommand.execute()" />
+    </mosaik-dialog-header>
+  </ng-template>
+
+  <ng-template mosaikDialogContent>
+    <div
+      test-id="skill-editor-drawer"
+      class="flex max-h-[calc(100dvh-240px)] min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-y-auto py-0.5"
+      [attr.aria-busy]="presenter.isHydrating()"
+    >
+      <!-- The sheet renders while the skill loads: its sections, headings and field labels are static,
+         and the fields stay disabled until the skill's own text is in them. -->
+      @if (presenter.flowRole(); as flowRole) {
+      <mosaik-select
+        test-id="skill-flow-role"
+        [label]="tr('loc.symphony.use.in.flow.824183')"
         [variant]="'primary'"
-        [multiline]="true"
-        [multilineRows]="6"
-        [resize]="'vertical'"
-        [readonly]="!presenter.canEdit()"
-        [disabled]="presenter.isHydrating()"
-        [value]="presenter.draft.instructions"
-        (input)="presenter.draft.instructions = presenter.eventText()($event)"
-      />
-    </section>
-
-    <mosaik-divider />
-
-    <section class="flex min-w-0 flex-col gap-1">
-      <div class="flex min-w-0 items-center justify-between gap-1">
-        <mosaik-text
-          part="sheet-heading"
-          [mosaikTypography]="'subtitle2'"
-          [text]="'agents/openai.yaml'"
-        />
-        <mosaik-badge
-          [label]="'Recommended'"
-          [appearance]="'soft'"
-          [variant]="'neutral'"
-          [size]="'small'"
-        />
-      </div>
-      <mosaik-text
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="'UI metadata and invocation policy.'"
-      />
-      <mosaik-textbox
-        test-id="skill-openai-yaml"
-        [label]="'OpenAI metadata YAML'"
-        [variant]="'primary'"
-        [multiline]="true"
-        [multilineRows]="5"
-        [resize]="'vertical'"
-        [readonly]="!presenter.canEdit()"
-        [disabled]="presenter.isHydrating()"
-        [value]="presenter.draft.openaiYaml"
-        (input)="presenter.draft.openaiYaml = presenter.eventText()($event)"
-      />
-    </section>
-
-    <mosaik-divider />
-
-    <section class="flex min-w-0 flex-col gap-1">
-      <div class="flex min-w-0 items-center justify-between gap-1">
-        <mosaik-text part="sheet-heading" [mosaikTypography]="'subtitle2'" [text]="'Resources'" />
-        @if (presenter.canEdit()) {
-        <mosaik-button
-          test-id="add-skill-resource"
-          [label]="'Add text resource'"
-          [appearance]="'outline'"
-          (click)="presenter.addResourceCommand.execute()"
+        [value]="flowRole"
+        [disabled]="presenter.store.configurationBusy()"
+        (selectionChanged)="presenter.assignFlowCommand.execute($event)"
+      >
+        @for (option of presenter.flowOptions; track option.role) {
+        <mosaik-select-item
+          [label]="option.label + ' · ' + option.placement"
+          [value]="option.role"
         />
         }
-      </div>
-      <mosaik-text
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="'Scripts, references and assets included in the package.'"
-      />
-      @if (presenter.draft.files.length) {
-      <div part="settings-group-rows" class="flex min-w-0 flex-col">
-        @for (file of presenter.draft.files; track $index; let index = $index) {
-        <div
-          class="flex min-w-0 flex-col gap-1 px-2 py-1.5"
-          [attr.test-id]="'skill-resource-' + index"
-        >
-          <div
-            class="grid min-w-0 grid-cols-[minmax(0,1fr)_160px_auto] items-end gap-1.5 max-[640px]:grid-cols-1"
-          >
-            <mosaik-textbox
-              [label]="'Package path'"
-              [variant]="'primary'"
-              [readonly]="!presenter.canEdit()"
-              [disabled]="presenter.isHydrating()"
-              [value]="file.path"
-              (input)="file.path = presenter.eventText()($event)"
-            />
-            <mosaik-select
-              [label]="'Kind'"
-              [variant]="'primary'"
-              [disabled]="!presenter.canEdit()"
-              [value]="file.kind"
-              (selectionChanged)="file.kind = $any(presenter.eventText()($event))"
-            >
-              <mosaik-select-item [label]="'Script'" [value]="'script'" />
-              <mosaik-select-item [label]="'Reference'" [value]="'reference'" />
-              <mosaik-select-item [label]="'Asset'" [value]="'asset'" />
-            </mosaik-select>
-            @if (presenter.canEdit()) {
-            <mosaik-button
-              [iconName]="'delete'"
-              [iconSize]="'small'"
-              [appearance]="'plain'"
-              [variant]="'danger'"
-              [attr.aria-label]="'Remove resource'"
-              (click)="presenter.removeResourceCommand.execute(index)"
-            />
-            }
-          </div>
-          @if (file.encoding === 'utf8') {
+      </mosaik-select>
+      <mosaik-divider />
+      }
+      <section class="flex min-w-0 flex-col gap-1">
+        <div class="flex min-w-0 items-center justify-between gap-1">
+          <mosaik-text
+            part="sheet-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="tr('loc.symphony.skill.md.0e95f5')"
+          />
+          <mosaik-badge
+            [label]="tr('loc.symphony.required.4850b1')"
+            [appearance]="'soft'"
+            [variant]="'highlight'"
+            [size]="'small'"
+          />
+        </div>
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.portable.frontmatter.and.instructions.loaded.progres.1f69fd')"
+        />
+        <div class="grid min-w-0 grid-cols-2 gap-x-2 gap-y-1.5 max-[640px]:grid-cols-1">
           <mosaik-textbox
-            [label]="'Resource content'"
+            test-id="skill-name"
+            [label]="tr('loc.symphony.name.dcd1d5')"
             [variant]="'primary'"
-            [multiline]="true"
-            [multilineRows]="3"
-            [resize]="'vertical'"
             [readonly]="!presenter.canEdit()"
             [disabled]="presenter.isHydrating()"
-            [value]="file.content"
-            (input)="file.content = presenter.eventText()($event)"
+            [value]="presenter.draft.name"
+            (input)="presenter.draft.name = presenter.eventText()($event)"
           />
-          } @else {
+          <mosaik-textbox
+            test-id="skill-description"
+            [label]="tr('loc.symphony.description.and.trigger.conditions.9f006f')"
+            [variant]="'primary'"
+            [readonly]="!presenter.canEdit()"
+            [disabled]="presenter.isHydrating()"
+            [value]="presenter.draft.description"
+            (input)="presenter.draft.description = presenter.eventText()($event)"
+          />
+        </div>
+        <mosaik-textbox
+          test-id="skill-instructions"
+          [label]="tr('loc.symphony.markdown.instructions.4c6a0b')"
+          [variant]="'primary'"
+          [multiline]="true"
+          [multilineRows]="6"
+          [resize]="'vertical'"
+          [readonly]="!presenter.canEdit()"
+          [disabled]="presenter.isHydrating()"
+          [value]="presenter.draft.instructions"
+          (input)="presenter.draft.instructions = presenter.eventText()($event)"
+        />
+      </section>
+
+      <mosaik-divider />
+
+      <section class="flex min-w-0 flex-col gap-1">
+        <div class="flex min-w-0 items-center justify-between gap-1">
           <mosaik-text
-            [mosaikTypography]="'caption'"
+            part="sheet-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="tr('loc.symphony.agents.openai.yaml.deb975')"
+          />
+          <mosaik-badge
+            [label]="tr('loc.symphony.recommended.d70604')"
+            [appearance]="'soft'"
             [variant]="'neutral'"
-            [text]="'Binary asset preserved as base64 (' + file.size + ' bytes).'"
+            [size]="'small'"
+          />
+        </div>
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.ui.metadata.and.invocation.policy.182733')"
+        />
+        <mosaik-textbox
+          test-id="skill-openai-yaml"
+          [label]="tr('loc.symphony.openai.metadata.yaml.23637f')"
+          [variant]="'primary'"
+          [multiline]="true"
+          [multilineRows]="5"
+          [resize]="'vertical'"
+          [readonly]="!presenter.canEdit()"
+          [disabled]="presenter.isHydrating()"
+          [value]="presenter.draft.openaiYaml"
+          (input)="presenter.draft.openaiYaml = presenter.eventText()($event)"
+        />
+      </section>
+
+      <mosaik-divider />
+
+      <section class="flex min-w-0 flex-col gap-1">
+        <div class="flex min-w-0 items-center justify-between gap-1">
+          <mosaik-text
+            part="sheet-heading"
+            [mosaikTypography]="'subtitle2'"
+            [text]="tr('loc.symphony.resources.e89b30')"
+          />
+          @if (presenter.canEdit()) {
+          <mosaik-button
+            test-id="add-skill-resource"
+            [label]="tr('loc.symphony.add.text.resource.dbed2e')"
+            [appearance]="'outline'"
+            (click)="presenter.addResourceCommand.execute()"
           />
           }
         </div>
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.scripts.references.and.assets.included.in.the.packag.9cf150')"
+        />
+        @if (presenter.draft.files.length) {
+        <div part="settings-group-rows" class="flex min-w-0 flex-col">
+          @for (file of presenter.draft.files; track $index; let index = $index) {
+          <div
+            class="flex min-w-0 flex-col gap-1 px-2 py-1.5"
+            [attr.test-id]="'skill-resource-' + index"
+          >
+            <div
+              class="grid min-w-0 grid-cols-[minmax(0,1fr)_160px_auto] items-end gap-1.5 max-[640px]:grid-cols-1"
+            >
+              <mosaik-textbox
+                [label]="tr('loc.symphony.package.path.a2ab82')"
+                [variant]="'primary'"
+                [readonly]="!presenter.canEdit()"
+                [disabled]="presenter.isHydrating()"
+                [value]="file.path"
+                (input)="file.path = presenter.eventText()($event)"
+              />
+              <mosaik-select
+                [label]="tr('loc.symphony.kind.f5387f')"
+                [variant]="'primary'"
+                [disabled]="!presenter.canEdit()"
+                [value]="file.kind"
+                (selectionChanged)="file.kind = $any(presenter.eventText()($event))"
+              >
+                <mosaik-select-item [label]="tr('loc.symphony.script.102acc')" [value]="'script'" />
+                <mosaik-select-item
+                  [label]="tr('loc.symphony.reference.71bf90')"
+                  [value]="'reference'"
+                />
+                <mosaik-select-item [label]="tr('loc.symphony.asset.80d298')" [value]="'asset'" />
+              </mosaik-select>
+              @if (presenter.canEdit()) {
+              <mosaik-button
+                [iconName]="'delete'"
+                [iconSize]="'small'"
+                [appearance]="'plain'"
+                [variant]="'danger'"
+                [attr.aria-label]="tr('loc.symphony.remove.resource.7274ce')"
+                (click)="presenter.removeResourceCommand.execute(index)"
+              />
+              }
+            </div>
+            @if (file.encoding === 'utf8') {
+            <mosaik-textbox
+              [label]="tr('loc.symphony.resource.content.5c80d1')"
+              [variant]="'primary'"
+              [multiline]="true"
+              [multilineRows]="3"
+              [resize]="'vertical'"
+              [readonly]="!presenter.canEdit()"
+              [disabled]="presenter.isHydrating()"
+              [value]="file.content"
+              (input)="file.content = presenter.eventText()($event)"
+            />
+            } @else {
+            <mosaik-text
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [text]="tr('loc.symphony.binary.asset.preserved.as.base64.bytes.0c0e90', [file.size])"
+            />
+            }
+          </div>
+          }
+        </div>
+        } @else {
+        <mosaik-text
+          [mosaikTypography]="'body2'"
+          [variant]="'neutral'"
+          [text]="tr('loc.symphony.this.skill.has.no.additional.resources.9d106a')"
+        />
         }
-      </div>
+      </section>
+
+      @if (presenter.selected?.source === 'user') {
+      <mosaik-divider />
+      <section class="flex min-w-0 flex-col gap-1">
+        <mosaik-text
+          part="sheet-heading"
+          [mosaikTypography]="'subtitle2'"
+          [text]="tr('loc.symphony.portable.package.16fa85')"
+        />
+        <mosaik-text
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.export.or.remove.this.symphony.skill.6fef82')"
+        />
+        <div class="flex min-w-0 items-end gap-1 max-[640px]:flex-col max-[640px]:items-stretch">
+          <mosaik-filebox
+            class="min-w-0 flex-1"
+            test-id="skill-export-path"
+            [label]="tr('loc.symphony.destination.root.b3a515')"
+            [variant]="'primary'"
+            [value]="presenter.exportPath()"
+            [directory]="true"
+            [readonly]="true"
+            [isClearable]="true"
+            (cleared)="presenter.exportPath.set('')"
+          >
+            <mosaik-button
+              slot="suffix"
+              test-id="choose-skill-export-path"
+              [appearance]="'plain'"
+              [iconName]="'folder'"
+              [iconSize]="'small'"
+              [attr.aria-label]="tr('loc.symphony.choose.skill.export.destination.e5dfd1')"
+              (click)="presenter.chooseExportDirectoryCommand.execute()"
+            />
+          </mosaik-filebox>
+          <mosaik-button
+            test-id="export-skill"
+            [label]="tr('loc.symphony.export.folder.b41ff5')"
+            [appearance]="'outline'"
+            [disabled]="presenter.store.skillsBusy() || !presenter.exportPath().trim()"
+            (click)="presenter.exportSkillCommand.execute()"
+          />
+          <mosaik-button
+            test-id="delete-skill"
+            [label]="tr('loc.symphony.move.to.trash.b250a4')"
+            [appearance]="'plain'"
+            [variant]="'danger'"
+            [disabled]="presenter.store.skillsBusy()"
+            (click)="presenter.deleteSkillCommand.execute()"
+          />
+        </div>
+      </section>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template mosaikDialogFooter>
+    <div class="flex w-full min-w-0 items-center justify-end gap-1">
+      <mosaik-button
+        test-id="cancel-skill-editor"
+        [label]="tr('loc.symphony.cancel.19766e')"
+        [appearance]="'plain'"
+        (click)="presenter.closeCommand.execute()"
+      />
+      @if (!presenter.canEdit() && presenter.selected) {
+      <mosaik-button
+        test-id="install-open-skill"
+        [label]="tr('loc.symphony.install.shared.copy.a092bc')"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        (click)="presenter.installSharedCommand.execute()"
+      />
       } @else {
-      <mosaik-text
-        [mosaikTypography]="'body2'"
-        [variant]="'neutral'"
-        [text]="'This skill has no additional resources.'"
+      <mosaik-button
+        test-id="save-skill"
+        [label]="tr('loc.symphony.save.skill.1d92b7')"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [disabled]="presenter.isHydrating() || presenter.store.skillsBusy()"
+        (click)="presenter.saveCommand.execute()"
       />
       }
-    </section>
-
-    @if (presenter.selected?.source === 'user') {
-    <mosaik-divider />
-    <section class="flex min-w-0 flex-col gap-1">
-      <mosaik-text
-        part="sheet-heading"
-        [mosaikTypography]="'subtitle2'"
-        [text]="'Portable package'"
-      />
-      <mosaik-text
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="'Export or remove this Symphony skill.'"
-      />
-      <div class="flex min-w-0 items-end gap-1 max-[640px]:flex-col max-[640px]:items-stretch">
-        <mosaik-filebox
-          class="min-w-0 flex-1"
-          test-id="skill-export-path"
-          [label]="'Destination root'"
-          [variant]="'primary'"
-          [value]="presenter.exportPath()"
-          [directory]="true"
-          [readonly]="true"
-          [isClearable]="true"
-          (cleared)="presenter.exportPath.set('')"
-        >
-          <mosaik-button
-            slot="suffix"
-            test-id="choose-skill-export-path"
-            [appearance]="'plain'"
-            [iconName]="'folder'"
-            [iconSize]="'small'"
-            [attr.aria-label]="'Choose skill export destination'"
-            (click)="presenter.chooseExportDirectoryCommand.execute()"
-          />
-        </mosaik-filebox>
-        <mosaik-button
-          test-id="export-skill"
-          [label]="'Export folder'"
-          [appearance]="'outline'"
-          [disabled]="presenter.store.skillsBusy() || !presenter.exportPath().trim()"
-          (click)="presenter.exportSkillCommand.execute()"
-        />
-        <mosaik-button
-          test-id="delete-skill"
-          [label]="'Move to trash'"
-          [appearance]="'plain'"
-          [variant]="'danger'"
-          [disabled]="presenter.store.skillsBusy()"
-          (click)="presenter.deleteSkillCommand.execute()"
-        />
-      </div>
-    </section>
-    }
-  </div>
-</ng-template>
-
-<ng-template mosaikDialogFooter>
-  <div class="flex w-full min-w-0 items-center justify-end gap-1">
-    <mosaik-button
-      test-id="cancel-skill-editor"
-      [label]="'Cancel'"
-      [appearance]="'plain'"
-      (click)="presenter.closeCommand.execute()"
-    />
-    @if (!presenter.canEdit() && presenter.selected) {
-    <mosaik-button
-      test-id="install-open-skill"
-      [label]="'Install shared copy'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      (click)="presenter.installSharedCommand.execute()"
-    />
-    } @else {
-    <mosaik-button
-      test-id="save-skill"
-      [label]="'Save skill'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      [disabled]="presenter.isHydrating() || presenter.store.skillsBusy()"
-      (click)="presenter.saveCommand.execute()"
-    />
-    }
-  </div>
-</ng-template>
+    </div>
+  </ng-template>
+</ng-container>

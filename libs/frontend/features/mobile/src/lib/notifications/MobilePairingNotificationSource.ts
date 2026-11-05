@@ -4,6 +4,7 @@ import { DOCUMENT } from '@angular/common';
 import { computed, DestroyRef, inject, Injectable } from '@angular/core';
 import type { INotificationItem, INotificationSource } from '@symphony/frontend-notification';
 import { MobileAccessStore } from '../state/MobileAccessStore';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -44,13 +45,32 @@ export class MobilePairingNotificationSource implements INotificationSource {
     return status.pendingPairings.map((pairing): INotificationItem => ({
       id: `${ITEM_PREFIX}${pairing.id}`,
       severity: 'info',
-      title: `${pairing.deviceName} asks to pair`,
+      get title() {
+        return translateLabel('loc.symphony.labels.asks.to.pair.e6bc5ce', pairing.deviceName);
+      },
       location: ['Mobile access'],
-      detail: `verification code ${pairing.verificationCode}`,
+      get detail() {
+        return translateLabel(
+          'loc.symphony.labels.verification.code.578f691',
+          pairing.verificationCode,
+        );
+      },
       scope: { kind: 'mac' },
       actions: [
-        { id: 'reject', label: 'Reject', emphasis: 'danger' },
-        { id: 'approve', label: 'Approve', emphasis: 'primary' },
+        {
+          id: 'reject',
+          get label() {
+            return translateLabel('loc.symphony.labels.reject.ab604a3');
+          },
+          emphasis: 'danger',
+        },
+        {
+          id: 'approve',
+          get label() {
+            return translateLabel('loc.symphony.labels.approve.6007acb');
+          },
+          emphasis: 'primary',
+        },
       ],
     }));
   });

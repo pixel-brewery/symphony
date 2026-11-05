@@ -9,6 +9,7 @@ import {
 } from '@symphony/frontend-widget';
 import { CiWidgetSource } from '../widgets/CiWidgetSource';
 import { CiHomeWidgetView } from '../widgets/views/CiHomeWidgetView';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -20,7 +21,9 @@ export function withCiWidgets(): IFeature<WidgetFeatureKind> {
       () => ({
         id: 'actions',
         order: 30,
-        label: 'Actions',
+        get label() {
+          return translateLabel('loc.symphony.labels.actions.ff8059d');
+        },
         testId: 'home-category-actions',
         tilesTestId: 'home-action-widgets',
         empty: 'No workflow run in the selected workspaces yet.',

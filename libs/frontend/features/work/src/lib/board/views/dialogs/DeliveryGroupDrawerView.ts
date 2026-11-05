@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  TranslateDirective,
   BannerComponent,
   BannerHeaderComponent,
   BannerSubHeaderComponent,
@@ -24,6 +25,7 @@ import { DeliveryGroupDrawerViewPresenter } from '../../view-presenters/Delivery
   selector: 'symphony-delivery-group-drawer-view',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     BannerComponent,
     BannerHeaderComponent,
     BannerSubHeaderComponent,

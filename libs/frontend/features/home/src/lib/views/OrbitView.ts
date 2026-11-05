@@ -1,10 +1,14 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {
+  ApplicationDatePipe as DatePipe,
+  ApplicationDecimalPipe as DecimalPipe,
+} from '@symphony/frontend-intl';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
+  TranslateDirective,
   ButtonComponent,
   CardComponent,
   DividerComponent,
@@ -44,6 +48,7 @@ import { OrbitViewPresenter } from '../view-presenters/OrbitViewPresenter';
     '(keydown.escape)': 'presenter.dismissOverlayCommand.execute()',
   },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     CardComponent,
     DatePipe,

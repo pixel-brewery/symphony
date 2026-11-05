@@ -5,7 +5,7 @@ import { skillFlowRoleLabel } from './skillFlowRoleLabel';
 
 // #endregion
 
-@Pipe({ name: 'skillFlowRoleLabel', standalone: true, pure: true })
+@Pipe({ name: 'skillFlowRoleLabel', standalone: true, pure: false })
 export class SkillFlowRoleLabelPipe implements PipeTransform {
   // #region Methods
 

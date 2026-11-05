@@ -2,6 +2,7 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { AgenticSwitch } from '../state/agentic-ladder/AgenticSwitch';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -11,7 +12,7 @@ import type { AgenticSwitch } from '../state/agentic-ladder/AgenticSwitch';
  *
  * @public
  */
-@Pipe({ name: 'agenticSwitchLabel', standalone: true, pure: true })
+@Pipe({ name: 'agenticSwitchLabel', standalone: true, pure: false })
 export class AgenticSwitchLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -24,21 +25,23 @@ export class AgenticSwitchLabelPipe implements PipeTransform {
   public transform(key: AgenticSwitch): string {
     switch (key) {
       case 'enabled':
-        return 'Enable agentic delivery';
+        return translateLabel('loc.symphony.labels.enable.agentic.delivery.ad19238');
       case 'observeFailures':
-        return 'Observe failed actions';
+        return translateLabel('loc.symphony.labels.observe.failed.actions.ef3fad6');
       case 'aiDiagnosisEnabled':
-        return 'Use AI for diagnosis';
+        return translateLabel('loc.symphony.labels.use.ai.for.diagnosis.ded8dd2');
       case 'ciRerunEnabled':
-        return 'Rerun transient and infrastructure failures';
+        return translateLabel(
+          'loc.symphony.labels.rerun.transient.and.infrastructure.failures.3f14e5d',
+        );
       case 'managedBranchUpdatesEnabled':
-        return 'Update managed pull-request branches';
+        return translateLabel('loc.symphony.labels.update.managed.pull.request.branches.41a1168');
       case 'sourceRepairEnabled':
-        return 'Repair source failures';
+        return translateLabel('loc.symphony.labels.repair.source.failures.373d83f');
       case 'workflowRepairEnabled':
-        return 'Repair workflow failures';
+        return translateLabel('loc.symphony.labels.repair.workflow.failures.a265f85');
       case 'replacementPullRequestEnabled':
-        return 'Allow replacement pull requests';
+        return translateLabel('loc.symphony.labels.allow.replacement.pull.requests.ac93083');
     }
   }
 

@@ -1,8 +1,12 @@
 // #region Imports
 
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {
+  ApplicationDatePipe as DatePipe,
+  ApplicationDecimalPipe as DecimalPipe,
+} from '@symphony/frontend-intl';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   ButtonComponent,
   IconNameDirective,
   IconComponent,
@@ -25,6 +29,7 @@ import { PresenterViewPresenter } from '../view-presenters/PresenterViewPresente
   selector: 'symphony-window-status-bar',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     IconNameDirective,
     DatePipe,

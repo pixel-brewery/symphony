@@ -9,6 +9,7 @@ import {
   input,
 } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   MessageComponent,
@@ -41,6 +42,7 @@ import { CiSettingsViewPresenter } from '../CiSettingsViewPresenter';
   selector: 'symphony-workspace-local-ci-card',
   host: { class: 'block' },
   imports: [
+    TranslateDirective,
     AvatarComponent,
     ButtonComponent,
     MessageComponent,

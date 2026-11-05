@@ -1,6 +1,6 @@
 // #region Imports
 
-import { DecimalPipe } from '@angular/common';
+import { ApplicationDecimalPipe as DecimalPipe } from '@symphony/frontend-intl';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
+  TranslateDirective,
   ButtonComponent,
   CardActionsComponent,
   CardComponent,
@@ -56,6 +57,7 @@ const INPUTS: Readonly<Record<string, JungleHuntInput>> = {
   selector: 'symphony-jungle-hunt-view',
   host: { class: 'flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden' },
   imports: [
+    TranslateDirective,
     ButtonComponent,
     CardActionsComponent,
     CardComponent,

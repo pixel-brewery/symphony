@@ -1,155 +1,157 @@
-@let mobileAccess = presenter.mobileAccess();
-<symphony-settings-group
-  test-id="mobile-network-settings-group"
-  [heading]="'Local network access'"
-  [description]="'Choose whether paired phones may reach this Mac on the current private network.'"
->
-  <symphony-settings-row
-    [label]="'Allow mobile access'"
-    [description]="'Make Symphony available only to phones that you pair and approve.'"
+<ng-container *mosaikTranslate="let tr">
+  @let mobileAccess = presenter.mobileAccess();
+  <symphony-settings-group
+    test-id="mobile-network-settings-group"
+    [heading]="tr('loc.symphony.local.network.access.5b7fde')"
+    [description]="tr('loc.symphony.choose.whether.paired.phones.may.reach.this.mac.on.t.4e3668')"
   >
-    @if (mobileAccess) {
-    <mosaik-toggle-switch
-      test-id="mobile-access-toggle"
-      [variant]="'primary'"
-      [isChecked]="presenter.enabled.value()"
-      [disabled]="presenter.store.mobileAccessBusy()"
-      [attr.aria-label]="'Allow mobile access'"
-      (checked)="presenter.toggleMobileAccessCommand.execute(true)"
-      (unchecked)="presenter.toggleMobileAccessCommand.execute(false)"
-    />
-    } @else {
-    <mosaik-skeleton
-      role="status"
-      aria-label="Loading mobile access"
-      [width]="'32px'"
-      [height]="'18px'"
-      [shimmer]="true"
-    />
-    }
-  </symphony-settings-row>
-  <symphony-settings-row
-    test-id="mobile-access-card"
-    [label]="mobileAccess ? (mobileAccess | mobileAccessStatusLabel) : 'Checking mobile access…'"
-    [description]="'Mobile access status'"
-  >
-    <mosaik-dot
-      slot="leading"
-      aria-hidden="true"
-      [size]="'small'"
-      [variant]="mobileAccess?.state === 'available' ? 'success' : mobileAccess?.state === 'unavailable' ? 'warning' : 'neutral'"
-    />
-  </symphony-settings-row>
-</symphony-settings-group>
+    <symphony-settings-row
+      [label]="tr('loc.symphony.allow.mobile.access.80ff9e')"
+      [description]="tr('loc.symphony.make.symphony.available.only.to.phones.that.you.pair.2e75e0')"
+    >
+      @if (mobileAccess) {
+      <mosaik-toggle-switch
+        test-id="mobile-access-toggle"
+        [variant]="'primary'"
+        [isChecked]="presenter.enabled.value()"
+        [disabled]="presenter.store.mobileAccessBusy()"
+        [attr.aria-label]="tr('loc.symphony.allow.mobile.access.80ff9e')"
+        (checked)="presenter.toggleMobileAccessCommand.execute(true)"
+        (unchecked)="presenter.toggleMobileAccessCommand.execute(false)"
+      />
+      } @else {
+      <mosaik-skeleton
+        role="status"
+        [attr.aria-label]="tr('loc.symphony.loading.mobile.access.8b81d0')"
+        [width]="'32px'"
+        [height]="'18px'"
+        [shimmer]="true"
+      />
+      }
+    </symphony-settings-row>
+    <symphony-settings-row
+      test-id="mobile-access-card"
+      [label]="mobileAccess ? (mobileAccess | mobileAccessStatusLabel) : tr('loc.symphony.checking.mobile.access.a7a747')"
+      [description]="tr('loc.symphony.mobile.access.status.209893')"
+    >
+      <mosaik-dot
+        slot="leading"
+        aria-hidden="true"
+        [size]="'small'"
+        [variant]="mobileAccess?.state === 'available' ? 'success' : mobileAccess?.state === 'unavailable' ? 'warning' : 'neutral'"
+      />
+    </symphony-settings-row>
+  </symphony-settings-group>
 
-<mosaik-message
-  test-id="mobile-network-guide"
-  [appearance]="'soft'"
-  [variant]="'info'"
-  [fit]="'width'"
-  [iconName]="'info'"
-  [iconSize]="'small'"
-  [header]="'The Mac remains the task owner'"
-  [content]="'Your phone must use the same Wi-Fi network, and Symphony must remain running on this Mac.'"
-/>
-
-@if (mobileAccess?.state === 'available') {
-<symphony-settings-group
-  test-id="mobile-pairing-settings-group"
-  [heading]="'Pair a phone'"
-  [description]="'Generate a short-lived QR code, then approve the verification request shown here.'"
->
-  <mosaik-button
-    slot="actions"
-    test-id="create-mobile-pairing"
-    [label]="presenter.mobilePairingChallenge() ? 'Generate a new QR code' : 'Pair a phone'"
-    [appearance]="'solid'"
-    [variant]="'primary'"
-    [disabled]="presenter.store.mobileAccessBusy()"
-    (click)="presenter.createMobilePairingCommand.execute()"
+  <mosaik-message
+    test-id="mobile-network-guide"
+    [appearance]="'soft'"
+    [variant]="'info'"
+    [fit]="'width'"
+    [iconName]="'info'"
+    [iconSize]="'small'"
+    [header]="tr('loc.symphony.the.mac.remains.the.task.owner.b4950f')"
+    [content]="tr('loc.symphony.your.phone.must.use.the.same.wi.fi.network.and.symph.d633b6')"
   />
-  @if (presenter.mobilePairingChallenge(); as challenge) {
-  <div test-id="mobile-pairing-code" class="flex min-w-0 items-center gap-3 px-3 py-2.5">
-    <mosaik-qrcode class="flex-none" [text]="challenge.pairingUrl" [dimension]="160" />
-    <div class="flex min-w-0 flex-1 flex-col gap-1">
-      <mosaik-text
-        part="settings-group-heading"
-        [mosaikTypography]="'subtitle2'"
-        [text]="'Scan with your phone'"
-      />
-      <mosaik-text
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [wrap]="true"
-        [text]="'The code expires automatically. If the camera is unavailable, copy the pairing address into your phone browser.'"
-      />
-      <div class="flex min-w-0 flex-col gap-[6px]">
+
+  @if (mobileAccess?.state === 'available') {
+  <symphony-settings-group
+    test-id="mobile-pairing-settings-group"
+    [heading]="tr('loc.symphony.pair.a.phone.31a94a')"
+    [description]="tr('loc.symphony.generate.a.short.lived.qr.code.then.approve.the.veri.9ce1a7')"
+  >
+    <mosaik-button
+      slot="actions"
+      test-id="create-mobile-pairing"
+      [label]="presenter.mobilePairingChallenge() ? tr('loc.symphony.generate.a.new.qr.code.db423d') : tr('loc.symphony.pair.a.phone.31a94a')"
+      [appearance]="'solid'"
+      [variant]="'primary'"
+      [disabled]="presenter.store.mobileAccessBusy()"
+      (click)="presenter.createMobilePairingCommand.execute()"
+    />
+    @if (presenter.mobilePairingChallenge(); as challenge) {
+    <div test-id="mobile-pairing-code" class="flex min-w-0 items-center gap-3 px-3 py-2.5">
+      <mosaik-qrcode class="flex-none" [text]="challenge.pairingUrl" [dimension]="160" />
+      <div class="flex min-w-0 flex-1 flex-col gap-1">
+        <mosaik-text
+          part="settings-group-heading"
+          [mosaikTypography]="'subtitle2'"
+          [text]="tr('loc.symphony.scan.with.your.phone.8e5223')"
+        />
         <mosaik-text
           [mosaikTypography]="'caption'"
           [variant]="'neutral'"
-          [text]="'Pairing address'"
+          [wrap]="true"
+          [text]="tr('loc.symphony.the.code.expires.automatically.if.the.camera.is.unav.cb1b2e')"
         />
-        <mosaik-textbox
-          class="w-full min-w-0"
-          test-id="mobile-pairing-address"
-          [value]="challenge.pairingUrl"
-          [readonly]="true"
-          [appearance]="'outline'"
-          [attr.aria-label]="'Pairing address'"
-        />
+        <div class="flex min-w-0 flex-col gap-[6px]">
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [text]="tr('loc.symphony.pairing.address.538b03')"
+          />
+          <mosaik-textbox
+            class="w-full min-w-0"
+            test-id="mobile-pairing-address"
+            [value]="challenge.pairingUrl"
+            [readonly]="true"
+            [appearance]="'outline'"
+            [attr.aria-label]="tr('loc.symphony.pairing.address.538b03')"
+          />
+        </div>
       </div>
     </div>
-  </div>
-  } @for (pairing of mobileAccess.pendingPairings; track pairing.id) {
-  <symphony-settings-row
-    [attr.test-id]="'mobile-pairing-request-' + pairing.id"
-    [label]="pairing.deviceName"
-    [description]="'Verification code ' + pairing.verificationCode"
+    } @for (pairing of mobileAccess.pendingPairings; track pairing.id) {
+    <symphony-settings-row
+      [attr.test-id]="'mobile-pairing-request-' + pairing.id"
+      [label]="pairing.deviceName"
+      [description]="tr('loc.symphony.verification.code.a367bb', [pairing.verificationCode])"
+    >
+      <mosaik-button
+        [label]="tr('loc.symphony.reject.ab604a')"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        (click)="presenter.decideMobilePairingCommand.execute([pairing.id, false])"
+      />
+      <mosaik-button
+        [label]="tr('loc.symphony.approve.6007ac')"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        (click)="presenter.decideMobilePairingCommand.execute([pairing.id, true])"
+      />
+    </symphony-settings-row>
+    }
+  </symphony-settings-group>
+  } @if ((mobileAccess?.devices?.length ?? 0) > 0) {
+  <symphony-settings-group
+    test-id="paired-phones-settings-group"
+    [heading]="tr('loc.symphony.paired.phones.969733')"
+    [description]="tr('loc.symphony.revoke.a.phone.when.it.should.no.longer.reach.this.s.730674')"
   >
+    @if ((mobileAccess?.devices?.length ?? 0) > 1) {
     <mosaik-button
-      [label]="'Reject'"
+      slot="actions"
+      test-id="revoke-all-mobile-devices"
+      [label]="tr('loc.symphony.revoke.all.phones.7bfa7a')"
       [appearance]="'plain'"
       [variant]="'danger'"
-      (click)="presenter.decideMobilePairingCommand.execute([pairing.id, false])"
+      (click)="presenter.revokeAllMobileDevicesCommand.execute()"
     />
-    <mosaik-button
-      [label]="'Approve'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      (click)="presenter.decideMobilePairingCommand.execute([pairing.id, true])"
-    />
-  </symphony-settings-row>
+    } @for (device of mobileAccess?.devices ?? []; track device.id) {
+    <symphony-settings-row
+      [attr.test-id]="'mobile-device-' + device.id"
+      [label]="device.name"
+      [description]="device.connected ? tr('loc.symphony.connected.229655') : tr('loc.symphony.last.connected.4d28f4', [((device.lastSeenAt ?? device.pairedAt) | date: 'MMM d, h:mm a')])"
+    >
+      <mosaik-button
+        [attr.test-id]="'revoke-mobile-device-' + device.id"
+        [label]="tr('loc.symphony.revoke.87e6d0')"
+        [appearance]="'plain'"
+        [variant]="'danger'"
+        (click)="presenter.revokeMobileDeviceCommand.execute(device.id)"
+      />
+    </symphony-settings-row>
+    }
+  </symphony-settings-group>
   }
-</symphony-settings-group>
-} @if ((mobileAccess?.devices?.length ?? 0) > 0) {
-<symphony-settings-group
-  test-id="paired-phones-settings-group"
-  [heading]="'Paired phones'"
-  [description]="'Revoke a phone when it should no longer reach this Symphony Desktop.'"
->
-  @if ((mobileAccess?.devices?.length ?? 0) > 1) {
-  <mosaik-button
-    slot="actions"
-    test-id="revoke-all-mobile-devices"
-    [label]="'Revoke all phones'"
-    [appearance]="'plain'"
-    [variant]="'danger'"
-    (click)="presenter.revokeAllMobileDevicesCommand.execute()"
-  />
-  } @for (device of mobileAccess?.devices ?? []; track device.id) {
-  <symphony-settings-row
-    [attr.test-id]="'mobile-device-' + device.id"
-    [label]="device.name"
-    [description]="device.connected ? 'Connected' : 'Last connected ' + ((device.lastSeenAt ?? device.pairedAt) | date: 'MMM d, h:mm a')"
-  >
-    <mosaik-button
-      [attr.test-id]="'revoke-mobile-device-' + device.id"
-      [label]="'Revoke'"
-      [appearance]="'plain'"
-      [variant]="'danger'"
-      (click)="presenter.revokeMobileDeviceCommand.execute(device.id)"
-    />
-  </symphony-settings-row>
-  }
-</symphony-settings-group>
-}
+</ng-container>

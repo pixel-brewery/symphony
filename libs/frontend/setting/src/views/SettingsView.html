@@ -1,56 +1,58 @@
-<!-- Settings opens inside the main window. Its navigation replaces the sidebar's destinations
+<ng-container *mosaikTranslate="let tr">
+  <!-- Settings opens inside the main window. Its navigation replaces the sidebar's destinations
      while it is open, and the toolbar shows the section's name, description and actions; the
      toolbar's back navigation leads out of Settings again. -->
-<ng-template symphonyWindowSidebar>
-  <symphony-settings-sidebar-view class="flex min-h-0 flex-1 flex-col" />
-</ng-template>
+  <ng-template symphonyWindowSidebar>
+    <symphony-settings-sidebar-view class="flex min-h-0 flex-1 flex-col" />
+  </ng-template>
 
-<ng-template
-  symphonyWindowToolbar
-  [toolbarTitle]="presenter.searching() ? 'Search settings' : (presenter.selectedSection()?.label ?? 'Settings')"
-  [toolbarSubtitle]="presenter.searching()
-    ? presenter.searchResultCount() + (presenter.searchResultCount() === 1 ? ' result' : ' results') + ' for “' + presenter.searchQuery().trim() + '” across every workspace and this Mac'
+  <ng-template
+    symphonyWindowToolbar
+    [toolbarTitle]="presenter.searching() ? tr('loc.symphony.search.settings.255b07') : (presenter.selectedSection()?.label ?? tr('loc.symphony.settings.74a883'))"
+    [toolbarSubtitle]="presenter.searching()
+    ? tr('loc.symphony.for.across.every.workspace.and.this.mac.566b8f', [presenter.searchResultCount(), (presenter.searchResultCount() === 1 ? tr('loc.symphony.result.f6a214') : tr('loc.symphony.results.c09914')), presenter.searchQuery().trim()])
     : presenter.settingsWorkspace()
       ? presenter.settingsWorkspace()!.displayName + ' · ' + (presenter.selectedSection()?.description ?? '')
       : (presenter.selectedSection()?.description ?? '')"
->
-  @if (!presenter.searching()) {
-  <div test-id="settings-toolbar-actions" class="flex flex-none items-center gap-0.5">
-    <mosaik-view-slot-outlet
-      class="contents"
-      [slot]="headerActionsSlot"
-      [symphonySettingsSelection]="{ workspaceId: presenter.settingsWorkspaceId(), sectionId: presenter.settingsWorkspace() ? presenter.workspaceSettingsSection() : presenter.globalSettingsSection() }"
-    />
-  </div>
-  }
-</ng-template>
-
-<div
-  test-id="settings-view"
-  class="flex min-h-0 w-full min-w-0 flex-1 flex-col"
-  [attr.aria-busy]="presenter.isHydrating()"
->
-  <!-- The 700px column of cards is centred in the content area, so a wide window does not leave
-       all of its space to the right of the cards. -->
-  <div
-    test-id="settings-content"
-    class="mx-auto box-border flex w-full max-w-[700px] min-w-0 flex-col gap-3 px-[36px] pt-3 pb-5"
   >
-    @if (presenter.searching()) {
-    <symphony-settings-search-view />
-    } @else if (presenter.settingsWorkspace()) {
-    <mosaik-view-slot-outlet
-      class="contents"
-      [slot]="workspaceSlot"
-      [symphonySettingsWorkspace]="presenter.settingsWorkspaceId()"
-      [symphonySettingsSection]="presenter.workspaceSettingsSection()"
-    />
-    } @else {
-    <mosaik-view-slot-outlet
-      class="contents"
-      [slot]="globalSlot"
-      [symphonySettingsSelection]="{ workspaceId: null, sectionId: presenter.globalSettingsSection() }"
-    />
+    @if (!presenter.searching()) {
+    <div test-id="settings-toolbar-actions" class="flex flex-none items-center gap-0.5">
+      <mosaik-view-slot-outlet
+        class="contents"
+        [slot]="headerActionsSlot"
+        [symphonySettingsSelection]="{ workspaceId: presenter.settingsWorkspaceId(), sectionId: presenter.settingsWorkspace() ? presenter.workspaceSettingsSection() : presenter.globalSettingsSection() }"
+      />
+    </div>
     }
+  </ng-template>
+
+  <div
+    test-id="settings-view"
+    class="flex min-h-0 w-full min-w-0 flex-1 flex-col"
+    [attr.aria-busy]="presenter.isHydrating()"
+  >
+    <!-- The 700px column of cards is centred in the content area, so a wide window does not leave
+       all of its space to the right of the cards. -->
+    <div
+      test-id="settings-content"
+      class="mx-auto box-border flex w-full max-w-[700px] min-w-0 flex-col gap-3 px-[36px] pt-3 pb-5"
+    >
+      @if (presenter.searching()) {
+      <symphony-settings-search-view />
+      } @else if (presenter.settingsWorkspace()) {
+      <mosaik-view-slot-outlet
+        class="contents"
+        [slot]="workspaceSlot"
+        [symphonySettingsWorkspace]="presenter.settingsWorkspaceId()"
+        [symphonySettingsSection]="presenter.workspaceSettingsSection()"
+      />
+      } @else {
+      <mosaik-view-slot-outlet
+        class="contents"
+        [slot]="globalSlot"
+        [symphonySettingsSelection]="{ workspaceId: null, sectionId: presenter.globalSettingsSection() }"
+      />
+      }
+    </div>
   </div>
-</div>
+</ng-container>

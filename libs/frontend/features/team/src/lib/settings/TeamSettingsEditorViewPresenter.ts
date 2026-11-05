@@ -35,6 +35,7 @@ import { type ITeamSettingsEditorRequest } from './ITeamSettingsEditorRequest';
 import { TEAM_SETTINGS_CONTEXT } from '../ports/TeamSettingsContextToken';
 import { synchronizeWorkspaceTeamConfiguration } from '../configuration/synchronizeWorkspaceTeamConfiguration';
 import { skillFlowRoles as SKILL_FLOW_ROLES } from '@symphony/domain-skills';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -47,18 +48,70 @@ type RouteCostClass = Settings['agentRoutePolicies'][number]['candidates'][numbe
  * shows the name alone, like every other provider's model list.
  */
 const CLAUDE_MODEL_CHOICES: readonly IAiChoice[] = [
-  { id: 'fable', label: 'Fable' },
-  { id: 'opus', label: 'Opus' },
-  { id: 'sonnet', label: 'Sonnet' },
-  { id: 'haiku', label: 'Haiku' },
+  {
+    id: 'fable',
+    get label() {
+      return translateLabel('loc.symphony.labels.fable.6489664');
+    },
+  },
+  {
+    id: 'opus',
+    get label() {
+      return translateLabel('loc.symphony.labels.opus.adc96e3');
+    },
+  },
+  {
+    id: 'sonnet',
+    get label() {
+      return translateLabel('loc.symphony.labels.sonnet.9064aab');
+    },
+  },
+  {
+    id: 'haiku',
+    get label() {
+      return translateLabel('loc.symphony.labels.haiku.15e21d2');
+    },
+  },
 ];
 
 /** Effort ladder shared by Claude Code (`--effort`) and OpenCode (`--variant`). */
 const STATIC_EFFORT_CHOICES: readonly IAiChoice[] = [
-  { id: 'low', label: 'Low', description: 'Fast answers, little deliberation' },
-  { id: 'medium', label: 'Medium', description: 'Balanced speed and depth' },
-  { id: 'high', label: 'High', description: 'Thorough reasoning for hard problems' },
-  { id: 'max', label: 'Max', description: 'Maximum reasoning budget' },
+  {
+    id: 'low',
+    get label() {
+      return translateLabel('loc.symphony.labels.low.f793de2');
+    },
+    get description() {
+      return translateLabel('loc.symphony.labels.fast.answers.little.deliberation.f07f049');
+    },
+  },
+  {
+    id: 'medium',
+    get label() {
+      return translateLabel('loc.symphony.labels.medium.8e588cd');
+    },
+    get description() {
+      return translateLabel('loc.symphony.labels.balanced.speed.and.depth.dd0df66');
+    },
+  },
+  {
+    id: 'high',
+    get label() {
+      return translateLabel('loc.symphony.labels.high.c4ebc6d');
+    },
+    get description() {
+      return translateLabel('loc.symphony.labels.thorough.reasoning.for.hard.problems.e5c1098');
+    },
+  },
+  {
+    id: 'max',
+    get label() {
+      return translateLabel('loc.symphony.labels.max.a1a5936');
+    },
+    get description() {
+      return translateLabel('loc.symphony.labels.maximum.reasoning.budget.0767e23');
+    },
+  },
 ];
 
 type SkillFlowRole = Settings['positions'][number]['allowedRoles'][number];
@@ -1423,11 +1476,16 @@ export class TeamSettingsEditorViewPresenter extends Hydratable(ViewPresenter) {
     void this._alerts
       .confirm({
         id: `install-agent-runtime-${runtime}`,
-        header: `Install ${label} CLI?`,
-        message: `Homebrew will download and install ${label} CLI on this Mac. Symphony verifies the command before enabling it for agents.`,
+        header: translateLabel('loc.symphony.labels.install.cli.3522956', label),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.homebrew.will.download.and.install.cli.on.this.mac.s.ccc5d72',
+            label,
+          );
+        },
         tone: 'warning',
-        confirmLabel: 'Install with Homebrew',
-        cancelLabel: 'Cancel',
+        confirmLabel: translateLabel('loc.symphony.labels.install.with.homebrew.7affa76'),
+        cancelLabel: translateLabel('loc.symphony.labels.cancel.19766ed'),
       })
       .then((confirmed) => {
         if (confirmed) void this.installAiRuntime(runtime);

@@ -8,4 +8,5 @@ export * from './presentation/Hydratable';
 export * from './navigation/NavigationRegistry';
 export * from './presentation/ViewPresenterToken';
 export * from './navigation/provideNavigationItems';
+export { browserStorage } from './storage/browserStorage';
 export * from './presentation/IHydratablePresenter';

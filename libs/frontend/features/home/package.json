@@ -29,6 +29,7 @@
     "@symphony/domain-workflow": "workspace:*",
     "@symphony/domain-workspace": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
+    "@symphony/frontend-intl": "workspace:*",
     "@symphony/frontend-notification": "workspace:*",
     "@symphony/frontend-search": "workspace:*",
     "@symphony/frontend-ui": "workspace:*",

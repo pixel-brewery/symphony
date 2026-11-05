@@ -1,5 +1,7 @@
 // eslint.config.mjs
 import js from '@eslint/js';
+import json from '@eslint/json';
+import { createResourcesConfig } from '@pixel-brewery/wortlaut-eslint-rules';
 import nx from '@nx/eslint-plugin';
 import tseslint from 'typescript-eslint';
 
@@ -17,8 +19,22 @@ export default [
       '**/vitest.config.*.timestamp*',
     ],
   },
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
+  { ...js.configs.recommended, files: ['**/*.{js,cjs,mjs,ts,tsx}'] },
+  ...tseslint.configs.recommended.map((config) => ({
+    ...config,
+    files: config.files ?? ['**/*.{js,cjs,mjs,ts,tsx}'],
+  })),
+  {
+    files: ['libs/frontend/intl/src/lib/**/*.json', 'apps/desktop/src/intl/resources/*.json'],
+    plugins: { json },
+    language: 'json/json',
+    rules: json.configs.recommended.rules,
+  },
+  ...createResourcesConfig({
+    files: ['libs/frontend/intl/src/lib/**/*.json', 'apps/desktop/src/intl/resources/*.json'],
+    severity: 'error',
+    missingTranslations: false,
+  }),
   {
     files: ['**/*.ts', '**/*.mjs'],
     plugins: { '@nx': nx },
@@ -73,6 +89,10 @@ export default [
                 'scope:frontend-feature',
                 'scope:shared',
               ],
+            },
+            {
+              allSourceTags: ['scope:frontend', 'type:intl'],
+              onlyDependOnLibsWithTags: ['scope:shared'],
             },
             ...[
               'core',

@@ -1,7 +1,11 @@
 // #region Imports
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AvatarComponent, ButtonComponent } from '@pixel-brewery/mosaik-elements-angular';
+import {
+  TranslateDirective,
+  AvatarComponent,
+  ButtonComponent,
+} from '@pixel-brewery/mosaik-elements-angular';
 import { SettingsGroupComponent, SettingsRowComponent } from '@symphony/frontend-setting';
 import { FeedbackSettingsViewPresenter } from './FeedbackSettingsViewPresenter';
 
@@ -11,7 +15,13 @@ import { FeedbackSettingsViewPresenter } from './FeedbackSettingsViewPresenter';
 @Component({
   selector: 'symphony-feedback-settings-view',
   host: { class: 'contents' },
-  imports: [AvatarComponent, ButtonComponent, SettingsGroupComponent, SettingsRowComponent],
+  imports: [
+    TranslateDirective,
+    AvatarComponent,
+    ButtonComponent,
+    SettingsGroupComponent,
+    SettingsRowComponent,
+  ],
   providers: [FeedbackSettingsViewPresenter],
   templateUrl: './FeedbackSettingsView.html',
   styleUrl: './FeedbackSettingsView.scss',

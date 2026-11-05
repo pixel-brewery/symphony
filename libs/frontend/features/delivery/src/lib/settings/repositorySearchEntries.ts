@@ -3,6 +3,7 @@
 import { computed, inject, type Signal } from '@angular/core';
 import type { ISettingsSearchEntry } from '@symphony/frontend-setting';
 import { DELIVERY_SETTINGS_CONTEXT } from '../ports/DeliverySettingsContextToken';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -20,7 +21,9 @@ export function repositorySearchEntries(): Signal<readonly ISettingsSearchEntry[
       id: `repository-${repository.id}`,
       label: repository.displayName,
       description: `${repository.owner}/${repository.name}`,
-      group: 'Repositories',
+      get group() {
+        return translateLabel('loc.symphony.labels.repositories.1e32af8');
+      },
       keywords: ['repository', repository.host, repository.defaultBranch],
       ...(repository.enabled ? {} : { value: 'Disabled' }),
       workspaceId: repository.workspaceId,

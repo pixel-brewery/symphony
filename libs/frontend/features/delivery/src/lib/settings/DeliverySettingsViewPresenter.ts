@@ -17,6 +17,7 @@ import { DELIVERY_SETTINGS_CONFIGURATION } from '../ports/DeliverySettingsConfig
 import { DELIVERY_REPOSITORY_RUNTIME } from '../ports/DeliveryRepositoryRuntimeToken';
 import { deliverySettingsDraftFor } from './deliverySettingsDraftFor';
 import { repositoryRemovalBlockers, withoutRepository } from './repository-removal';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -102,12 +103,15 @@ export class DeliverySettingsViewPresenter extends Hydratable(ViewPresenter) {
     void this._alerts
       .confirm({
         id: `remove-delivery-target-${targetId}`,
-        header: `Remove ${target.displayName}?`,
-        message:
-          'This removes the destination configuration from Symphony. Deployment history and the deployed application are kept.',
+        header: translateLabel('loc.symphony.labels.remove.9d64ce8', target.displayName),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.this.removes.the.destination.configuration.from.symp.513d374',
+          );
+        },
         tone: 'danger',
-        confirmLabel: 'Remove destination',
-        cancelLabel: 'Keep destination',
+        confirmLabel: translateLabel('loc.symphony.labels.remove.destination.bdaef27'),
+        cancelLabel: translateLabel('loc.symphony.labels.keep.destination.4683038'),
         destructive: true,
       })
       .then((confirmed) => {
@@ -293,22 +297,35 @@ export class DeliverySettingsViewPresenter extends Hydratable(ViewPresenter) {
     if (blockers.length) {
       void this._alerts.confirm({
         id: `remove-repository-blocked-${repository.id}`,
-        header: 'This repository is still in use',
-        message: `${blockers.join(', ')} ${blockers.length === 1 ? 'uses' : 'use'} only this repository. Add another repository there first, then remove it.`,
+        header: translateLabel('loc.symphony.labels.this.repository.is.still.in.use.7390f4c'),
+        get message() {
+          return blockers.length === 1
+            ? translateLabel(
+                'loc.symphony.labels.uses.only.this.repository.add.another.repository.the.b33eeda',
+                blockers.join(', '),
+              )
+            : translateLabel(
+                'loc.symphony.labels.use.only.this.repository.add.another.repository.ther.60ba295',
+                blockers.join(', '),
+              );
+        },
         tone: 'warning',
-        confirmLabel: 'OK',
+        confirmLabel: translateLabel('loc.symphony.labels.ok.565339b'),
       });
       return;
     }
     void this._alerts
       .confirm({
         id: `remove-repository-${repository.id}`,
-        header: `Remove ${repository.displayName}?`,
-        message:
-          'Symphony drops the repository from this workspace and forgets its local path. Your checkout and its Git history stay untouched on disk.',
+        header: translateLabel('loc.symphony.labels.remove.9d64ce8', repository.displayName),
+        get message() {
+          return translateLabel(
+            'loc.symphony.labels.symphony.drops.the.repository.from.this.workspace.an.c3634e3',
+          );
+        },
         tone: 'danger',
-        confirmLabel: 'Remove repository',
-        cancelLabel: 'Keep repository',
+        confirmLabel: translateLabel('loc.symphony.labels.remove.repository.c6d5a90'),
+        cancelLabel: translateLabel('loc.symphony.labels.keep.repository.75f9955'),
         destructive: true,
       })
       .then((confirmed) => {

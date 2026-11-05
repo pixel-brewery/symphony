@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import {
+  TranslateDirective,
   AvatarComponent,
   ButtonComponent,
   IconNameDirective,
@@ -27,6 +28,7 @@ import { LocalCiPresetDetailsPipe } from '../pipes/LocalCiPresetDetailsPipe';
 import { LocalCiPresetOptionLabelPipe } from '../pipes/LocalCiPresetOptionLabelPipe';
 import { CiSettingsViewPresenter } from '../CiSettingsViewPresenter';
 import { VirtualMachinesCardViewPresenter } from '../VirtualMachinesCardViewPresenter';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -38,6 +40,7 @@ import { VirtualMachinesCardViewPresenter } from '../VirtualMachinesCardViewPres
   selector: 'symphony-virtual-machines-card',
   host: { class: 'flex min-w-0 flex-col gap-2' },
   imports: [
+    TranslateDirective,
     AvatarComponent,
     ButtonComponent,
     IconNameDirective,
@@ -96,12 +99,30 @@ export class VirtualMachinesCardView extends View<VirtualMachinesCardViewPresent
     {
       key: 'memoryGiB',
       testId: 'memory',
-      label: 'Memory',
+      get label() {
+        return translateLabel('loc.symphony.labels.memory.c3963ae');
+      },
       unit: ' GB',
       minimum: localCiResourceMinimums.memoryGiB,
     },
-    { key: 'diskGiB', testId: 'disk', label: 'Virtual disk', unit: ' GB', minimum: 8 },
-    { key: 'cacheGiB', testId: 'cache', label: 'Shared cache', unit: ' GB', minimum: 1 },
+    {
+      key: 'diskGiB',
+      testId: 'disk',
+      get label() {
+        return translateLabel('loc.symphony.labels.virtual.disk.97962ea');
+      },
+      unit: ' GB',
+      minimum: 8,
+    },
+    {
+      key: 'cacheGiB',
+      testId: 'cache',
+      get label() {
+        return translateLabel('loc.symphony.labels.shared.cache.2822f85');
+      },
+      unit: ' GB',
+      minimum: 1,
+    },
   ];
 
   // #endregion

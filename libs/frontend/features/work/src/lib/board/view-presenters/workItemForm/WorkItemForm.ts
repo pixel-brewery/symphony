@@ -14,6 +14,7 @@ import { WORK_TASK_CONTEXT } from '../../../ports/WorkTaskContextToken';
 import { WorkStore } from '../../../state/WorkStore';
 import type { IWorkItemFormModel } from './IWorkItemFormModel';
 import { readEventValue } from './readEventValue';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -87,8 +88,16 @@ export class WorkItemForm {
     this._work = work;
     this._context = context;
     this._form = form(this._model, (schema) => {
-      required(schema.title, { message: 'Enter a work-item title.' });
-      required(schema.repository, { message: 'Choose a repository.' });
+      required(schema.title, {
+        get message() {
+          return translateLabel('loc.symphony.labels.enter.a.work.item.title.02dee47');
+        },
+      });
+      required(schema.repository, {
+        get message() {
+          return translateLabel('loc.symphony.labels.choose.a.repository.42fb4fb');
+        },
+      });
     });
     this._projectFields = computed(() => this._work.workItemMetadata()?.projectFields ?? []);
     this._workflowStateField = computed(() =>

@@ -1,74 +1,76 @@
-<mosaik-text
-  test-id="settings-search-hint"
-  [mosaikTypography]="'caption'"
-  [variant]="'neutral'"
-  [wrap]="true"
-  [text]="'Search covers labels, help texts and values. A result changes the setting in place; its breadcrumb opens the section it lives in.'"
-/>
-@for (group of presenter.searchGroups(); track group.key) {
-<section
-  class="flex min-w-0 flex-col gap-1"
-  [attr.test-id]="'settings-search-group-' + $index"
-  [attr.aria-label]="group.breadcrumb.join(' › ')"
->
-  <div class="flex min-w-0">
-    <mosaik-button
-      part="settings-search-breadcrumb"
-      [attr.test-id]="'settings-search-breadcrumb-' + $index"
-      [label]="group.breadcrumb.join(' › ')"
-      [appearance]="'plain'"
-      [mosaikTooltip]="'Open section'"
-      (click)="presenter.openSearchResultCommand.execute(group.results[0]!)"
-    />
-  </div>
-  <div part="settings-group-rows" class="flex min-w-0 flex-col">
-    @for (result of group.results; track result.key) {
-    <symphony-settings-row
-      [attr.test-id]="'settings-search-result-' + result.key"
-      [label]="result.entry.label"
-      [description]="result.entry.description ?? ''"
-      [labelParts]="result.entry.label | settingsSearchHighlight: presenter.searchQuery()"
-    >
-      @if (result.entry.loadControl) {
-      <symphony-settings-search-control [result]="result" />
-      } @else { @if (result.entry.value) {
-      <mosaik-text
-        [attr.test-id]="'settings-search-value-' + result.key"
-        [mosaikTypography]="'caption'"
-        [variant]="'neutral'"
-        [text]="result.entry.value"
-      />
-      }
+<ng-container *mosaikTranslate="let tr">
+  <mosaik-text
+    test-id="settings-search-hint"
+    [mosaikTypography]="'caption'"
+    [variant]="'neutral'"
+    [wrap]="true"
+    [text]="tr('loc.symphony.search.covers.labels.help.texts.and.values.a.result.ba8183')"
+  />
+  @for (group of presenter.searchGroups(); track group.key) {
+  <section
+    class="flex min-w-0 flex-col gap-1"
+    [attr.test-id]="'settings-search-group-' + $index"
+    [attr.aria-label]="group.breadcrumb.join(' › ')"
+  >
+    <div class="flex min-w-0">
       <mosaik-button
-        [attr.test-id]="'settings-search-open-' + result.key"
-        [label]="'Open'"
-        [iconName]="'chevronRight'"
-        [iconSize]="'small'"
-        [iconPosition]="'after'"
+        part="settings-search-breadcrumb"
+        [attr.test-id]="'settings-search-breadcrumb-' + $index"
+        [label]="group.breadcrumb.join(' › ')"
         [appearance]="'plain'"
-        [attr.aria-label]="'Open ' + result.entry.label"
-        (click)="presenter.openSearchResultCommand.execute(result)"
+        [mosaikTooltip]="tr('loc.symphony.open.section.14b40e')"
+        (click)="presenter.openSearchResultCommand.execute(group.results[0]!)"
       />
+    </div>
+    <div part="settings-group-rows" class="flex min-w-0 flex-col">
+      @for (result of group.results; track result.key) {
+      <symphony-settings-row
+        [attr.test-id]="'settings-search-result-' + result.key"
+        [label]="result.entry.label"
+        [description]="result.entry.description ?? ''"
+        [labelParts]="result.entry.label | settingsSearchHighlight: presenter.searchQuery()"
+      >
+        @if (result.entry.loadControl) {
+        <symphony-settings-search-control [result]="result" />
+        } @else { @if (result.entry.value) {
+        <mosaik-text
+          [attr.test-id]="'settings-search-value-' + result.key"
+          [mosaikTypography]="'caption'"
+          [variant]="'neutral'"
+          [text]="result.entry.value"
+        />
+        }
+        <mosaik-button
+          [attr.test-id]="'settings-search-open-' + result.key"
+          [label]="tr('loc.symphony.open.ed077f')"
+          [iconName]="'chevronRight'"
+          [iconSize]="'small'"
+          [iconPosition]="'after'"
+          [appearance]="'plain'"
+          [attr.aria-label]="tr('loc.symphony.open.e71b40', [result.entry.label])"
+          (click)="presenter.openSearchResultCommand.execute(result)"
+        />
+        }
+      </symphony-settings-row>
       }
-    </symphony-settings-row>
-    }
-  </div>
-</section>
-} @empty {
-<symphony-settings-conditional [condition]="'Without results'" test-id="settings-search-empty">
-  <div part="settings-group-rows" class="flex min-w-0 flex-col">
-    <symphony-settings-row
-      [label]="'No setting matches “' + presenter.searchQuery().trim() + '”'"
-      [description]="'Try another word.'"
-    >
-      <mosaik-icon
-        slot="leading"
-        aria-hidden="true"
-        [iconName]="'search'"
-        [size]="'small'"
-        [variant]="'neutral'"
-      />
-    </symphony-settings-row>
-  </div>
-</symphony-settings-conditional>
-}
+    </div>
+  </section>
+  } @empty {
+  <symphony-settings-conditional [condition]="'Without results'" test-id="settings-search-empty">
+    <div part="settings-group-rows" class="flex min-w-0 flex-col">
+      <symphony-settings-row
+        [label]="tr('loc.symphony.no.setting.matches.901162', [presenter.searchQuery().trim()])"
+        [description]="tr('loc.symphony.try.another.word.8d9d7c')"
+      >
+        <mosaik-icon
+          slot="leading"
+          aria-hidden="true"
+          [iconName]="'search'"
+          [size]="'small'"
+          [variant]="'neutral'"
+        />
+      </symphony-settings-row>
+    </div>
+  </symphony-settings-conditional>
+  }
+</ng-container>

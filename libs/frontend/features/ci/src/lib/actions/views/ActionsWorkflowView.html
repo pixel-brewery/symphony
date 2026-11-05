@@ -1,607 +1,620 @@
-@if (presenter.selectedWorkflow(); as workflow) {
-<header
-  class="flex min-w-0 flex-none flex-wrap items-center gap-1"
-  test-id="actions-workflow-header"
->
-  <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-    <mosaik-text
-      test-id="actions-workflow-title"
-      [mosaikTypography]="'headline5'"
-      [truncate]="true"
-      [text]="workflow.name"
-    />
-    <mosaik-text
-      part="actions-technical"
-      class="technical-value"
-      test-id="actions-workflow-path"
-      [variant]="'neutral'"
-      [truncate]="true"
-      [text]="workflow.path"
-    />
-  </div>
-  @if (workflow.supportsManualDispatch && workflow.state === 'active') {
-  <div class="flex flex-none items-center gap-1" test-id="workflow-dispatch-available">
-    <mosaik-button
-      [attr.test-id]="'workflow-dispatch-local-' + workflow.id"
-      [label]="'Run locally'"
-      [iconName]="'play'"
-      [iconSize]="'small'"
-      [appearance]="'outline'"
-      [isBusy]="presenter.localWorkflowDispatchBusy()(workflow)"
-      [disabled]="!presenter.localCiEnabled()(workflow) || presenter.localRunnerBusy()"
-      [mosaikTooltip]="!presenter.localCiEnabled()(workflow)
-        ? 'Enable local GitHub Actions for this workspace in Settings'
+<ng-container *mosaikTranslate="let tr">
+  @if (presenter.selectedWorkflow(); as workflow) {
+  <header
+    class="flex min-w-0 flex-none flex-wrap items-center gap-1"
+    test-id="actions-workflow-header"
+  >
+    <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+      <mosaik-text
+        test-id="actions-workflow-title"
+        [mosaikTypography]="'headline5'"
+        [truncate]="true"
+        [text]="workflow.name"
+      />
+      <mosaik-text
+        part="actions-technical"
+        class="technical-value"
+        test-id="actions-workflow-path"
+        [variant]="'neutral'"
+        [truncate]="true"
+        [text]="workflow.path"
+      />
+    </div>
+    @if (workflow.supportsManualDispatch && workflow.state === 'active') {
+    <div class="flex flex-none items-center gap-1" test-id="workflow-dispatch-available">
+      <mosaik-button
+        [attr.test-id]="'workflow-dispatch-local-' + workflow.id"
+        [label]="tr('loc.symphony.run.locally.a28ec8')"
+        [iconName]="'play'"
+        [iconSize]="'small'"
+        [appearance]="'outline'"
+        [isBusy]="presenter.localWorkflowDispatchBusy()(workflow)"
+        [disabled]="!presenter.localCiEnabled()(workflow) || presenter.localRunnerBusy()"
+        [mosaikTooltip]="!presenter.localCiEnabled()(workflow)
+        ? tr('loc.symphony.enable.local.github.actions.for.this.workspace.in.se.fb5801')
         : presenter.localRunnerBusy() && !presenter.localWorkflowDispatchBusy()(workflow)
-          ? 'Another local Action is using the single managed runner'
-          : 'Run on the managed local Linux VM'"
-      (click)="presenter.dispatchWorkflowLocallyCommand.execute(workflow)"
-    />
-    <mosaik-button
-      [attr.test-id]="'workflow-dispatch-remote-' + workflow.id"
-      [label]="'Run on GitHub'"
-      [iconName]="'github'"
-      [iconSize]="'small'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      [isBusy]="presenter.dispatchingWorkflowId() === workflow.id"
-      [disabled]="!!presenter.dispatchingWorkflowId()"
-      (click)="presenter.dispatchWorkflowCommand.execute(workflow)"
-    />
-  </div>
-  }
-</header>
-
-@if (presenter.dispatchProposal()?.id === workflow.id && presenter.dispatchProposal(); as proposal)
-{
-<section
-  part="actions-frame"
-  class="flex max-h-[45%] min-h-0 min-w-0 flex-none flex-col gap-1.5 overflow-y-auto overscroll-contain p-2"
-  test-id="workflow-dispatch-proposal"
-  aria-label="Run on GitHub"
->
-  <div class="flex min-w-0 flex-col gap-[2px]">
-    <mosaik-text
-      part="actions-section-heading"
-      [mosaikTypography]="'subtitle2'"
-      [text]="'Run ' + proposal.name + ' on GitHub'"
-    />
-    <mosaik-text
-      [mosaikTypography]="'caption'"
-      [variant]="'neutral'"
-      [text]="'Choose the branch or revision and the workflow inputs.'"
-    />
-  </div>
-  <mosaik-textbox
-    test-id="workflow-dispatch-ref"
-    [label]="'Revision or branch'"
-    [ngModel]="presenter.dispatchRef()"
-    (ngModelChange)="presenter.dispatchRef.set($event)"
-  />
-  @for (input of proposal.inputs ?? []; track input.id) { @if (input.type === 'choice' || input.type
-  === 'boolean') {
-  <mosaik-select
-    [label]="input.description || input.id"
-    [ngModel]="presenter.dispatchInputs()[input.id] ?? input.defaultValue ?? ''"
-    (ngModelChange)="presenter.updateDispatchInputCommand.execute([input.id, $event])"
-  >
-    @for (value of input.type === 'boolean' ? ['true', 'false'] : input.options; track value) {
-    <mosaik-select-item [value]="value" [label]="value" />
+          ? tr('loc.symphony.another.local.action.is.using.the.single.managed.run.c4a008')
+          : tr('loc.symphony.run.on.the.managed.local.linux.vm.3e2ff9')"
+        (click)="presenter.dispatchWorkflowLocallyCommand.execute(workflow)"
+      />
+      <mosaik-button
+        [attr.test-id]="'workflow-dispatch-remote-' + workflow.id"
+        [label]="tr('loc.symphony.run.on.github.c0b37d')"
+        [iconName]="'github'"
+        [iconSize]="'small'"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="presenter.dispatchingWorkflowId() === workflow.id"
+        [disabled]="!!presenter.dispatchingWorkflowId()"
+        (click)="presenter.dispatchWorkflowCommand.execute(workflow)"
+      />
+    </div>
     }
-  </mosaik-select>
-  } @else {
-  <mosaik-textbox
-    [attr.test-id]="'workflow-input-' + input.id"
-    [label]="input.description || input.id"
-    [required]="input.required"
-    [ngModel]="presenter.dispatchInputs()[input.id] ?? ''"
-    (ngModelChange)="presenter.updateDispatchInputCommand.execute([input.id, $event])"
-  />
-  } }
-  <div class="flex items-center justify-end gap-1">
-    <mosaik-button
-      test-id="workflow-dispatch-cancel"
-      [label]="'Cancel'"
-      [appearance]="'plain'"
-      (click)="presenter.cancelDispatchCommand.execute()"
-    />
-    <mosaik-button
-      test-id="workflow-dispatch-confirm"
-      [label]="'Start workflow'"
-      [appearance]="'solid'"
-      [variant]="'primary'"
-      [isBusy]="!!presenter.dispatchingWorkflowId()"
-      [disabled]="!!presenter.dispatchingWorkflowId() || !presenter.dispatchRef().trim()"
-      (click)="presenter.confirmDispatchCommand.execute()"
-    />
-  </div>
-</section>
-}
+  </header>
 
-<div
-  class="grid min-h-0 min-w-0 flex-1 grid-rows-2 gap-2.5 overflow-clip"
-  test-id="actions-workflow-panes"
->
-  <div
+  @if (presenter.dispatchProposal()?.id === workflow.id && presenter.dispatchProposal(); as
+  proposal) {
+  <section
     part="actions-frame"
-    class="flex min-h-0 min-w-0 flex-col overflow-clip px-1 py-0.5"
-    test-id="actions-workflow-runs"
+    class="flex max-h-[45%] min-h-0 min-w-0 flex-none flex-col gap-1.5 overflow-y-auto overscroll-contain p-2"
+    test-id="workflow-dispatch-proposal"
+    [attr.aria-label]="tr('loc.symphony.run.on.github.c0b37d')"
   >
-    @if (presenter.workflowRuns().length) {
-    <mosaik-table
-      class="min-h-0 min-w-0 flex-1"
-      test-id="actions-workflow-table"
-      aria-label="Workflow runs"
-      [appearance]="'plain'"
-      [columns]="'110px minmax(180px, 1fr) 120px 90px 120px'"
+    <div class="flex min-w-0 flex-col gap-[2px]">
+      <mosaik-text
+        part="actions-section-heading"
+        [mosaikTypography]="'subtitle2'"
+        [text]="tr('loc.symphony.run.on.github.0314c3', [proposal.name])"
+      />
+      <mosaik-text
+        [mosaikTypography]="'caption'"
+        [variant]="'neutral'"
+        [text]="tr('loc.symphony.choose.the.branch.or.revision.and.the.workflow.input.9f8aaa')"
+      />
+    </div>
+    <mosaik-textbox
+      test-id="workflow-dispatch-ref"
+      [label]="tr('loc.symphony.revision.or.branch.b70a4b')"
+      [ngModel]="presenter.dispatchRef()"
+      (ngModelChange)="presenter.dispatchRef.set($event)"
+    />
+    @for (input of proposal.inputs ?? []; track input.id) { @if (input.type === 'choice' ||
+    input.type === 'boolean') {
+    <mosaik-select
+      [label]="input.description || input.id"
+      [ngModel]="presenter.dispatchInputs()[input.id] ?? input.defaultValue ?? ''"
+      (ngModelChange)="presenter.updateDispatchInputCommand.execute([input.id, $event])"
     >
-      <mosaik-table-header test-id="actions-workflow-table-header">
-        <mosaik-table-header-row>
-          <mosaik-table-header-cell [text]="'Result'" />
-          <mosaik-table-header-cell
-            test-id="actions-workflow-revision-heading"
-            [text]="'Revision'"
+      @for (value of input.type === 'boolean' ? ['true', 'false'] : input.options; track value) {
+      <mosaik-select-item [value]="value" [label]="value" />
+      }
+    </mosaik-select>
+    } @else {
+    <mosaik-textbox
+      [attr.test-id]="'workflow-input-' + input.id"
+      [label]="input.description || input.id"
+      [required]="input.required"
+      [ngModel]="presenter.dispatchInputs()[input.id] ?? ''"
+      (ngModelChange)="presenter.updateDispatchInputCommand.execute([input.id, $event])"
+    />
+    } }
+    <div class="flex items-center justify-end gap-1">
+      <mosaik-button
+        test-id="workflow-dispatch-cancel"
+        [label]="tr('loc.symphony.cancel.19766e')"
+        [appearance]="'plain'"
+        (click)="presenter.cancelDispatchCommand.execute()"
+      />
+      <mosaik-button
+        test-id="workflow-dispatch-confirm"
+        [label]="tr('loc.symphony.start.workflow.4a1907')"
+        [appearance]="'solid'"
+        [variant]="'primary'"
+        [isBusy]="!!presenter.dispatchingWorkflowId()"
+        [disabled]="!!presenter.dispatchingWorkflowId() || !presenter.dispatchRef().trim()"
+        (click)="presenter.confirmDispatchCommand.execute()"
+      />
+    </div>
+  </section>
+  }
+
+  <div
+    class="grid min-h-0 min-w-0 flex-1 grid-rows-2 gap-2.5 overflow-clip"
+    test-id="actions-workflow-panes"
+  >
+    <div
+      part="actions-frame"
+      class="flex min-h-0 min-w-0 flex-col overflow-clip px-1 py-0.5"
+      test-id="actions-workflow-runs"
+    >
+      @if (presenter.workflowRuns().length) {
+      <mosaik-table
+        class="min-h-0 min-w-0 flex-1"
+        test-id="actions-workflow-table"
+        [attr.aria-label]="tr('loc.symphony.workflow.runs.c454be')"
+        [appearance]="'plain'"
+        [columns]="'110px minmax(180px, 1fr) 120px 90px 120px'"
+      >
+        <mosaik-table-header test-id="actions-workflow-table-header">
+          <mosaik-table-header-row>
+            <mosaik-table-header-cell [text]="tr('loc.symphony.result.6e7d50')" />
+            <mosaik-table-header-cell
+              test-id="actions-workflow-revision-heading"
+              [text]="tr('loc.symphony.revision.2e516d')"
+            />
+            <mosaik-table-header-cell [text]="tr('loc.symphony.runner.2184a4')" />
+            <mosaik-table-header-cell [text]="tr('loc.symphony.duration.4fc52a')" />
+            <mosaik-table-header-cell [text]="tr('loc.symphony.started.ecbc89')" />
+          </mosaik-table-header-row>
+        </mosaik-table-header>
+        <mosaik-table-body>
+          @for (row of presenter.workflowRuns(); track row.id) {
+          <mosaik-table-body-row
+            part="actions-run-row"
+            tabindex="0"
+            [attr.test-id]="'action-run-' + row.id"
+            [attr.aria-selected]="presenter.selectedRun()?.id === row.id"
+            [isSelected]="presenter.selectedRun()?.id === row.id"
+            (click)="presenter.selectRunCommand.execute(row)"
+            (keydown.enter)="presenter.selectRunCommand.execute(row)"
+          >
+            <mosaik-table-body-cell>
+              @if (row.status === 'in-progress') {
+              <span class="flex items-center gap-1">
+                <mosaik-progress-ring
+                  role="img"
+                  [attr.aria-label]="tr('loc.symphony.running.f4ccae')"
+                  [isIndeterminate]="true"
+                  [variant]="'primary'"
+                  [radius]="8"
+                  [thickness]="2"
+                />
+                <mosaik-text
+                  [mosaikTypography]="'caption'"
+                  [text]="tr('loc.symphony.running.f4ccae')"
+                />
+              </span>
+              } @else {
+              <mosaik-badge
+                [label]="(row.status | actionRunBadge).label"
+                [variant]="(row.status | actionRunBadge).variant"
+                [appearance]="(row.status | actionRunBadge).appearance"
+              />
+              }
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell>
+              <mosaik-text
+                part="actions-technical"
+                class="technical-value min-w-0"
+                [attr.test-id]="'action-run-branch-' + row.id"
+                [truncate]="true"
+                [text]="row | actionRunRevision"
+              />
+            </mosaik-table-body-cell>
+            <mosaik-table-body-cell [text]="row.runner | actionRunnerLabel" />
+            <mosaik-table-body-cell
+              [text]="(row.startedAt | actionRunDuration: row.finishedAt) || '—'"
+            />
+            <mosaik-table-body-cell
+              [text]="(row.startedAt ?? row.finishedAt) | actionRunStarted: presenter.now()"
+            />
+          </mosaik-table-body-row>
+          }
+        </mosaik-table-body>
+      </mosaik-table>
+      } @else {
+      <mosaik-empty-state
+        test-id="actions-workflow-runs-empty"
+        [iconName]="'executionOutline'"
+        [header]="presenter.selectedWorkflowHasRuns() ? tr('loc.symphony.no.run.matches.the.filter.055a84') : tr('loc.symphony.no.workflow.runs.7d41ea')"
+        [content]="presenter.selectedWorkflowHasRuns()
+      ? tr('loc.symphony.change.the.filter.to.see.the.other.runs.of.this.work.a6fd1a')
+      : workflow.supportsManualDispatch && workflow.state === 'active'
+        ? tr('loc.symphony.run.this.workflow.on.github.or.with.the.managed.loca.bb8efa')
+        : tr('loc.symphony.runs.of.this.workflow.appear.here.3410ca')"
+      />
+      }
+    </div>
+
+    @if (presenter.selectedRun(); as row) {
+    <section
+      class="flex min-h-0 min-w-0 flex-col gap-1.25 overflow-clip"
+      test-id="actions-selected-run"
+      [attr.aria-label]="tr('loc.symphony.run.815f13', [(row.revision | shortRevision)])"
+    >
+      <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
+        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
+          <mosaik-text
+            part="actions-section-heading"
+            test-id="actions-selected-run-title"
+            [mosaikTypography]="'subtitle2'"
+            [truncate]="true"
+            [text]="tr('loc.symphony.run.649713', [(row.revision ? (row.revision | shortRevision) : row.run?.runNumber ? '#' + row.run.runNumber : ''), (row.status === 'in-progress'
+            ? tr('loc.symphony.running.for.90808b', [(row.startedAt | relativeTime: presenter.now())])
+            : row.status === 'queued'
+              ? tr('loc.symphony.waiting.for.0a870f', [(row.startedAt | relativeTime: presenter.now())])
+              : (row.status | actionRunBadge).label.toLowerCase()
+                + ((row.startedAt | actionRunDuration: row.finishedAt) ? ' after ' + (row.startedAt | actionRunDuration: row.finishedAt) : ''))])"
           />
-          <mosaik-table-header-cell [text]="'Runner'" />
-          <mosaik-table-header-cell [text]="'Duration'" />
-          <mosaik-table-header-cell [text]="'Started'" />
-        </mosaik-table-header-row>
-      </mosaik-table-header>
-      <mosaik-table-body>
-        @for (row of presenter.workflowRuns(); track row.id) {
-        <mosaik-table-body-row
-          part="actions-run-row"
-          tabindex="0"
-          [attr.test-id]="'action-run-' + row.id"
-          [attr.aria-selected]="presenter.selectedRun()?.id === row.id"
-          [isSelected]="presenter.selectedRun()?.id === row.id"
-          (click)="presenter.selectRunCommand.execute(row)"
-          (keydown.enter)="presenter.selectRunCommand.execute(row)"
+          <mosaik-text
+            [mosaikTypography]="'caption'"
+            [variant]="'neutral'"
+            [truncate]="true"
+            [text]="row.runner === 'github-local' && row.run
+          ? tr('loc.symphony.github.local.runner.cbf87b', [(row.run.status | actionRunBadge).label.toLowerCase(), ((row.runningLocally ? 'in-progress' : (row.localExecution?.state ?? row.status)) | actionRunBadge).label.toLowerCase()])
+          : (row.run?.title ?? row.workflowName) + (row.actor ? ' · by ' + row.actor : '')"
+          />
+        </div>
+        @if (presenter.runControls()(row); as controls) {
+        <div class="flex flex-none items-center gap-0.5">
+          @if (controls.canViewLog) {
+          <mosaik-button
+            test-id="actions-run-log"
+            [label]="tr('loc.symphony.view.log.ccab91')"
+            [iconName]="'open'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            (click)="presenter.viewLogCommand.execute(row)"
+          />
+          } @if (controls.canStop) {
+          <mosaik-button
+            test-id="actions-run-stop"
+            [label]="tr('loc.symphony.stop.cae7d5')"
+            [iconName]="'clear'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            (click)="presenter.stopRunCommand.execute(row)"
+          />
+          } @if (controls.canCancel) {
+          <mosaik-button
+            test-id="actions-run-cancel"
+            [label]="tr('loc.symphony.cancel.19766e')"
+            [iconName]="'clear'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            (click)="presenter.cancelRunCommand.execute(row)"
+          />
+          } @if (row.run && presenter.localCiEnabled()(row.run) && !row.runningLocally) {
+          <mosaik-button
+            test-id="actions-run-local"
+            [label]="tr('loc.symphony.rerun.locally.d96def')"
+            [iconName]="'play'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            [disabled]="!controls.canRunLocally"
+            [mosaikTooltip]="controls.canRunLocally ? tr('loc.symphony.run.this.revision.on.the.managed.local.linux.vm.33f633') : tr('loc.symphony.another.local.action.is.using.the.single.managed.run.c4a008')"
+            (click)="presenter.runLocallyCommand.execute(row)"
+          />
+          } @if (row.status !== 'failed') { @if (controls.canRerun) {
+          <mosaik-button
+            test-id="actions-run-rerun"
+            [label]="tr('loc.symphony.rerun.on.github.5df0c3')"
+            [iconName]="'sync'"
+            [iconSize]="'small'"
+            [appearance]="'outline'"
+            (click)="presenter.rerunCommand.execute(row)"
+          />
+          } @if (controls.canOpenInGitHub) {
+          <mosaik-button
+            test-id="actions-run-open"
+            [label]="tr('loc.symphony.open.in.github.4fb788')"
+            [iconName]="'open'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            (click)="presenter.openInGitHubCommand.execute(row)"
+          />
+          } }
+        </div>
+        }
+      </div>
+
+      <div
+        class="grid min-h-0 min-w-0 flex-1 gap-2.5 overflow-clip"
+        [class]="row.status === 'failed' ? 'grid-rows-2' : 'grid-rows-1'"
+        test-id="actions-run-details"
+      >
+        <div
+          class="grid min-h-0 min-w-0 grid-cols-2 gap-1.25 overflow-clip"
+          test-id="actions-run-output"
         >
-          <mosaik-table-body-cell>
-            @if (row.status === 'in-progress') {
-            <span class="flex items-center gap-1">
+          @if (row.run) {
+          <div
+            part="actions-frame"
+            class="flex min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain"
+            role="list"
+            test-id="actions-run-steps"
+          >
+            @if (presenter.runDetailsLoading() && !presenter.runSteps().length) { @for (line of [1,
+            2, 3]; track line) {
+            <div
+              class="flex h-[42px] min-w-0 flex-none items-center gap-1 px-1.75"
+              aria-hidden="true"
+            >
+              <mosaik-skeleton
+                [shape]="'circle'"
+                [width]="'20px'"
+                [height]="'20px'"
+                [shimmer]="true"
+              />
+              <mosaik-skeleton
+                [width]="line === 2 ? '12rem' : '8rem'"
+                [height]="'14px'"
+                [shimmer]="true"
+              />
+            </div>
+            } } @else if (presenter.runDetailsFailed()) {
+            <div
+              class="flex min-w-0 flex-none flex-col gap-[2px] px-1.75 py-1.25"
+              test-id="actions-run-steps-failed"
+            >
+              <mosaik-text
+                [mosaikTypography]="'body2'"
+                [text]="tr('loc.symphony.steps.unavailable.ec9e2e')"
+              />
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="tr('loc.symphony.github.did.not.report.the.jobs.of.this.run.view.the.fd1341')"
+              />
+            </div>
+            } @else { @for (step of presenter.runSteps(); track step.id) {
+            <div
+              class="flex min-w-0 flex-none items-center gap-1 py-[9px]"
+              role="listitem"
+              [class]="step.nested ? 'pr-1.75 pl-4.75' : 'px-1.75'"
+              [attr.test-id]="'actions-run-step-' + step.id"
+            >
+              @if (step.status === 'in-progress') {
               <mosaik-progress-ring
+                class="flex-none"
                 role="img"
-                [attr.aria-label]="'Running'"
+                [attr.aria-label]="step.status | ciLogStatusLabel"
                 [isIndeterminate]="true"
                 [variant]="'primary'"
                 [radius]="8"
                 [thickness]="2"
               />
-              <mosaik-text [mosaikTypography]="'caption'" [text]="'Running'" />
-            </span>
-            } @else {
-            <mosaik-badge
-              [label]="(row.status | actionRunBadge).label"
-              [variant]="(row.status | actionRunBadge).variant"
-              [appearance]="(row.status | actionRunBadge).appearance"
-            />
-            }
-          </mosaik-table-body-cell>
-          <mosaik-table-body-cell>
-            <mosaik-text
-              part="actions-technical"
-              class="technical-value min-w-0"
-              [attr.test-id]="'action-run-branch-' + row.id"
-              [truncate]="true"
-              [text]="row | actionRunRevision"
-            />
-          </mosaik-table-body-cell>
-          <mosaik-table-body-cell [text]="row.runner | actionRunnerLabel" />
-          <mosaik-table-body-cell
-            [text]="(row.startedAt | actionRunDuration: row.finishedAt) || '—'"
-          />
-          <mosaik-table-body-cell
-            [text]="(row.startedAt ?? row.finishedAt) | actionRunStarted: presenter.now()"
-          />
-        </mosaik-table-body-row>
-        }
-      </mosaik-table-body>
-    </mosaik-table>
-    } @else {
-    <mosaik-empty-state
-      test-id="actions-workflow-runs-empty"
-      [iconName]="'executionOutline'"
-      [header]="presenter.selectedWorkflowHasRuns() ? 'No run matches the filter' : 'No workflow runs'"
-      [content]="presenter.selectedWorkflowHasRuns()
-      ? 'Change the filter to see the other runs of this workflow.'
-      : workflow.supportsManualDispatch && workflow.state === 'active'
-        ? 'Run this workflow on GitHub or with the managed local runner to create its first run.'
-        : 'Runs of this workflow appear here.'"
-    />
-    }
-  </div>
-
-  @if (presenter.selectedRun(); as row) {
-  <section
-    class="flex min-h-0 min-w-0 flex-col gap-1.25 overflow-clip"
-    test-id="actions-selected-run"
-    [attr.aria-label]="'Run ' + (row.revision | shortRevision)"
-  >
-    <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
-      <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-        <mosaik-text
-          part="actions-section-heading"
-          test-id="actions-selected-run-title"
-          [mosaikTypography]="'subtitle2'"
-          [truncate]="true"
-          [text]="'Run '
-          + (row.revision ? (row.revision | shortRevision) : row.run?.runNumber ? '#' + row.run.runNumber : '')
-          + ' · '
-          + (row.status === 'in-progress'
-            ? 'running for ' + (row.startedAt | relativeTime: presenter.now())
-            : row.status === 'queued'
-              ? 'waiting for ' + (row.startedAt | relativeTime: presenter.now())
-              : (row.status | actionRunBadge).label.toLowerCase()
-                + ((row.startedAt | actionRunDuration: row.finishedAt) ? ' after ' + (row.startedAt | actionRunDuration: row.finishedAt) : ''))"
-        />
-        <mosaik-text
-          [mosaikTypography]="'caption'"
-          [variant]="'neutral'"
-          [truncate]="true"
-          [text]="row.runner === 'github-local' && row.run
-          ? 'GitHub ' + (row.run.status | actionRunBadge).label.toLowerCase()
-            + ' · local runner ' + ((row.runningLocally ? 'in-progress' : (row.localExecution?.state ?? row.status)) | actionRunBadge).label.toLowerCase()
-          : (row.run?.title ?? row.workflowName) + (row.actor ? ' · by ' + row.actor : '')"
-        />
-      </div>
-      @if (presenter.runControls()(row); as controls) {
-      <div class="flex flex-none items-center gap-0.5">
-        @if (controls.canViewLog) {
-        <mosaik-button
-          test-id="actions-run-log"
-          [label]="'View log'"
-          [iconName]="'open'"
-          [iconSize]="'small'"
-          [appearance]="'plain'"
-          (click)="presenter.viewLogCommand.execute(row)"
-        />
-        } @if (controls.canStop) {
-        <mosaik-button
-          test-id="actions-run-stop"
-          [label]="'Stop'"
-          [iconName]="'clear'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          (click)="presenter.stopRunCommand.execute(row)"
-        />
-        } @if (controls.canCancel) {
-        <mosaik-button
-          test-id="actions-run-cancel"
-          [label]="'Cancel'"
-          [iconName]="'clear'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          (click)="presenter.cancelRunCommand.execute(row)"
-        />
-        } @if (row.run && presenter.localCiEnabled()(row.run) && !row.runningLocally) {
-        <mosaik-button
-          test-id="actions-run-local"
-          [label]="'Rerun locally'"
-          [iconName]="'play'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          [disabled]="!controls.canRunLocally"
-          [mosaikTooltip]="controls.canRunLocally ? 'Run this revision on the managed local Linux VM' : 'Another local Action is using the single managed runner'"
-          (click)="presenter.runLocallyCommand.execute(row)"
-        />
-        } @if (row.status !== 'failed') { @if (controls.canRerun) {
-        <mosaik-button
-          test-id="actions-run-rerun"
-          [label]="'Rerun on GitHub'"
-          [iconName]="'sync'"
-          [iconSize]="'small'"
-          [appearance]="'outline'"
-          (click)="presenter.rerunCommand.execute(row)"
-        />
-        } @if (controls.canOpenInGitHub) {
-        <mosaik-button
-          test-id="actions-run-open"
-          [label]="'Open in GitHub'"
-          [iconName]="'open'"
-          [iconSize]="'small'"
-          [appearance]="'plain'"
-          (click)="presenter.openInGitHubCommand.execute(row)"
-        />
-        } }
-      </div>
-      }
-    </div>
-
-    <div
-      class="grid min-h-0 min-w-0 flex-1 gap-2.5 overflow-clip"
-      [class]="row.status === 'failed' ? 'grid-rows-2' : 'grid-rows-1'"
-      test-id="actions-run-details"
-    >
-      <div
-        class="grid min-h-0 min-w-0 grid-cols-2 gap-1.25 overflow-clip"
-        test-id="actions-run-output"
-      >
-        @if (row.run) {
-        <div
-          part="actions-frame"
-          class="flex min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain"
-          role="list"
-          test-id="actions-run-steps"
-        >
-          @if (presenter.runDetailsLoading() && !presenter.runSteps().length) { @for (line of [1, 2,
-          3]; track line) {
-          <div
-            class="flex h-[42px] min-w-0 flex-none items-center gap-1 px-1.75"
-            aria-hidden="true"
-          >
-            <mosaik-skeleton
-              [shape]="'circle'"
-              [width]="'20px'"
-              [height]="'20px'"
-              [shimmer]="true"
-            />
-            <mosaik-skeleton
-              [width]="line === 2 ? '12rem' : '8rem'"
-              [height]="'14px'"
-              [shimmer]="true"
-            />
+              } @else {
+              <mosaik-icon
+                class="flex-none"
+                role="img"
+                [attr.aria-label]="step.status | ciLogStatusLabel"
+                [icon]="(step.status | runStepPresentation).icon"
+                [variant]="(step.status | runStepPresentation).variant"
+                [size]="'small'"
+              />
+              }
+              <mosaik-text
+                class="min-w-0 flex-1"
+                [mosaikTypography]="step.kind === 'job' ? 'subtitle2' : 'body2'"
+                [truncate]="true"
+                [text]="step.name + (step.status === 'skipped' ? ' · skipped' : '')"
+              />
+              <mosaik-text
+                class="flex-none"
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="(step.startedAt | actionRunDuration: step.finishedAt) || '—'"
+              />
+            </div>
+            } @empty {
+            <div
+              class="flex min-w-0 flex-none flex-col gap-[2px] px-1.75 py-1.25"
+              test-id="actions-run-steps-empty"
+            >
+              <mosaik-text
+                [mosaikTypography]="'body2'"
+                [text]="tr('loc.symphony.no.jobs.reported.yet.4ea162')"
+              />
+              <mosaik-text
+                [mosaikTypography]="'caption'"
+                [variant]="'neutral'"
+                [text]="tr('loc.symphony.steps.appear.when.the.workflow.schedules.its.first.j.f2c7e4')"
+              />
+            </div>
+            } }
           </div>
-          } } @else if (presenter.runDetailsFailed()) {
-          <div
-            class="flex min-w-0 flex-none flex-col gap-[2px] px-1.75 py-1.25"
-            test-id="actions-run-steps-failed"
+          }
+          <section
+            class="flex min-h-0 min-w-0 flex-col gap-0.5 overflow-clip"
+            test-id="actions-run-log-region"
+            [attr.aria-label]="tr('loc.symphony.run.log.22ae6e')"
           >
-            <mosaik-text [mosaikTypography]="'body2'" [text]="'Steps unavailable'" />
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="'GitHub did not report the jobs of this run. View the log or open the run in GitHub.'"
-            />
-          </div>
-          } @else { @for (step of presenter.runSteps(); track step.id) {
-          <div
-            class="flex min-w-0 flex-none items-center gap-1 py-[9px]"
-            role="listitem"
-            [class]="step.nested ? 'pr-1.75 pl-4.75' : 'px-1.75'"
-            [attr.test-id]="'actions-run-step-' + step.id"
-          >
-            @if (step.status === 'in-progress') {
-            <mosaik-progress-ring
-              class="flex-none"
-              role="img"
-              [attr.aria-label]="step.status | ciLogStatusLabel"
-              [isIndeterminate]="true"
-              [variant]="'primary'"
-              [radius]="8"
-              [thickness]="2"
-            />
-            } @else {
-            <mosaik-icon
-              class="flex-none"
-              role="img"
-              [attr.aria-label]="step.status | ciLogStatusLabel"
-              [icon]="(step.status | runStepPresentation).icon"
-              [variant]="(step.status | runStepPresentation).variant"
-              [size]="'small'"
-            />
-            }
-            <mosaik-text
-              class="min-w-0 flex-1"
-              [mosaikTypography]="step.kind === 'job' ? 'subtitle2' : 'body2'"
-              [truncate]="true"
-              [text]="step.name + (step.status === 'skipped' ? ' · skipped' : '')"
-            />
             <mosaik-text
               class="flex-none"
               [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="(step.startedAt | actionRunDuration: step.finishedAt) || '—'"
+              [text]="tr('loc.symphony.run.log.22ae6e')"
             />
-          </div>
-          } @empty {
-          <div
-            class="flex min-w-0 flex-none flex-col gap-[2px] px-1.75 py-1.25"
-            test-id="actions-run-steps-empty"
-          >
-            <mosaik-text [mosaikTypography]="'body2'" [text]="'No jobs reported yet'" />
-            <mosaik-text
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="'Steps appear when the workflow schedules its first job.'"
-            />
-          </div>
-          } }
-        </div>
-        }
-        <section
-          class="flex min-h-0 min-w-0 flex-col gap-0.5 overflow-clip"
-          test-id="actions-run-log-region"
-          aria-label="Run log"
-        >
-          <mosaik-text class="flex-none" [mosaikTypography]="'caption'" [text]="'Run log'" />
-          @if (presenter.logExcerpt(); as excerpt) {
-          <pre
-            part="actions-log-excerpt"
-            class="technical-value m-0 min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain px-1.75 py-1.5"
-            test-id="actions-run-log-excerpt"
-          >
+            @if (presenter.logExcerpt(); as excerpt) {
+            <pre
+              part="actions-log-excerpt"
+              class="technical-value m-0 min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain px-1.75 py-1.5"
+              test-id="actions-run-log-excerpt"
+            >
 {{ excerpt }}</pre>
-          } @else {
-          <mosaik-text
-            class="min-h-0 overflow-y-auto"
-            test-id="actions-run-log-empty"
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [wrap]="true"
-            [text]="'No log excerpt is available. Open the full log to inspect this run.'"
-          />
-          }
-        </section>
-      </div>
+            } @else {
+            <mosaik-text
+              class="min-h-0 overflow-y-auto"
+              test-id="actions-run-log-empty"
+              [mosaikTypography]="'caption'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="tr('loc.symphony.no.log.excerpt.is.available.open.the.full.log.to.ins.1cc2c6')"
+            />
+            }
+          </section>
+        </div>
 
-      @if (row.status === 'failed') {
-      <section
-        part="actions-frame"
-        class="flex min-h-0 min-w-0 flex-col gap-1 overflow-clip p-1"
-        test-id="actions-diagnosis"
-        aria-label="Diagnosis"
-      >
-        <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
-          @if (presenter.diagnosisAgentName(); as agentName) {
-          <mosaik-avatar
-            class="flex-none"
-            [text]="agentName"
-            [size]="'small'"
-            [appearance]="'soft'"
-          />
-          } @else {
-          <mosaik-avatar
-            class="flex-none"
-            [icon]="'sparkle'"
-            [size]="'small'"
-            [appearance]="'soft'"
-          />
-          }
-          <div class="flex min-w-0 flex-1 items-center gap-1">
-            <div class="flex min-w-0 items-center gap-1">
-              <mosaik-text [mosaikTypography]="'subtitle2'" [text]="'Diagnosis'" />
-              @if (presenter.recovery().repair; as repair) {
-              <mosaik-badge
-                test-id="actions-repair-state"
-                [label]="repair.state === 'succeeded' ? 'Repaired' : repair.state === 'failed' || repair.state === 'cancelled' ? 'Repair failed' : 'Repairing'"
-                [variant]="repair.state === 'succeeded' ? 'success' : repair.state === 'failed' || repair.state === 'cancelled' ? 'danger' : 'info'"
-                [appearance]="'soft'"
+        @if (row.status === 'failed') {
+        <section
+          part="actions-frame"
+          class="flex min-h-0 min-w-0 flex-col gap-1 overflow-clip p-1"
+          test-id="actions-diagnosis"
+          [attr.aria-label]="tr('loc.symphony.diagnosis.2e3074')"
+        >
+          <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
+            @if (presenter.diagnosisAgentName(); as agentName) {
+            <mosaik-avatar
+              class="flex-none"
+              [text]="agentName"
+              [size]="'small'"
+              [appearance]="'soft'"
+            />
+            } @else {
+            <mosaik-avatar
+              class="flex-none"
+              [icon]="'sparkle'"
+              [size]="'small'"
+              [appearance]="'soft'"
+            />
+            }
+            <div class="flex min-w-0 flex-1 items-center gap-1">
+              <div class="flex min-w-0 items-center gap-1">
+                <mosaik-text
+                  [mosaikTypography]="'subtitle2'"
+                  [text]="tr('loc.symphony.diagnosis.2e3074')"
+                />
+                @if (presenter.recovery().repair; as repair) {
+                <mosaik-badge
+                  test-id="actions-repair-state"
+                  [label]="repair.state === 'succeeded' ? tr('loc.symphony.repaired.c7531e') : repair.state === 'failed' || repair.state === 'cancelled' ? tr('loc.symphony.repair.failed.9445b1') : tr('loc.symphony.repairing.e2c520')"
+                  [variant]="repair.state === 'succeeded' ? 'success' : repair.state === 'failed' || repair.state === 'cancelled' ? 'danger' : 'info'"
+                  [appearance]="'soft'"
+                />
+                }
+              </div>
+            </div>
+            <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
+              <mosaik-button
+                test-id="actions-fix-with-ai"
+                [size]="'small'"
+                [label]="tr('loc.symphony.fix.with.ai.c4c097')"
+                [iconName]="'sparkle'"
+                [iconSize]="'small'"
+                [appearance]="'solid'"
+                [variant]="'primary'"
+                [isBusy]="presenter.fixingRunId() === row.id"
+                [disabled]="presenter.fixWithAi().state !== 'available' || !!presenter.fixingRunId()"
+                [mosaikTooltip]="presenter.fixWithAi().state === 'available'
+        ? tr('loc.symphony.an.agent.revises.the.pull.request.with.this.failure.226e04')
+        : ''"
+                (click)="presenter.fixWithAiCommand.execute()"
+              />
+              @if (presenter.runControls()(row).canRerun) {
+              <mosaik-button
+                test-id="actions-diagnosis-rerun"
+                [size]="'small'"
+                [attr.aria-label]="tr('loc.symphony.rerun.on.github.5df0c3')"
+                [mosaikTooltip]="tr('loc.symphony.rerun.on.github.5df0c3')"
+                [iconName]="'sync'"
+                [iconSize]="'small'"
+                [appearance]="'outline'"
+                (click)="presenter.rerunCommand.execute(row)"
+              />
+              } @if (presenter.runControls()(row).canOpenInGitHub) {
+              <mosaik-button
+                test-id="actions-diagnosis-open"
+                [size]="'small'"
+                [attr.aria-label]="tr('loc.symphony.open.in.github.4fb788')"
+                [mosaikTooltip]="tr('loc.symphony.open.in.github.4fb788')"
+                [iconName]="'open'"
+                [iconSize]="'small'"
+                [appearance]="'plain'"
+                (click)="presenter.openInGitHubCommand.execute(row)"
               />
               }
             </div>
           </div>
-          <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
-            <mosaik-button
-              test-id="actions-fix-with-ai"
-              [size]="'small'"
-              [label]="'Fix with AI'"
-              [iconName]="'sparkle'"
-              [iconSize]="'small'"
-              [appearance]="'solid'"
-              [variant]="'primary'"
-              [isBusy]="presenter.fixingRunId() === row.id"
-              [disabled]="presenter.fixWithAi().state !== 'available' || !!presenter.fixingRunId()"
-              [mosaikTooltip]="presenter.fixWithAi().state === 'available'
-        ? 'An agent revises the pull request with this failure as feedback'
-        : ''"
-              (click)="presenter.fixWithAiCommand.execute()"
-            />
-            @if (presenter.runControls()(row).canRerun) {
-            <mosaik-button
-              test-id="actions-diagnosis-rerun"
-              [size]="'small'"
-              [attr.aria-label]="'Rerun on GitHub'"
-              [mosaikTooltip]="'Rerun on GitHub'"
-              [iconName]="'sync'"
-              [iconSize]="'small'"
-              [appearance]="'outline'"
-              (click)="presenter.rerunCommand.execute(row)"
-            />
-            } @if (presenter.runControls()(row).canOpenInGitHub) {
-            <mosaik-button
-              test-id="actions-diagnosis-open"
-              [size]="'small'"
-              [attr.aria-label]="'Open in GitHub'"
-              [mosaikTooltip]="'Open in GitHub'"
-              [iconName]="'open'"
-              [iconSize]="'small'"
-              [appearance]="'plain'"
-              (click)="presenter.openInGitHubCommand.execute(row)"
-            />
-            }
-          </div>
-        </div>
-        <div
-          class="flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain"
-          test-id="actions-diagnosis-content"
-        >
-          <div class="flex min-w-0 flex-none flex-col gap-1" test-id="actions-diagnosis-body">
-            @if (presenter.recovery().diagnosis; as diagnosis) { @if (diagnosis.state ===
-            'succeeded') {
-            <mosaik-text
-              test-id="actions-diagnosis-text"
-              [mosaikTypography]="'body2'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="diagnosis.summary || 'The AI diagnosis reported no explanation.'"
-            />
-            } @else if (diagnosis.state === 'failed' || diagnosis.state === 'cancelled') {
-            <mosaik-text
-              test-id="actions-diagnosis-text"
-              [mosaikTypography]="'body2'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="diagnosis.error || 'The AI diagnosis did not complete.'"
-            />
-            } @else {
-            <div class="flex min-w-0 items-center gap-1">
-              <mosaik-progress-ring
-                role="img"
-                [attr.aria-label]="'Diagnosing'"
-                [isIndeterminate]="true"
-                [variant]="'primary'"
-                [radius]="8"
-                [thickness]="2"
-              />
+          <div
+            class="flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain"
+            test-id="actions-diagnosis-content"
+          >
+            <div class="flex min-w-0 flex-none flex-col gap-1" test-id="actions-diagnosis-body">
+              @if (presenter.recovery().diagnosis; as diagnosis) { @if (diagnosis.state ===
+              'succeeded') {
               <mosaik-text
                 test-id="actions-diagnosis-text"
                 [mosaikTypography]="'body2'"
                 [variant]="'neutral'"
-                [text]="'An agent is diagnosing this failure.'"
+                [wrap]="true"
+                [text]="diagnosis.summary || tr('loc.symphony.the.ai.diagnosis.reported.no.explanation.c6bd31')"
               />
-            </div>
-            } } @else {
-            <mosaik-text
-              test-id="actions-diagnosis-text"
-              [mosaikTypography]="'body2'"
-              [variant]="'neutral'"
-              [wrap]="true"
-              [text]="(presenter.failedStep() ? 'The run failed in “' + presenter.failedStep()?.name + '”. ' : '')
-          + 'No AI diagnosis yet: Symphony diagnoses failed checks of its own pull requests when Fix failed checks allows it.'"
-            />
-            } @if (presenter.fixWithAi().state !== 'available') {
-            <div
-              class="flex min-w-0 flex-wrap items-center gap-1"
-              test-id="actions-fix-with-ai-reason"
-            >
+              } @else if (diagnosis.state === 'failed' || diagnosis.state === 'cancelled') {
               <mosaik-text
-                class="min-w-0"
-                [mosaikTypography]="'caption'"
+                test-id="actions-diagnosis-text"
+                [mosaikTypography]="'body2'"
                 [variant]="'neutral'"
                 [wrap]="true"
-                [text]="presenter.fixWithAi().state === 'policy'
-        ? 'Fix with AI needs Fix failed checks set to Repair or Full.'
+                [text]="diagnosis.error || tr('loc.symphony.the.ai.diagnosis.did.not.complete.372946')"
+              />
+              } @else {
+              <div class="flex min-w-0 items-center gap-1">
+                <mosaik-progress-ring
+                  role="img"
+                  [attr.aria-label]="tr('loc.symphony.diagnosing.362fa4')"
+                  [isIndeterminate]="true"
+                  [variant]="'primary'"
+                  [radius]="8"
+                  [thickness]="2"
+                />
+                <mosaik-text
+                  test-id="actions-diagnosis-text"
+                  [mosaikTypography]="'body2'"
+                  [variant]="'neutral'"
+                  [text]="tr('loc.symphony.an.agent.is.diagnosing.this.failure.d63b0b')"
+                />
+              </div>
+              } } @else {
+              <mosaik-text
+                test-id="actions-diagnosis-text"
+                [mosaikTypography]="'body2'"
+                [variant]="'neutral'"
+                [wrap]="true"
+                [text]="tr('loc.symphony.no.ai.diagnosis.yet.symphony.diagnoses.failed.checks.4e8f5e', [(presenter.failedStep() ? tr('loc.symphony.the.run.failed.in.630229', [presenter.failedStep()?.name]) : '')])"
+              />
+              } @if (presenter.fixWithAi().state !== 'available') {
+              <div
+                class="flex min-w-0 flex-wrap items-center gap-1"
+                test-id="actions-fix-with-ai-reason"
+              >
+                <mosaik-text
+                  class="min-w-0"
+                  [mosaikTypography]="'caption'"
+                  [variant]="'neutral'"
+                  [wrap]="true"
+                  [text]="presenter.fixWithAi().state === 'policy'
+        ? tr('loc.symphony.fix.with.ai.needs.fix.failed.checks.set.to.repair.or.8c778f')
         : presenter.fixWithAi().state === 'busy'
-          ? 'An agent is already working on this pull request.'
+          ? tr('loc.symphony.an.agent.is.already.working.on.this.pull.request.365257')
           : presenter.fixWithAi().state === 'unavailable'
-            ? 'AI agents are not part of this Symphony setup.'
-            : 'Fix with AI revises Symphony’s own pull requests; this run checked another branch.'"
-              />
-              @if (presenter.fixWithAi().state === 'policy') {
-              <mosaik-button
-                test-id="actions-open-automation-settings"
-                [label]="'Open Automation settings'"
-                [appearance]="'plain'"
-                [size]="'small'"
-                (click)="presenter.openAutomationSettingsCommand.execute()"
-              />
+            ? tr('loc.symphony.ai.agents.are.not.part.of.this.symphony.setup.5a7dea')
+            : tr('loc.symphony.fix.with.ai.revises.symphony.s.own.pull.requests.thi.7428f7')"
+                />
+                @if (presenter.fixWithAi().state === 'policy') {
+                <mosaik-button
+                  test-id="actions-open-automation-settings"
+                  [label]="tr('loc.symphony.open.automation.settings.f04940')"
+                  [appearance]="'plain'"
+                  [size]="'small'"
+                  (click)="presenter.openAutomationSettingsCommand.execute()"
+                />
+                }
+              </div>
               }
             </div>
-            }
           </div>
-        </div>
-      </section>
-      }
-    </div>
-  </section>
-  } @else {
-  <mosaik-empty-state
-    test-id="actions-no-selected-run"
-    [iconName]="'executionOutline'"
-    [header]="'No run selected'"
-    [content]="'Select a workflow run to inspect its steps and log.'"
-  />
+        </section>
+        }
+      </div>
+    </section>
+    } @else {
+    <mosaik-empty-state
+      test-id="actions-no-selected-run"
+      [iconName]="'executionOutline'"
+      [header]="tr('loc.symphony.no.run.selected.0faf87')"
+      [content]="tr('loc.symphony.select.a.workflow.run.to.inspect.its.steps.and.log.9dfc29')"
+    />
+    }
+  </div>
   }
-</div>
-}
+</ng-container>

@@ -1,6 +1,7 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -9,7 +10,7 @@ interface IRuntimeHealth {
   readonly version?: string;
 }
 
-@Pipe({ name: 'aiRuntimeStatus', standalone: true, pure: true })
+@Pipe({ name: 'aiRuntimeStatus', standalone: true, pure: false })
 export class AiRuntimeStatusPipe implements PipeTransform {
   // #region Methods
 
@@ -20,10 +21,13 @@ export class AiRuntimeStatusPipe implements PipeTransform {
    * @public
    */
   public transform(health: IRuntimeHealth | undefined): string {
-    if (!health) return 'Checking local CLI…';
+    if (!health) return translateLabel('loc.symphony.labels.checking.local.cli.c46b886');
     return health.available
-      ? `CLI ready${health.version ? ` · ${health.version}` : ''}`
-      : 'CLI must be installed first';
+      ? translateLabel(
+          'loc.symphony.labels.cli.ready.4b29fcf',
+          health.version ? ` · ${health.version}` : '',
+        )
+      : translateLabel('loc.symphony.labels.cli.must.be.installed.first.c0fff7f');
   }
 
   // #endregion

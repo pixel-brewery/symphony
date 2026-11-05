@@ -3,10 +3,11 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { IExecutionRecord } from '@symphony/domain-execution';
 import type { ApplicationSettingsDto } from '@symphony/ipc-contracts-composition';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-@Pipe({ name: 'menuExecutionContext', standalone: true, pure: true })
+@Pipe({ name: 'menuExecutionContext', standalone: true, pure: false })
 export class MenuExecutionContextPipe implements PipeTransform {
   // #region Methods
 
@@ -23,7 +24,10 @@ export class MenuExecutionContextPipe implements PipeTransform {
     workspaces: ApplicationSettingsDto['workspaces'],
     now: number,
   ): string {
-    if (execution.pause?.resumeRequestedAt) return 'Queued for the next available execution slot';
+    if (execution.pause?.resumeRequestedAt)
+      return translateLabel(
+        'loc.symphony.labels.queued.for.the.next.available.execution.slot.7e4d3ee',
+      );
     const workspace = workspaces.find((candidate) => candidate.id === execution.workspaceId);
     const kind =
       execution.kind === 'solution'

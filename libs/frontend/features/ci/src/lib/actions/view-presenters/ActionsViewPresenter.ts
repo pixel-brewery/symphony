@@ -44,6 +44,7 @@ import { resolveFixWithAi } from './actionsOverview/resolveFixWithAi';
 import { runTimestamp } from './actionsOverview/runTimestamp';
 import { toActionDrawerRun } from './actionsOverview/toActionDrawerRun';
 import { hydrateActionsRoute } from './routeHydration/hydrateActionsRoute';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -849,8 +850,11 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
       );
       if (started) {
         this._notifications.showSuccess(
-          'AI fix started.',
-          `An agent revises the pull request that ${row.workflowName} checked.`,
+          translateLabel('loc.symphony.labels.ai.fix.started.b0186ef'),
+          translateLabel(
+            'loc.symphony.labels.an.agent.revises.the.pull.request.that.checked.76069a4',
+            row.workflowName,
+          ),
         );
       }
     } finally {

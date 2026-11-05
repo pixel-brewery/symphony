@@ -9,6 +9,7 @@ import {
 import { ApplicationProjection } from '@symphony/frontend-core/projection';
 import { CI_CONTEXT } from '../ports/CiContextToken';
 import { countFailingWorkflows } from './countFailingWorkflows';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -27,12 +28,16 @@ export function withCiNavigation(order: number): IFeature<NavigationFeatureKind>
       const projection = inject(ApplicationProjection);
       return {
         key: 'actions',
-        label: 'Actions',
+        get label() {
+          return translateLabel('loc.symphony.labels.actions.ff8059d');
+        },
         icon: 'executionOutline',
         route: '/main/actions',
         order,
         region: 'desktop-main',
-        group: 'Delivery',
+        get group() {
+          return translateLabel('loc.symphony.labels.delivery.52bfe58');
+        },
         countTone: 'attention',
         count: () =>
           countFailingWorkflows({

@@ -1,6 +1,7 @@
 // #region Imports
 
-import { DecimalPipe, LowerCasePipe } from '@angular/common';
+import { LowerCasePipe } from '@angular/common';
+import { ApplicationDecimalPipe as DecimalPipe } from '@symphony/frontend-intl';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -11,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  TranslateDirective,
   BadgeComponent,
   ButtonComponent,
   DividerComponent,
@@ -57,6 +59,7 @@ const MAXIMUM_PANEL_HEIGHT = 760;
     '(document:keydown)': 'onKeydown($event)',
   },
   imports: [
+    TranslateDirective,
     AgentActivityIconPipe,
     AgentActivityLabelPipe,
     AgentAvatarSourcePipe,

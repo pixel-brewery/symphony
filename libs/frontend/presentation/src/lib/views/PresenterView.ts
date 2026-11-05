@@ -4,6 +4,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import {
+  TranslateDirective,
   AppComponent,
   ButtonComponent,
   IconNameDirective,
@@ -35,6 +36,7 @@ import { WindowStatusBarView } from './WindowStatusBarView';
     '(window:keydown)': 'handleShortcut($event)',
   },
   imports: [
+    TranslateDirective,
     AppComponent,
     ButtonComponent,
     IconNameDirective,

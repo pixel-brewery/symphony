@@ -2,11 +2,12 @@
 
 import { Pipe, type PipeTransform } from '@angular/core';
 import type { WorkflowTransitionTrigger } from '@symphony/domain-workflow';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
 /** Names what makes a transition fire, in the vocabulary the process document uses. */
-@Pipe({ name: 'workflowTriggerLabel' })
+@Pipe({ pure: false, name: 'workflowTriggerLabel' })
 export class WorkflowTriggerLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -21,7 +22,7 @@ export class WorkflowTriggerLabelPipe implements PipeTransform {
       case 'outcome':
         return `${trigger.role} · ${trigger.outcome}`;
       case 'claim':
-        return `claim · ${trigger.role}`;
+        return translateLabel('loc.symphony.labels.claim.90a8687', trigger.role);
       case 'decision':
         return trigger.optionId;
       case 'reconciliation':

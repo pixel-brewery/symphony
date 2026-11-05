@@ -3,6 +3,7 @@
 import type { IActionDrawerRun } from '../../views/drawers/IActionDrawerRun';
 import type { IActionDrawerSourceState } from '../../views/drawers/IActionDrawerSourceState';
 import type { IActionRunRow } from './IActionRunRow';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -25,7 +26,9 @@ export function toActionDrawerRun(row: IActionRunRow, repositoryName?: string): 
       ? [
           {
             kind: 'local-runner' as const,
-            label: 'Local runner' as const,
+            get label() {
+              return translateLabel('loc.symphony.labels.local.runner.eef4f85');
+            },
             state: row.runningLocally ? 'in-progress' : (row.localExecution?.state ?? row.status),
           },
         ]
@@ -34,7 +37,11 @@ export function toActionDrawerRun(row: IActionRunRow, repositoryName?: string): 
   const ciRunId = row.run?.id ?? row.localExecution?.ciRunId;
   return {
     kind: local ? 'local-action' : 'cloud-action',
-    sourceLabel: !local ? 'GitHub' : row.run ? 'Action' : 'Local runner',
+    sourceLabel: !local
+      ? 'GitHub'
+      : row.run
+        ? translateLabel('loc.symphony.labels.action.64cff13')
+        : translateLabel('loc.symphony.labels.local.runner.eef4f85'),
     sources,
     title: row.workflowName,
     message: [row.branch, row.revision].filter(Boolean).join(' · ') || repositoryName || '',

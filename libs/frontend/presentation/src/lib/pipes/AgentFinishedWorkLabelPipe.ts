@@ -1,17 +1,18 @@
 // #region Imports
 
 import { Pipe, type PipeTransform } from '@angular/core';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-const ROLE_PAST_VERBS: Readonly<Record<string, string>> = {
-  'work-item-creation': 'drafted',
-  analysis: 'planned',
-  solution: 'implemented',
-  revision: 'revised',
-  'ci-diagnosis': 'diagnosed',
-  'ci-repair': 'repaired',
-  'pull-request-review': 'addressed reviews on',
+const ROLE_PAST_VERBS: Readonly<Record<string, Parameters<typeof translateLabel>[0]>> = {
+  'work-item-creation': 'loc.symphony.labels.finishedWork.drafted',
+  analysis: 'loc.symphony.labels.finishedWork.planned',
+  solution: 'loc.symphony.labels.finishedWork.implemented',
+  revision: 'loc.symphony.labels.finishedWork.revised',
+  'ci-diagnosis': 'loc.symphony.labels.finishedWork.diagnosed',
+  'ci-repair': 'loc.symphony.labels.finishedWork.repaired',
+  'pull-request-review': 'loc.symphony.labels.finishedWork.addressedReviewsOn',
 };
 
 /**
@@ -19,7 +20,7 @@ const ROLE_PAST_VERBS: Readonly<Record<string, string>> = {
  *
  * @public
  */
-@Pipe({ name: 'agentFinishedWorkLabel', standalone: true, pure: true })
+@Pipe({ name: 'agentFinishedWorkLabel', standalone: true, pure: false })
 export class AgentFinishedWorkLabelPipe implements PipeTransform {
   // #region Methods
 
@@ -31,7 +32,9 @@ export class AgentFinishedWorkLabelPipe implements PipeTransform {
    * @public
    */
   public transform(role: string | undefined): string {
-    return ROLE_PAST_VERBS[role ?? ''] ?? 'worked on';
+    return translateLabel(
+      ROLE_PAST_VERBS[role ?? ''] ?? 'loc.symphony.labels.finishedWork.workedOn',
+    );
   }
 
   // #endregion

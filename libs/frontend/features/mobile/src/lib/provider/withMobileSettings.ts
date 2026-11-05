@@ -6,6 +6,7 @@ import {
   withSettingsViews,
   type SettingsFeatureKind,
 } from '@symphony/frontend-setting';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
@@ -27,31 +28,58 @@ export function withMobileSettings(): readonly IFeature<SettingsFeatureKind>[] {
           section: {
             scope: 'global',
             id: 'mobile',
-            label: 'Mobile access',
-            description: 'Pair phones on the local network.',
+            get label() {
+              return translateLabel('loc.symphony.labels.mobile.access.f1a2806');
+            },
+            get description() {
+              return translateLabel('loc.symphony.labels.pair.phones.on.the.local.network.440a80d');
+            },
             order: 50,
           },
           search: [
             {
               id: 'allow',
-              label: 'Allow mobile access',
-              description: 'Make Symphony available only to phones that you pair and approve.',
-              group: 'Local network access',
+              get label() {
+                return translateLabel('loc.symphony.labels.allow.mobile.access.80ff9e0');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.make.symphony.available.only.to.phones.that.you.pair.2e75e0c',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.local.network.access.5b7fde2');
+              },
               keywords: ['phone', 'wi-fi', 'network', 'iphone', 'android'],
             },
             {
               id: 'pair',
-              label: 'Pair a phone',
-              description:
-                'Generate a short-lived QR code, then approve the verification request shown here.',
-              group: 'Pair a phone',
+              get label() {
+                return translateLabel('loc.symphony.labels.pair.a.phone.31a94a7');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.generate.a.short.lived.qr.code.then.approve.the.veri.9ce1a7d',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.pair.a.phone.31a94a7');
+              },
               keywords: ['qr code', 'pairing', 'verification'],
             },
             {
               id: 'revoke',
-              label: 'Paired phones',
-              description: 'Revoke a phone when it should no longer reach this Symphony Desktop.',
-              group: 'Paired phones',
+              get label() {
+                return translateLabel('loc.symphony.labels.paired.phones.969733d');
+              },
+              get description() {
+                return translateLabel(
+                  'loc.symphony.labels.revoke.a.phone.when.it.should.no.longer.reach.this.s.7306745',
+                );
+              },
+              get group() {
+                return translateLabel('loc.symphony.labels.paired.phones.969733d');
+              },
               keywords: ['revoke'],
             },
           ],
