@@ -10,7 +10,11 @@
       [iconSize]="'small'"
       [appearance]="presenter.isOpen() ? 'soft' : 'plain'"
       [attr.aria-expanded]="presenter.isOpen()"
-      [attr.aria-label]="count ? tr('loc.symphony.notifications.attention.3b56c7', [count, (count === 1 ? tr('loc.symphony.needs.266d1c') : tr('loc.symphony.need.be8dff'))]) : tr('loc.symphony.notifications.788011')"
+      [attr.aria-label]="!count
+        ? tr('loc.symphony.notifications.788011')
+        : count === 1
+          ? tr('loc.symphony.notifications.attention.one', [count])
+          : tr('loc.symphony.notifications.attention.many', [count])"
       [mosaikTooltip]="tr('loc.symphony.notifications.788011')"
       (click)="centre.toggle()"
     />
@@ -60,9 +64,11 @@
             [mosaikTypography]="'caption'"
             [variant]="'neutral'"
             [wrap]="true"
-            [text]="count
-            ? tr('loc.symphony.attention.bf6631', [count, (count === 1 ? tr('loc.symphony.needs.266d1c') : tr('loc.symphony.need.be8dff')), (items | notificationScopeList)])
-            : tr('loc.symphony.nothing.needs.attention.21ad0f')"
+            [text]="!count
+              ? tr('loc.symphony.nothing.needs.attention.21ad0f')
+              : count === 1
+                ? tr('loc.symphony.attention.one', [count, (items | notificationScopeList)])
+                : tr('loc.symphony.attention.many', [count, (items | notificationScopeList)])"
           />
         </div>
         <mosaik-button

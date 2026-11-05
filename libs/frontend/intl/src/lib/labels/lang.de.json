@@ -749,6 +749,7 @@
   "loc.symphony.labels.this.agent.cannot.be.removed.1eba77f": "Dieser Agent kann nicht entfernt werden",
   "loc.symphony.labels.this.agent.is.the.only.work.item.creator.while.a.tea.77a091e": "Dieser Agent erstellt als einziger Work Items, während eine Teams-Feedbackquelle aktiviert ist. Übertrage diese Zuständigkeit zuerst auf einen anderen Agenten oder deaktiviere die Quelle.",
   "loc.symphony.labels.this.build.does.not.have.a.release.feed.configured.e8b2252": "Für diesen Build ist keine Update-Quelle konfiguriert.",
+  "loc.symphony.labels.this.mac": "dieser Mac",
   "loc.symphony.labels.this.mac.has.reached.its.free.space.reserve.cb6c188": "Dieser Mac hat seine Speicherreserve erreicht",
   "loc.symphony.labels.this.mac.is.low.on.free.space.0009111": "Auf diesem Mac ist wenig Speicher frei",
   "loc.symphony.labels.this.mac.may.sleep.while.symphony.works.2a0fe08": "Dieser Mac kann in den Ruhezustand wechseln, während Symphony arbeitet.",

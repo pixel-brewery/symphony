@@ -37,6 +37,10 @@ test('switches application language live across desktop windows and restores it 
         'label',
         'Appearance',
       );
+      await expect(settings.getByTestId('notification-bell')).toHaveAttribute(
+        'aria-label',
+        /^Benachrichtigungen, (?:1 Problem erfordert|(?:[2-9]|[1-9]\d+) Probleme erfordern) Aufmerksamkeit$/u,
+      );
       const tray = first.app.windows().find((window) => window.url().includes('#/menu-bar'));
       expect(tray).toBeDefined();
       if (!tray) throw new Error('The desktop menu-bar renderer is unavailable.');

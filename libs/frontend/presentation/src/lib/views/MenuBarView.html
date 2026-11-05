@@ -390,7 +390,9 @@
         role="button"
         tabindex="0"
         test-id="menu-bar-notifications"
-        [attr.aria-label]="tr('loc.symphony.notifications.attention.3b56c7', [attention.length, (attention.length === 1 ? tr('loc.symphony.needs.266d1c') : tr('loc.symphony.need.be8dff'))])"
+        [attr.aria-label]="attention.length === 1
+          ? tr('loc.symphony.notifications.attention.one', [attention.length])
+          : tr('loc.symphony.notifications.attention.many', [attention.length])"
         (click)="presenter.openNotificationsCommand.execute()"
         (keydown.enter)="presenter.openNotificationsCommand.execute()"
       >

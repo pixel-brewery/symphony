@@ -749,6 +749,7 @@
   "loc.symphony.labels.this.agent.cannot.be.removed.1eba77f": "This agent cannot be removed",
   "loc.symphony.labels.this.agent.is.the.only.work.item.creator.while.a.tea.77a091e": "This agent is the only Work Item Creator while a Teams feedback intake is enabled. Assign that responsibility to another agent or disable the intake first.",
   "loc.symphony.labels.this.build.does.not.have.a.release.feed.configured.e8b2252": "This build does not have a release feed configured.",
+  "loc.symphony.labels.this.mac": "this Mac",
   "loc.symphony.labels.this.mac.has.reached.its.free.space.reserve.cb6c188": "This Mac has reached its free-space reserve",
   "loc.symphony.labels.this.mac.is.low.on.free.space.0009111": "This Mac is low on free space",
   "loc.symphony.labels.this.mac.may.sleep.while.symphony.works.2a0fe08": "This Mac may sleep while Symphony works.",

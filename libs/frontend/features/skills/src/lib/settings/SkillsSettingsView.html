@@ -87,7 +87,11 @@
               [mosaikTypography]="'caption'"
               [variant]="'neutral'"
               [wrap]="true"
-              [text]="added ? tr('loc.symphony.built.in.instructions.your.additions.68ecdf', [added, (added === 1 ? tr('loc.symphony.line.added.49b597') : tr('loc.symphony.lines.added.5866e3'))]) : tr('loc.symphony.built.in.instructions.only.7f3383')"
+              [text]="!added
+                ? tr('loc.symphony.built.in.instructions.only.7f3383')
+                : added === 1
+                  ? tr('loc.symphony.built.in.instructions.your.additions.one', [added])
+                  : tr('loc.symphony.built.in.instructions.your.additions.many', [added])"
             />
           </div>
           <mosaik-button
