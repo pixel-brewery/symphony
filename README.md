@@ -12,7 +12,7 @@ Isolated Git worktrees. Resumable agent runs. Pull requests and checks in contex
 [![Continuous Desktop Release](https://img.shields.io/github/actions/workflow/status/pixel-brewery/symphony/release.yml?branch=main&style=flat-square&label=desktop%20release)](https://github.com/pixel-brewery/symphony/actions/workflows/release.yml)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-[Install](#install) · [Workflow](#from-board-to-reviewed-change) · [Capabilities](#what-it-does) · [Build from source](#build-from-source) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
+[Install](#install) · [Workflow](#from-board-to-reviewed-change) · [Capabilities](#what-it-does) · [Build from source](#build-from-source) · [Documentation](docs/README.md) · [Design system](DESIGN-SYSTEM.md) · [Contributing](CONTRIBUTING.md)
 
 > **Public release preparation.** Source and release configuration target
 > [pixel-brewery/symphony](https://github.com/pixel-brewery/symphony). Publication still
