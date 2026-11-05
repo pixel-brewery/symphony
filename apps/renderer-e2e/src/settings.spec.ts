@@ -227,11 +227,11 @@ test('opens Settings from the app menu and desktop requests inside the main wind
     await expect(page).toHaveURL(/#\/main\/board/u);
     const windowsBefore = app.windows().length;
 
-    // act: the application menu's `Settings…` item, which carries the ⌘, accelerator.
-    const menuItem = await app.evaluate(({ Menu }) => {
+    // act: the application menu's Settings item, which carries the ⌘, accelerator.
+    const { nativeLocale, ...menuItem } = await app.evaluate(({ app: electronApp, Menu }) => {
       const find = (items: readonly Electron.MenuItem[]): Electron.MenuItem | undefined => {
         for (const item of items) {
-          if (item.label === 'Settings…') return item;
+          if (item.accelerator === 'CmdOrCtrl+,') return item;
           const nested = item.submenu ? find(item.submenu.items) : undefined;
           if (nested) return nested;
         }
@@ -239,11 +239,18 @@ test('opens Settings from the app menu and desktop requests inside the main wind
       };
       const item = find(Menu.getApplicationMenu()?.items ?? []);
       item?.click();
-      return { label: item?.label, accelerator: item?.accelerator };
+      return {
+        nativeLocale: electronApp.getLocale(),
+        label: item?.label,
+        accelerator: item?.accelerator,
+      };
     });
 
     // assert
-    expect(menuItem).toEqual({ label: 'Settings…', accelerator: 'CmdOrCtrl+,' });
+    expect(menuItem).toEqual({
+      label: /^de(?:[-_]|$)/iu.test(nativeLocale) ? 'Einstellungen…' : 'Settings…',
+      accelerator: 'CmdOrCtrl+,',
+    });
     await expectSettingsInMainWindow(app, page);
     expect(app.windows()).toHaveLength(windowsBefore);
     await expect(page.getByTestId('window-title-text')).toHaveJSProperty('text', 'Workspaces');
