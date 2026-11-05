@@ -29,3 +29,6 @@ COMPONENTS.md
 DESIGN.md
 # Design canvas exports keep the exact bytes the canvas serves.
 docs/workitems/macos-redesign/artboards
+
+# Private local Varynth folder projection; see DESIGN-SYSTEM.md.
+/design-system/
