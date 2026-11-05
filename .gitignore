@@ -47,3 +47,6 @@ Desktop.ini
 .env.*
 !.env.example
 !.env.*.example
+
+# Private local Varynth folder projection; see DESIGN-SYSTEM.md.
+/design-system/
