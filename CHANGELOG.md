@@ -1,3 +1,19 @@
+## 0.1.33 (2026-11-05)
+
+### 🚀 Features
+
+- **i18n:** add JSON catalogs and Wortlaut validation ([3846794](https://github.com/pixel-brewery/symphony/commit/3846794))
+- **i18n:** add English and German JSON catalogs with Wortlaut ([#45](https://github.com/pixel-brewery/symphony/pull/45))
+
+### 🩹 Fixes
+
+- **i18n:** preserve spacing and plural grammar in translated text ([f586a3c](https://github.com/pixel-brewery/symphony/commit/f586a3c))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+- RueDeRennes @RueDeRennes
+
 ## 0.1.32 (2026-11-05)
 
 This was a version bump only, there were no code changes.
