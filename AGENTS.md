@@ -26,6 +26,12 @@ This repository contains a local-first desktop orchestration platform for Codex-
 - Preserve recovery evidence before cleanup. Remove temporary branches and worktrees only after proving their commits or exact contents are integrated; keep permanent integration branches, and account for stashes instead of hiding unfinished work there.
 - Manual releases, deployments, package publication, history rewriting, visibility changes and credential changes require separate owner authorization. Existing workflows triggered by an authorized source merge remain part of normal delivery.
 
+## Issue tracking
+
+- Track authorized follow-up work in `pixel-brewery/symphony` issues. Add each issue explicitly to the [Symphony GitHub project board](https://github.com/orgs/pixel-brewery/projects/2), which owns the backlog and status.
+- Search the board and the repository's open and closed issues first. Update an existing issue for the same work and reopen it for a confirmed regression.
+- Read the current `Status` field and options from GitHub Projects before setting a status. After writing, verify that the issue appears once on the board with the intended status.
+
 ## Architecture invariants
 
 - OmniRoute is research-only reference material. Never add it as a dependency, provider, runtime, account, catalog source, gateway, integration, default, example, or user-visible label. Symphony owns its provider/model catalog, routing, and failover; CLI execution adapters remain replaceable implementation details and never own the visible catalog.
