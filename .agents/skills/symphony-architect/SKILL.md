@@ -1,7 +1,7 @@
 ---
 name: symphony-architect
 metadata:
-  inherits: architecture
+  inherits: architect
 description: 'Plan, implement, refactor, test, explain, document or review engineering work in Symphony. Derive from the shared Pixel Brewery architecture foundations with Symphony desktop boundaries, provider-neutral orchestration, persistence, Angular/Mosaik renderer and verification rules.'
 ---
 
@@ -11,10 +11,10 @@ Carry out the requested engineering task through Symphony's canonical owners. Th
 
 ## Inherited architecture foundation
 
-1. Read `AGENTS.md`, the inherited [Architecture skill](../architecture/SKILL.md), its [shared workflow](../architecture/references/common/workflow.md) and the [local project contract](references/project.md) at task start, whether or not this skill was mentioned.
+1. Read `AGENTS.md`, the inherited [Architecture skill](../architect/SKILL.md), its [shared workflow](../architect/references/common/workflow.md) and the [local project contract](references/project.md) at task start, whether or not this skill was mentioned.
 2. Follow the base workflow for task scope, ownership, subagent coordination, implementation and verification. Select all applicable common modules in the table below and combine them with the local project references; classify tests by both test kind and production owner.
 3. Apply Symphony's explicit framework and runtime translations below. Local specialization does not waive the common structural, contract, lifecycle, isolation or verification foundations.
-4. The base is installed in `.agents/skills/architecture` from `pixel-brewery/skills`; `skills-lock.json` pins its immutable commit and content digest. Validate the installed base and this derivation with `python3 .agents/skills/architecture/scripts/check_inheritance.py --root . --derived symphony-architect`. If the base is missing or invalid, restore the locked skill before dependent work; do not substitute a peer checkout or a remembered copy.
+4. The base is installed in `.agents/skills/architect` from `pixel-brewery/skills`; `skills-lock.json` pins its immutable commit and content digest. Validate the installed base and this derivation with `python3 .agents/skills/architect/scripts/check_inheritance.py --root . --derived symphony-architect`. If the base is missing or invalid, restore the locked skill before dependent work; do not substitute a peer checkout or a remembered copy.
 
 ## Symphony applicability and precedence
 
@@ -27,17 +27,17 @@ User instructions and the authorized scope govern the task. Symphony's `AGENTS.m
 
 | Task or production boundary | Common module | Symphony application |
 | --- | --- | --- |
-| Every task | [Workflow](../architecture/references/common/workflow.md) | [Project contract](references/project.md), [Environment](references/environment.md) |
-| Solution design, architecture review, cross-cutting concerns, refactoring or migration | [Architecture](../architecture/references/common/architecture.md) | [Architecture application](references/architecture.md) |
-| TypeScript abstraction, SOLID, composition, source conventions or pattern selection | [OOP/design patterns](../architecture/references/common/oop.md) | [Project source conventions](references/project.md), [Architecture application](references/architecture.md) |
-| Application services, orchestration, queries, state, SQLite or persistence | [Backend](../architecture/references/common/backend.md) | [Backend integration](references/backend.md) |
-| IPC/preload/process messages, runtime validation, serialization or mobile contracts | [Backend contracts](../architecture/references/common/backend-contracts.md), [API URLs](../architecture/references/common/api.md) | [Transport contracts](references/backend-contracts.md) |
-| Provider ports/adapters, configuration, external I/O, credentials, lifecycle or bounded resources | [Platform](../architecture/references/common/platform.md) | [Platform owners](references/platform.md), [Architecture application](references/architecture.md) |
-| Authorization, AI, files/downloads, reads, external destinations, events, feedback or cleanup | [Backend safety](../architecture/references/common/backend-safety.md) | [Platform integration](references/platform.md), [Backend integration](references/backend.md) |
-| Angular renderer/mobile UI, Mosaik, TypeScript/HTML/SCSS, forms, presenters, routing or localization | [Frontend](../architecture/references/common/frontend.md), [Frontend patterns](../architecture/references/common/frontend-patterns.md) | [Frontend integration](references/frontend.md) |
-| Calendar days, instants, time zones, expiry, scheduling, filters or presentation | [Date/time](../architecture/references/common/date-time.md) | [Temporal integration](references/date-time.md) |
-| Unit/integration/IPC/contract/component tests, mocks, timers, coverage or spec ownership | [Testing](../architecture/references/common/testing.md), plus the production domain | [Test integration](references/testing.md) |
-| Playwright Electron/mobile journeys and acceptance evidence | [Browser E2E](../architecture/references/common/e2e.md), plus the production domain | [Browser integration](references/e2e.md) |
+| Every task | [Workflow](../architect/references/common/workflow.md) | [Project contract](references/project.md), [Environment](references/environment.md) |
+| Solution design, architecture review, cross-cutting concerns, refactoring or migration | [Architecture](../architect/references/common/architecture.md) | [Architecture application](references/architecture.md) |
+| TypeScript abstraction, SOLID, composition, source conventions or pattern selection | [OOP/design patterns](../architect/references/common/oop.md) | [Project source conventions](references/project.md), [Architecture application](references/architecture.md) |
+| Application services, orchestration, queries, state, SQLite or persistence | [Backend](../architect/references/common/backend.md) | [Backend integration](references/backend.md) |
+| IPC/preload/process messages, runtime validation, serialization or mobile contracts | [Backend contracts](../architect/references/common/backend-contracts.md), [API URLs](../architect/references/common/api.md) | [Transport contracts](references/backend-contracts.md) |
+| Provider ports/adapters, configuration, external I/O, credentials, lifecycle or bounded resources | [Platform](../architect/references/common/platform.md) | [Platform owners](references/platform.md), [Architecture application](references/architecture.md) |
+| Authorization, AI, files/downloads, reads, external destinations, events, feedback or cleanup | [Backend safety](../architect/references/common/backend-safety.md) | [Platform integration](references/platform.md), [Backend integration](references/backend.md) |
+| Angular renderer/mobile UI, Mosaik, TypeScript/HTML/SCSS, forms, presenters, routing or localization | [Frontend](../architect/references/common/frontend.md), [Frontend patterns](../architect/references/common/frontend-patterns.md) | [Frontend integration](references/frontend.md) |
+| Calendar days, instants, time zones, expiry, scheduling, filters or presentation | [Date/time](../architect/references/common/date-time.md) | [Temporal integration](references/date-time.md) |
+| Unit/integration/IPC/contract/component tests, mocks, timers, coverage or spec ownership | [Testing](../architect/references/common/testing.md), plus the production domain | [Test integration](references/testing.md) |
+| Playwright Electron/mobile journeys and acceptance evidence | [Browser E2E](../architect/references/common/e2e.md), plus the production domain | [Browser integration](references/e2e.md) |
 | Nx generation/linking, package exports, API documentation, skills, MCP or generated output | Production domain above | [Tooling and documentation](references/tooling.md) |
 
 Examples of combined selection:

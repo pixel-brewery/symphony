@@ -2,14 +2,14 @@
 
 **Dokumentstatus:** Implementierter Ist-Stand
 
-Symphony keeps repository-owned assistant rules separate from a versioned shared Architecture foundation. Repository instructions select `symphony-architect`; that skill explicitly reads the installed `architecture` base and applies its principles through Symphony's desktop, process, provider, persistence and Angular/Mosaik contracts.
+Symphony keeps repository-owned assistant rules separate from a versioned shared Architecture foundation. Repository instructions select `symphony-architect`; that skill explicitly reads the installed `architect` base and applies its principles through Symphony's desktop, process, provider, persistence and Angular/Mosaik contracts.
 
 ## Sources and generated consumers
 
 | Surface                                          | Source of truth                                                                                    | Generated consumers                                                                                                 |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Repository instructions                          | `AGENTS.md`                                                                                        | Thin `CODEX.md` and `CLAUDE.md` adapters                                                                            |
-| Shared Architecture foundation                   | `pixel-brewery/skills`, `skills/architecture`                                                      | Installed copy in `.agents/skills/architecture`, tracked in root `skills-lock.json`                                 |
+| Shared Architecture foundation                   | `pixel-brewery/skills`, `skills/architect`                                                         | Installed copy in `.agents/skills/architect`, tracked in root `skills-lock.json`                                    |
 | Local Designer                                   | `symphony-designer` explicitly reading the pinned shared `designer` and its local project contract | Generated Claude adapter and portable archive                                                                       |
 | Local skill rules                                | `.agents/skills/<name>` excluding imported skills                                                  | `.claude/skills/<name>/SKILL.md`, `.agents/packages/<name>.skill`, `.agents/packages/skills-lock.json`              |
 | Agent descriptions                               | `.github/agents/*.agent.md`                                                                        | Codex/OpenCode/Claude agents and repository wrapper skills                                                          |
@@ -54,9 +54,9 @@ Der lokale Designer verwendet `mosaik` für die verpflichtende Katalogkonsultati
 
 ## Versioned Architecture derivation
 
-The local `symphony-architect` declares `metadata.inherits: architecture` and explicitly reads `../architecture/SKILL.md`. This is an instruction and validation contract rather than native Skill-format inheritance. The local router combines relevant base modules with Symphony references. Generic foundations remain binding; explicit local translations determine their application to actual desktop owners without introducing another framework, transport or database.
+The local `symphony-architect` declares `metadata.inherits: architect` and explicitly reads `../architect/SKILL.md`. This is an instruction and validation contract rather than native Skill-format inheritance. The local router combines relevant base modules with Symphony references. Generic foundations remain binding; explicit local translations determine their application to actual desktop owners without introducing another framework, transport or database.
 
-The root standard Skills CLI lock records the source repository, `skills/architecture/SKILL.md`, a full immutable Git commit in `ref`, and the installed-folder SHA-256 in `computedHash`. The base is committed with the consumer repository, so ordinary work requires neither another project checkout nor network access. The imported directory is excluded from source formatting and must not be edited locally.
+The root standard Skills CLI lock records the source repository, `skills/architect/SKILL.md`, a full immutable Git commit in `ref`, and the installed-folder SHA-256 in `computedHash`. The base is committed with the consumer repository, so ordinary work requires neither another project checkout nor network access. The imported directory is excluded from source formatting and must not be edited locally.
 
 `python3 .agents/scripts/sync_architect_core.py --check` delegates to the installed base checker. It validates the lock, revision, installed-source digest and explicit local derivation. Missing or modified base content prevents successful agent synchronization; restore the locked source rather than falling back silently to remembered or peer rules.
 
@@ -73,7 +73,7 @@ Symphony retains these concrete adaptations:
 Select a full commit and install through the standard Skills CLI from the repository root, for example:
 
 ```sh
-npx skills add https://github.com/pixel-brewery/skills/tree/<commit>/skills/architecture --skill architecture --agent codex --copy --yes
+npx skills add https://github.com/pixel-brewery/skills/tree/<commit>/skills/architect --skill architect --agent codex --copy --yes
 ```
 
 Review the root lock's immutable `ref`, source and digest. A branch name or floating default branch is not an accepted Architecture pin. Run `yarn agents:sync`, review the local instructions and generated artifacts, then run `yarn agents:check`. Common changes are authored upstream and adopted through a deliberate new pin; local rules remain in their existing local skill references.
