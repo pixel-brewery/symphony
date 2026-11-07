@@ -27,26 +27,26 @@ class PortableSkillArchiveTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="inherited archive ") as directory:
             root = Path(directory)
             derived = root / ".agents/skills/derived"
-            base = root / ".agents/skills/architecture"
+            base = root / ".agents/skills/architect"
             (derived / "references").mkdir(parents=True)
             (base / "references/common").mkdir(parents=True)
-            source = "---\nname: derived\ndescription: Derived fixture.\nmetadata:\n  inherits: architecture\n---\n\nRead [base](../architecture/SKILL.md).\n"
+            source = "---\nname: derived\ndescription: Derived fixture.\nmetadata:\n  inherits: architect\n---\n\nRead [base](../architect/SKILL.md).\n"
             (derived / "SKILL.md").write_text(source)
-            (derived / "references/project.md").write_text("Apply [workflow](../../architecture/references/common/workflow.md).\n")
-            (base / "SKILL.md").write_text("---\nname: architecture\ndescription: Base.\n---\n\nRead [workflow](references/common/workflow.md).\n")
+            (derived / "references/project.md").write_text("Apply [workflow](../../architect/references/common/workflow.md).\n")
+            (base / "SKILL.md").write_text("---\nname: architect\ndescription: Base.\n---\n\nRead [workflow](references/common/workflow.md).\n")
             (base / "references/common/workflow.md").write_text("Preserve the local project rules.\n")
             provenance = {"source": "pixel-brewery/skills", "ref": "a" * 40, "sourceType": "github", "computedHash": "locked-base-content"}
-            (root / "skills-lock.json").write_text(json.dumps({"version": 1, "skills": {"architecture": provenance, "unrelated": {"source": "other/repo"}}}))
+            (root / "skills-lock.json").write_text(json.dumps({"version": 1, "skills": {"architect": provenance, "unrelated": {"source": "other/repo"}}}))
 
             data = archive_bytes(derived)
             with zipfile.ZipFile(io.BytesIO(data)) as archive:
                 names = archive.namelist()
                 self.assertTrue(all(name.startswith("derived/") for name in names))
-                self.assertIn("derived/dependencies/architecture/references/common/workflow.md", names)
-                self.assertIn(b"[base](dependencies/architecture/SKILL.md)", archive.read("derived/SKILL.md"))
-                self.assertIn(b"[workflow](../dependencies/architecture/references/common/workflow.md)", archive.read("derived/references/project.md"))
-                self.assertIn(b"[workflow](references/common/workflow.md)", archive.read("derived/dependencies/architecture/SKILL.md"))
-                self.assertEqual(json.loads(archive.read("derived/dependencies/skills-lock.json")), {"version": 1, "skills": {"architecture": provenance}})
+                self.assertIn("derived/dependencies/architect/references/common/workflow.md", names)
+                self.assertIn(b"[base](dependencies/architect/SKILL.md)", archive.read("derived/SKILL.md"))
+                self.assertIn(b"[workflow](../dependencies/architect/references/common/workflow.md)", archive.read("derived/references/project.md"))
+                self.assertIn(b"[workflow](references/common/workflow.md)", archive.read("derived/dependencies/architect/SKILL.md"))
+                self.assertEqual(json.loads(archive.read("derived/dependencies/skills-lock.json")), {"version": 1, "skills": {"architect": provenance}})
             self.assertEqual((derived / "SKILL.md").read_text(), source)
 
             (base / "references/common/workflow.md").write_text("Updated shared foundation.\n")
@@ -57,12 +57,12 @@ class PortableSkillArchiveTests(unittest.TestCase):
             root = Path(directory)
             derived = root / "derived"
             derived.mkdir()
-            (derived / "SKILL.md").write_text("---\nname: derived\ndescription: Derived.\nmetadata:\n  inherits: architecture\n---\n\n# Workflow\n")
-            with self.assertRaisesRegex(ValueError, "missing inherited skill architecture"):
+            (derived / "SKILL.md").write_text("---\nname: derived\ndescription: Derived.\nmetadata:\n  inherits: architect\n---\n\n# Workflow\n")
+            with self.assertRaisesRegex(ValueError, "missing inherited skill architect"):
                 archive_bytes(derived)
-            base = root / "architecture"
+            base = root / "architect"
             base.mkdir()
-            (base / "SKILL.md").write_text("---\nname: architecture\ndescription: Base.\nmetadata:\n  inherits: derived\n---\n\n# Workflow\n")
+            (base / "SKILL.md").write_text("---\nname: architect\ndescription: Base.\nmetadata:\n  inherits: derived\n---\n\n# Workflow\n")
             with self.assertRaisesRegex(ValueError, "circular inherited skill"):
                 archive_bytes(derived)
 

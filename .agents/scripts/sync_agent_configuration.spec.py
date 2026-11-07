@@ -84,12 +84,12 @@ class AgentConfigurationFormatterTests(unittest.TestCase):
             root = Path(directory)
             skill = root / ".agents/skills/derived/SKILL.md"
             skill.parent.mkdir(parents=True)
-            skill.write_text("---\nname: derived\ndescription: Local fixture.\nmetadata:\n  inherits: architecture\n---\n\nRead [base](../architecture/SKILL.md).\n")
+            skill.write_text("---\nname: derived\ndescription: Local fixture.\nmetadata:\n  inherits: architect\n---\n\nRead [base](../architect/SKILL.md).\n")
 
             projected = claude_files(root, [], {})[root / ".claude/skills/derived/SKILL.md"]
 
-            self.assertIn("metadata:\n  inherits: architecture\n---", projected)
-            self.assertIn("Read [base](../architecture/SKILL.md).", projected)
+            self.assertIn("metadata:\n  inherits: architect\n---", projected)
+            self.assertIn("Read [base](../architect/SKILL.md).", projected)
             self.assertEqual(skill.read_text().count("metadata:"), 1)
 
     @classmethod

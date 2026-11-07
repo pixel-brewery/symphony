@@ -1,6 +1,6 @@
 # Architect origin and Symphony translations
 
-The architecture foundation is inherited from the public [Pixel Brewery Skills](https://github.com/pixel-brewery/skills) repository, skill `architecture`. The root `skills-lock.json` records its full immutable commit in `ref`, source path and installed-folder SHA-256. The canonical installed base is `../../architecture`; this local skill declares `metadata.inherits: architecture` and reads [its entrypoint](../../architecture/SKILL.md) before applying Symphony-specific rules.
+The architecture foundation is inherited from the public [Pixel Brewery Skills](https://github.com/pixel-brewery/skills) repository, skill `architect`. The root `skills-lock.json` records its full immutable commit in `ref`, source path and installed-folder SHA-256. The canonical installed base is `../../architect`; this local skill declares `metadata.inherits: architect` and reads [its entrypoint](../../architect/SKILL.md) before applying Symphony-specific rules.
 
 The foundation originated from the 13 common modules shared by Archipel, private upstream application, Mosaik, Synapse and Symphony. These modules are maintained centrally rather than copied into this local skill. Relevant modules are loaded through the routing table; ordinary skill use remains independent of other project checkouts.
 

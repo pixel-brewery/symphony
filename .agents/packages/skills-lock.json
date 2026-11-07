@@ -9,18 +9,18 @@
       "sha256": "1c3a982d9625c1deb223f7f521dc3de9e45bfb691c4c60dee519d654d77e2af3"
     },
     {
+      "name": "architect",
+      "source": ".agents/skills/architect",
+      "archive": ".agents/packages/architect.skill",
+      "claude": ".claude/skills/architect/SKILL.md",
+      "sha256": "617fc1133cf9a27a3336cc530e0206245edeecd412acd8e11430a13a2f2b33da"
+    },
+    {
       "name": "architect-desktop-platform",
       "source": ".agents/skills/architect-desktop-platform",
       "archive": ".agents/packages/architect-desktop-platform.skill",
       "claude": ".claude/skills/architect-desktop-platform/SKILL.md",
       "sha256": "132d71f98cd2d864829fba33dfd2f82bb830f52d6f61f111d42ecd8f206f262f"
-    },
-    {
-      "name": "architecture",
-      "source": ".agents/skills/architecture",
-      "archive": ".agents/packages/architecture.skill",
-      "claude": ".claude/skills/architecture/SKILL.md",
-      "sha256": "978c9ffcce6842cb9f49dfdd97c65f205de44a1093ebd049c89e7cfdd8e30a39"
     },
     {
       "name": "caveman",
@@ -202,14 +202,14 @@
       "source": ".agents/skills/symphony-architect",
       "archive": ".agents/packages/symphony-architect.skill",
       "claude": ".claude/skills/symphony-architect/SKILL.md",
-      "sha256": "dcf88f0b613af1456320ca71810f5fc8b078fa92dc2269bc2fefebb34a110e9b"
+      "sha256": "362f8f4597770661aac75e7989e579c9e742311bf7525a0102843cfb76a3e1c0"
     },
     {
       "name": "symphony-designer",
       "source": ".agents/skills/symphony-designer",
       "archive": ".agents/packages/symphony-designer.skill",
       "claude": ".claude/skills/symphony-designer/SKILL.md",
-      "sha256": "5467164610bf78ee576a9b508fd5482af9b8c02becf62cdc3cdcdb29cc4d452f"
+      "sha256": "89b6bb5bd6e919aae066ee3015346a4a1a6ea2b00b9c2c97497bef51a88c0654"
     },
     {
       "name": "symphony-docs",

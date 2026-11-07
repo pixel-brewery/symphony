@@ -1,6 +1,6 @@
 # Symphony project contract
 
-Read for every task with `AGENTS.md` and [shared workflow](../../architecture/references/common/workflow.md). The common modules come from the locked Pixel Brewery Architecture base; this file and the local domain references apply them to Symphony.
+Read for every task with `AGENTS.md` and [shared workflow](../../architect/references/common/workflow.md). The common modules come from the locked Pixel Brewery Architecture base; this file and the local domain references apply them to Symphony.
 
 ## Owners and authority
 
