@@ -1,3 +1,15 @@
+## 0.1.35 (2026-11-07)
+
+### 🩹 Fixes
+
+- **agents:** unify designer and local Mosaik MCP ([46a91b6](https://github.com/pixel-brewery/symphony/commit/46a91b6))
+- **agents:** unify designer and local Mosaik MCP ([#48](https://github.com/pixel-brewery/symphony/pull/48))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+- RueDeRennes @RueDeRennes
+
 ## 0.1.34 (2026-11-06)
 
 This was a version bump only, there were no code changes.
