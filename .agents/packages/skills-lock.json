@@ -13,7 +13,7 @@
       "source": ".agents/skills/architect",
       "archive": ".agents/packages/architect.skill",
       "claude": ".claude/skills/architect/SKILL.md",
-      "sha256": "617fc1133cf9a27a3336cc530e0206245edeecd412acd8e11430a13a2f2b33da"
+      "sha256": "a2e76018af4755f6bec980cca2c2805901e6276db022a5c6a340aa62a51d5e9f"
     },
     {
       "name": "architect-desktop-platform",
@@ -202,14 +202,14 @@
       "source": ".agents/skills/symphony-architect",
       "archive": ".agents/packages/symphony-architect.skill",
       "claude": ".claude/skills/symphony-architect/SKILL.md",
-      "sha256": "362f8f4597770661aac75e7989e579c9e742311bf7525a0102843cfb76a3e1c0"
+      "sha256": "eaf928f8aa58a957d77e60d7c013a396ac5d88bd7e0a42dc1b32bfdb2c02634a"
     },
     {
       "name": "symphony-designer",
       "source": ".agents/skills/symphony-designer",
       "archive": ".agents/packages/symphony-designer.skill",
       "claude": ".claude/skills/symphony-designer/SKILL.md",
-      "sha256": "89b6bb5bd6e919aae066ee3015346a4a1a6ea2b00b9c2c97497bef51a88c0654"
+      "sha256": "94b2884f80e0cb364b49a338064160371db31486901f49aa1df6bc1f28fbba4c"
     },
     {
       "name": "symphony-docs",
