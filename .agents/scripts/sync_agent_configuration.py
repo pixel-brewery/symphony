@@ -139,7 +139,10 @@ def render_codex_config(servers: dict[str, dict[str, Any]]) -> str:
             lines.append(f"url = {toml(server['url'])}")
         else:
             raise ValueError(f"MCP server {name!r} needs command or url")
-        lines.extend(["enabled = true", ""])
+        lines.append("enabled = true")
+        if name == "mosaik":
+            lines.extend(["startup_timeout_sec = 30", "tool_timeout_sec = 60"])
+        lines.append("")
     lines.extend(["[features]", "multi_agent = true", "", "[agents]", "max_concurrent_threads_per_session = 4", ""])
     return "\n".join(lines)
 
@@ -152,6 +155,8 @@ def render_opencode_config(servers: dict[str, dict[str, Any]]) -> str:
             entries[name] = {"type": "local", "command": [server["command"], *args], "enabled": True}
         else:
             entries[name] = {"type": "remote", "url": server["url"], "enabled": True}
+        if name == "mosaik":
+            entries[name]["timeout"] = 30000
     return json.dumps({"$schema": "https://opencode.ai/config.json", "mcp": entries}, indent=2) + "\n"
 
 
@@ -178,6 +183,29 @@ def render_claude_mcp_config(servers: dict[str, dict[str, Any]], plugin_servers:
         else:
             entries[name] = {"type": "http", "url": server["url"]}
     return json.dumps({"mcpServers": entries}, indent=2) + "\n"
+
+
+def render_mosaik_client_files(root: Path, servers: dict[str, dict[str, Any]]) -> dict[Path, str]:
+    """Project the canonical local Mosaik connection into the additional client schemas."""
+    mosaik = servers.get("mosaik", {})
+    if mosaik.get("type") != "stdio" or not isinstance(mosaik.get("command"), str):
+        raise ValueError("The Mosaik connection must be a preinstalled local stdio server.")
+    arguments = mosaik.get("args", [])
+    if not isinstance(arguments, list) or not all(isinstance(argument, str) for argument in arguments):
+        raise ValueError("The Mosaik connection must declare string arguments.")
+    local = {
+        "command": mosaik["command"],
+        "args": ["." if argument == WORKSPACE_VARIABLE else argument for argument in arguments],
+    }
+    configurations = {
+        ".github/mcp.json": {"mcpServers": {"mosaik": {"type": "stdio", **local, "tools": ["*"]}}},
+        ".cursor/mcp.json": {"mcpServers": {"mosaik": dict(local)}},
+        ".gemini/settings.json": {
+            "context": {"fileName": ["AGENTS.md", "GEMINI.md"]},
+            "mcpServers": {"mosaik": {**local, "cwd": ".", "timeout": 60000}},
+        },
+    }
+    return {root / path: json.dumps(configuration, indent=2) + "\n" for path, configuration in configurations.items()}
 
 
 def skill_sources(root: Path, wrappers: dict[Path, str]) -> dict[str, str]:
@@ -228,6 +256,7 @@ def provider_files(root: Path, guidance: list[Guidance], servers: dict[str, dict
         root / ".codex" / "config.toml": render_codex_config(servers),
         root / "opencode.json": render_opencode_config(servers),
         root / ".mcp.json": render_claude_mcp_config(servers, plugin_provided_mcp_servers(root)),
+        **render_mosaik_client_files(root, servers),
         root / ".opencode" / ".gitignore": "# Generated runtime data\nnode_modules/\n",
     }
     for item in guidance:

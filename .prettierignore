@@ -35,3 +35,7 @@ docs/workitems/macos-redesign/artboards
 
 # Wortlaut pins the original shipped rule-pack bytes.
 .wortlaut/rule-packs/**
+
+# Preserve the reviewed shared Designer source bytes.
+.agents/skills/designer
+.claude/skills/designer

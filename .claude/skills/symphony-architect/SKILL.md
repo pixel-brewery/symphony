@@ -54,6 +54,10 @@ Examples of combined selection:
 
 Apply the completion and consequence gates in [the project contract](references/project.md). Ordinary skill use does not imply Definition of Done, a legal review, publishing, a release or permission to message others.
 
+## Local design role
+
+Apply [Symphony Designer](../symphony-designer/SKILL.md) to every UI question, new idea, implementation and review. It explicitly composes the pinned shared Designer with Symphony's own theme, parity and runtime contract; `inspect-reference-ui` remains its local comparison module. Engineering boundaries remain with this architect.
+
 ## Local environment
 
 Every task also applies [Environment](references/environment.md): resolve the actual configured runtime, reuse necessary services, coordinate heavy checks, isolate test-owned SQLite/workspace data and clean up owned helpers. Symphony has no NestJS API or PostgreSQL server; do not copy another project's ports or database prerequisites. Packaged Electron journeys use the repository's real Electron fixture and process model.

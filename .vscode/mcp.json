@@ -21,8 +21,10 @@
       "args": ["-y", "@angular/cli", "mcp"]
     },
     "mosaik": {
-      "type": "http",
-      "url": "https://beta.api.mosaik.breadstone.de/api/mcp"
+      "type": "stdio",
+      "command": "yarn",
+      "args": ["exec", "mosaik-mcp"],
+      "cwd": "${workspaceFolder}"
     }
   }
 }

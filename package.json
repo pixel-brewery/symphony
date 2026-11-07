@@ -151,6 +151,7 @@
     "@nx/vitest": "23.3.1",
     "@nx/web": "23.3.1",
     "@nx/workspace": "23.3.1",
+    "@pixel-brewery/mosaik-mcp": "0.1.192",
     "@pixel-brewery/wortlaut-eslint-rules": "0.2.4",
     "@pixel-brewery/wortlaut-nx-tasks": "0.2.4",
     "@playwright/test": "1.64.1",
