@@ -58,6 +58,13 @@
       "sha256": "a1d0fc7ae3d572954fd0318527d09147a95824ee53007a03230dc31bd955f087"
     },
     {
+      "name": "designer",
+      "source": ".agents/skills/designer",
+      "archive": ".agents/packages/designer.skill",
+      "claude": ".claude/skills/designer/SKILL.md",
+      "sha256": "70e10384cca149aed39aafa8571abd186bf7a438a1e695ef07ca7463dab58f7b"
+    },
+    {
       "name": "diagnose-ci-failure",
       "source": ".agents/skills/diagnose-ci-failure",
       "archive": ".agents/packages/diagnose-ci-failure.skill",
@@ -69,7 +76,7 @@
       "source": ".agents/skills/inspect-reference-ui",
       "archive": ".agents/packages/inspect-reference-ui.skill",
       "claude": ".claude/skills/inspect-reference-ui/SKILL.md",
-      "sha256": "f8266cd511e901385af68c951d18bd76b17bcf740fb8aaa5cc5874e3210dae60"
+      "sha256": "be9198f72c4856a032fc0e43fcce9bd75823fcee4ac1f13a35e746ff16e1b974"
     },
     {
       "name": "link-workspace-packages",
@@ -195,7 +202,14 @@
       "source": ".agents/skills/symphony-architect",
       "archive": ".agents/packages/symphony-architect.skill",
       "claude": ".claude/skills/symphony-architect/SKILL.md",
-      "sha256": "9882d75dd3a565bab31ef6b4d96eaa553a73a9c1a0dc80cffe6d72bd890fd1d4"
+      "sha256": "dcf88f0b613af1456320ca71810f5fc8b078fa92dc2269bc2fefebb34a110e9b"
+    },
+    {
+      "name": "symphony-designer",
+      "source": ".agents/skills/symphony-designer",
+      "archive": ".agents/packages/symphony-designer.skill",
+      "claude": ".claude/skills/symphony-designer/SKILL.md",
+      "sha256": "5467164610bf78ee576a9b508fd5482af9b8c02becf62cdc3cdcdb29cc4d452f"
     },
     {
       "name": "symphony-docs",

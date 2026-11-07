@@ -6,7 +6,6 @@
         "api.github.com",
         "github.com",
         "registry.npmjs.org",
-        "beta.api.mosaik.breadstone.de",
         "www.google-analytics.com"
       ],
       "allowUnixSockets": ["/tmp/.nx", "~/.nx"]

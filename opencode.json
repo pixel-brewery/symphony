@@ -22,9 +22,10 @@
       "enabled": true
     },
     "mosaik": {
-      "type": "remote",
-      "url": "https://beta.api.mosaik.breadstone.de/api/mcp",
-      "enabled": true
+      "type": "local",
+      "command": ["yarn", "exec", "mosaik-mcp"],
+      "enabled": true,
+      "timeout": 30000
     }
   }
 }

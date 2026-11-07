@@ -1,6 +1,6 @@
 # Angular, Mosaik and renderer integration
 
-Use with common Frontend and Frontend patterns. Read [renderer architecture](../../../../.github/instructions/renderer-architecture.instructions.md), [inspect-reference-ui](../../inspect-reference-ui/SKILL.md), the affected Symphony owner and the exact private upstream application/Mosaik source.
+Use with common Frontend and Frontend patterns. Apply [Symphony Designer](../../symphony-designer/SKILL.md) to every UI question, new idea, implementation and review; its [local contract](../../symphony-designer/references/project.md) owns the project's design mutation of the pinned shared foundation. Read [renderer architecture](../../../../.github/instructions/renderer-architecture.instructions.md), [inspect-reference-ui](../../inspect-reference-ui/SKILL.md), the affected Symphony owner and the exact private upstream application/Mosaik source.
 
 ## Reference and ownership contract
 

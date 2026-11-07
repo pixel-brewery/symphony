@@ -9,6 +9,8 @@ Source: [.agents/skills/inspect-reference-ui/SKILL.md](../../../.agents/skills/i
 
 # Inspect the reference UI
 
+This is the local parity module of [Symphony Designer](../symphony-designer/SKILL.md), not an alternative design workflow. Keep its existing private-reference comparison requirements alongside the shared Designer and Symphony design contract.
+
 1. Treat `$SYMPHONY_REFERENCE_ROOT` and `../mosaik` as read-only.
 2. Locate the exact reference implementation, styles, tokens, configuration, tests, and public Mosaik API before changing Symphony.
 3. Compare structure, behavior, interaction, density, spacing, typography, states, and responsive rules; do not compare screenshots alone.

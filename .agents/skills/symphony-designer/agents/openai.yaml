@@ -1,0 +1,12 @@
+interface:
+  display_name: 'Symphony Designer'
+  short_description: "Design and review Symphony's own Mosaik interface"
+  default_prompt: 'Use $symphony-designer to design or review the requested interface through its local foundations and the shared Designer.'
+dependencies:
+  tools:
+    - type: 'mcp'
+      value: 'mosaik'
+      description: 'Preinstalled local Mosaik catalog snapshot 0.1.192'
+      transport: 'stdio'
+policy:
+  allow_implicit_invocation: true

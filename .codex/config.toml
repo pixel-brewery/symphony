@@ -26,8 +26,12 @@ cwd = "."
 enabled = true
 
 [mcp_servers."mosaik"]
-url = "https://beta.api.mosaik.breadstone.de/api/mcp"
+command = "yarn"
+args = [ "exec", "mosaik-mcp" ]
+cwd = "."
 enabled = true
+startup_timeout_sec = 30
+tool_timeout_sec = 60
 
 [features]
 multi_agent = true

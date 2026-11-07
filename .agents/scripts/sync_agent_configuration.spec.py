@@ -4,13 +4,78 @@
 from __future__ import annotations
 
 import os
+import json
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from sync_agent_configuration import claude_files, format_content
+from sync_agent_configuration import (
+    claude_files,
+    format_content,
+    render_claude_mcp_config,
+    render_codex_config,
+    render_mosaik_client_files,
+    render_opencode_config,
+)
+
+
+class CatalogConnectionTests(unittest.TestCase):
+    def test_additional_clients_receive_only_the_same_local_mosaik_bin(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        servers = {
+            "nx": {"type": "stdio", "command": "npx", "args": ["nx", "mcp"]},
+            "mosaik": {"type": "stdio", "command": "yarn", "args": ["exec", "mosaik-mcp"]},
+        }
+        projected = render_mosaik_client_files(root, servers)
+        self.assertEqual(set(projected), {root / ".github/mcp.json", root / ".cursor/mcp.json", root / ".gemini/settings.json"})
+        local = {"command": "yarn", "args": ["exec", "mosaik-mcp"]}
+
+        github = json.loads(projected[root / ".github/mcp.json"])
+        self.assertEqual(github, {"mcpServers": {"mosaik": {"type": "stdio", **local, "tools": ["*"]}}})
+        cursor = json.loads(projected[root / ".cursor/mcp.json"])
+        self.assertEqual(cursor, {"mcpServers": {"mosaik": local}})
+        gemini = json.loads(projected[root / ".gemini/settings.json"])
+        self.assertEqual(gemini, {
+            "context": {"fileName": ["AGENTS.md", "GEMINI.md"]},
+            "mcpServers": {"mosaik": {**local, "cwd": ".", "timeout": 60000}},
+        })
+
+    def test_additional_clients_refuse_a_remote_or_malformed_mosaik_definition(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        with self.assertRaisesRegex(ValueError, "local stdio"):
+            render_mosaik_client_files(root, {"mosaik": {"type": "http", "url": "https://example.invalid/mcp"}})
+        with self.assertRaisesRegex(ValueError, "string arguments"):
+            render_mosaik_client_files(root, {"mosaik": {"type": "stdio", "command": "yarn", "args": "exec mosaik-mcp"}})
+
+    def test_clients_launch_one_preinstalled_local_mosaik_bin(self) -> None:
+        servers = {
+            "nx": {"type": "stdio", "command": "npx", "args": ["nx", "mcp"]},
+            "mosaik": {
+                "type": "stdio",
+                "command": "yarn",
+                "args": ["exec", "mosaik-mcp"],
+                "cwd": "${workspaceFolder}",
+            },
+        }
+
+        codex = render_codex_config(servers)
+        mosaik = codex.split('[mcp_servers."mosaik"]', 1)[1].split("[features]", 1)[0]
+        self.assertIn('command = "yarn"', mosaik)
+        self.assertIn('args = [ "exec", "mosaik-mcp" ]', mosaik)
+        self.assertIn('cwd = "."', mosaik)
+        self.assertIn("startup_timeout_sec = 30", mosaik)
+        self.assertIn("tool_timeout_sec = 60", mosaik)
+        self.assertNotIn("url =", mosaik)
+        self.assertNotIn("mosaik-offline", codex)
+
+        claude = json.loads(render_claude_mcp_config(servers, {"nx"}))["mcpServers"]
+        self.assertEqual(claude, {"mosaik": {"type": "stdio", "command": "yarn", "args": ["exec", "mosaik-mcp"]}})
+
+        opencode = json.loads(render_opencode_config(servers))["mcp"]
+        self.assertEqual(set(opencode), {"nx", "mosaik"})
+        self.assertEqual(opencode["mosaik"], {"type": "local", "command": ["yarn", "exec", "mosaik-mcp"], "enabled": True, "timeout": 30000})
 
 
 class AgentConfigurationFormatterTests(unittest.TestCase):
