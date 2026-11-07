@@ -6,15 +6,15 @@ Symphony keeps repository-owned assistant rules separate from a versioned shared
 
 ## Sources and generated consumers
 
-| Surface                                          | Source of truth                                                                                    | Generated consumers                                                                                    |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Repository instructions                          | `AGENTS.md`                                                                                        | Thin `CODEX.md` and `CLAUDE.md` adapters                                                               |
-| Shared Architecture foundation                   | `pixel-brewery/skills`, `skills/architecture`                                                      | Installed copy in `.agents/skills/architecture`, tracked in root `skills-lock.json`                    |
-| Local Designer                                   | `symphony-designer` explicitly reading the pinned shared `designer` and its local project contract | Generated Claude adapter and portable archive                                                          |
-| Local skill rules                                | `.agents/skills/<name>` excluding imported skills                                                  | `.claude/skills/<name>/SKILL.md`, `.agents/packages/<name>.skill`, `.agents/packages/skills-lock.json` |
-| Agent descriptions                               | `.github/agents/*.agent.md`                                                                        | Codex/OpenCode/Claude agents and repository wrapper skills                                             |
-| Scoped instructions, prompts and reference rules | `.github/instructions`, `.github/prompts`, `.github/rules`                                         | Provider commands and repository wrapper skills                                                        |
-| MCP servers                                      | `.vscode/mcp.json`                                                                                 | `.codex/config.toml`, `opencode.json`, `.mcp.json`, `.github/mcp.json`, `.cursor/mcp.json`, `.gemini/settings.json`                                                     |
+| Surface                                          | Source of truth                                                                                    | Generated consumers                                                                                                 |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Repository instructions                          | `AGENTS.md`                                                                                        | Thin `CODEX.md` and `CLAUDE.md` adapters                                                                            |
+| Shared Architecture foundation                   | `pixel-brewery/skills`, `skills/architecture`                                                      | Installed copy in `.agents/skills/architecture`, tracked in root `skills-lock.json`                                 |
+| Local Designer                                   | `symphony-designer` explicitly reading the pinned shared `designer` and its local project contract | Generated Claude adapter and portable archive                                                                       |
+| Local skill rules                                | `.agents/skills/<name>` excluding imported skills                                                  | `.claude/skills/<name>/SKILL.md`, `.agents/packages/<name>.skill`, `.agents/packages/skills-lock.json`              |
+| Agent descriptions                               | `.github/agents/*.agent.md`                                                                        | Codex/OpenCode/Claude agents and repository wrapper skills                                                          |
+| Scoped instructions, prompts and reference rules | `.github/instructions`, `.github/prompts`, `.github/rules`                                         | Provider commands and repository wrapper skills                                                                     |
+| MCP servers                                      | `.vscode/mcp.json`                                                                                 | `.codex/config.toml`, `opencode.json`, `.mcp.json`, `.github/mcp.json`, `.cursor/mcp.json`, `.gemini/settings.json` |
 
 The sync command projects these sources without granting external-write, branch, release or product-change authority. It excludes plugin-provided Nx skills from Claude's mirror to avoid duplicate registration; Codex and OpenCode continue to use the canonical tree.
 
@@ -34,15 +34,15 @@ Die kanonische Registry definiert genau einen Mosaik-Server: `mosaik` startet da
 
 Der bestehende Generator projiziert die Verbindung in sieben Clientformen. Die Registry bleibt die einzige MCP-Quelle; die Projektionen werden durch `yarn agents:sync` erzeugt und durch `yarn agents:check` gegen sie geprüft.
 
-| Client | Konfiguration | Mosaik-Semantik |
-| --- | --- | --- |
-| VS Code / Copilot | `.vscode/mcp.json` | Kanonischer STDIO-Eintrag; `${workspaceFolder}` als Arbeitsverzeichnis |
-| Codex | `.codex/config.toml` | Lokaler Prozess mit Arbeitsverzeichnis `.` und Start-/Toolzeitlimits |
-| Claude Code | `.mcp.json` | Lokaler STDIO-Prozess; Nx bleibt separat durch das aktivierte Plugin bereitgestellt |
-| OpenCode | `opencode.json` | Lokale Befehlsliste `["yarn", "exec", "mosaik-mcp"]` |
-| GitHub Copilot CLI | `.github/mcp.json` | STDIO mit ausschließlich hier gesetztem `tools: ["*"]` |
-| Cursor | `.cursor/mcp.json` | Befehls-/Argumenteintrag im `mcpServers`-Schema |
-| Gemini CLI | `.gemini/settings.json` | Lokaler Prozess mit `cwd: "."`, 60 Sekunden Timeout und `AGENTS.md`/`GEMINI.md` als Kontextdateinamen |
+| Client             | Konfiguration           | Mosaik-Semantik                                                                                       |
+| ------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| VS Code / Copilot  | `.vscode/mcp.json`      | Kanonischer STDIO-Eintrag; `${workspaceFolder}` als Arbeitsverzeichnis                                |
+| Codex              | `.codex/config.toml`    | Lokaler Prozess mit Arbeitsverzeichnis `.` und Start-/Toolzeitlimits                                  |
+| Claude Code        | `.mcp.json`             | Lokaler STDIO-Prozess; Nx bleibt separat durch das aktivierte Plugin bereitgestellt                   |
+| OpenCode           | `opencode.json`         | Lokale Befehlsliste `["yarn", "exec", "mosaik-mcp"]`                                                  |
+| GitHub Copilot CLI | `.github/mcp.json`      | STDIO mit ausschließlich hier gesetztem `tools: ["*"]`                                                |
+| Cursor             | `.cursor/mcp.json`      | Befehls-/Argumenteintrag im `mcpServers`-Schema                                                       |
+| Gemini CLI         | `.gemini/settings.json` | Lokaler Prozess mit `cwd: "."`, 60 Sekunden Timeout und `AGENTS.md`/`GEMINI.md` als Kontextdateinamen |
 
 Die drei zusätzlichen MCP-Projektionen für Copilot CLI, Cursor und Gemini enthalten ausschließlich `mosaik`; bestehende Nx-/Angular-/Filesystem-/Playwright-Verbindungen der anderen Clients bleiben in deren bisherigem Umfang erhalten. Der Generator wahrt Claudes Nx-Plugin-Ausschluss und fügt keine MCP-Zugangsdaten, globalen Clientrichtlinien oder weitere Services hinzu.
 
