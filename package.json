@@ -87,7 +87,7 @@
     "intl:references": "nx run frontend-intl:intl-references"
   },
   "dependencies": {
-    "@angular/cdk": "22.2.5",
+    "@angular/cdk": "22.2.6",
     "@angular/common": "22.2.4",
     "@angular/compiler": "22.2.4",
     "@angular/core": "22.2.4",
@@ -127,10 +127,10 @@
     "zone.js": "0.16.3"
   },
   "devDependencies": {
-    "@angular-devkit/core": "22.2.5",
-    "@angular-devkit/schematics": "22.2.5",
-    "@angular/build": "22.2.5",
-    "@angular/cli": "22.2.5",
+    "@angular-devkit/core": "22.2.6",
+    "@angular-devkit/schematics": "22.2.6",
+    "@angular/build": "22.2.6",
+    "@angular/cli": "22.2.6",
     "@angular/compiler-cli": "22.2.4",
     "@electron-forge/cli": "8.0.1",
     "@electron-forge/maker-deb": "7.11.2",
@@ -155,7 +155,7 @@
     "@pixel-brewery/wortlaut-eslint-rules": "0.2.4",
     "@pixel-brewery/wortlaut-nx-tasks": "0.2.4",
     "@playwright/test": "1.64.1",
-    "@schematics/angular": "22.2.5",
+    "@schematics/angular": "22.2.6",
     "@swc/helpers": "~0.5.23",
     "@symphony/application-ai": "workspace:*",
     "@symphony/application-automation": "workspace:*",
