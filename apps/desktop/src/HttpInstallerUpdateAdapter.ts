@@ -94,6 +94,7 @@ export class HttpInstallerUpdateAdapter implements IInstallerUpdateAdapter {
     readonly architecture: string;
   }): Promise<IInstallerUpdate | undefined> {
     const response = await this._fetchImplementation(feed.url, {
+      cache: 'no-cache',
       headers: { accept: 'application/json' },
       redirect: 'follow',
       signal: AbortSignal.timeout(15_000),

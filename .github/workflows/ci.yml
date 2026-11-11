@@ -170,6 +170,8 @@ jobs:
     if: needs.changes.outputs.documentation_only != 'true'
     runs-on: macos-latest
     timeout-minutes: 45
+    env:
+      SYMPHONY_UPDATE_BASE_URL: https://pixel-brewery.github.io/symphony
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -195,6 +197,20 @@ jobs:
 
       - name: Package
         run: yarn forge:package
+
+      - name: Create and verify macOS installer
+        run: |
+          yarn electron-forge make --from-package --arch=arm64
+          version="$(node -p 'require("./package.json").version')"
+          hdiutil verify "out/make/Symphony-darwin-arm64-${version}.dmg"
+
+      - name: Verify automatic update in the packaged application
+        env:
+          SYMPHONY_E2E_PACKAGED_UPDATE: '1'
+          SYMPHONY_E2E_WINDOW_MODE: hidden
+        run: |
+          export SYMPHONY_E2E_PACKAGED_EXECUTABLE="$PWD/out/Symphony-darwin-arm64/Symphony.app/Contents/MacOS/Symphony"
+          yarn exec playwright test --config apps/renderer-e2e/playwright.config.ts packaged-update.spec.ts
 
   quality-gate:
     name: Quality Gate

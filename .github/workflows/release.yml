@@ -327,7 +327,13 @@ jobs:
       - name: Report macOS package signing mode
         run: echo 'macOS bundles use ad-hoc sealing without Apple certificates or notarization.'
 
-      - run: yarn electron-forge make --arch=${{ matrix.arch }}
+      - run: yarn electron-forge package --arch=${{ matrix.arch }}
+
+      - name: Verify packaged version and update origin
+        run: node tools/package-smoke.mjs ${{ matrix.arch }}
+
+      - name: Create macOS installer
+        run: yarn electron-forge make --from-package --arch=${{ matrix.arch }}
 
       # Every macOS app must be structurally sealed. Ad-hoc sealing preserves
       # bundle integrity without claiming Apple publisher trust.
@@ -353,11 +359,27 @@ jobs:
             exit 1
           fi
 
+      - name: Verify automatic update in the packaged application
+        env:
+          SYMPHONY_E2E_PACKAGED_UPDATE: '1'
+          SYMPHONY_E2E_WINDOW_MODE: hidden
+        run: |
+          export SYMPHONY_E2E_PACKAGED_EXECUTABLE="$PWD/out/Symphony-darwin-${{ matrix.arch }}/Symphony.app/Contents/MacOS/Symphony"
+          yarn exec playwright test --config apps/renderer-e2e/playwright.config.ts packaged-update.spec.ts
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: update-darwin-${{ matrix.arch }}
           path: out/make/Symphony-darwin-${{ matrix.arch }}-${{ env.RELEASE_VERSION }}.dmg
           if-no-files-found: error
+          retention-days: 14
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: failure()
+        with:
+          name: packaged-update-test-${{ matrix.arch }}
+          path: apps/renderer-e2e/output/playwright/**
+          if-no-files-found: ignore
           retention-days: 14
 
   windows:
@@ -404,6 +426,9 @@ jobs:
       # x64 packaging stays available for a later support expansion.
       # - run: yarn electron-forge make --arch=x64
       - run: yarn electron-forge make --arch=arm64
+
+      - name: Verify packaged version and update origin
+        run: node tools/package-smoke.mjs arm64
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -456,6 +481,9 @@ jobs:
       # x64 packaging stays available for a later support expansion.
       # - run: yarn electron-forge make --arch=x64
       - run: yarn electron-forge make --arch=arm64
+      - name: Verify packaged version and update origin
+        run: node tools/package-smoke.mjs arm64
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: update-linux-arm64

@@ -114,14 +114,19 @@ async function collectFiles(root, directory, files, counts) {
 async function verifyFile(file, origin, deploymentKey, request) {
   const path = file.path.split('/').map(encodeURIComponent).join('/');
   const url = new URL(path, `${origin}/`);
-  url.searchParams.set('symphony-deployment', deploymentKey);
+  const installerFeed = file.path.startsWith('channels/') && file.path.endsWith('/installer.json');
+  if (!installerFeed) {
+    url.searchParams.set('symphony-deployment', deploymentKey);
+  }
   let response;
   try {
     response = await request(url, {
       redirect: 'error',
       credentials: 'omit',
       signal: AbortSignal.timeout(requestTimeoutMs),
-      headers: { 'Cache-Control': 'no-cache' },
+      ...(installerFeed
+        ? { cache: 'no-cache', headers: { Accept: 'application/json' } }
+        : { headers: { 'Cache-Control': 'no-cache' } }),
     });
   } catch {
     throw new Error(`The published file could not be fetched: ${file.path}.`);

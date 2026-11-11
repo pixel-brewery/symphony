@@ -38,6 +38,12 @@ import { normalizedRepository } from './normalizedRepository';
 export class ManagedLimaGithubRunner implements IGithubLocalRunner {
   // #region Fields
 
+  /**
+   * The pinned version installed in each managed local runner.
+   *
+   * @public
+   */
+  public readonly version = ACTIONS_RUNNER_VERSION;
   private readonly _limaEnvironment: ManagedLimaEnvironment;
 
   // #endregion
@@ -142,7 +148,13 @@ export class ManagedLimaGithubRunner implements IGithubLocalRunner {
         `ACTIONS_CACHE_URL=http://127.0.0.1:${ACTION_CACHE_SERVER_PORT}/`,
         '/opt/actions-runner/run.sh',
       ]);
-      const completion = processCompletion(runnerProcess).catch((cause: unknown) => {
+      let exitDiagnostics = '';
+      const completion = processCompletion(runnerProcess, undefined, {
+        secret: input.registrationToken,
+        reportExit: (exit, output) => {
+          exitDiagnostics = [exit, output.slice(-8_000)].filter(Boolean).join('\n');
+        },
+      }).catch((cause: unknown) => {
         const storageFailure = active.storageFailure();
         if (storageFailure) throw storageFailure;
         throw cause;
@@ -159,7 +171,10 @@ export class ManagedLimaGithubRunner implements IGithubLocalRunner {
         architecture,
         imageVersion: localCiImageVersion(input.image),
         completion,
-        diagnostics: () => active.diagnostics(),
+        diagnostics: async () => {
+          const resources = await active.diagnostics().catch(() => undefined);
+          return [resources, exitDiagnostics].filter(Boolean).join('\n');
+        },
         stop,
       };
     } catch (cause) {

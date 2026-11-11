@@ -21,8 +21,12 @@ process.env['PATH'] = `${executableDirectory}:${hostPath}`;
 
 export default defineConfig({
   testDir: './src',
-  // Temporarily suspend game journeys while the Memphis design is adjusted.
-  testIgnore: ['**/arcade-*.spec.ts'],
+  testIgnore: [
+    // Temporarily suspend game journeys while the Memphis design is adjusted.
+    '**/arcade-*.spec.ts',
+    // The release job supplies the exact Forge executable and its compiled origin.
+    ...(process.env['SYMPHONY_E2E_PACKAGED_UPDATE'] === '1' ? [] : ['**/packaged-update.spec.ts']),
+  ],
   timeout: 120_000,
   expect: {
     timeout: 15_000,

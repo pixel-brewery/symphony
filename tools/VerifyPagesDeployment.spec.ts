@@ -11,9 +11,10 @@ import { VerifyPagesDeployment } from './VerifyPagesDeployment.mjs';
 let workspace: string;
 let outputDirectory: string;
 const baseUrl = 'https://pixel-brewery.github.io/symphony';
+const installerFeed = 'channels/stable/darwin/arm64/installer.json';
 const expectedFiles = new Map([
   ['index.html', Buffer.from('<html>Downloads</html>\n')],
-  ['channels/stable/darwin/arm64/installer.json', Buffer.from('{"version":"0.1.27"}\n')],
+  [installerFeed, Buffer.from('{"version":"0.1.27"}\n')],
   ['releases/0.1.17/manifest.json', Buffer.from('{ "original": true }\n')],
   ['releases/0.1.17/shared/symphony.ico', Buffer.from([0, 0, 1, 0, 255])],
 ]);
@@ -61,11 +62,40 @@ describe('public Pages deployment verification', () => {
       new Set(expectedFiles.keys()),
     );
     for (const [input, options] of request.mock.calls) {
-      expect(new URL(String(input)).searchParams.has('symphony-deployment')).toBe(true);
       expect(options?.redirect).toBe('error');
+      expect(options?.credentials).toBe('omit');
       expect(options?.signal).toBeInstanceOf(AbortSignal);
-      expect(options?.headers).toEqual({ 'Cache-Control': 'no-cache' });
+      if (requestPath(input) === installerFeed) {
+        expect(String(input)).toBe(`${baseUrl}/${installerFeed}`);
+        expect(options?.cache).toBe('no-cache');
+        expect(options?.headers).toEqual({ Accept: 'application/json' });
+      } else {
+        expect(new URL(String(input)).searchParams.has('symphony-deployment')).toBe(true);
+        expect(options?.headers).toEqual({ 'Cache-Control': 'no-cache' });
+      }
     }
+  });
+
+  it('rejects publication while the canonical installer feed still returns the old version', async () => {
+    const request = vi.fn(async (input: Parameters<typeof fetch>[0]) =>
+      String(input) === `${baseUrl}/${installerFeed}`
+        ? new Response('{"version":"0.1.26"}')
+        : matchingResponse(input),
+    );
+
+    const operation = VerifyPagesDeployment({
+      outputDirectory,
+      baseUrl,
+      request,
+      attempts: 2,
+      retryDelayMs: 0,
+    });
+
+    await expect(operation).rejects.toThrow(`different bytes: ${installerFeed}`);
+    expect(request.mock.calls.filter(([input]) => requestPath(input) === installerFeed)).toEqual([
+      [new URL(`${baseUrl}/${installerFeed}`), expect.anything()],
+      [new URL(`${baseUrl}/${installerFeed}`), expect.anything()],
+    ]);
   });
 
   it('rejects a changed historical manifest even when the download page matches', async () => {

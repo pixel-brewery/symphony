@@ -94,7 +94,11 @@ describe('HttpInstallerUpdateAdapter', () => {
     });
     expect(fetchImplementation).toHaveBeenCalledWith(
       'https://updates.example.com/channels/stable/darwin/arm64/installer.json',
-      expect.objectContaining({ redirect: 'follow' }),
+      expect.objectContaining({
+        cache: 'no-cache',
+        headers: { accept: 'application/json' },
+        redirect: 'follow',
+      }),
     );
   });
 

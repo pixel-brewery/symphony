@@ -88,6 +88,13 @@ describe('ManagedLimaGithubRunner', () => {
       },
       spawn: (_executable, arguments_) => {
         spawnCalls.push([...arguments_]);
+        if (arguments_.includes('/opt/actions-runner/run.sh')) {
+          return spawn(process.execPath, [
+            '-e',
+            `console.error('older output ' + 'x'.repeat(12_000));
+             console.error('Runner version rejected\\nAuthorization: Bearer opaque-authorization-value\\nregistration-token-that-must-stay-secret');`,
+          ]);
+        }
         return arguments_.some((argument) => argument.includes('cat >'))
           ? spawn(process.execPath, ['-e', 'process.stdin.resume();'])
           : spawn(process.execPath, ['-e', '']);
@@ -120,6 +127,13 @@ describe('ManagedLimaGithubRunner', () => {
       imageVersion:
         'ubuntu-24.04-20260725@sha256:2eaec7286c49fdea713dddabcf5012cafa7097a658e916acb48f4bc5fdc8e419/lima-2.2.0/runner-image-ubuntu24-arm64-20260817.96/node-24.15.0/actions-runner-2.338.2-local-cache/action-cache-server-1.1.2',
     });
+    const diagnostics = await session.diagnostics();
+    expect(diagnostics).toContain('Managed runner process exited with code 0.');
+    expect(diagnostics).toContain('Runner version rejected');
+    expect(diagnostics).toContain('Authorization: Bearer [redacted]');
+    expect(diagnostics).not.toContain('opaque-authorization-value');
+    expect(diagnostics).not.toContain('registration-token-that-must-stay-secret');
+    expect(diagnostics).not.toContain('older output');
     const startCall = executionCalls.find((arguments_) => arguments_[0] === 'start');
     const vmName = startCall
       ?.find((argument) => argument.startsWith('--name='))

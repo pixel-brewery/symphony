@@ -614,7 +614,7 @@ function initializeUpdates(): void {
   const { configurationRoot } = resolvePersistencePaths();
   updateCoordinator = new UpdateCoordinator({
     adapter: new ElectronAutoUpdateAdapter(),
-    installerAdapter: new HttpInstallerUpdateAdapter(globalThis.fetch, {
+    installerAdapter: new HttpInstallerUpdateAdapter((input, options) => fetch(input, options), {
       openPath: (path) => shell.openPath(path),
     }),
     currentVersion: app.getVersion(),
