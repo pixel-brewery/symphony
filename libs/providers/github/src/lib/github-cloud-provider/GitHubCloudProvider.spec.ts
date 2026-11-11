@@ -1010,10 +1010,69 @@ describe('GitHubCloudProvider workflow catalog', () => {
     ).toBe(true);
   });
 
-  it('sends the managed local CI input when dispatching a prepared workflow locally', async () => {
+  it.each<{
+    readonly scenario: string;
+    readonly responses: readonly (Record<string, string | null> | Error)[];
+    readonly expectedError?: RegExp;
+    readonly hostname?: string;
+  }>([
+    {
+      scenario: 'dispatches a prepared workflow when the pinned runner can receive jobs',
+      responses: [{ registration_deprecates_at: null, runtime_deprecates_at: null }],
+    },
+    {
+      scenario: 'blocks dispatch when GitHub has retired the pinned runner at runtime',
+      responses: [
+        { registration_deprecates_at: null, runtime_deprecates_at: '2026-08-16T12:59:59Z' },
+      ],
+      expectedError: /2\.336\.0 can no longer receive jobs.*Update Symphony/u,
+    },
+    {
+      scenario: 'allows dispatch when the optional endpoint is forbidden',
+      responses: [new Error('gh: Forbidden (HTTP 403)')],
+    },
+    {
+      scenario: 'allows dispatch when the optional endpoint is unavailable',
+      responses: [new Error('gh: Not Found (HTTP 404)')],
+    },
+    {
+      scenario: 'retries a transient eligibility check before dispatch',
+      responses: [
+        new Error('gh: Service Unavailable (HTTP 503)'),
+        { runtime_deprecates_at: '2026-08-17T00:00:00Z' },
+      ],
+    },
+    {
+      scenario: 'continues dispatch when the optional eligibility read remains unavailable',
+      responses: [
+        new Error('gh: Service Unavailable (HTTP 503)'),
+        new Error('gh: Service Unavailable (HTTP 503)'),
+      ],
+    },
+    {
+      scenario: 'preserves the rate-limit failure instead of treating it as a forbidden endpoint',
+      responses: [new Error('gh: API rate limit exceeded (HTTP 403)')],
+      expectedError: /rate limit exceeded/u,
+    },
+    {
+      scenario: 'leaves GitHub Enterprise Server dispatch on its existing compatibility path',
+      responses: [],
+      hostname: 'github.example.com',
+    },
+  ])('$scenario', async ({ responses, expectedError, hostname }) => {
     // arrange
-    const settings = deliverySettings('/tmp/symphony-workflow-dispatch-local');
+    const defaults = deliverySettings('/tmp/symphony-workflow-dispatch-local');
+    const settings: IApplicationSettings = {
+      ...defaults,
+      connections: defaults.connections.map((connection) =>
+        hostname && connection.kind === 'github' ? { ...connection, hostname } : connection,
+      ),
+      repositoryBindings: defaults.repositoryBindings.map((repository) =>
+        hostname ? { ...repository, host: hostname } : repository,
+      ),
+    };
     const requests: string[][] = [];
+    let eligibilityReads = 0;
     const workflowSource = [
       'on:',
       '    workflow_dispatch:',
@@ -1028,6 +1087,11 @@ describe('GitHubCloudProvider workflow catalog', () => {
       token: async () => 'test-token',
       now: () => new Date('2026-08-16T13:00:00.000Z'),
       localRunnerPollMilliseconds: 0,
+      localRunner: {
+        version: '2.336.0',
+        cleanup: vi.fn(),
+        start: vi.fn(),
+      },
       execute: async (_command, arguments_) => {
         requests.push([...arguments_]);
         const path = arguments_.at(-1) ?? '';
@@ -1049,6 +1113,11 @@ describe('GitHubCloudProvider workflow catalog', () => {
             encoding: 'base64',
             content: Buffer.from(workflowSource).toString('base64'),
           });
+        }
+        if (path.endsWith('/actions/runners/deprecations/2.336.0')) {
+          const response = responses[eligibilityReads++];
+          if (response instanceof Error) throw response;
+          return JSON.stringify(response);
         }
         if (path.endsWith('/actions/workflows/101/dispatches')) return '';
         if (path.includes('/actions/workflows/101/runs?event=workflow_dispatch&branch=main')) {
@@ -1075,10 +1144,15 @@ describe('GitHubCloudProvider workflow catalog', () => {
 
     // act
     await provider.listWorkflows();
+    const dispatch = provider.dispatchWorkflow('ci-1:101', 'main', { local: true });
+
     // assert
-    await expect(provider.dispatchWorkflow('ci-1:101', 'main', { local: true })).resolves.toEqual(
-      expect.objectContaining({ id: 'ci-1:703', event: 'workflow_dispatch' }),
-    );
+    if (expectedError) await expect(dispatch).rejects.toThrow(expectedError);
+    else
+      await expect(dispatch).resolves.toEqual(
+        expect.objectContaining({ id: 'ci-1:703', event: 'workflow_dispatch' }),
+      );
+    expect(eligibilityReads).toBe(responses.length);
     expect(
       requests.some(
         (request) =>
@@ -1087,7 +1161,7 @@ describe('GitHubCloudProvider workflow catalog', () => {
           request.includes('inputs[symphony_local]=true') &&
           request.at(-1)?.endsWith('/actions/workflows/101/dispatches'),
       ),
-    ).toBe(true);
+    ).toBe(!expectedError);
   });
 
   it('refuses a local dispatch when the workflow does not declare the managed local CI input', async () => {
@@ -2381,7 +2455,36 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
     expect(requested).toBe(false);
   });
 
-  it('cancels an older queued run that blocks a jobless selected run', async () => {
+  it.each([
+    {
+      scenario: 'cancels an older queued run that blocks a jobless selected run',
+      conflict: false,
+      status: 'completed',
+      attempt: 3,
+      shouldContinue: true,
+    },
+    {
+      scenario: 'continues when GitHub already cancelled the same blocking attempt',
+      conflict: true,
+      status: 'completed',
+      attempt: 3,
+      shouldContinue: true,
+    },
+    {
+      scenario: 'keeps the cancellation conflict when the blocking attempt is still active',
+      conflict: true,
+      status: 'queued',
+      attempt: 3,
+      shouldContinue: false,
+    },
+    {
+      scenario: 'keeps the cancellation conflict when the blocking run is on a different attempt',
+      conflict: true,
+      status: 'completed',
+      attempt: 4,
+      shouldContinue: false,
+    },
+  ])('$scenario', async ({ conflict, status, attempt, shouldContinue }) => {
     // arrange
     const settings = deliverySettings('/tmp/symphony-local-ci-concurrency-blocker');
     const requests: Array<{ readonly method: string; readonly path: string }> = [];
@@ -2474,13 +2577,17 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
             ],
           });
         }
-        if (path.endsWith('/actions/runs/202/cancel')) return '';
+        if (path.endsWith('/actions/runs/202/cancel')) {
+          if (conflict)
+            throw new Error('gh: Cannot cancel a workflow run that is completed. (HTTP 409)');
+          return '';
+        }
         if (path.endsWith('/actions/runs/202')) {
           return JSON.stringify({
             id: 202,
-            status: 'completed',
+            status,
             conclusion: 'cancelled',
-            run_attempt: 3,
+            run_attempt: attempt,
           });
         }
         if (path.endsWith('/actions/runners/registration-token')) return JSON.stringify({});
@@ -2498,13 +2605,52 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
         '/tmp/symphony-local-ci-concurrency-blocker/runtime',
         new AbortController().signal,
       ),
-    ).rejects.toThrow('GitHub did not issue a local runner registration token.');
+    ).rejects.toThrow(
+      shouldContinue ? 'GitHub did not issue a local runner registration token.' : 'HTTP 409',
+    );
     expect(
       requests.filter((request) => request.method === 'POST').map((request) => request.path),
     ).toEqual([
       'repos/example/platform/actions/runs/202/cancel',
-      'repos/example/platform/actions/runners/registration-token',
+      ...(shouldContinue ? ['repos/example/platform/actions/runners/registration-token'] : []),
     ]);
+    expect(requests).toContainEqual({
+      method: 'GET',
+      path: 'repos/example/platform/actions/runs/202',
+    });
+  });
+
+  it('stops before preparing an existing run when the pinned runner can no longer register', async () => {
+    // arrange
+    const execute = vi.fn<NonNullable<IGitHubCloudProviderOptions['execute']>>(async () =>
+      JSON.stringify({
+        registration_deprecates_at: '2026-08-14T12:00:00.000Z',
+        runtime_deprecates_at: '2026-08-15T12:00:00.000Z',
+      }),
+    );
+    const start = vi.fn();
+    const provider = new GitHubCloudProvider({
+      settings: () => deliverySettings('/tmp/symphony-expired-runner'),
+      token: async () => 'test-token',
+      now: () => new Date('2026-08-14T12:00:00.000Z'),
+      localRunner: { version: '2.336.0', cleanup: vi.fn(), start },
+      execute,
+    });
+
+    // act
+    const execution = provider.runLocally(
+      'ci-1:203',
+      'local-ci-execution-1',
+      '/tmp/symphony-expired-runner/runtime',
+      new AbortController().signal,
+    );
+
+    // assert
+    await expect(execution).rejects.toThrow(/2\.336\.0 can no longer register.*Update Symphony/u);
+    expect(execute.mock.calls.map(([, arguments_]) => arguments_.at(-1))).toEqual([
+      'repos/example/platform/actions/runners/deprecations/2.336.0',
+    ]);
+    expect(start).not.toHaveBeenCalled();
   });
 
   it('keeps the pre-VM setup failure visible in Action details', async () => {
@@ -2881,6 +3027,7 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
         setupScript: 'corepack enable\n',
       }),
       localRunner: {
+        version: '2.336.0',
         cleanup: async () => ({
           removedInstances: 0,
           failedInstances: 0,
@@ -2908,6 +3055,12 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
         const method = arguments_[arguments_.indexOf('--method') + 1] ?? '';
         const path = arguments_.at(-1) ?? '';
         requests.push({ method, path });
+        if (path.endsWith('/actions/runners/deprecations/2.336.0')) {
+          return JSON.stringify({
+            registration_deprecates_at: '2026-08-18T00:00:00.000Z',
+            runtime_deprecates_at: '2026-08-17T00:00:00.000Z',
+          });
+        }
         if (path.endsWith('/actions/runs?per_page=50')) {
           return JSON.stringify({
             workflow_runs: [
@@ -2979,6 +3132,9 @@ describe('GitHubCloudProvider managed local Actions runner', () => {
         ciRunId: 'ci-1:203',
         ...(interruption === 'cancel' ? {} : { revision: 'def456' }),
         state: interruption === 'cancel' ? 'cancelled' : 'succeeded',
+        localDiagnostics: expect.stringContaining(
+          'GitHub Actions runner 2.336.0 can receive jobs in this repository until 2026-08-17T00:00:00.000Z.',
+        ),
         runner: {
           kind: 'managed-linux-vm',
           architecture: 'arm64',

@@ -107,6 +107,11 @@ interface IGitHubRunnerRegistrationTokenResponse {
   readonly token?: string;
 }
 
+interface IGitHubRunnerDeprecationResponse {
+  readonly registration_deprecates_at?: string | null;
+  readonly runtime_deprecates_at?: string | null;
+}
+
 interface IGitHubCliWorkflowJobsResponse {
   readonly jobs?: readonly {
     readonly databaseId?: number;
@@ -471,7 +476,10 @@ export class GitHubCloudProvider
   private readonly _runTargets = new Map<string, IRunTarget>();
   private readonly _managedLocalRunIds = new Set<string>();
   private readonly _workflowTargets = new Map<string, IWorkflowTarget>();
-  private readonly _activeLocalRunners = new Map<string, IGithubLocalRunnerSession>();
+  private readonly _activeLocalRunners = new Map<
+    string,
+    Pick<IGithubLocalRunnerSession, 'diagnostics'>
+  >();
   private readonly _localRunnerDiagnostics = new Map<string, string>();
   private readonly _completedRunLogs = new Map<string, string>();
   private readonly _governor: GitHubRequestGovernor;
@@ -970,6 +978,7 @@ export class GitHubCloudProvider
       ...(options?.local ? { [LOCAL_CI_DISPATCH_INPUT]: 'true' } : {}),
     };
     validateDispatchInputs(projectDispatchInputs(definition), inputs);
+    if (options?.local) await this.assertLocalRunnerEligible(target);
     const dispatchedAt = this.now().getTime();
     const repositoryPath = this.repositoryPath(target.repository);
     const dispatched = await this.api<{ workflow_run_id?: number }>(
@@ -1111,7 +1120,7 @@ export class GitHubCloudProvider
         ?.diagnostics()
         .catch(() => undefined),
     ]);
-    const localDiagnostics = activeDiagnostics ?? this._localRunnerDiagnostics.get(runId);
+    const localDiagnostics = activeDiagnostics || this._localRunnerDiagnostics.get(runId);
     const failureDetails = failureLog ?? (await this.failedJobAnnotations(target, jobs));
     return {
       runId,
@@ -1261,12 +1270,14 @@ export class GitHubCloudProvider
     const runnerName = `symphony-${target.runId}-${executionId.slice(-12)}`.slice(0, 64);
     const startedAt = this.now().toISOString();
     let expectedAttempt: number | undefined;
+    let versionNotice: string | undefined;
     let runner: IGithubLocalRunnerSession;
     try {
       this.rememberLocalRunnerDiagnostics(
         runId,
         'Phase: Preparing GitHub workflow for local execution\nRunner: not started yet',
       );
+      versionNotice = await this.assertLocalRunnerEligible(target, signal);
       expectedAttempt = await this.prepareWorkflowRun(target, runId, signal);
       this.rememberLocalRunnerDiagnostics(
         runId,
@@ -1305,7 +1316,10 @@ export class GitHubCloudProvider
           `Memory: ${preset.resources.memoryGiB} GiB`,
           `Disk: ${preset.resources.diskGiB} GiB`,
           `Cache: ${preset.resources.cacheGiB} GiB`,
-        ].join('\n'),
+          versionNotice,
+        ]
+          .filter(Boolean)
+          .join('\n'),
       );
       if (!this._options.localCiGuest) {
         throw new Error('Managed local CI has no configured guest image resolver.');
@@ -1331,18 +1345,28 @@ export class GitHubCloudProvider
     } catch (cause) {
       this.rememberLocalRunnerDiagnostics(
         runId,
-        `Phase: Local runner setup failed\nError: ${cause instanceof Error ? cause.message : 'Unknown local runner error'}`,
+        [
+          'Phase: Local runner setup failed',
+          `Error: ${cause instanceof Error ? cause.message : 'Unknown local runner error'}`,
+          versionNotice,
+        ]
+          .filter(Boolean)
+          .join('\n'),
       );
       throw cause;
     }
-    this._activeLocalRunners.set(runId, runner);
+    const diagnostics = async (): Promise<string> => {
+      const runnerDiagnostics = await runner.diagnostics();
+      return [runnerDiagnostics, versionNotice].filter(Boolean).join('\n');
+    };
+    this._activeLocalRunners.set(runId, { diagnostics });
     let terminal: IGitHubWorkflowRunResponse;
     try {
       terminal = await this.waitForWorkflowRun(target, runner.completion, signal);
     } finally {
-      const diagnostics = await runner.diagnostics().catch(() => undefined);
-      if (diagnostics) {
-        this.rememberLocalRunnerDiagnostics(runId, diagnostics);
+      const finalDiagnostics = await diagnostics().catch(() => undefined);
+      if (finalDiagnostics) {
+        this.rememberLocalRunnerDiagnostics(runId, finalDiagnostics);
       }
       this._activeLocalRunners.delete(runId);
       await runner.stop();
@@ -1740,10 +1764,7 @@ export class GitHubCloudProvider
       }
       firstFailure ??= { cause: result.reason };
       const binding = bindings[index]!;
-      const status =
-        result.reason instanceof Error
-          ? /\bHTTP(?:\/\S+)?\s+(\d{3})\b/iu.exec(result.reason.message)?.[1]
-          : undefined;
+      const status = githubHttpStatus(result.reason);
       this._options.reportReadFailure?.(
         {
           workspaceId: binding.workspaceId,
@@ -2373,6 +2394,56 @@ export class GitHubCloudProvider
     }
   }
 
+  private async assertLocalRunnerEligible(
+    target: Pick<IRunTarget, 'repository' | 'connection'>,
+    signal?: AbortSignal,
+  ): Promise<string | undefined> {
+    signal?.throwIfAborted();
+    const version = this._options.localRunner?.version;
+    if (!version || target.connection.hostname !== 'github.com') return;
+    const path = `${this.repositoryPath(target.repository)}/actions/runners/deprecations/${encodeURIComponent(version)}`;
+    let schedule: IGitHubRunnerDeprecationResponse;
+    for (let attempt = 0; ; attempt += 1) {
+      signal?.throwIfAborted();
+      try {
+        schedule = await this.api<IGitHubRunnerDeprecationResponse>(
+          target.connection,
+          path,
+          'GET',
+          undefined,
+          { 'X-GitHub-Api-Version': '2026-03-10' },
+        );
+        break;
+      } catch (cause) {
+        if (isRunListInterruption(cause) || isGitHubAuthenticationFailure(cause)) throw cause;
+        const status = githubHttpStatus(cause);
+        // The schedule endpoint is optional and can need additional repository read permissions.
+        if (status === '403' || status === '404') {
+          signal?.throwIfAborted();
+          return;
+        }
+        if (!isTransientRunStatusFailure(cause) || attempt > 0) {
+          signal?.throwIfAborted();
+          return `GitHub did not provide the deprecation schedule for runner ${version}.`;
+        }
+        await wait(this._options.localRunnerPollMilliseconds ?? 1_000, signal);
+      }
+    }
+    signal?.throwIfAborted();
+    const registrationCutoff = Date.parse(schedule?.registration_deprecates_at ?? '');
+    const runtimeCutoff = Date.parse(schedule?.runtime_deprecates_at ?? '');
+    const cutoff = Math.min(...[registrationCutoff, runtimeCutoff].filter(Number.isFinite));
+    if (!Number.isFinite(cutoff)) return;
+    const operation = cutoff === registrationCutoff ? 'register' : 'receive jobs';
+    const deadline = new Date(cutoff).toISOString();
+    if (cutoff <= this.now().getTime()) {
+      throw new Error(
+        `GitHub Actions runner ${version} can no longer ${operation} in this repository (cutoff ${deadline}). Update Symphony before starting the local run.`,
+      );
+    }
+    return `GitHub Actions runner ${version} can ${operation} in this repository until ${deadline}. Update Symphony before then.`;
+  }
+
   private requireRunTarget(
     runId: string,
     scope: 'selected' | 'operational' = 'selected',
@@ -2548,24 +2619,22 @@ export class GitHubCloudProvider
     signal: AbortSignal,
   ): Promise<void> {
     const repositoryPath = this.repositoryPath(target.repository);
+    const workflowRunPath = `${repositoryPath}/actions/runs/${workflowRunId}`;
     this.rememberLocalRunnerDiagnostics(
       diagnosticsRunId,
       reason === 'blocking-run'
         ? `Phase: Cancelling blocking GitHub workflow run\nBlocking run: ${workflowRunId}\nAttempt: ${runAttempt ?? 'unknown'}\nRunner: not started yet`
         : `Phase: Cancelling incomplete GitHub workflow attempt\nAttempt: ${runAttempt ?? 'unknown'}\nRunner: not started yet`,
     );
-    await this.api(
-      target.connection,
-      `${repositoryPath}/actions/runs/${workflowRunId}/cancel`,
-      'POST',
-    );
+    if (await this.requestWorkflowRunCancellation(target, workflowRunId, 'cancel', runAttempt))
+      return;
     const pollMilliseconds = this._options.localRunnerPollMilliseconds ?? 2_000;
     let workflowRun: IGitHubWorkflowRunResponse | undefined;
     for (let attempt = 0; attempt < GITHUB_RUN_CANCEL_CHECKS && !signal.aborted; attempt += 1) {
       await wait(pollMilliseconds, signal);
       workflowRun = await this.api<IGitHubWorkflowRunResponse>(
         target.connection,
-        `${repositoryPath}/actions/runs/${workflowRunId}`,
+        workflowRunPath,
         'GET',
       );
       if (workflowRun.status === 'completed') return;
@@ -2588,11 +2657,15 @@ export class GitHubCloudProvider
             'Runner: not started yet',
           ].join('\n'),
         );
-        await this.api(
-          target.connection,
-          `${repositoryPath}/actions/runs/${workflowRunId}/force-cancel`,
-          'POST',
-        );
+        if (
+          await this.requestWorkflowRunCancellation(
+            target,
+            workflowRunId,
+            'force-cancel',
+            runAttempt,
+          )
+        )
+          return;
       }
     }
     if (signal.aborted) {
@@ -2605,6 +2678,33 @@ export class GitHubCloudProvider
         (GITHUB_RUN_CANCEL_CHECKS * pollMilliseconds) / 1_000,
       )} seconds. Latest status: ${workflowRun?.status ?? 'unknown'}.`,
     );
+  }
+
+  private async requestWorkflowRunCancellation(
+    target: IRunTarget,
+    workflowRunId: string,
+    action: 'cancel' | 'force-cancel',
+    runAttempt: number | undefined,
+  ): Promise<boolean> {
+    const workflowRunPath = `${this.repositoryPath(target.repository)}/actions/runs/${workflowRunId}`;
+    try {
+      await this.api(target.connection, `${workflowRunPath}/${action}`, 'POST');
+      return false;
+    } catch (cause) {
+      if (githubHttpStatus(cause) !== '409') throw cause;
+      const run = await this.api<IGitHubWorkflowRunResponse>(
+        target.connection,
+        workflowRunPath,
+        'GET',
+      );
+      if (
+        run.id !== Number(workflowRunId) ||
+        run.status !== 'completed' ||
+        (runAttempt !== undefined && run.run_attempt !== runAttempt)
+      )
+        throw cause;
+      return true;
+    }
   }
 
   private async waitForManagedLocalJobs(
@@ -3210,6 +3310,12 @@ function isRunListInterruption(cause: unknown): boolean {
     current = current.cause;
   }
   return false;
+}
+
+function githubHttpStatus(cause: unknown): string | undefined {
+  return cause instanceof Error
+    ? /\bHTTP(?:\/\S+)?\s+(\d{3})\b/iu.exec(cause.message)?.[1]
+    : undefined;
 }
 
 function isTransientRunStatusFailure(cause: unknown): boolean {

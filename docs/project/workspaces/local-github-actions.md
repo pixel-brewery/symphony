@@ -12,6 +12,8 @@ Die automatische Übernahme berücksichtigt nur aktivierte Workspaces mit einges
 
 Ein bereits protokollierter Übernahmeversuch wird nach einem Einrichtungsfehler nicht automatisch für denselben GitHub-Lauf und Versuch wiederholt. Behebe zuerst die Ursache, wähle dann den Workspace aus und starte den Lauf in [Actions](../actions/README.md) ausdrücklich mit **Rerun locally** erneut. Das Einschalten lokaler Läufe ändert die Runner-Auswahl des GitHub-Workflows nicht; Jobs müssen für den lokalen Runner von Symphony vorbereitet sein. Die nachfolgende Speicherablehnung geschieht bereits vor einem solchen protokollierten Versuch.
 
+Wenn GitHub für den mitgelieferten Runner ein Ablaufdatum meldet, steht es in den lokalen Runner-Diagnosen des Laufs. Hat GitHub die Runner-Version bereits außer Betrieb genommen, meldet Symphony den Grund beim Start. Aktualisiere Symphony und verwende anschließend **Rerun locally** für den wartenden Lauf.
+
 ## Wenn Speicher den Start verhindert
 
 Vor einem lokalen Start muss nach dessen zusätzlichem Speicherbedarf noch die gesamte unter [System › Storage](../system/README.md#storage) eingestellte Mac-Reserve frei bleiben. Reicht der Platz nicht, beginnt Symphony den lokalen Lauf nicht; die gespeicherte Reserve wird dabei nicht herabgesetzt. Das gilt auch, solange die ausführliche Belegungszählung noch läuft. Eine nicht abgeschlossene Zählung bestätigt keine freien Kontingente, und eine fehlgeschlagene Messung gibt keinen Start frei.
