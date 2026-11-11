@@ -72,6 +72,7 @@ test('a Forge package discovers and hands off an update from its ordinary channe
       SYMPHONY_AGENT_MODE: 'simulated',
     },
   });
+  const childProcess = app.process();
 
   try {
     // Only the remote response and OS opener are fixtures. Main still schedules the check,
@@ -136,7 +137,7 @@ test('a Forge package discovers and hands off an update from its ordinary channe
     await expect(install).toBeVisible();
     await install.click();
 
-    await expect.poll(() => app.process().exitCode).toBe(0);
+    await expect.poll(() => childProcess.exitCode).toBe(0);
     const handoff = JSON.parse(await readFile(handoffLog, 'utf8')) as {
       path: string;
       contents: string;
@@ -145,6 +146,6 @@ test('a Forge package discovers and hands off an update from its ordinary channe
     expect(basename(handoff.path)).toBe(installerName);
     expect(handoff.contents).toBe(installerContents);
   } finally {
-    if (app.process().exitCode === null) await app.close();
+    if (childProcess.exitCode === null) await app.close();
   }
 });
