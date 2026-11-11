@@ -1,22 +1,26 @@
 // #region Imports
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { extractFile, listPackage } from '@electron/asar';
 
 // #endregion
 
 const outputRoot = resolve('out');
-const packageRoot = resolve(outputRoot, `Symphony-${process.platform}-${process.arch}`);
+const architecture = process.argv[2] ?? process.arch;
+if (!['arm64', 'x64'].includes(architecture)) {
+  throw new Error(`Unsupported Forge package architecture: ${architecture}.`);
+}
+const packageRoot = resolve(outputRoot, `Symphony-${process.platform}-${architecture}`);
 const entries = readdirSync(packageRoot, { recursive: true, encoding: 'utf8' });
 const asarCandidates = entries
-  .filter((entry) => /resources\/app\.asar$/i.test(entry))
+  .filter((entry) => /(?:^|[\\/])resources[\\/]app\.asar$/i.test(entry))
   .map((entry) => ({ entry, modifiedAt: statSync(resolve(packageRoot, entry)).mtimeMs }))
   .sort((left, right) => right.modifiedAt - left.modifiedAt);
 const asarRelativePath = asarCandidates[0]?.entry;
 if (!asarRelativePath) {
   throw new Error(
-    `The Symphony Forge package for ${process.platform}/${process.arch} does not contain Resources/app.asar.`,
+    `The Symphony Forge package for ${process.platform}/${architecture} does not contain Resources/app.asar.`,
   );
 }
 
@@ -25,7 +29,36 @@ if (statSync(asarPath).size < 1_000) {
   throw new Error(`Packaged ASAR is unexpectedly small: ${asarPath}`);
 }
 
-const packagedFiles = new Set(listPackage(asarPath));
+const packagedFiles = new Set(listPackage(asarPath).map((entry) => entry.replaceAll('\\', '/')));
+const releaseVersion = process.env['RELEASE_VERSION'];
+const { version: projectVersion } = JSON.parse(readFileSync(resolve('package.json'), 'utf8'));
+const expectedVersion = releaseVersion ?? projectVersion;
+const { version: packagedVersion } = JSON.parse(extractFile(asarPath, 'package.json').toString());
+if (
+  !/^\d+\.\d+\.\d+$/u.test(expectedVersion) ||
+  projectVersion !== expectedVersion ||
+  packagedVersion !== expectedVersion
+) {
+  throw new Error(
+    `The Forge package version does not match the expected version ${expectedVersion}.`,
+  );
+}
+
+const expectedUpdateOrigin = process.env['SYMPHONY_UPDATE_BASE_URL'] ?? '';
+if (releaseVersion !== undefined && !expectedUpdateOrigin) {
+  throw new Error('A release package requires a configured update origin.');
+}
+if (expectedUpdateOrigin) {
+  const url = URL.parse(expectedUpdateOrigin);
+  if (!url || url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) {
+    throw new Error('The expected update origin must be a credential-free HTTPS URL.');
+  }
+}
+const packagedMain = extractFile(asarPath, join('dist', 'apps', 'desktop', 'main.mjs')).toString();
+if (!packagedMain.includes(`updateBaseUrl: ${JSON.stringify(expectedUpdateOrigin)},`)) {
+  throw new Error('The Forge package does not use the expected compiled update origin.');
+}
+
 const figureFiles = ['blue', 'mint', 'orange', 'purple', 'gold', 'rose']
   .flatMap((identity) => [identity + '.png', identity + '-48.png', identity + '-v2.png'])
   .concat('LICENSE');
@@ -65,7 +98,10 @@ for (const requiredPath of [
 }
 
 for (const name of orbitResources) {
-  const packaged = extractFile(asarPath, `dist/apps/renderer/browser/orbit/${name}`);
+  const packaged = extractFile(
+    asarPath,
+    join('dist', 'apps', 'renderer', 'browser', 'orbit', name),
+  );
   if (!packaged.equals(readFileSync(resolve('resources/orbit', name)))) {
     throw new Error(`Packaged planet asset ${name} differs from its source asset.`);
   }
@@ -73,7 +109,10 @@ for (const name of orbitResources) {
 
 for (const surface of ['renderer', 'mobile']) {
   for (const name of figureFiles) {
-    const packaged = extractFile(asarPath, `dist/apps/${surface}/browser/figures/${name}`);
+    const packaged = extractFile(
+      asarPath,
+      join('dist', 'apps', surface, 'browser', 'figures', name),
+    );
     if (!packaged.equals(readFileSync(resolve('resources/figures', name)))) {
       throw new Error(`Packaged ${surface} figure ${name} differs from its source asset.`);
     }

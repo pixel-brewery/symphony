@@ -6,6 +6,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
+      "inputs": ["production", "^production", { "env": "SYMPHONY_UPDATE_BASE_URL" }],
       "outputs": ["{workspaceRoot}/dist/apps/desktop"],
       "options": { "command": "node tools/build-node-apps.mjs desktop" }
     },
