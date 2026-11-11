@@ -1,3 +1,15 @@
+## 0.1.36 (2026-11-11)
+
+### 🩹 Fixes
+
+- **runner:** update ACTIONS_RUNNER_VERSION and corresponding SHA256 checksums ([7278bc5](https://github.com/pixel-brewery/symphony/commit/7278bc5))
+- **runner:** update ACTIONS_RUNNER_VERSION and corresponding SHA256 checksums ([#56](https://github.com/pixel-brewery/symphony/pull/56))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+- RueDeRennes @RueDeRennes
+
 ## 0.1.35 (2026-11-07)
 
 ### 🩹 Fixes
