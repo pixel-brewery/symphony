@@ -7,10 +7,10 @@ import { ACTIONS_RUNNER_VERSION } from './ActionsRunnerVersion';
 export const actionsRunnerAssets = {
   arm64: {
     archive: `actions-runner-linux-arm64-${ACTIONS_RUNNER_VERSION}.tar.gz`,
-    sha256: '58b758e420b87093fbd4bfddd368074960053e2f1388f01848c82624b90f27d1',
+    sha256: '670adb2f268fe21dcbb58b3db0e0aa9d5b3bddfe2c651481336e561ff86de945',
   },
   x64: {
     archive: `actions-runner-linux-x64-${ACTIONS_RUNNER_VERSION}.tar.gz`,
-    sha256: '04cf0be1aff4c3ec3554466c39124ca250e3effd8873bb7e8d68535aa9505d5d',
+    sha256: 'baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40',
   },
 } as const;
