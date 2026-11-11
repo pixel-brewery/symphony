@@ -118,7 +118,7 @@ describe('ManagedLimaGithubRunner', () => {
       os: 'linux',
       architecture: 'arm64',
       imageVersion:
-        'ubuntu-24.04-20260725@sha256:2eaec7286c49fdea713dddabcf5012cafa7097a658e916acb48f4bc5fdc8e419/lima-2.2.0/runner-image-ubuntu24-arm64-20260817.96/node-24.15.0/actions-runner-2.336.0-local-cache/action-cache-server-1.1.2',
+        'ubuntu-24.04-20260725@sha256:2eaec7286c49fdea713dddabcf5012cafa7097a658e916acb48f4bc5fdc8e419/lima-2.2.0/runner-image-ubuntu24-arm64-20260817.96/node-24.15.0/actions-runner-2.338.2-local-cache/action-cache-server-1.1.2',
     });
     const startCall = executionCalls.find((arguments_) => arguments_[0] === 'start');
     const vmName = startCall

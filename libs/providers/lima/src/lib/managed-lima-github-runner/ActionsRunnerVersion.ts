@@ -1,1 +1,1 @@
-export const ACTIONS_RUNNER_VERSION = '2.336.0';
+export const ACTIONS_RUNNER_VERSION = '2.338.2';
