@@ -1,3 +1,15 @@
+## 0.1.37 (2026-11-11)
+
+### 🩹 Fixes
+
+- **release:** retry macOS installer detach race ([16d9114](https://github.com/pixel-brewery/symphony/commit/16d9114))
+- **runner:** detect GitHub Actions runner expiry ([3b98ae7](https://github.com/pixel-brewery/symphony/commit/3b98ae7))
+- **updates:** verify the packaged update path ([e755d9a](https://github.com/pixel-brewery/symphony/commit/e755d9a))
+
+### ❤️ Thank You
+
+- RueDeRennes @RueDeRennes
+
 ## 0.1.36 (2026-11-11)
 
 ### 🩹 Fixes
