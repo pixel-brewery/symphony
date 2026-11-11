@@ -38,6 +38,11 @@ import { normalizedRepository } from './normalizedRepository';
 export class ManagedLimaGithubRunner implements IGithubLocalRunner {
   // #region Fields
 
+  /**
+   * The pinned version installed in each managed local runner.
+   *
+   * @public
+   */
   public readonly version = ACTIONS_RUNNER_VERSION;
   private readonly _limaEnvironment: ManagedLimaEnvironment;
 

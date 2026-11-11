@@ -24,6 +24,47 @@ interface IDiskImageConfiguration {
 
 const run = promisify(execFile);
 
+describe('macOS installer creation', () => {
+  it('retries only a lost Symphony mount and preserves a permanent maker failure', async () => {
+    // arrange
+    const script = `
+      const { MakerDMG } = await import('@electron-forge/maker-dmg');
+      const { default: config } = await import('./forge.config.mjs');
+      const maker = config.makers.find((candidate) => candidate.name === 'dmg').clone();
+      const lostMount = new Error('Command failed: hdiutil detach /Volumes/Symphony\\nhdiutil: detach failed - No such file or directory');
+      const otherFailure = new Error('Cannot copy application');
+      const outcomes = [];
+      for (const failures of [[lostMount, lostMount], [lostMount, lostMount, lostMount], [otherFailure]]) {
+        let calls = 0;
+        MakerDMG.prototype.make = async () => {
+          const failure = failures[calls++];
+          if (failure) throw failure;
+          return ['installer.dmg'];
+        };
+        try {
+          outcomes.push({ result: await maker.make({}), calls });
+        } catch (error) {
+          outcomes.push({ original: error === failures.at(-1), calls });
+        }
+      }
+      process.stdout.write(JSON.stringify(outcomes));
+    `;
+
+    // act
+    const result = await run(process.execPath, ['--input-type=module', '-e', script], {
+      cwd: resolve('.'),
+      timeout: 5_000,
+    });
+
+    // assert
+    expect(JSON.parse(result.stdout)).toEqual([
+      { result: ['installer.dmg'], calls: 3 },
+      { original: true, calls: 3 },
+      { original: true, calls: 1 },
+    ]);
+  });
+});
+
 describe('macOS installer contents', () => {
   it('retains the installable app and Applications link with a readable first-launch guide inside the visible window', async () => {
     // arrange

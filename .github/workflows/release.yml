@@ -327,10 +327,13 @@ jobs:
       - name: Report macOS package signing mode
         run: echo 'macOS bundles use ad-hoc sealing without Apple certificates or notarization.'
 
-      - run: yarn electron-forge make --arch=${{ matrix.arch }}
+      - run: yarn electron-forge package --arch=${{ matrix.arch }}
 
       - name: Verify packaged version and update origin
         run: node tools/package-smoke.mjs ${{ matrix.arch }}
+
+      - name: Create macOS installer
+        run: yarn electron-forge make --from-package --arch=${{ matrix.arch }}
 
       # Every macOS app must be structurally sealed. Ad-hoc sealing preserves
       # bundle integrity without claiming Apple publisher trust.

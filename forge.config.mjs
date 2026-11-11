@@ -33,6 +33,25 @@ const windowsControlPanelIconUrl = updateBaseUrl
   ? `${updateBaseUrl}/releases/${packageVersion}/shared/symphony.ico`
   : undefined;
 
+class MakerDMGWithDetachRetry extends MakerDMG {
+  async make(options) {
+    const maximumAttempts = 3;
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        return await super.make(options);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        const lostMount =
+          /hdiutil detach \/Volumes\/Symphony(?: \d+)?\s/u.test(message) &&
+          message.includes('hdiutil: detach failed - No such file or directory');
+        if (!lostMount || attempt === maximumAttempts) throw error;
+        console.warn(message);
+        console.warn(`Retrying Symphony DMG creation (${attempt + 1}/${maximumAttempts}).`);
+      }
+    }
+  }
+}
+
 export default {
   packagerConfig: {
     asar: true,
@@ -63,7 +82,7 @@ export default {
   makers: [
     // Archive packages are intentionally not part of the release surface.
     // new MakerZIP({}, ['darwin', 'linux', 'win32']),
-    new MakerDMG((architecture) => ({
+    new MakerDMGWithDetachRetry((architecture) => ({
       name: `Symphony-darwin-${architecture}-${packageVersion}`,
       title: 'Symphony',
       icon: `${iconBase}.icns`,
