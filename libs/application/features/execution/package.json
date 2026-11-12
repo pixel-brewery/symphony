@@ -40,6 +40,6 @@
     "@symphony/domain-platform": "workspace:*",
     "@symphony/ipc-contracts-execution": "workspace:*",
     "@types/node": "26.6.6",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   }
 }

@@ -18,7 +18,7 @@
     "@symphony/domain-ai": "workspace:*",
     "@symphony/domain-workflow": "workspace:*",
     "@types/node": "26.6.6",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   },
   "dependencies": {
     "@pixel-brewery/synapse-core": "0.0.1",
