@@ -30,7 +30,7 @@ concurrency:
 
 env:
   RELEASE_SPECIFIER: ${{ inputs.specifier || 'patch' }}
-  NODE_VERSION: 24.15.0
+  NODE_VERSION: 24.20.0
   YARN_VERSION: 4.10.3
 
 jobs:
