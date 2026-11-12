@@ -168,8 +168,8 @@ describe('Dependabot pull request merge', () => {
     }
     expect(quality.defaults.run.shell).toBe('bash');
     expect(names).toEqual(requiredJobNames);
-    expect(workflow.jobs['electron-e2e'].needs).toEqual(['changes', 'quality']);
-    expect(workflow.jobs.package.needs).toEqual(['changes', 'quality']);
+    expect(workflow.jobs['electron-e2e'].needs).toBe('changes');
+    expect(workflow.jobs.package.needs).toBe('changes');
     expect(workflow.jobs['electron-e2e']['runs-on']).toBe('macos-latest');
     expect(workflow.jobs.package['runs-on']).toBe('macos-latest');
     expect(workflow.jobs['quality-gate'].needs).toEqual([

@@ -246,19 +246,20 @@ describe('release workflow signing policy', () => {
     );
   });
 
-  it('rejects publishing without every native build passing', async () => {
+  it.each(['verify', 'linux'])('rejects publishing without a successful %s job', async (job) => {
     // arrange
-    const workflowSource = (
-      await readFile(resolve('.github/workflows/release.yml'), 'utf8')
-    ).replace('needs: [configure, macos, windows, linux]', 'needs: [configure, macos, windows]');
+    const workflow = parse(await readFile(resolve('.github/workflows/release.yml'), 'utf8'));
     const forgeSource = await readFile(resolve('forge.config.mjs'), 'utf8');
+    workflow.jobs.publish.needs = workflow.jobs.publish.needs.filter(
+      (dependency: string) => dependency !== job,
+    );
 
     // act
-    const violations = ValidateReleaseWorkflowSigningPolicy(workflowSource, forgeSource);
+    const violations = ValidateReleaseWorkflowSigningPolicy(stringify(workflow), forgeSource);
 
     // assert
     expect(violations).toContain(
-      'Publication must require every successful native build and release identity.',
+      'Publication must require the release identity, source verification and every native build.',
     );
   });
 
