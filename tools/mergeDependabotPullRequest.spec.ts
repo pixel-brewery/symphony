@@ -25,6 +25,8 @@ const pullRequestPath = `${repositoryPath}/pulls/7`;
 const runPath = `${repositoryPath}/actions/runs/202`;
 const mainPath = `${repositoryPath}/branches/main`;
 const requiredJobNames = [
+  'Classify changed files',
+  'Documentation links and structure',
   'Agents, Format, Lint, Typecheck, Test and Build (ubuntu-latest)',
   'Agents, Format, Lint, Typecheck, Test and Build (macos-latest)',
   'Agents, Format, Lint, Typecheck, Test and Build (windows-latest)',
@@ -145,6 +147,8 @@ describe('Dependabot pull request merge', () => {
 
     // act
     const names = [
+      workflow.jobs.changes.name,
+      workflow.jobs.documentation.name,
       ...quality.strategy.matrix.os.map((os: string) =>
         quality.name.replace('${{ matrix.os }}', os),
       ),
@@ -417,8 +421,8 @@ describe('Dependabot pull request merge', () => {
     const jobs = dependencies.records.jobs;
 
     if (kind === 'missing') jobs.pop();
-    else if (kind === 'duplicate') jobs[2] = { ...jobs[0], id: 7 };
-    else jobs.push({ ...jobs[0], id: 7, name: 'extra job' });
+    else if (kind === 'duplicate') jobs[2] = { ...jobs[0], id: jobs[2].id };
+    else jobs.push({ ...jobs[0], id: jobs.length + 1, name: 'extra job' });
 
     dependencies.records.jobPages[0].total_count = jobs.length;
 
@@ -477,19 +481,12 @@ describe('Dependabot pull request merge', () => {
   it('rejects a successful run with the old Ubuntu-only three-job coverage', async () => {
     // arrange
     const dependencies = controlled();
-    dependencies.records.jobPages = [
-      {
-        total_count: 3,
-        jobs: [
-          {
-            ...dependencies.records.jobs[0],
-            name: 'Agents, Format, Lint, Typecheck, Test and Build',
-          },
-          dependencies.records.jobs[3],
-          dependencies.records.jobs[4],
-        ],
-      },
-    ];
+    const legacyJobs = [
+      'Agents, Format, Lint, Typecheck, Test and Build',
+      'Electron E2E',
+      'Package smoke test',
+    ].map((name, index) => ({ ...dependencies.records.jobs[index], name }));
+    dependencies.records.jobPages = [{ total_count: legacyJobs.length, jobs: legacyJobs }];
 
     // act
     const result = await mergeDependabotPullRequest(context, dependencies);
@@ -503,9 +500,10 @@ describe('Dependabot pull request merge', () => {
     // arrange
     const dependencies = controlled();
 
+    const { jobs } = dependencies.records;
     dependencies.records.jobPages = [
-      { total_count: 6, jobs: dependencies.records.jobs.slice(0, 1) },
-      { total_count: 6, jobs: dependencies.records.jobs.slice(1) },
+      { total_count: jobs.length, jobs: jobs.slice(0, 1) },
+      { total_count: jobs.length, jobs: jobs.slice(1) },
     ];
 
     // act
@@ -529,8 +527,11 @@ describe('Dependabot pull request merge', () => {
       const jobs = dependencies.records.jobs;
 
       dependencies.records.jobPages = [
-        { total_count: 6, jobs: jobs.slice(0, 1) },
-        { total_count: kind === 'count-changed' ? 7 : 6, jobs: jobs.slice(1) },
+        { total_count: jobs.length, jobs: jobs.slice(0, 1) },
+        {
+          total_count: kind === 'count-changed' ? jobs.length + 1 : jobs.length,
+          jobs: jobs.slice(1),
+        },
       ];
 
       if (kind === 'empty-page') dependencies.records.jobPages[1].jobs = [];

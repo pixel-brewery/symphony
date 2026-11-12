@@ -502,7 +502,6 @@ jobs:
       cancel-in-progress: false
     permissions:
       contents: write
-      actions: write
     env:
       SYMPHONY_RELEASE_VERSION: ${{ needs.configure.outputs.version }}
       RELEASE_TAG: ${{ needs.configure.outputs.tag }}
@@ -668,13 +667,6 @@ jobs:
           auth_header="$(printf 'x-access-token:%s' "$RELEASE_PUSH_TOKEN" | base64 -w0)"
           echo "::add-mask::${auth_header}"
           git -c "http.${GITHUB_SERVER_URL}/.extraheader=AUTHORIZATION: basic ${auth_header}" push --atomic origin "HEAD:refs/heads/main" "refs/tags/${RELEASE_TAG}"
-
-      # Release metadata commits carry [skip ci]. Refresh bot branches explicitly
-      # after the durable version change even if a later asset upload fails.
-      - name: Refresh Dependabot after the release commit
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run rebase-dependabot.yml --ref main --repo "$GITHUB_REPOSITORY"
 
       # Assets must exist at their advertised URLs before any channel points at them.
       - name: Publish the GitHub release

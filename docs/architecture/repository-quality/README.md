@@ -92,8 +92,9 @@ offenlassen könnte.
 Die Main-Regel verlangt `Quality Gate` zusätzlich zu den fünf vorhandenen
 Matrix-/Abnahme-Kontexten. Die Workflowdatei verändert selbst keine Repositoryeinstellung; die
 erforderlichen Kontexte müssen zusätzlich in der Main-Regel konfiguriert sein. Der privilegierte
-Dependabot-Mergehelfer verlangt weiterhin fünf erfolgreiche schwere Ergebnisse;
-Paket- und Workflowupdates fallen niemals unter die Dokumentationsausnahme.
+Dependabot-Mergehelfer prüft alle acht erfolgreichen Jobs des auslösenden Laufs. Dazu gehören
+Klassifizierung, Dokumentation, die drei Plattform-Jobs, Electron E2E, der Paket-Smoke-Test
+und das Quality Gate. Paket- und Workflowupdates durchlaufen die vollständige Prüfung.
 
 ## Releasefolgen
 
