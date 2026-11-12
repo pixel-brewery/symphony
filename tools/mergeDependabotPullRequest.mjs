@@ -11,6 +11,8 @@ import { resolveDependabotRepository } from './resolveDependabotRepository.mjs';
 const workflowPath = '.github/workflows/ci.yml';
 const workflowName = 'Repository Quality';
 const requiredJobs = [
+  'Classify changed files',
+  'Documentation links and structure',
   'Agents, Format, Lint, Typecheck, Test and Build (ubuntu-latest)',
   'Agents, Format, Lint, Typecheck, Test and Build (macos-latest)',
   'Agents, Format, Lint, Typecheck, Test and Build (windows-latest)',
