@@ -77,7 +77,8 @@ und ist erfolgreich. Die drei Matrixinstanzen behalten ihre erforderlichen,
 betriebssystemspezifischen Checknamen. Bei Dokumentationsänderungen laufen alle drei
 als kleine Linuxjobs mit einer Erklärung; Checkout, Paketinstallation und sämtliche
 Verifikationsschritte bleiben aus. Bei Codeänderungen verwenden sie wie bisher
-Ubuntu, macOS und Windows. Electron E2E und Paket-Smoke-Test laufen nur bei
+Ubuntu, macOS und Windows. Electron E2E und Paket-Smoke-Test können nach
+erfolgreicher Klassifizierung parallel zur Matrix starten. Beide laufen nur bei
 `documentation_only != 'true'`.
 
 Der mit `always()` ausgeführte `Quality Gate` verlangt erfolgreiche Klassifizierung

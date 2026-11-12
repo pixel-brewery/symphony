@@ -83,12 +83,14 @@ export function ValidateReleaseWorkflowSigningPolicy(workflowSource, forgeSource
     violations.push('Release app credentials must be restricted to trusted main release events.');
   }
   if (
-    !['configure', 'macos', 'windows', 'linux'].every((job) =>
+    !['configure', 'verify', 'macos', 'windows', 'linux'].every((job) =>
       jobs.publish?.needs?.includes(job),
     ) ||
     jobs.publish?.if !== undefined
   ) {
-    violations.push('Publication must require every successful native build and release identity.');
+    violations.push(
+      'Publication must require the release identity, source verification and every native build.',
+    );
   }
   if (
     JSON.stringify(jobs.verify?.strategy?.matrix?.os) !==

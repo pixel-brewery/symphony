@@ -282,7 +282,7 @@ jobs:
 
   macos:
     name: macOS ${{ matrix.arch }} release
-    needs: [configure, verify]
+    needs: configure
     runs-on: macos-latest
     timeout-minutes: 60
     strategy:
@@ -384,7 +384,7 @@ jobs:
 
   windows:
     name: Windows arm64 release
-    needs: [configure, verify]
+    needs: configure
     runs-on: windows-latest
     timeout-minutes: 60
     env:
@@ -439,7 +439,7 @@ jobs:
 
   linux:
     name: Linux arm64 release
-    needs: [configure, verify]
+    needs: configure
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -493,7 +493,7 @@ jobs:
 
   publish:
     name: Publish installer-only ARM64 release
-    needs: [configure, macos, windows, linux]
+    needs: [configure, verify, macos, windows, linux]
     environment: release-main
     runs-on: ubuntu-latest
     timeout-minutes: 30
