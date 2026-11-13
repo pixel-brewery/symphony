@@ -1,3 +1,19 @@
+## 0.1.44 (2026-11-13)
+
+### 🚀 Features
+
+- **arcade:** add Lynx California Games ([083cede](https://github.com/pixel-brewery/symphony/commit/083cede))
+- **arcade:** add Atari Lynx California Games ([#66](https://github.com/pixel-brewery/symphony/pull/66))
+
+### 🩹 Fixes
+
+- **arcade:** improve California Games fidelity ([5d03a7a](https://github.com/pixel-brewery/symphony/commit/5d03a7a))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+- RueDeRennes @RueDeRennes
+
 ## 0.1.43 (2026-11-13)
 
 This was a version bump only, there were no code changes.
