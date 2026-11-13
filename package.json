@@ -15,7 +15,7 @@
     "claude-code",
     "opencode"
   ],
-  "version": "0.1.41",
+  "version": "0.1.42",
   "private": true,
   "author": "Pixel Brewery and Symphony contributors",
   "license": "MIT",
