@@ -39,9 +39,6 @@ export class ArcadeViewPresenter extends ViewPresenter {
   /** Opens the River Raid title screen. @public */
   public readonly playRiverRaidCommand: Command<void>;
 
-  /** Opens the Atari Lynx California Games title screen. @public */
-  public readonly playCaliforniaGamesCommand: Command<void>;
-
   /** Opens every game's ranked completed results from the Arcade hub. @public */
   public readonly showLeaderboardCommand: Command<void>;
 
@@ -92,9 +89,6 @@ export class ArcadeViewPresenter extends ViewPresenter {
     this.playRiverRaidCommand = new Command(() => {
       void router.navigate(['/main/arcade/river-raid']);
     });
-    this.playCaliforniaGamesCommand = new Command(() => {
-      void router.navigate(['/main/arcade/california-games']);
-    });
     this.games = [
       game('pong', 'Pong', 'Pong', 2, 2, this.playPongCommand),
       game('breakout', 'Breakout', 'Breakout', 1, 4, this.playBreakoutCommand),
@@ -111,14 +105,7 @@ export class ArcadeViewPresenter extends ViewPresenter {
         2,
         this.playRealSportsBoxingCommand,
       ),
-      game(
-        'california-games',
-        'California Games',
-        'California Games',
-        1,
-        2,
-        this.playCaliforniaGamesCommand,
-      ),
+      // California Games remains archived in source, but is intentionally absent from the catalog.
     ];
     this.showLeaderboardCommand = new Command(() => {
       dialogService.show(ArcadeLeaderboardDialogView, {

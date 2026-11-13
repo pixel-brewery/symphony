@@ -23,6 +23,17 @@ describe('arcadeRoutes', () => {
   afterEach(() => TestBed.resetTestingModule());
   afterAll(() => TestBed.resetTestEnvironment());
 
+  it('does not register the archived California Games route', () => {
+    // arrange
+    const route = arcadeRoutes[0];
+
+    // act
+    const childPaths = route?.children?.map((child) => child.path);
+
+    // assert
+    expect(childPaths).not.toContain('california-games');
+  });
+
   it('waits for application hydration before evaluating the saved Arcade preference', async () => {
     // arrange
     let complete: () => void = () => undefined;

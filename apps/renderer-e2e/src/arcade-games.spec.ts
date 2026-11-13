@@ -71,7 +71,6 @@ const GAMES = [
   'seaquest',
   'jungle-hunt',
   'realsports-boxing',
-  'california-games',
 ] as const;
 
 /**
@@ -115,7 +114,7 @@ async function expectGameCards(page: Page, columns: number): Promise<void> {
     .toBe(columns);
 }
 
-test('loads all nine bundled game covers and opens every game in light and dark themes', async () => {
+test('loads all eight active game covers and opens every game in light and dark themes', async () => {
   test.setTimeout(180_000);
   // arrange
   const { app, configurationRoot, outputDirectory } = await launchArcadeApp('catalog');
@@ -130,6 +129,11 @@ test('loads all nine bundled game covers and opens every game in light and dark 
     await expect(page).toHaveURL(/#\/main\/home$/);
     await expect(page.getByTestId('home-view')).toBeVisible();
     await enableArcade(page);
+    await page.evaluate(() => {
+      window.location.hash = '#/main/arcade/california-games';
+    });
+    await expect(page).toHaveURL(/#\/main\/home$/);
+    await expect(page.getByTestId('home-view')).toBeVisible();
     // God mode is shown and entered in the Arcade card of Settings.
     const settings = await openSettings(page);
     await settings.getByTestId('global-settings-section-appearance').click();
@@ -168,7 +172,7 @@ test('loads all nine bundled game covers and opens every game in light and dark 
 
       // assert
       await expect(page.getByTestId('window-title-text')).toHaveJSProperty('text', 'Arcade');
-      await expect(page.getByTestId('window-subtitle')).toHaveJSProperty('text', '9 games');
+      await expect(page.getByTestId('window-subtitle')).toHaveJSProperty('text', '8 games');
       await expect(
         page.getByTestId('window-toolbar').getByTestId('arcade-open-leaderboard'),
       ).toBeVisible();
@@ -216,7 +220,6 @@ test('loads all nine bundled game covers and opens every game in light and dark 
         ['pong', 'Pong', 'Space'],
         ['seaquest', 'Seaquest', 'Enter'],
         ['river-raid', 'River Raid', 'Space'],
-        ['california-games', 'California Games', 'Enter'],
       ]) {
         // act
         await page.getByTestId('navigation-arcade').click();
@@ -348,12 +351,7 @@ test('restores new-game results beside existing Arcade history after restarting 
       await expect(pong).toHaveAttribute('data-winner', '0');
       await pong.scrollIntoViewIfNeeded();
       await expect(pong).toBeInViewport();
-      const california = page.getByTestId('leaderboard-california-games-result');
-      await expect(california).toHaveCount(1);
-      await expect(california).toHaveAttribute('data-event', 'bmx');
-      await expect(california).toHaveAttribute('data-score', '2400');
-      await california.scrollIntoViewIfNeeded();
-      await expect(california).toBeInViewport();
+      await expect(page.getByTestId('leaderboard-california-games-results')).toHaveCount(0);
       await page.screenshot({
         path: resolve(outputDirectory, `arcade-new-games-leaderboard-${theme}.png`),
       });

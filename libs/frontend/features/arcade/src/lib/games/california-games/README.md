@@ -1,6 +1,6 @@
 # California Games — Atari Lynx
 
-This directory owns a self-contained TypeScript reconstruction of the 1989 Atari Lynx release. The model advances at a deterministic 60 Hz, the renderer writes a native 160 × 102 indexed framebuffer, and the audio adapter synthesizes four mono Lynx-style channels. Symphony does not bundle or execute a ROM, emulator, sampled soundtrack or remote runtime.
+This directory retains an inactive, self-contained TypeScript reconstruction of the 1989 Atari Lynx release. The model advances at a deterministic 60 Hz, the renderer writes a native 160 × 102 indexed framebuffer, and the audio adapter synthesizes four mono Lynx-style channels. The game is intentionally absent from the catalog, command palette, shared leaderboard projection and active route table. Its former route falls back to Overview. Symphony does not bundle or execute a ROM, emulator, sampled soundtrack or remote runtime.
 
 The View owns its Signals, Commands and browser lifecycle directly, as requested; there is no game ViewPresenter. The shared `ArcadeCanvasController` remains the only browser frame/input owner. Game rules, rendering and audio remain game-local so a second global engine is not introduced for one Lynx title.
 
@@ -35,12 +35,12 @@ God mode prevents a crash, wipeout, fall or drop from ending the relevant event.
 
 `LynxAudioChannel` models a 240 Hz sequenced tone/noise voice with a configurable 12-bit LFSR, integration and signed volume. `CaliforniaGamesAudio` mixes four voices to mono, caches six reconstructed music programs (title, high scores and one per event), plays simulation-ID-deduplicated effects, and owns gesture unlock, mute, pause, reset and disposal. The programs are new transcriptions in the style and event structure of the Lynx score, not copied samples or verified register dumps. Exact original melody licensing and register identity are therefore not claimed.
 
-## Symphony integration
+## Archived Symphony integration
 
-The route is `/main/arcade/california-games`. The packaged gallery cover is a lossless WebP conversion of the retained retail cover. Each completed player's event result is validated and stored in the shared local leaderboard; the best three per event are kept. The cartridge's own top-three screen remains inside the game flow, while the Arcade dialog provides persistent cross-session results.
+No active route or gallery entry registers this game. The retained retail cover remains a lossless WebP archive. The shared leaderboard schema and ranking still accept previously stored event results so existing profile data is not destroyed, but the Arcade dialog does not display them. Re-enabling the game requires an explicit product decision and renewed UI, fidelity and end-to-end review.
 
 The header, controls, instructions and fallback state use the installed Mosaik Soho components and tokens. The catalog remains a normal View/ViewPresenter pair; the game is a closed three-file View with no game presenter. The renderer stays sandboxed and uses no Node.js, IPC, orchestrator or desktop API.
 
 ## Verification
 
-Adjacent model tests cover intro/menu transitions, all four event controls and limits, scoring, high scores, pause chords, screen flip, two players, God mode and deterministic catch-up. Surface/renderer tests cover the indexed palette, primitives, sprites, each scene, aspect-preserving output and screen flip. Audio tests cover all programs/effects, four-channel synthesis, de-duplication and lifecycle. View tests cover browser routing, focused-header input recovery, editable-field exclusion, two-player restart, pause-preserving instructions, once-only leaderboard writes and cleanup. `apps/renderer-e2e/src/arcade-california-games.spec.ts` exercises the packaged-process route, menu navigation from a focused application control, BMX acceleration, Surfing, Half Pipe and Foot Bag start behavior, reference screenshots, pause, screen flip, instructions, sound and two-player restart.
+Adjacent model tests cover intro/menu transitions, all four event controls and limits, scoring, high scores, pause chords, screen flip, two players, God mode and deterministic catch-up. Surface/renderer tests cover the indexed palette, primitives, sprites, each scene, aspect-preserving output and screen flip. Audio tests cover all programs/effects, four-channel synthesis, de-duplication and lifecycle. View tests cover browser routing, focused-header input recovery, editable-field exclusion, two-player restart, pause-preserving instructions, once-only leaderboard writes and cleanup. `apps/renderer-e2e/src/arcade-california-games.spec.ts` is retained as an archived implementation exercise; the active catalog journey instead verifies that the game is not registered or reachable.

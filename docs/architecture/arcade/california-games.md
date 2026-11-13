@@ -4,7 +4,9 @@
 
 ## Ziel, Umfang und Treuevertrag
 
-California Games ist eine vollständig lokale, sandboxfähige Rekonstruktion der Atari-Lynx-Fassung von 1989. Sie stellt den sichtbaren Cartridge-Ablauf, vier Disziplinen, die dokumentierten Steuerungen und Zeitlimits, ereignisbezogene Top-3-Tafeln, Lynx-Farben, skalierte Sprites und synthetisiertes Vierkanal-Audio bereit. Ein ROM, Emulator, Original-Sample, Netzwerklaufzeit oder Node.js-Zugriff ist weder Voraussetzung noch Bestandteil.
+California Games ist als vollständig lokale, sandboxfähige Rekonstruktion der Atari-Lynx-Fassung von 1989 im Quellcode erhalten. Die Implementierung ist nicht im Arcade-Katalog, in der Befehlspalette, im gemeinsamen Leaderboard oder im Router registriert und daher für Benutzer nicht erreichbar. Ihr früherer Pfad `/main/arcade/california-games` fällt auf Overview zurück. Modell-, Renderer-, Audio-, View-, Asset- und Testdateien bleiben für eine mögliche spätere Überarbeitung archiviert; die folgenden Verträge dokumentieren diesen erhaltenen Stand und sind kein aktives Produktversprechen.
+
+Das bindende Ziel ist die inaktive Archivierung: Keine neue Funktion darf California Games implizit wieder registrieren. Eine spätere Reaktivierung braucht eine neue Produktentscheidung, eine erneute Referenzprüfung und aktive Ende-zu-Ende-Akzeptanz. Das Leaderboard-Schema und seine Rangierung bleiben vorerst kompatibel, damit vorhandene Profildaten weder verworfen noch unlesbar werden; der sichtbare Dialog projiziert diese Einträge nicht.
 
 Verbindliche Grenzen der Treue:
 
@@ -22,8 +24,8 @@ Verbindliche Grenzen der Treue:
 | Szenenprojektion           | game-lokaler Renderer                                      | vollständige Szene aus einem unveränderlichen Snapshot; keine Regelmutation           |
 | Klang                      | game-lokaler Audioadapter                                  | vier mono gemischte Stimmen, Musik-/Effekt-Deduplizierung, Audio nur nach Geste       |
 | Browserlebenszyklus        | gemeinsamer Arcade-Canvas-Controller und geschlossene View | Resize, Animation Frame, Tastatur, Fokusverlust, Pause, Audio und Disposal            |
-| persistente Ergebnisse     | Arcade-Leaderboard                                         | validierte Einzelresultate, beste drei pro Disziplin                                  |
-| Katalog und Route          | Arcade-Feature                                             | lazy Route `/main/arcade/california-games`, gebündeltes Cover, kein Runtime-Netzwerk  |
+| persistente Ergebnisse     | Arcade-Leaderboard                                         | nur Abwärtskompatibilität für vorhandene Einträge; keine sichtbare Projektion         |
+| Katalog und Route          | Arcade-Feature                                             | keine Registrierung; alter Pfad fällt auf Overview zurück                             |
 
 Die Spiel-View ist eine isolierte `.ts`/`.html`/`.scss`-Einheit und besitzt Commands und Signals direkt. Ein Game-ViewPresenter ist absichtlich nicht vorhanden. Modell, Renderer und Audio bleiben getrennte game-lokale Module, weil nur der Browserlebenszyklus zwischen den Arcade-Spielen stabil geteilt wird. Aus einem einzelnen Lynx-Titel wird keine globale Emulator- oder Konsolenabstraktion abgeleitet.
 
@@ -94,7 +96,7 @@ Der Browseradapter erzeugt den `AudioContext` erst nach einer Nutzeraktion, besi
 
 Der gemeinsame Canvas-Controller liest die dokumentierten Tastencodes. Spieler 1 verwendet Pfeile, Z/X und Q/E; Spieler 2 W/A/S/D, F/G und R/T. Die View dekodiert nur Spieler und Lynx-Schalter und übergibt beide an das Modell. P/Escape ruft den originalen Pausevertrag auf. Wenn nach einem Klick ein interaktives Kopfzeilenelement den Fokus besitzt, leitet die View bekannte Spieltasten in der Capture-Phase einmalig an das Spiel weiter und fokussiert anschließend den Canvas. Editierbare Felder, Dialoge und modifizierte Tastenkombinationen sind davon ausgenommen. Fokusverlust pausiert ohne Option-Chord, gibt Eingaben frei und suspendiert Audio. Die Anleitung pausiert nur ein zuvor laufendes Spiel und stellt genau diesen Zustand wieder her. Navigation und Zerstörung entfernen auch die Dokument-Listener und geben Eingaben sowie Browserressourcen frei.
 
-Bei einer neuen `resultId` schreibt die View jeden Eintrag aus `latestResults` genau einmal. Der persistierte Vertrag lautet:
+Würde die archivierte View isoliert ausgeführt, schreibt sie bei einer neuen `resultId` jeden Eintrag aus `latestResults` genau einmal. Der aus Kompatibilitätsgründen erhaltene persistierte Vertrag lautet:
 
 ```text
 {
@@ -113,7 +115,7 @@ Die verstrichene Zeit ist Eventlimit minus verbleibendem Timer. Der gemeinsame S
 
 ## Quellen, Assets und Offlinegarantie
 
-Das Originalhandbuch und die Lynx-Hardwarereferenz sind Entwicklungsnachweise, keine Runtime-Abhängigkeiten. Das Cover wird mit unveränderten Abmessungen als WebP gebaut; Quelle, Original, Hash und Konvertierung stehen in `resources/arcade/README.md`. Der Renderer kopiert nur das WebP in das Anwendungspaket. Screenshots, Handbuch und Internetquellen werden nicht ausgeliefert oder zur Laufzeit geladen.
+Das Originalhandbuch und die Lynx-Hardwarereferenz sind Entwicklungsnachweise, keine Runtime-Abhängigkeiten. Quelle, Original, Hash und Konvertierung des archivierten Covers stehen in `resources/arcade/README.md`. Das Cover bleibt im Repository, wird aber vom aktiven Katalog nicht geladen. Screenshots, Handbuch und Internetquellen werden nicht ausgeliefert oder zur Laufzeit geladen.
 
 ## Fehler- und Wiederherstellungsverhalten
 
@@ -131,4 +133,4 @@ Das Originalhandbuch und die Lynx-Hardwarereferenz sind Entwicklungsnachweise, k
 - Renderer-/Oberflächentests müssen 160 × 102, Palettenindices, Begrenzung, Spriteoperationen, alle Phasen, alle Events und gedrehte Ausgabe belegen.
 - Audiotests müssen vier Stimmen, feste Wiedergabelängen, LFSR/Integrate, Programme, Effekte, ID-Deduplizierung, Mute, Pause, Reset und Disposal ohne echten Audioausgang belegen.
 - Viewtests müssen Browserinput, Zwei-Spieler-Neustart, pausenerhaltende Anleitung, genau einmal geschriebene Ergebnisse und Ressourcenfreigabe belegen.
-- Die Electron-Reise muss die Route aus dem Katalog öffnen, das originale Menü mit fokussiertem Kopfzeilen-Button bedienen, alle vier Events starten, je Event eine sichtbare Eingabewirkung beziehungsweise Startpose prüfen, Referenzscreenshots erzeugen, Pause/Flip/Anleitung/Ton/Zwei-Spieler-Wechsel prüfen und die vollflächige Canvas-Geometrie bestätigen.
+- Die aktive Electron-Reise muss belegen, dass keine Kachel und kein Leaderboard-Abschnitt erscheint und der frühere direkte Pfad auf Overview zurückfällt. Die archivierte California-Games-Reise bleibt als isolierter Implementierungsnachweis erhalten, gehört aber nicht zur aktiven Produktauslieferungsakzeptanz.
