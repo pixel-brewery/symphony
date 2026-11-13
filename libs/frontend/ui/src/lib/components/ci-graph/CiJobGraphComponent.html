@@ -74,6 +74,7 @@
       <mosaik-flow-edge
         [edgeKey]="'dependency:' + edge.key"
         [source]="edge.source"
+        [sourcePort]="0.5"
         [target]="edge.target"
         [attr.test-id]="'ci-graph-dependency-' + edge.key"
       />

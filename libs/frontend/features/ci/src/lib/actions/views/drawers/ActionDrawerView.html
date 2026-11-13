@@ -124,49 +124,12 @@
     @let details = presenter.details(); @let loading = presenter.isHydrating() && !details &&
     !presenter.loadFailed();
     <div
-      #logSurface
       test-id="action-detail-drawer"
-      class="flex h-full min-h-0 min-w-0 flex-col gap-2 overflow-y-auto px-2 py-1"
+      class="flex h-full min-h-0 min-w-0 flex-col gap-2 overflow-clip px-2 py-1"
       [attr.aria-busy]="loading"
       [attr.aria-label]="loading ? tr('loc.symphony.loading.action.log.27691e') : null"
     >
-      @if (details && details.pendingApprovals?.length) {
-      <section class="grid gap-3" test-id="ci-pending-approvals">
-        <strong>{{ tr('loc.symphony.pending.deployment.reviews.697ed6') }}</strong>
-        <span>
-          {{ tr('loc.symphony.exact.version.b74354', [details.workflowGraph?.revision ??
-          presenter.currentCiRun()?.revision]) }}
-        </span>
-        <mosaik-textbox
-          test-id="ci-approval-comment"
-          [label]="tr('loc.symphony.review.reason.046bf9')"
-          [ngModel]="presenter.approvalComment()"
-          (ngModelChange)="presenter.approvalComment.set($event)"
-        />
-        @for (approval of details.pendingApprovals; track approval.environmentId) {
-        <div class="flex flex-wrap items-center gap-2">
-          <span>{{ tr('loc.symphony.target.13d85e', [approval.environment]) }}</span>@if
-          (approval.waitUntil) {<span
-            >{{ tr('loc.symphony.wait.until.04875f', [approval.waitUntil | date:'medium']) }}</span
-          >}
-          <mosaik-button
-            [attr.test-id]="'ci-approve-'+approval.environmentId"
-            [label]="tr('loc.symphony.approve.this.version.b3f9b4')"
-            [disabled]="!approval.canApprove || presenter.approvalBusy() || presenter.approvalUncertain() || !presenter.approvalComment().trim()"
-            (click)="presenter.reviewApprovalCommand.execute([approval.environmentId,'approved'])"
-          />
-          <mosaik-button
-            [label]="tr('loc.symphony.reject.ab604a')"
-            [variant]="'danger'"
-            [disabled]="!approval.canApprove || presenter.approvalBusy() || presenter.approvalUncertain() || !presenter.approvalComment().trim()"
-            (click)="presenter.reviewApprovalCommand.execute([approval.environmentId,'rejected'])"
-          />
-        </div>
-        } @if (presenter.approvalUncertain()) {<mosaik-hint
-          [text]="tr('loc.symphony.the.review.outcome.is.unconfirmed.inspect.the.run.on.38a273')"
-        />}
-      </section>
-      } @if (details && details.workflowGraph; as graph) { @if (graph.jobs.length) {
+      @if (details && details.workflowGraph; as graph) { @if (graph.jobs.length) {
       <mosaik-card
         test-id="action-detail-graph-frame"
         class="h-[12rem] shrink-0"
@@ -193,9 +156,9 @@
       </div>
       }
 
-      <section class="grid min-w-0 gap-1">
-        <header class="flex items-center justify-between gap-2">
-          <h3 class="m-0" test-id="action-detail-log-heading">
+      <section class="flex min-h-0 min-w-0 flex-1 flex-col gap-1">
+        <header class="flex shrink-0 items-center justify-between gap-2">
+          <h3 id="action-detail-log-heading" class="m-0" test-id="action-detail-log-heading">
             {{ tr('loc.symphony.action.log.77ffc1') }}
           </h3>
           @if (presenter.isRunning()) {
@@ -210,137 +173,188 @@
           }
         </header>
 
-        @if (loading) {
-        <div test-id="action-detail-loading-skeleton" class="px-1 py-2">
-          <mosaik-timeline [orientation]="'vertical'" [align]="'start'" aria-hidden="true">
-            <mosaik-timeline-item>
-              <mosaik-timeline-marker
-                [appearance]="'soft'"
-                [variant]="'neutral'"
-                [size]="'medium'"
+        <div
+          #logSurface
+          test-id="action-detail-log-scroll"
+          class="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
+          role="region"
+          aria-labelledby="action-detail-log-heading"
+          tabindex="0"
+        >
+          @if (details && details.pendingApprovals?.length) {
+          <section class="grid gap-3" test-id="ci-pending-approvals">
+            <strong>{{ tr('loc.symphony.pending.deployment.reviews.697ed6') }}</strong>
+            <span>
+              {{ tr('loc.symphony.exact.version.b74354', [details.workflowGraph?.revision ??
+              presenter.currentCiRun()?.revision]) }}
+            </span>
+            <mosaik-textbox
+              test-id="ci-approval-comment"
+              [label]="tr('loc.symphony.review.reason.046bf9')"
+              [ngModel]="presenter.approvalComment()"
+              (ngModelChange)="presenter.approvalComment.set($event)"
+            />
+            @for (approval of details.pendingApprovals; track approval.environmentId) {
+            <div class="flex flex-wrap items-center gap-2">
+              <span>{{ tr('loc.symphony.target.13d85e', [approval.environment]) }}</span>@if
+              (approval.waitUntil) {<span
+                >{{ tr('loc.symphony.wait.until.04875f', [approval.waitUntil | date:'medium'])
+                }}</span
+              >}
+              <mosaik-button
+                [attr.test-id]="'ci-approve-'+approval.environmentId"
+                [label]="tr('loc.symphony.approve.this.version.b3f9b4')"
+                [disabled]="!approval.canApprove || presenter.approvalBusy() || presenter.approvalUncertain() || !presenter.approvalComment().trim()"
+                (click)="presenter.reviewApprovalCommand.execute([approval.environmentId,'approved'])"
               />
-              <mosaik-timeline-content>
-                <article class="grid w-full min-w-0 gap-2">
-                  <header
-                    class="flex min-h-5 flex-wrap items-center justify-between gap-x-2 gap-y-1"
-                  >
-                    <div class="grid min-w-0 gap-1">
-                      <div class="flex h-2.5 items-center">
-                        <mosaik-skeleton [width]="'9rem'" [height]="'14px'" [shimmer]="true" />
-                      </div>
-                      <div class="flex h-2.5 items-center">
-                        <mosaik-skeleton [width]="'4.5rem'" [height]="'14px'" [shimmer]="true" />
-                      </div>
-                    </div>
-                  </header>
-                </article>
-              </mosaik-timeline-content>
-            </mosaik-timeline-item>
-          </mosaik-timeline>
-        </div>
-        } @else { @if (presenter.logView(); as logView) { @if (logView.jobs.length ||
-        logView.runProtocols.length) {
-        <div class="px-1 py-2" test-id="action-detail-log">
-          <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
-            @for (job of logView.jobs; track job.id) {
-            <mosaik-timeline-item tabindex="-1" [attr.test-id]="'action-detail-job-' + job.id">
-              <mosaik-timeline-marker
-                [iconName]="job.status | ciLogStatusIcon"
-                [variant]="job.status | ciLogStatusVariant"
-                [appearance]="'soft'"
-                [size]="'medium'"
+              <mosaik-button
+                [label]="tr('loc.symphony.reject.ab604a')"
+                [variant]="'danger'"
+                [disabled]="!approval.canApprove || presenter.approvalBusy() || presenter.approvalUncertain() || !presenter.approvalComment().trim()"
+                (click)="presenter.reviewApprovalCommand.execute([approval.environmentId,'rejected'])"
               />
-              <mosaik-timeline-content>
-                <article class="grid w-full min-w-0 gap-2">
-                  <header
-                    class="flex min-h-5 flex-wrap items-center justify-between gap-x-2 gap-y-1"
-                  >
-                    <div class="grid min-w-0 gap-1">
-                      <strong>{{ job.name }}</strong>
-                      <span>{{ job.status | ciLogStatusLabel }}</span>
-                    </div>
-                    @if (job.externalUrl; as jobUrl) {
-                    <mosaik-button
-                      [attr.test-id]="'action-detail-open-job-' + job.id"
-                      [label]="tr('loc.symphony.open.job.ad578d')"
-                      [appearance]="'outline'"
-                      [iconName]="'open'"
-                      [size]="'small'"
-                      [href]="jobUrl"
-                      [target]="'_blank'"
-                      [rel]="'noreferrer'"
-                    />
-                    }
-                  </header>
-                  @if (job.steps.length) {
-                  <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
-                    @for (step of job.steps; track step.id) {
-                    <mosaik-timeline-item [attr.test-id]="'action-detail-step-' + step.id">
-                      <mosaik-timeline-marker
-                        [iconName]="step.status | ciLogStatusIcon"
-                        [variant]="step.status | ciLogStatusVariant"
-                        [appearance]="'soft'"
-                        [size]="'small'"
-                      />
-                      <mosaik-timeline-content>
-                        <div class="grid w-full min-w-0 gap-2">
-                          <div class="flex items-baseline justify-between gap-2">
-                            <strong>{{ step.name }}</strong>
-                            <small>{{ step.status | ciLogStatusLabel }}</small>
-                          </div>
-                          @if (step.protocol; as protocol) {
-                          <mosaik-disclosure
-                            [attr.test-id]="'action-detail-step-protocol-' + step.id"
-                            [summary]="tr('loc.symphony.protocol.cf0883')"
-                            [isExpanded]="!!protocol && (step.status === 'failed' || step.status === 'in-progress')"
-                          >
-                            <pre class="m-0 whitespace-pre-wrap break-words p-2">
-{{ protocol }}</pre>
-                          </mosaik-disclosure>
-                          }
+            </div>
+            } @if (presenter.approvalUncertain()) {<mosaik-hint
+              [text]="tr('loc.symphony.the.review.outcome.is.unconfirmed.inspect.the.run.on.38a273')"
+            />}
+          </section>
+          } @if (loading) {
+          <div test-id="action-detail-loading-skeleton" class="px-1 py-2">
+            <mosaik-timeline [orientation]="'vertical'" [align]="'start'" aria-hidden="true">
+              <mosaik-timeline-item>
+                <mosaik-timeline-marker
+                  [appearance]="'soft'"
+                  [variant]="'neutral'"
+                  [size]="'large'"
+                  [iconSize]="'medium'"
+                />
+                <mosaik-timeline-content>
+                  <article class="grid w-full min-w-0 gap-2">
+                    <header
+                      class="flex min-h-5 flex-wrap items-center justify-between gap-x-2 gap-y-1"
+                    >
+                      <div class="grid min-w-0 gap-1">
+                        <div class="flex h-2.5 items-center">
+                          <mosaik-skeleton [width]="'9rem'" [height]="'14px'" [shimmer]="true" />
                         </div>
-                      </mosaik-timeline-content>
-                    </mosaik-timeline-item>
+                        <div class="flex h-2.5 items-center">
+                          <mosaik-skeleton [width]="'4.5rem'" [height]="'14px'" [shimmer]="true" />
+                        </div>
+                      </div>
+                    </header>
+                  </article>
+                </mosaik-timeline-content>
+              </mosaik-timeline-item>
+            </mosaik-timeline>
+          </div>
+          } @else { @if (presenter.logView(); as logView) { @if (logView.jobs.length ||
+          logView.runProtocols.length) {
+          <div class="px-1 py-2" test-id="action-detail-log">
+            <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+              @for (job of logView.jobs; track job.id) {
+              <mosaik-timeline-item tabindex="-1" [attr.test-id]="'action-detail-job-' + job.id">
+                <mosaik-timeline-marker
+                  [iconName]="job.status | ciLogStatusIcon"
+                  [variant]="job.status | ciLogStatusVariant"
+                  [appearance]="'soft'"
+                  [size]="'large'"
+                  [iconSize]="'medium'"
+                />
+                <mosaik-timeline-content>
+                  <article class="grid w-full min-w-0 gap-2">
+                    <header
+                      class="flex min-h-5 flex-wrap items-center justify-between gap-x-2 gap-y-1"
+                    >
+                      <div class="grid min-w-0 gap-1">
+                        <strong>{{ job.name }}</strong>
+                        <span>{{ job.status | ciLogStatusLabel }}</span>
+                      </div>
+                      @if (job.externalUrl; as jobUrl) {
+                      <mosaik-button
+                        [attr.test-id]="'action-detail-open-job-' + job.id"
+                        [label]="tr('loc.symphony.open.job.ad578d')"
+                        [appearance]="'outline'"
+                        [iconName]="'open'"
+                        [size]="'small'"
+                        [href]="jobUrl"
+                        [target]="'_blank'"
+                        [rel]="'noreferrer'"
+                      />
+                      }
+                    </header>
+                    @if (job.steps.length) {
+                    <mosaik-timeline [orientation]="'vertical'" [align]="'start'">
+                      @for (step of job.steps; track step.id) {
+                      <mosaik-timeline-item [attr.test-id]="'action-detail-step-' + step.id">
+                        <mosaik-timeline-marker
+                          [iconName]="step.status | ciLogStatusIcon"
+                          [variant]="step.status | ciLogStatusVariant"
+                          [appearance]="'soft'"
+                          [size]="'large'"
+                          [iconSize]="'medium'"
+                        />
+                        <mosaik-timeline-content>
+                          <div class="grid w-full min-w-0 gap-2">
+                            <div class="flex items-baseline justify-between gap-2">
+                              <strong>{{ step.name }}</strong>
+                              <small>{{ step.status | ciLogStatusLabel }}</small>
+                            </div>
+                            @if (step.protocol; as protocol) {
+                            <mosaik-disclosure
+                              [attr.test-id]="'action-detail-step-protocol-' + step.id"
+                              [summary]="tr('loc.symphony.protocol.cf0883')"
+                              [isExpanded]="!!protocol && (step.status === 'failed' || step.status === 'in-progress')"
+                            >
+                              <pre class="m-0 whitespace-pre-wrap break-words p-2">
+{{ protocol }}</pre>
+                            </mosaik-disclosure>
+                            }
+                          </div>
+                        </mosaik-timeline-content>
+                      </mosaik-timeline-item>
+                      }
+                    </mosaik-timeline>
                     }
-                  </mosaik-timeline>
-                  }
-                </article>
-              </mosaik-timeline-content>
-            </mosaik-timeline-item>
-            } @for (protocol of logView.runProtocols; track protocol.id) {
-            <mosaik-timeline-item [attr.test-id]="'action-detail-protocol-' + protocol.id">
-              <mosaik-timeline-marker
-                [iconName]="protocol.status | ciLogStatusIcon"
-                [variant]="protocol.status | ciLogStatusVariant"
-                [appearance]="'soft'"
-                [size]="'medium'"
-              />
-              <mosaik-timeline-content>
-                <mosaik-disclosure
-                  [attr.test-id]="'action-detail-run-protocol-' + protocol.id"
-                  [summary]="protocol.title"
-                  [isExpanded]="true"
-                >
-                  <pre class="m-0 whitespace-pre-wrap break-words p-2">{{ protocol.content }}</pre>
-                </mosaik-disclosure>
-              </mosaik-timeline-content>
-            </mosaik-timeline-item>
-            }
-          </mosaik-timeline>
+                  </article>
+                </mosaik-timeline-content>
+              </mosaik-timeline-item>
+              } @for (protocol of logView.runProtocols; track protocol.id) {
+              <mosaik-timeline-item [attr.test-id]="'action-detail-protocol-' + protocol.id">
+                <mosaik-timeline-marker
+                  [iconName]="protocol.status | ciLogStatusIcon"
+                  [variant]="protocol.status | ciLogStatusVariant"
+                  [appearance]="'soft'"
+                  [size]="'large'"
+                  [iconSize]="'medium'"
+                />
+                <mosaik-timeline-content>
+                  <mosaik-disclosure
+                    [attr.test-id]="'action-detail-run-protocol-' + protocol.id"
+                    [summary]="protocol.title"
+                    [isExpanded]="true"
+                  >
+                    <pre class="m-0 whitespace-pre-wrap break-words p-2">
+{{ protocol.content }}</pre>
+                  </mosaik-disclosure>
+                </mosaik-timeline-content>
+              </mosaik-timeline-item>
+              }
+            </mosaik-timeline>
+          </div>
+          } @else if (presenter.loadFailed()) {
+          <mosaik-empty-state
+            [iconName]="'errorCircle'"
+            [header]="tr('loc.symphony.action.log.unavailable.d307cb')"
+            [content]="tr('loc.symphony.open.the.workflow.in.github.to.inspect.its.log.40d1f3')"
+          />
+          } @else {
+          <mosaik-empty-state
+            [iconName]="'executionOutline'"
+            [header]="tr('loc.symphony.no.jobs.reported.yet.4ea162')"
+            [content]="tr('loc.symphony.the.action.log.will.appear.when.the.workflow.schedul.ae4f4d')"
+          />
+          } } }
         </div>
-        } @else if (presenter.loadFailed()) {
-        <mosaik-empty-state
-          [iconName]="'errorCircle'"
-          [header]="tr('loc.symphony.action.log.unavailable.d307cb')"
-          [content]="tr('loc.symphony.open.the.workflow.in.github.to.inspect.its.log.40d1f3')"
-        />
-        } @else {
-        <mosaik-empty-state
-          [iconName]="'executionOutline'"
-          [header]="tr('loc.symphony.no.jobs.reported.yet.4ea162')"
-          [content]="tr('loc.symphony.the.action.log.will.appear.when.the.workflow.schedul.ae4f4d')"
-        />
-        } } }
       </section>
     </div>
   </ng-template>

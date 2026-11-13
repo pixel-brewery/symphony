@@ -50,7 +50,9 @@ Oben im Drawer stehen der Workflow, die Quelle und ihr Status sowie bei bekannte
 
 Die Schaltflächen im Kopf der Laufdetails zeigen beim Überfahren oder per Tastaturfokus ihre Funktion. Der Pfeil öffnet den aktuellen Lauf auf GitHub, wenn ein Link vorliegt.
 
-Das kompakte Diagramm zeigt verfügbare Abhängigkeiten zwischen den Jobs in einem gerahmten Bereich mit Punktraster. Ein Klick auf einen ausgeführten Job führt zu seinem Eintrag in **Action log**. Bei Matrix-Jobs wählst du dort im Diagramm die konkrete Ausführung aus. Den Inhalt des Diagramms kannst du durch Ziehen verschieben und mit Strg- oder Cmd-Scrollen vergrößern oder verkleinern. Die Liste unter dem Diagramm enthält alle gemeldeten Jobs, auch wenn sich ein Job keiner Definition im Diagramm zuordnen lässt. **Open job** öffnet den jeweiligen Job auf GitHub, wenn ein Link vorhanden ist.
+Beim Scrollen bleiben das Diagramm und die Überschrift **Action log** sichtbar. In der Timeline zeigen größere Symbole den Status von Jobs, Schritten und Protokolleinträgen.
+
+Das kompakte Diagramm zeigt verfügbare Abhängigkeiten zwischen den Jobs in einem gerahmten Bereich mit Punktraster. Parallele Jobs zweigen von einem gemeinsamen Ausgang ab. Pfeilspitzen zeigen die Richtung der Abhängigkeiten. Ein Klick auf einen ausgeführten Job führt zu seinem Eintrag in **Action log**. Bei Matrix-Jobs wählst du dort im Diagramm die konkrete Ausführung aus. Den Inhalt des Diagramms kannst du durch Ziehen verschieben und mit Strg- oder Cmd-Scrollen vergrößern oder verkleinern. Die Liste unter dem Diagramm enthält alle gemeldeten Jobs, auch wenn sich ein Job keiner Definition im Diagramm zuordnen lässt. **Open job** öffnet den jeweiligen Job auf GitHub, wenn ein Link vorhanden ist.
 
 Ausstehende Deployment-Freigaben zeigen ihre Zielumgebung und die genaue Revision. Wer die Freigabeberechtigung hat, kann nach Eingabe eines Grunds zustimmen oder ablehnen.
 

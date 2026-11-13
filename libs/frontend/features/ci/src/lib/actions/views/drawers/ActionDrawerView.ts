@@ -88,8 +88,16 @@ export class ActionDrawerView extends View<ActionDrawerViewPresenter> {
     const job = log.querySelector<HTMLElement>(
       `[test-id="action-detail-job-${CSS.escape(jobId)}"]`,
     );
-    job?.focus({ preventScroll: true });
-    job?.scrollIntoView({ block: 'nearest' });
+    if (!job) return;
+
+    job.focus({ preventScroll: true });
+    const viewport = log.getBoundingClientRect();
+    const item = job.getBoundingClientRect();
+    if (item.top < viewport.top || item.height >= viewport.height) {
+      log.scrollTop += item.top - viewport.top;
+    } else if (item.bottom > viewport.bottom) {
+      log.scrollTop += item.bottom - viewport.bottom;
+    }
   }
 
   // #endregion

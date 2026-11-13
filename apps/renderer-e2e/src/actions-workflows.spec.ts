@@ -3,7 +3,10 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import type { FlowElement } from '@pixel-brewery/mosaik-elements-foundation/components/flow';
+import type {
+  FlowEdgeElement,
+  FlowElement,
+} from '@pixel-brewery/mosaik-elements-foundation/components/flow';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
 import type { BrowserWindow } from 'electron';
 import { prepareMainWindow } from './prepareMainWindow';
@@ -351,6 +354,18 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     const viewport = loadedFlow.locator('[part="viewport"]');
     await expect(viewport).toHaveCSS('background-image', /^radial-gradient/u);
     const loadedHeading = await drawer.getByTestId('action-detail-log-heading').boundingBox();
+    const parallelEdges = loadedFlow.getByTestId(/^ci-graph-dependency-/u);
+    await expect
+      .poll(() =>
+        parallelEdges.evaluateAll((edges) => {
+          const routes = (edges as FlowEdgeElement[]).map((edge) => edge.geometry);
+          return {
+            sources: new Set(routes.map((route) => JSON.stringify(route?.sourcePoint))).size,
+            targets: new Set(routes.map((route) => JSON.stringify(route?.targetPoint))).size,
+          };
+        }),
+      )
+      .toEqual({ sources: 1, targets: 29 });
     expect(skeletonBounds?.height).toBeCloseTo(loadedBounds?.height ?? 0, 0);
     expect(skeletonHeading?.y).toBeCloseTo(loadedHeading?.y ?? 0, 0);
     await expect(
@@ -362,6 +377,22 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     await expect(
       layoutPage.getByTestId('action-detail-step-protocol-actions-ci:7001:job:quality:step:test'),
     ).toContainText('Verification output 40');
+    const log = drawer.getByTestId('action-detail-log-scroll');
+    const stepMarker = drawer
+      .getByTestId('action-detail-step-actions-ci:7001:job:quality:step:test')
+      .locator(':scope > mosaik-timeline-marker');
+    await expect(stepMarker).toHaveJSProperty('iconSize', 'medium');
+    await expect(stepMarker).toHaveJSProperty('size', 'large');
+    await log.focus();
+    await layoutPage.keyboard.press('End');
+    await expect.poll(() => log.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    expect(await graphFrame.boundingBox()).toEqual(loadedBounds);
+    expect(await drawer.getByTestId('action-detail-log-heading').boundingBox()).toEqual(
+      loadedHeading,
+    );
+    await layoutPage.keyboard.press('Home');
+    await expect.poll(() => log.evaluate((element) => element.scrollTop)).toBe(0);
+
     const openRun = layoutPage.getByTestId('action-detail-open-run');
     const openRunTooltip = layoutPage.getByTestId('action-detail-open-run-tooltip');
     await openRun.hover();
