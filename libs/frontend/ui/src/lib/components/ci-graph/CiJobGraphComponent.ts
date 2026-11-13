@@ -69,8 +69,8 @@ const graphPadding = 24;
       useFactory: (): Partial<FlowElement.Props> => ({
         direction: 'left-to-right',
         edgeRouting: 'orthogonal',
-        edgeMarkerEnd: 'none',
-        grid: 'none',
+        edgeMarkerEnd: 'arrow',
+        grid: 'dots',
         fitPadding: graphPadding,
         layout: 'auto',
         layoutEngine: new DagreLayoutEngine(),
