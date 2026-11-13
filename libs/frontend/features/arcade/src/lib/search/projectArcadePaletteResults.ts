@@ -15,7 +15,7 @@ const GAMES: readonly (readonly [title: string, slug: string])[] = [
   ['Pong', 'pong'],
   ['Seaquest', 'seaquest'],
   ['River Raid', 'river-raid'],
-  ['California Games', 'california-games'],
+  // California Games remains archived in source, but is intentionally not discoverable.
 ];
 
 /**

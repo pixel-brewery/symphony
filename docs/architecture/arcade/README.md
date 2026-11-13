@@ -4,13 +4,13 @@
 
 ## Ziel und Garantien
 
-Arcade ist ein optionales Renderer-Feature mit neun lokal gebündelten Spielen, einer Spielauswahl, einer persönlichen Bestenliste und einem sitzungsweisen God mode. Das funktionale Verhalten beschreibt [Arcade](../../project/arcade/README.md). Die Atari-Lynx-Rekonstruktion beschreibt [California Games](california-games.md).
+Arcade ist ein optionales Renderer-Feature mit acht aktiven, lokal gebündelten Spielen, einer Spielauswahl, einer persönlichen Bestenliste und einem sitzungsweisen God mode. Das funktionale Verhalten beschreibt [Arcade](../../project/arcade/README.md). Die deaktivierte Atari-Lynx-Rekonstruktion ist als [California Games](california-games.md) archiviert.
 
 Garantien:
 
 - Ohne eingeschaltete Präferenz ist keine Arcade-Route erreichbar und kein Navigations- oder Palettenbeitrag sichtbar. Die Präferenz ist standardmäßig aus.
 - Die Spielauswahl ist ein statischer Katalog; sie liest keine Orchestrierungsdaten und löst keine IPC-Anfrage aus. Spiele, Titelbilder, Audio und Bestenliste kommen ohne Netzwerkzugriff aus.
-- Die Bestenliste speichert nur validierte Ergebnisse beendeter Spiele: höchstens zehn je Spiel, bei California Games die besten drei je Disziplin. Ein Speicher- oder Lesefehler verhindert weder das Spielen noch die Anzeige des Ergebnisses in der laufenden Sitzung.
+- Die Bestenliste speichert nur validierte Ergebnisse beendeter aktiver Spiele, höchstens zehn je Spiel. Das Schema liest weiterhin bereits gespeicherte California-Games-Einträge, ohne sie im Dialog anzuzeigen oder zu löschen. Ein Speicher- oder Lesefehler verhindert weder das Spielen noch die Anzeige des Ergebnisses in der laufenden Sitzung.
 - God mode wird nie persistiert und erweitert keine Fähigkeit außerhalb der Spielsimulationen.
 
 ## Geltungsbereich und Nicht-Ziele
@@ -25,11 +25,11 @@ Garantien:
 | Präferenz                         | Anwendungseinstellungen (`user.arcadeEnabled`) | `enabled: Signal<boolean>`, `setEnabled(boolean): Promise<boolean>` über den Arcade-Einstellungskontext | Navigation, Routenschutz, Palette, Einstellungskarte |
 | Einstellungsbeitrag               | Arcade-Feature im Slot `Appearance`            | Karte `Navigation` mit `Show Arcade` und `God mode`, Sucheinträge                                       | Einstellungen                                        |
 | Navigation                        | Arcade-Feature                                 | Eintrag `arcade` mit `isVisible`                                                                        | Seitenleiste                                         |
-| Routen                            | Arcade-Feature                                 | `/main/arcade` und neun Kindrouten hinter einem `canMatch`-Schutz                                       | Router, Palette, Spielauswahl                        |
+| Routen                            | Arcade-Feature                                 | `/main/arcade` und acht Kindrouten hinter einem `canMatch`-Schutz                                       | Router, Palette, Spielauswahl                        |
 | Katalog und Bestenlisten-Aufruf   | Presenter der Spielauswahl                     | `games: readonly IArcadeGame[]`, `showLeaderboardCommand`                                               | Spielauswahl                                         |
 | Ergebnisse                        | `ArcadeLeaderboardStore` (anwendungsweit)      | `entries: Signal<readonly ArcadeLeaderboardEntry[]>`, `add(entry): boolean`                             | Spiele (schreiben), Dialog (liest)                   |
 | God mode                          | `ArcadeGodModeStore` (anwendungsweit)          | `sequence`, `progress`, `enabled`                                                                       | Spiele außer Pong, Einstellungskarte                 |
-| Pausieren und Eingaben auf Canvas | gemeinsamer Canvas-Controller der Spiele       | Optionen `isActive`, `inputs`, `onInput`, `onTogglePause`                                               | alle neun Spiele                                     |
+| Pausieren und Eingaben auf Canvas | gemeinsamer Canvas-Controller der Spiele       | Optionen `isActive`, `inputs`, `onInput`, `onTogglePause`                                               | alle aktiven Spiele                                  |
 
 ## Präferenz
 
@@ -64,9 +64,8 @@ Navigationseintrag: Schlüssel `arcade`, Beschriftung `Arcade`, Symbol `games`, 
 | `/main/arcade/seaquest`          | Seaquest                 |
 | `/main/arcade/jungle-hunt`       | Jungle Hunt              |
 | `/main/arcade/realsports-boxing` | RealSports Boxing        |
-| `/main/arcade/california-games`  | California Games         |
 
-Jede Route wird getrennt nachgeladen. Der gemeinsame `canMatch`-Schutz wartet auf die einmalige Anwendungshydratisierung und prüft erst dann `user.arcadeEnabled === true`; andernfalls liefert er einen UrlTree auf `/main/home`. Ein Lesezeichen auf ein Spiel führt bei ausgeschalteter Präferenz damit zu Overview, bevor eine Spielkomponente geladen wird.
+Jede Route wird getrennt nachgeladen. Der gemeinsame `canMatch`-Schutz wartet auf die einmalige Anwendungshydratisierung und prüft erst dann `user.arcadeEnabled === true`; andernfalls liefert er einen UrlTree auf `/main/home`. Ein Lesezeichen auf ein Spiel führt bei ausgeschalteter Präferenz damit zu Overview, bevor eine Spielkomponente geladen wird. California Games besitzt unabhängig von der Präferenz keine registrierte Route; sein früherer Pfad fällt auf Overview zurück.
 
 ## Spielauswahl
 
@@ -82,7 +81,6 @@ Der Presenter liefert einen festen Katalog in dieser Anzeigereihenfolge:
 | `seaquest`          | Seaquest          | Seaquest                 | 1–2     |
 | `jungle-hunt`       | Jungle Hunt       | Jungle Hunt              | 1–1     |
 | `realsports-boxing` | RealSports Boxing | RealSports Boxing        | 1–2     |
-| `california-games`  | California Games  | California Games         | 1–2     |
 
 `IArcadeGame` enthält `id`, `title`, `fullTitle`, `cover` (`arcade/<id>.webp`, ein gebündeltes Renderer-Asset), `minPlayers`, `maxPlayers` und den Befehl `play`, der auf `/main/arcade/<id>` navigiert.
 
@@ -98,15 +96,15 @@ Darstellung:
 
 ### Dialog
 
-`Leaderboard` öffnet den Bestenlisten-Dialog über Mosaiks `DialogService` (Breite 52 rem, Höhe 90 dvh, Mindestbreite 20 rem, eigene Abdunklung, Schließen per Klick daneben und Escape, Fußzeile `Close`). Der Dialog erhält beim Öffnen eine Momentaufnahme von `entries()` und zeigt je Spiel einen Abschnitt in der Reihenfolge Pitfall!, Pitfall II: Lost Caverns, Breakout, RealSports Boxing, Jungle Hunt, Pong, Seaquest, River Raid und California Games, jeweils mit Rang, spielspezifischen Angaben und eigenem Leerzustand. California Games zeigt zusätzlich die originale sitzungsbezogene Top-3-Tafel im Spielfluss; sie ist nicht der gemeinsame Dialog.
+`Leaderboard` öffnet den Bestenlisten-Dialog über Mosaiks `DialogService` (Breite 52 rem, Höhe 90 dvh, Mindestbreite 20 rem, eigene Abdunklung, Schließen per Klick daneben und Escape, Fußzeile `Close`). Der Dialog erhält beim Öffnen eine Momentaufnahme von `entries()` und zeigt je aktivem Spiel einen Abschnitt in der Reihenfolge Pitfall!, Pitfall II: Lost Caverns, Breakout, RealSports Boxing, Jungle Hunt, Pong, Seaquest und River Raid, jeweils mit Rang, spielspezifischen Angaben und eigenem Leerzustand.
 
 ### Speicher
 
 - Ablage über die Browser-Speicher-Injektion der Anwendung (`BROWSER_STORAGE`, `getItem`/`setItem`) unter `symphony.arcade.leaderboard.v1` als JSON-Array.
 - Lesen beim Erzeugen: Werte über 100 000 Zeichen, kein JSON oder kein Array ergeben eine leere Liste. Von den ersten 100 Elementen werden nur schemagültige Einträge mit noch nicht gesehener `id` übernommen. Gültige Einträge des früheren Schlüssels `symphony.arcade.pitfall.records.v1` (höchstens 20 000 Zeichen) werden als `game: 'pitfall'` übernommen.
-- Schema: eine diskriminierte Union über `game` (`pitfall`, `pitfall-ii`, `breakout`, `realsports-boxing`, `jungle-hunt`, `pong`, `seaquest`, `river-raid`, `california-games`) mit `id`, `completedAt` und den spielspezifischen Feldern. Pong-Einträge sind nur gültig, wenn der Sieger die gewählte Zielpunktzahl erreicht hat. California-Games-Einträge enthalten `event`, `score`, `player`, `players` und `elapsedSeconds`; Event, Spielerzahl, Wertebereich und höchstens 90 Sekunden werden validiert.
+- Schema: eine diskriminierte Union über `game` (`pitfall`, `pitfall-ii`, `breakout`, `realsports-boxing`, `jungle-hunt`, `pong`, `seaquest`, `river-raid`, `california-games`) mit `id`, `completedAt` und den spielspezifischen Feldern. Pong-Einträge sind nur gültig, wenn der Sieger die gewählte Zielpunktzahl erreicht hat. Der California-Games-Zweig bleibt ausschließlich als Abwärtskompatibilität für vorhandene Profile bestehen; er validiert weiterhin `event`, `score`, `player`, `players` und `elapsedSeconds`, wird aber nicht mehr erzeugt oder angezeigt.
 - `add(entry)`: verwirft ungültige Einträge (`false`), ersetzt einen Eintrag mit derselben `id` statt ihn zu verdoppeln, rangiert neu und schreibt die ganze Liste. Ohne Speicher oder bei einem Schreibfehler liefert `add` `false`, die neue Rangliste bleibt aber im Speicher der Sitzung sichtbar.
-- Rangfolge je Spiel absteigend nach: Punktzahl (Pong: Abstand der Punkte, Breakout: beste Teampunktzahl, RealSports Boxing: höhere Punktzahl, sonst `score`); bei Pitfall! danach mehr Schätze und kürzere Zeit, bei Pitfall II mehr Goldbarren und kürzere Zeit; danach höheres Level, wo vorhanden; zuletzt der spätere Abschluss. Reguläre Spiele behalten zehn Einträge. California Games gruppiert in der festen Reihenfolge BMX, Surfing, Half Pipe und Foot Bag und behält je Gruppe die drei höchsten Punkte, bei Gleichstand die kürzere Zeit.
+- Rangfolge je Spiel absteigend nach: Punktzahl (Pong: Abstand der Punkte, Breakout: beste Teampunktzahl, RealSports Boxing: höhere Punktzahl, sonst `score`); bei Pitfall! danach mehr Schätze und kürzere Zeit, bei Pitfall II mehr Goldbarren und kürzere Zeit; danach höheres Level, wo vorhanden; zuletzt der spätere Abschluss. Reguläre Spiele behalten zehn Einträge. Die unveränderte Kompatibilitätslogik hält vorhandene California-Games-Daten weiterhin bei höchstens drei Einträgen je Disziplin.
 
 Die Spiele schreiben nur beendete Partien; nicht beendete Expeditionen und Matches werden nicht gespeichert. Eine Bestenliste online oder zwischen Computern gibt es nicht.
 
@@ -151,9 +149,9 @@ Die Spiele schreiben nur beendete Partien; nicht beendete Expeditionen und Match
 ## Verifikation und Akzeptanzkriterien
 
 - Bei ausgeschalteter Präferenz fehlt `navigation-arcade`, und `#/main/arcade/pitfall` endet auf `#/main/home` (`arcade-games.spec.ts`).
-- Nach dem Einschalten in **Appearance** erscheint `navigation-arcade` im Hauptfenster ohne Neuladen; die Spielauswahl zeigt neun Karten mit geladenen Titelbildern, und jedes `Play` öffnet die Route des Spiels in hellem und dunklem Schema.
+- Nach dem Einschalten in **Appearance** erscheint `navigation-arcade` im Hauptfenster ohne Neuladen; die Spielauswahl zeigt acht Karten mit geladenen Titelbildern, und jedes `Play` öffnet die Route des Spiels in hellem und dunklem Schema. California Games fehlt im Katalog und in der Palette; sein alter Pfad endet auf Overview.
 - Der Katalog nennt Reihenfolge, Titelbilder und Spielerzahlen wie oben; `Leaderboard` öffnet einen Dialog und navigiert nicht (`ArcadeViewPresenter.spec.ts`).
-- Die Bestenliste behält je regulärem Spiel zehn Ergebnisse und bei California Games drei je Disziplin, ersetzt eine wiederholte `id`, übernimmt alte Pitfall-Einträge, ignoriert beschädigte Einträge und behält ein Ergebnis bei fehlendem Speicher für die Sitzung; Ergebnisse überstehen einen Neustart (`ArcadeLeaderboardStore.spec.ts`, `arcade-games.spec.ts`, `arcade-pitfall.spec.ts`).
+- Die Bestenliste behält je aktivem Spiel zehn Ergebnisse, ersetzt eine wiederholte `id`, übernimmt alte Pitfall-Einträge, ignoriert beschädigte Einträge und behält ein Ergebnis bei fehlendem Speicher für die Sitzung; Ergebnisse überstehen einen Neustart. Bereits gespeicherte California-Games-Einträge bleiben schema- und speicherkompatibel, erscheinen jedoch nicht im Dialog (`ArcadeLeaderboardStore.spec.ts`, `arcade-games.spec.ts`, `arcade-pitfall.spec.ts`).
 - God mode aktiviert sich nur nach der vollständigen, ununterbrochenen Folge ohne Modifikatoren, fällt nach zwei Sekunden Pause zurück und erreicht bereits offene und später geöffnete Fenster (`ArcadeGodModeStore.spec.ts`).
 - Die Palette bietet `Play …` nur mit Eingabe und eingeschalteter Präferenz an (`projectArcadePaletteResults.spec.ts`).
 

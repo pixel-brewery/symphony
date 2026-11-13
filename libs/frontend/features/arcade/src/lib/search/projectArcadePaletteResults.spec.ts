@@ -19,10 +19,8 @@ describe('projectArcadePaletteResults', () => {
       ['Play Pitfall!', { kind: 'navigate', path: '/main/arcade/pitfall' }],
       ['Play Pitfall II: Lost Caverns', { kind: 'navigate', path: '/main/arcade/pitfall-ii' }],
     ]);
-    expect(california.map((result) => [result.title, result.action])).toEqual([
-      ['Play California Games', { kind: 'navigate', path: '/main/arcade/california-games' }],
-    ]);
-    expect(games).toHaveLength(9);
+    expect(california).toEqual([]);
+    expect(games).toHaveLength(8);
     expect(games.every((result) => result.group === 'commands' && result.icon === 'games')).toBe(
       true,
     );

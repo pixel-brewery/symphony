@@ -12,5 +12,5 @@ export const ArcadeGameIds = [
   'seaquest',
   'jungle-hunt',
   'realsports-boxing',
-  'california-games',
+  // California Games remains archived in source, but is intentionally not registered.
 ] as const;

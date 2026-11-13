@@ -34,7 +34,7 @@ describe('ArcadeViewPresenter', () => {
     return { presenter, navigate, show };
   }
 
-  it('lists the nine shipped games in catalog order with their covers and player counts', () => {
+  it('lists the eight active games in catalog order with their covers and player counts', () => {
     // arrange
     const { presenter } = arrange();
 
@@ -57,7 +57,6 @@ describe('ArcadeViewPresenter', () => {
       ['seaquest', 'Seaquest', 'arcade/seaquest.webp', 1, 2],
       ['jungle-hunt', 'Jungle Hunt', 'arcade/jungle-hunt.webp', 1, 1],
       ['realsports-boxing', 'RealSports Boxing', 'arcade/realsports-boxing.webp', 1, 2],
-      ['california-games', 'California Games', 'arcade/california-games.webp', 1, 2],
     ]);
     expect(presenter.games.map((game) => game.id)).toEqual([...ArcadeGameIds]);
     expect(presenter.games.find((game) => game.id === 'pitfall-ii')?.fullTitle).toBe(
