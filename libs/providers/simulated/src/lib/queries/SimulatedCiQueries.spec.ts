@@ -71,10 +71,12 @@ describe('SimulatedCiQueries', () => {
     const details = provider.runDetails(failed!.id);
 
     // assert
-    expect(snapshot.ciRuns).toHaveLength(72);
-    expect(new Set(snapshot.ciRuns.map((run) => run.id)).size).toBe(72);
+    expect(snapshot.ciRuns).toHaveLength(360);
+    expect(new Set(snapshot.ciRuns.map((run) => run.id)).size).toBe(360);
     expect(snapshot.ciRuns.filter((run) => run.status === 'failed')).toHaveLength(1);
-    expect(snapshot.ciRuns.filter((run) => run.workflowId === failed?.workflowId)).toHaveLength(24);
+    expect(snapshot.ciRuns.filter((run) => run.workflowId === failed?.workflowId)).toHaveLength(
+      120,
+    );
     expect(snapshot.ciWorkflows.filter((workflow) => workflow.state === 'disabled')).toHaveLength(
       1,
     );

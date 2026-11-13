@@ -1,6 +1,6 @@
 // #region Imports
 
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, TemplateRef, viewChild } from '@angular/core';
 import {
   TranslateDirective,
   AvatarComponent,
@@ -32,13 +32,13 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
 // #endregion
 
 /**
- * Renders one logical board entry inside the column's virtual viewport.
+ * Declares the card template projected directly into a Mosaik board column.
  *
  * @public
  */
 @Component({
   selector: 'symphony-board-column-entry',
-  host: { class: 'block w-full min-w-0 max-w-full pb-[6px]' },
+  host: { class: 'hidden' },
   imports: [
     TranslateDirective,
     AvatarComponent,
@@ -71,24 +71,13 @@ export class BoardColumnEntryComponent {
   // #region Fields
 
   /**
-   * Logical group or standalone work item rendered by this recycled view.
+   * Entry template with the logical board entry supplied by the column.
    *
    * @public
    * @readonly
    */
-  public readonly entry = input.required<IBoardColumnEntry>();
-
-  /** Delivery group when this recycled view represents a group. */
-  protected readonly group = computed(() => {
-    const entry = this.entry();
-    return entry.kind === 'group' ? entry.group : undefined;
-  });
-
-  /** Work item when this recycled view represents a standalone card. */
-  protected readonly item = computed(() => {
-    const entry = this.entry();
-    return entry.kind === 'item' ? entry.item : undefined;
-  });
+  public readonly template =
+    viewChild<TemplateRef<{ $implicit: IBoardColumnEntry }>>('entryTemplate');
 
   /** Owning board presenter shared with the route view. */
   protected readonly presenter = inject(BoardViewPresenter);
@@ -107,6 +96,30 @@ export class BoardColumnEntryComponent {
   // #endregion
 
   // #region Methods
+
+  /**
+   * Opens a delivery group when the group card itself is activated.
+   *
+   * @param event - Mosaik activation detail, which can also bubble from a group member.
+   * @param groupId - Stable delivery-group id.
+   * @protected
+   */
+  protected openGroupFromCard(event: unknown, groupId: string): void {
+    const detail = event as { readonly itemKey?: unknown } | null;
+    if (detail?.itemKey === groupId) void this.presenter.openDeliveryGroup(groupId);
+  }
+
+  /**
+   * Opens a card activated by the keyboard. Pointer activation is handled separately for selection.
+   *
+   * @param event - Mosaik activation detail.
+   * @param workItemId - Stable work-item id.
+   * @protected
+   */
+  protected openTaskFromKeyboard(event: unknown, workItemId: string): void {
+    const detail = event as { readonly trigger?: unknown } | null;
+    if (detail?.trigger === 'keyboard') this.presenter.openTaskCommand.execute(workItemId);
+  }
 
   /**
    * Toggles the selection of one card.

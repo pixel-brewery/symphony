@@ -38,7 +38,7 @@
     "@symphony/ipc-contracts-work": "workspace:*",
     "@symphony/ipc-contracts-workflow": "workspace:*",
     "@symphony/ipc-contracts-workspace": "workspace:*",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

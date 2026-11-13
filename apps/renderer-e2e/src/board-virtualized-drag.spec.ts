@@ -8,7 +8,7 @@ import { expandBoardColumn } from './expandBoardColumn';
 
 // #endregion
 
-test('moves a virtualized board entry between CDK column drop targets', async () => {
+test('moves a board card between native Mosaik column drop targets', async () => {
   // arrange
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
@@ -44,17 +44,23 @@ test('moves a virtualized board entry between CDK column drop targets', async ()
     await expect(
       page.getByTestId('board-column-qualified').getByTestId(`board-item-${workItemId}`),
     ).toBeVisible();
-    const dragEntry = card.locator('xpath=ancestor::symphony-board-column-entry');
     const targetColumn = page.getByTestId('board-column-ready');
-    const sourceBox = await dragEntry.boundingBox();
+    await page.evaluate(() =>
+      Promise.allSettled(document.getAnimations().map((animation) => animation.finished)),
+    );
+    const sourceBox = await card.boundingBox();
     const targetBox = await targetColumn.boundingBox();
     expect(sourceBox).not.toBeNull();
     expect(targetBox).not.toBeNull();
-    await page.mouse.move(sourceBox!.x + sourceBox!.width / 2, sourceBox!.y + 24);
+    const pickup = { x: sourceBox!.x + sourceBox!.width / 2, y: sourceBox!.y + 24 };
+    await page.mouse.move(pickup.x, pickup.y);
     await page.mouse.down();
-    await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + 120, {
-      steps: 20,
-    });
+    await page.mouse.move(pickup.x + 12, pickup.y, { steps: 4 });
+    await page.mouse.move(
+      targetBox!.x + targetBox!.width / 2,
+      targetBox!.y + Math.min(250, targetBox!.height / 2),
+      { steps: 20 },
+    );
     await page.mouse.up();
 
     // assert
@@ -67,9 +73,8 @@ test('moves a virtualized board entry between CDK column drop targets', async ()
         }, workItemId),
       )
       .toBe('ready');
-    await expect(
-      page.getByTestId('board-column-ready').getByTestId(`board-item-${workItemId}`),
-    ).toBeVisible();
+    await expect(targetColumn.getByTestId(`board-item-${workItemId}`)).toBeVisible();
+    await expect(card).toHaveCount(1);
   } finally {
     await app.close();
     rmSync(configurationRoot, { force: true, recursive: true });

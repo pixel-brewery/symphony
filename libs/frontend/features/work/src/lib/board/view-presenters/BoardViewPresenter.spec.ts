@@ -171,13 +171,16 @@ function workItem(id: string, overrides: Partial<IWorkItem> = {}): IWorkItem {
   };
 }
 
-function click(modifiers: Partial<Pick<MouseEvent, 'metaKey' | 'ctrlKey' | 'shiftKey'>> = {}) {
+function click(
+  modifiers: Partial<Pick<MouseEvent, 'metaKey' | 'ctrlKey' | 'shiftKey'>> = {},
+  path: readonly EventTarget[] = [],
+) {
   return {
     metaKey: false,
     ctrlKey: false,
     shiftKey: false,
     ...modifiers,
-    composedPath: () => [],
+    composedPath: () => path,
   } as unknown as MouseEvent;
 }
 
@@ -327,17 +330,22 @@ describe('BoardViewPresenter', () => {
     );
   });
 
-  it('adds a modifier-clicked card to the delivery selection without opening it', () => {
+  it('starts modifier selection and mirrors subsequent native changes without opening a card', () => {
     // arrange
     const { presenter, navigate } = arrange(true, {
       items: [workItem('a'), workItem('b')],
       queryParameters: {},
     });
     TestBed.tick();
+    const initialCard = document.createElement('mosaik-flow-board-column-item');
+    const selectableCard = document.createElement('mosaik-flow-board-column-item');
+    Object.defineProperty(initialCard, 'selectionMode', { value: 'none' });
+    Object.defineProperty(selectableCard, 'selectionMode', { value: 'multiple' });
 
     // act
-    presenter.openTaskFromCardCommand.execute([click({ metaKey: true }), 'a']);
-    presenter.openTaskFromCardCommand.execute([click({ shiftKey: true }), 'b']);
+    presenter.openTaskFromCardCommand.execute([click({ metaKey: true }, [initialCard]), 'a']);
+    presenter.setItemSelected('b', true);
+    presenter.openTaskFromCardCommand.execute([click({ shiftKey: true }, [selectableCard]), 'b']);
 
     // assert
     expect(presenter.selectedItemKeys()).toEqual(['a', 'b']);

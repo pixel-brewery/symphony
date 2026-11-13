@@ -40,7 +40,7 @@
     "@symphony/domain-work": "workspace:*",
     "@symphony/domain-workflow": "workspace:*",
     "@symphony/domain-workspace": "workspace:*",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

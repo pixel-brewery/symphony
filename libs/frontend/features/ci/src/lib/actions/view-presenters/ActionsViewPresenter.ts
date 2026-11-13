@@ -50,9 +50,6 @@ import { translateLabel } from '@symphony/frontend-intl/labels';
 
 /** Finished runs `History` shows at first and adds per `Show older runs`. */
 const HISTORY_PAGE_SIZE = 10;
-/** How often the steps of a run in progress are read again. */
-const ACTIVE_DETAILS_REFRESH_MILLISECONDS = 10_000;
-
 /**
  * The run details loaded for the selected run.
  *
@@ -61,12 +58,11 @@ const ACTIVE_DETAILS_REFRESH_MILLISECONDS = 10_000;
 interface ISelectedRunDetails {
   readonly key: string;
   readonly details?: ICiRunDetails;
-  readonly failed: boolean;
 }
 
 /**
  * Owns the `Actions` screen: `All runs` across every workflow, the `WORKFLOWS` list, a selected
- * workflow with its runs, the selected run's steps, log excerpt and diagnosis, and every run
+ * workflow with its runs, evidence for the selected failure's diagnosis, and every run
  * command — dispatch on GitHub or the managed local runner, stop, cancel, rerun, run locally,
  * open in GitHub, the Action drawer and `Fix with AI`.
  *
@@ -107,7 +103,6 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _historyLimit = signal(HISTORY_PAGE_SIZE);
   private readonly _runDetails = signal<ISelectedRunDetails | undefined>(undefined);
   private _activeDrawer?: IDrawerRef<IActionDrawerData>;
-  private _detailsTimer?: ReturnType<typeof setTimeout>;
 
   /**
    * Current time from the shared clock, for elapsed and start times.
@@ -384,7 +379,7 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
   });
 
   /**
-   * The run whose steps, log and diagnosis are shown: the chosen one, the `?run=` link's, or the
+   * The run used for diagnosis: the chosen one, the `?run=` link's, or the
    * newest finished run of the workflow.
    *
    * @public
@@ -398,29 +393,6 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
       rows.find((row) => !isActiveRunStatus(row.status)) ??
       rows[0]
     );
-  });
-
-  /**
-   * Whether the selected run's details are loading.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly runDetailsLoading = computed(() => {
-    const key = this.detailsKey(this.selectedRun());
-    const loaded = this._runDetails();
-    return Boolean(key) && (!loaded || loaded.key !== key);
-  });
-
-  /**
-   * Whether the selected run's details could not be loaded.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly runDetailsFailed = computed(() => {
-    const loaded = this._runDetails();
-    return Boolean(loaded?.failed && loaded.key === this.detailsKey(this.selectedRun()));
   });
 
   /**
@@ -448,8 +420,7 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
   });
 
   /**
-   * The end of the selected run's log: the failure output of a failed run, the live output of a
-   * running one.
+   * A bounded excerpt of the failed run’s log for repair feedback.
    *
    * @public
    * @readonly
@@ -457,12 +428,10 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
   public readonly logExcerpt = computed(() => {
     const row = this.selectedRun();
     const loaded = this._runDetails();
-    if (!row || row.status === 'succeeded' || row.status === 'cancelled') return undefined;
+    if (row?.status !== 'failed') return undefined;
     const details = loaded && loaded.key === this.detailsKey(row) ? loaded.details : undefined;
     return excerptRunLog(
-      row.status === 'failed'
-        ? (details?.failureLog ?? row.localExecution?.failureLog ?? details?.logOutput)
-        : details?.logOutput,
+      details?.failureLog ?? row.localExecution?.failureLog ?? details?.logOutput,
     );
   });
 
@@ -475,18 +444,6 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
   public readonly recovery = computed(() =>
     findAgenticRecovery(this._context.snapshot()?.executions ?? [], this.selectedRun()?.run),
   );
-
-  /**
-   * Name of the agent that wrote the diagnosis.
-   *
-   * @public
-   * @readonly
-   */
-  public readonly diagnosisAgentName = computed(() => {
-    const agentId = this.recovery().diagnosis?.bindingSnapshot?.agentProfileId;
-    return this._context.settings()?.agentProfiles?.find((profile) => profile.id === agentId)
-      ?.displayName;
-  });
 
   /**
    * Whether `Fix with AI` can start for the selected run, or why not.
@@ -558,11 +515,8 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _selectWorkflowCommand = new Command<'all' | string>(
     (workflowId) => void this.onExecuteSelectWorkflowCommand(workflowId),
   );
-  private readonly _selectRunCommand = new Command<IActionRunRow>((row) =>
-    this._selectedRunId.set(row.id),
-  );
-  private readonly _openRunCommand = new Command<IActionRunRow>(
-    (row) => void this.onExecuteOpenRunCommand(row),
+  private readonly _openRunCommand = new Command<IActionRunRow>((row) =>
+    this.onExecuteOpenRunCommand(row),
   );
   private readonly _showOlderRunsCommand = new Command<void>(() =>
     this._historyLimit.update((limit) => limit + HISTORY_PAGE_SIZE),
@@ -626,10 +580,10 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
       const status = this._queryParamMap().get('status');
       this.selectedStatus.set(isRunStatus(status) ? status : undefined);
     });
-    // The selected run's steps follow the run: a new run, attempt or state reads them again.
+    // Diagnosis and repair use failure evidence; active run polling belongs to the log drawer.
     effect(() => {
       const row = this.selectedRun();
-      untracked(() => void this.loadRunDetails(row));
+      if (row?.status === 'failed') untracked(() => void this.loadRunDetails(row));
     });
     // `?workflow=<id>&dispatch=github` (the palette's `Run <workflow> on GitHub`) is a one-shot
     // intent: it opens the workflow's dispatch confirmation once the workflow is known, then
@@ -664,11 +618,7 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
   public get selectWorkflowCommand(): Command<'all' | string> {
     return this._selectWorkflowCommand;
   }
-  /** Selects a run of the selected workflow. @public @readonly */
-  public get selectRunCommand(): Command<IActionRunRow> {
-    return this._selectRunCommand;
-  }
-  /** Opens a `History` run in its workflow, or its log when it has no workflow. @public @readonly */
+  /** Opens the run log directly and selects the row in its current workflow. @public @readonly */
   public get openRunCommand(): Command<IActionRunRow> {
     return this._openRunCommand;
   }
@@ -754,17 +704,6 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
     });
   }
 
-  /**
-   * Stops the details refresh.
-   *
-   * @public
-   */
-  public override dispose(): void {
-    if (this._detailsTimer !== undefined) clearTimeout(this._detailsTimer);
-    this._detailsTimer = undefined;
-    super.dispose();
-  }
-
   private onExecuteRefreshCommand(): Promise<void> {
     return this._ci.refreshContinuousIntegrationRuns(true);
   }
@@ -780,14 +719,11 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
     });
   }
 
-  private async onExecuteOpenRunCommand(row: IActionRunRow): Promise<void> {
-    const workflowId = row.workflowId;
-    if (!workflowId || !this.workflows().some((workflow) => workflow.id === workflowId)) {
-      this.onExecuteViewLogCommand(row);
-      return;
+  private onExecuteOpenRunCommand(row: IActionRunRow): void {
+    if (row.workflowId === this.selectedWorkflow()?.id) {
+      this._selectedRunId.set(row.id);
     }
-    await this.onExecuteSelectWorkflowCommand(workflowId);
-    this._selectedRunId.set(row.id);
+    this.onExecuteViewLogCommand(row);
   }
 
   private onExecuteActivateListMenuOptionCommand(selection: ICollectionListMenuSelection): void {
@@ -898,31 +834,22 @@ export class ActionsViewPresenter extends Hydratable(ViewPresenter) {
     return run ? `${run.id}:${run.runAttempt ?? 1}:${row.status}` : undefined;
   }
 
-  private async loadRunDetails(row: IActionRunRow | undefined, force = false): Promise<void> {
+  private async loadRunDetails(row: IActionRunRow): Promise<void> {
     const key = this.detailsKey(row);
     const runId = row?.run?.id;
     if (!key || !runId) return;
-    if (!force && this._runDetails()?.key === key) return;
-    if (this._detailsTimer !== undefined) clearTimeout(this._detailsTimer);
-    this._detailsTimer = undefined;
+    if (this._runDetails()?.key === key) return;
     let loaded: ISelectedRunDetails;
     try {
       loaded = {
         key,
         details: await this._ci.loadContinuousIntegrationRunDetails(runId),
-        failed: false,
       };
     } catch {
-      loaded = { key, failed: true };
+      loaded = { key };
     }
     if (this.detailsKey(this.selectedRun()) !== key) return;
     this._runDetails.set(loaded);
-    if (row && isActiveRunStatus(row.status)) {
-      this._detailsTimer = setTimeout(() => {
-        this._detailsTimer = undefined;
-        void this.loadRunDetails(this.selectedRun(), true);
-      }, ACTIVE_DETAILS_REFRESH_MILLISECONDS);
-    }
   }
 
   // #endregion

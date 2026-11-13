@@ -58,43 +58,47 @@
     >
 
     @if (update.kind === 'available' || update.kind === 'downloading') {
-    <span class="relative flex h-[24px] w-[24px] flex-none items-center justify-center">
-      <mosaik-button
-        [attr.test-id]="update.kind === 'available' ? 'download-available-update' : 'update-downloading'"
-        [iconName]="'download'"
-        [iconSize]="'small'"
-        [appearance]="'plain'"
-        [disabled]="update.kind === 'downloading'"
-        [attr.aria-label]="update.kind === 'available'
+    <mosaik-button
+      class="h-[24px] w-[24px] flex-none"
+      [attr.test-id]="update.kind === 'available' ? 'download-available-update' : 'update-downloading'"
+      [appearance]="'plain'"
+      [disabled]="update.kind === 'downloading'"
+      [attr.aria-label]="update.kind === 'available'
         ? tr('loc.symphony.download.symphony.cfedb8', [update.targetVersion])
         : tr('loc.symphony.downloading.the.update.1ebd07')"
-        [mosaikTooltip]="update.kind === 'available'
+      [mosaikTooltip]="update.kind === 'available'
         ? tr('loc.symphony.download.symphony.cfedb8', [update.targetVersion])
         : tr('loc.symphony.downloading.the.update.a14a1b')"
-        (click)="presenter.downloadUpdateCommand.execute()"
-      />
+      (click)="presenter.downloadUpdateCommand.execute()"
+    >
       @if (update.kind === 'downloading') {
-      <span
-        class="pointer-events-none absolute inset-0 flex items-center justify-center"
+      <mosaik-progress-ring
+        slot="icon"
         test-id="update-progress"
         role="progressbar"
         [attr.aria-valuenow]="update.progress === undefined ? null : (update.progress * 100 | number: '1.0-0')"
         aria-valuemin="0"
         aria-valuemax="100"
         [attr.aria-label]="tr('loc.symphony.update.download.1c20b4')"
-      >
-        <mosaik-progress-ring
-          [variant]="'primary'"
-          [radius]="11"
-          [thickness]="2"
-          [min]="0"
-          [max]="100"
-          [value]="(update.progress ?? 0) * 100"
-          [isIndeterminate]="update.progress === undefined"
-        />
-      </span>
+        [variant]="'primary'"
+        [radius]="8"
+        [thickness]="2"
+        [min]="0"
+        [max]="100"
+        [value]="(update.progress ?? 0) * 100"
+        [isIndeterminate]="update.progress === undefined"
+      />
+      } @else {
+      <mosaik-icon
+        slot="icon"
+        test-id="update-download-icon"
+        aria-hidden="true"
+        [icon]="'download'"
+        [size]="'small'"
+        [inline]="true"
+      />
       }
-    </span>
+    </mosaik-button>
     } @else if (update.kind === 'ready') {
     <mosaik-button
       class="flex-none"

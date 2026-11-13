@@ -22,9 +22,7 @@ import {
 import {
   FLOW_DEFAULT_PROPS,
   FlowComponent,
-  FlowControlsComponent,
   FlowEdgeComponent,
-  FlowMinimapComponent,
   FlowNodeComponent,
 } from '@pixel-brewery/mosaik-elements-angular/components/flow';
 import {
@@ -42,10 +40,13 @@ import { projectCiJobs } from './projectCiJobs';
 
 // #endregion
 
+const initialZoom = 0.8;
+const graphPadding = 24;
+
 /** Parallel jobs and actual matrix executions on the shared Mosaik viewport. */
 @Component({
   selector: 'symphony-ci-job-graph',
-  host: { class: 'block min-w-0' },
+  host: { class: 'block h-full min-w-0' },
   imports: [
     TranslateDirective,
     ButtonComponent,
@@ -55,9 +56,7 @@ import { projectCiJobs } from './projectCiJobs';
     IconNameDirective,
     TextComponent,
     FlowComponent,
-    FlowControlsComponent,
     FlowEdgeComponent,
-    FlowMinimapComponent,
     FlowNodeComponent,
     CiLogStatusIconPipe,
     CiLogStatusLabelPipe,
@@ -72,7 +71,7 @@ import { projectCiJobs } from './projectCiJobs';
         edgeRouting: 'orthogonal',
         edgeMarkerEnd: 'none',
         grid: 'none',
-        fitPadding: 24,
+        fitPadding: graphPadding,
         layout: 'auto',
         layoutEngine: new DagreLayoutEngine(),
         layoutOptions: { nodeGap: 40, layerGap: 64, padding: 24 },
@@ -91,6 +90,7 @@ export class CiJobGraphComponent {
 
   /** @public */ public readonly graph = input.required<ICiWorkflowGraph>();
   /** @public */ public readonly jobs = input<readonly ICiRunJob[]>([]);
+  /** @public */ public readonly pending = input(false);
   /** @public */ public readonly selected = output<string>();
   private readonly _flow = viewChild.required(FlowComponent);
   private readonly _nodeViews = viewChildren(FlowNodeComponent);
@@ -108,13 +108,6 @@ export class CiJobGraphComponent {
           target: 'job:' + job.id,
         })),
     );
-  });
-  /** @public */ public readonly inspected = computed(() =>
-    this.nodes().find((node) => 'job:' + node.definition.id === this.selectedKey()),
-  );
-  /** @public */ public readonly unmatched = computed(() => {
-    const known = new Set(this.graph().jobs.map((job) => job.id));
-    return this.jobs().filter((job) => !job.workflowJobId || !known.has(job.workflowJobId));
   });
 
   // #endregion
@@ -137,18 +130,41 @@ export class CiJobGraphComponent {
     }
   }
 
-  /** Large graphs begin at their first job at readable scale; navigation then stays with the operator. @public */
+  /**
+   * Frames the graph once at a readable scale while preserving subsequent operator navigation.
+   *
+   * @param event - Measured layout and node keys.
+   * @public
+   */
   public onLayoutCompleted(event: IFlowLayoutCompletedEventDetail): void {
-    const first = this._nodeViews()[0]?.elementRef.nativeElement;
-    if (this._framed || !event.bounds || event.nodeKeys.length !== this.nodes().length || !first)
+    if (this._framed || !event.bounds || event.nodeKeys.length !== this.nodes().length) return;
+    const flow = this._flow();
+    const element = flow.elementRef.nativeElement;
+    if (!element.clientWidth || !element.clientHeight) return;
+
+    const { bounds } = event;
+    const width = bounds.width * initialZoom;
+    const height = bounds.height * initialZoom;
+    const fits =
+      width + 2 * graphPadding <= element.clientWidth &&
+      height + 2 * graphPadding <= element.clientHeight;
+    if (fits) {
+      this._framed = true;
+      flow.setZoom(initialZoom);
+      flow.centerOn({ x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 });
       return;
+    }
+
+    const hasIncomingEdge = new Set(this.edges().map((edge) => edge.target));
+    const nodes = this._nodeViews().map((node) => node.elementRef.nativeElement);
+    const first = nodes.find((node) => !hasIncomingEdge.has(node.nodeKey)) ?? nodes[0];
+    if (!first) return;
     this._framed = true;
-    if (this.nodes().length > 24)
-      this._flow().elementRef.nativeElement.setViewport({
-        x: 24 - first.x,
-        y: 24 - first.y,
-        zoom: 1,
-      });
+    flow.setViewport({
+      x: graphPadding - bounds.x * initialZoom,
+      y: (element.clientHeight - first.offsetHeight * initialZoom) / 2 - first.y * initialZoom,
+      zoom: initialZoom,
+    });
   }
 
   // #endregion

@@ -290,9 +290,12 @@ test('creates a work item from the sheet and edits it on its own screen', async 
       .filter({ hasText: 'Add complete issue creation to the workspace board' });
     await expect
       .poll(async () => {
-        await page
-          .getByTestId('board-column-viewport-backlog')
-          .evaluate((viewport) => viewport.scrollTo({ top: viewport.scrollHeight }));
+        await page.getByTestId('board-column-backlog').evaluate((column) => {
+          const viewport = (
+            column as HTMLElementTagNameMap['mosaik-flow-board-column']
+          ).getScrollableElement();
+          viewport.scrollTo({ top: viewport.scrollHeight });
+        });
         return createdCard.isVisible();
       })
       .toBe(true);

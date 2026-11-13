@@ -19,14 +19,14 @@
     }
   },
   "dependencies": {
-    "@angular/core": "22.2.5",
-    "@angular/router": "22.2.5",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.183",
+    "@angular/core": "22.2.6",
+    "@angular/router": "22.2.6",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.199",
     "@symphony/frontend-core": "workspace:*",
     "@symphony/frontend-intl": "workspace:*"
   },
   "devDependencies": {
-    "@angular/platform-browser": "22.2.5",
+    "@angular/platform-browser": "22.2.6",
     "vitest": "5.1.0"
   }
 }

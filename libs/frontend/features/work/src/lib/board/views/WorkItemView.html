@@ -484,17 +484,32 @@
             </div>
             @if (presenter.checks().length) {
             <div part="framed" class="min-w-0 px-1 py-0.5">
-              <mosaik-table [columns]="'minmax(0, 1fr) 140px 90px'" [appearance]="'plain'">
+              <mosaik-table class="max-h-48" [virtualized]="true" [appearance]="'plain'">
                 <mosaik-table-header>
                   <mosaik-table-header-row>
-                    <mosaik-table-header-cell [text]="tr('loc.symphony.check.9d6084')" />
-                    <mosaik-table-header-cell [text]="tr('loc.symphony.result.6e7d50')" />
-                    <mosaik-table-header-cell [text]="tr('loc.symphony.time.33b934')" />
+                    <mosaik-table-header-cell
+                      key="check"
+                      width="minmax(0, 1fr)"
+                      [text]="tr('loc.symphony.check.9d6084')"
+                    />
+                    <mosaik-table-header-cell
+                      key="result"
+                      width="140px"
+                      [text]="tr('loc.symphony.result.6e7d50')"
+                    />
+                    <mosaik-table-header-cell
+                      key="time"
+                      width="90px"
+                      [text]="tr('loc.symphony.time.33b934')"
+                    />
                   </mosaik-table-header-row>
                 </mosaik-table-header>
                 <mosaik-table-body>
                   @for (check of presenter.checks(); track check.id) {
-                  <mosaik-table-body-row [attr.test-id]="'work-item-check-' + check.id">
+                  <mosaik-table-body-row
+                    [key]="check.id"
+                    [attr.test-id]="'work-item-check-' + check.id"
+                  >
                     <mosaik-table-body-cell [text]="check.name" />
                     <mosaik-table-body-cell>
                       <mosaik-badge

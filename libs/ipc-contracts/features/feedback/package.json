@@ -16,6 +16,6 @@
   "dependencies": {
     "@symphony/configuration-feedback": "workspace:*",
     "@symphony/ipc-contracts-core": "workspace:*",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   }
 }

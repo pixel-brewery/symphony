@@ -1,6 +1,6 @@
 // #region Imports
 
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import {
   TranslateDirective,
   BadgeComponent,
@@ -18,6 +18,7 @@ import {
   TooltipDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
+import { ContextMenuTriggerDirective, type ContextMenuComponent } from '@pixel-brewery/ngpel-ui';
 import { RelativeTimePipe } from '@symphony/frontend-ui';
 import { ActionRunBadgePipe } from '../../pipes/ActionRunBadgePipe';
 import { ActionRunDurationPipe } from '../../pipes/ActionRunDurationPipe';
@@ -46,6 +47,7 @@ import { ActionsViewPresenter } from '../view-presenters/ActionsViewPresenter';
     ActionRunStartedPipe,
     BadgeComponent,
     ButtonComponent,
+    ContextMenuTriggerDirective,
     IconNameDirective,
     ProgressRingComponent,
     RelativeTimePipe,
@@ -74,6 +76,14 @@ export class ActionsAllRunsView {
    * @readonly
    */
   protected readonly presenter = inject(ActionsViewPresenter);
+
+  /**
+   * The shared context menu for rows in the Actions tables.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly runMenu = input.required<ContextMenuComponent>();
 
   // #endregion
 }

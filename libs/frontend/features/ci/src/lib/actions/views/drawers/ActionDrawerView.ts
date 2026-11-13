@@ -8,9 +8,7 @@ import {
   AnchorComponent,
   ButtonComponent,
   DisclosureComponent,
-  DismissComponent,
   DrawerContentDirective,
-  DrawerFooterDirective,
   DrawerHeaderComponent,
   DrawerHeaderDirective,
   EmptyStateComponent,
@@ -23,6 +21,7 @@ import {
   TimelineContentComponent,
   TimelineItemComponent,
   TimelineMarkerComponent,
+  ToolbarComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
@@ -52,10 +51,8 @@ import { ActionDrawerViewPresenter } from '../../view-presenters/ActionDrawerVie
     DatePipe,
     DisclosureComponent,
     DrawerContentDirective,
-    DrawerFooterDirective,
     DrawerHeaderComponent,
     DrawerHeaderDirective,
-    DismissComponent,
     EmptyStateComponent,
     HintComponent,
     IconNameDirective,
@@ -66,10 +63,30 @@ import { ActionDrawerViewPresenter } from '../../view-presenters/ActionDrawerVie
     TimelineContentComponent,
     TimelineItemComponent,
     TimelineMarkerComponent,
+    ToolbarComponent,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: ActionDrawerViewPresenter }],
   templateUrl: './ActionDrawerView.html',
   styleUrl: './ActionDrawerView.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ActionDrawerView extends View<ActionDrawerViewPresenter> {}
+export class ActionDrawerView extends View<ActionDrawerViewPresenter> {
+  // #region Methods
+
+  /**
+   * Reveals the timeline entry for a job activated in the diagram.
+   *
+   * @param log - This drawer's scrollable log surface.
+   * @param jobId - The selected execution identifier.
+   * @public
+   */
+  public revealJob(log: HTMLElement, jobId: string): void {
+    const job = log.querySelector<HTMLElement>(
+      `[test-id="action-detail-job-${CSS.escape(jobId)}"]`,
+    );
+    job?.focus({ preventScroll: true });
+    job?.scrollIntoView({ block: 'nearest' });
+  }
+
+  // #endregion
+}

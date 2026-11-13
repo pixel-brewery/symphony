@@ -387,133 +387,71 @@
         }
       </div>
       } @else if (presenter.workItems().length && presenter.filteredWorkItems().length) {
+      <symphony-board-column-entry #columnEntry />
       <mosaik-flow-board
-        cdkDropListGroup
         class="block h-full min-h-0 w-full min-w-0"
+        test-id="board-columns"
+        [intl]="boardIntl()"
         [displayMode]="'tasks'"
         [orientation]="'horizontal'"
         [mutationMode]="'controlled'"
         [selectionMode]="presenter.selectedItemKeys().length ? 'multiple' : 'none'"
-        [dragdrop]="false"
+        [dragdrop]="true"
+        [virtualized]="true"
         [gap]="12"
+        (flowBoardItemMove)="presenter.moveBoardEntry($event)"
+        (flowBoardItemsMove)="presenter.moveBoardEntries($event)"
+        (flowBoardItemGroup)="presenter.groupBoardItems($event)"
       >
-        @for (column of presenter.columns(); track column.id) { @if
-        (presenter.isColumnExpanded()(column.id)) {
+        @for (column of presenter.columns(); track column.id) { @let expanded =
+        presenter.isColumnExpanded()(column.id);
         <mosaik-flow-board-column
-          cdkDropList
-          class="w-[248px] min-w-[248px] max-w-[248px]"
+          [class]="expanded ? 'w-[248px] min-w-[248px] max-w-[248px]' : ''"
           [attr.test-id]="'board-column-' + column.id"
-          [cdkDropListData]="column.id"
-          [cdkDropListSortingDisabled]="true"
           [columnKey]="column.id"
           [appearance]="'plain'"
-          [collapsible]="false"
-          [isExpanded]="true"
-          (cdkDropListDropped)="moveVirtualizedEntry($event)"
-        >
-          <div slot="title" class="flex min-w-0 items-baseline gap-1">
-            <mosaik-text
-              part="board-column-title"
-              class="min-w-0"
-              [mosaikTypography]="'subtitle2'"
-              [truncate]="true"
-              [text]="column.label"
-            />
-            <mosaik-text
-              class="flex-none"
-              [attr.test-id]="'board-column-count-' + column.id"
-              [mosaikTypography]="'caption'"
-              [variant]="'neutral'"
-              [text]="'' + presenter.items()(column.id).length"
-            />
-          </div>
-          <!-- `+` as drawn, and the collapse control as a plain button beside it: the column's own
-             Mosaik toggle would add a filled square the design does not have. -->
-          <div slot="actions" class="flex items-center">
-            <mosaik-button
-              [attr.test-id]="'board-column-create-' + column.id"
-              [iconName]="'add'"
-              [iconSize]="'small'"
-              [appearance]="'plain'"
-              [disabled]="!presenter.canCreateWorkItem()"
-              [attr.aria-label]="tr('loc.symphony.new.work.item.in.a57a81', [column.label])"
-              (click)="presenter.createTaskCommand.execute(column)"
-            />
-            <mosaik-button
-              [attr.test-id]="'board-column-collapse-' + column.id"
-              [iconName]="'chevronLeft'"
-              [iconSize]="'small'"
-              [appearance]="'plain'"
-              [attr.aria-label]="tr('loc.symphony.collapse.61eb87', [column.label])"
-              [mosaikTooltip]="tr('loc.symphony.collapse.61eb87', [column.label])"
-              (click)="presenter.collapseColumnCommand.execute(column.id)"
-            />
-          </div>
-          @if (presenter.columnEntries(column.id).length) {
-          <cdk-virtual-scroll-viewport
-            class="block h-full min-h-0 w-full min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto [&>.cdk-virtual-scroll-content-wrapper]:w-full"
-            [attr.test-id]="'board-column-viewport-' + column.id"
-            [symphonyDynamicSizeVirtualScroll]="presenter.columnEntryKeys(column.id)"
-            [estimatedItemSize]="160"
-            [bufferSize]="640"
-          >
-            <symphony-board-column-entry
-              *cdkVirtualFor="
-              let entry of presenter.columnEntries(column.id);
-              trackBy: presenter.trackColumnEntry;
-              let virtualIndex = index
-            "
-              cdkDrag
-              [cdkDragData]="entry"
-              [cdkDragDisabled]="
-              entry.kind === 'item' &&
-              presenter.runtimeStatus()(entry.item.id)?.execution?.state === 'running'
-            "
-              [entry]="entry"
-              [attr.data-board-virtual-index]="virtualIndex"
-              [attr.data-board-virtual-key]="entry.id"
-            />
-          </cdk-virtual-scroll-viewport>
-          } @else {
-          <mosaik-hint
-            [text]="tr('loc.symphony.no.items.in.78bf56', [column.label.toLowerCase()])"
-            [textOverflow]="'wrap'"
-          />
-          }
-        </mosaik-flow-board-column>
-        } @else {
-        <!-- A collapsed column is a narrow strip with its count and its name read downwards; the
-           strip itself expands it and still takes dropped cards. -->
-        <div
-          part="board-collapsed-column"
-          cdkDropList
-          role="button"
-          tabindex="0"
-          class="flex w-[40px] flex-none flex-col items-center gap-[10px] pt-[6px]"
-          [attr.test-id]="'board-column-' + column.id"
-          [attr.data-column-key]="column.id"
-          [attr.aria-expanded]="false"
-          [attr.aria-label]="tr('loc.symphony.show.work.items.8e73a4', [column.label, presenter.items()(column.id).length])"
-          [cdkDropListData]="column.id"
-          [cdkDropListSortingDisabled]="true"
-          (cdkDropListDropped)="moveVirtualizedEntry($event)"
-          (click)="presenter.expandColumnCommand.execute(column.id)"
-          (keydown.enter)="presenter.expandColumnCommand.execute(column.id)"
-          (keydown.space)="$event.preventDefault(); presenter.expandColumnCommand.execute(column.id)"
+          [collapsible]="true"
+          [isExpanded]="expanded"
+          (flowBoardColumnExpandChange)="presenter.setColumnExpandedCommand.execute($event)"
         >
           <mosaik-text
+            slot="title"
+            [mosaikTypography]="'subtitle2'"
+            [truncate]="true"
+            [text]="column.label"
+          />
+          <mosaik-text
+            slot="meta"
             [attr.test-id]="'board-column-count-' + column.id"
             [mosaikTypography]="'caption'"
             [variant]="'neutral'"
             [text]="'' + presenter.items()(column.id).length"
           />
-          <mosaik-text
-            part="board-collapsed-column-label"
-            [mosaikTypography]="'subtitle2'"
-            [text]="column.label"
+          @if (expanded) {
+          <mosaik-button
+            slot="actions"
+            [attr.test-id]="'board-column-create-' + column.id"
+            [iconName]="'add'"
+            [iconSize]="'small'"
+            [appearance]="'plain'"
+            [disabled]="!presenter.canCreateWorkItem()"
+            [attr.aria-label]="tr('loc.symphony.new.work.item.in.a57a81', [column.label])"
+            (click)="presenter.createTaskCommand.execute(column)"
           />
-        </div>
-        } }
+          @for (entry of presenter.columnEntries(column.id); track entry.id) {
+          <ng-container
+            [ngTemplateOutlet]="columnEntry.template()"
+            [ngTemplateOutletContext]="{ $implicit: entry }"
+          />
+          } @empty {
+          <mosaik-hint
+            slot="empty"
+            [text]="tr('loc.symphony.no.items.in.78bf56', [column.label.toLowerCase()])"
+            [textOverflow]="'wrap'"
+          />
+          } }
+        </mosaik-flow-board-column>
+        }
       </mosaik-flow-board>
       } @else {
       <mosaik-empty-state

@@ -18,6 +18,6 @@
     "@symphony/configuration-work": "workspace:*",
     "@symphony/ipc-contracts-skills": "workspace:*",
     "@symphony/ipc-contracts-workflow": "workspace:*",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   }
 }

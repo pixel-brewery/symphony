@@ -2,6 +2,8 @@
 
 **Dokumentstatus:** Implementierter Ist-Stand
 
+Die Liste verwendet eine höhenbegrenzte Mosaik Table mit nativer Virtualisierung und stabilen Pull-Request-Ids als Zeilenschlüssel. Der Tabellenkopf bleibt beim Scrollen sichtbar. Bei großen Ergebnismengen zeigt Mosaik nur das aktuelle Zeilenfenster; Filter, Auswahl und die Prüfungen für Menüaktionen verwenden weiterhin die vollständige Projektion.
+
 ## Ziel und Garantien
 
 Der Bildschirm **Pull requests** projiziert die offenen Pull Requests des Workspace-Umfangs, ihre Workflow-Läufe und die Ausführungen, die sie veröffentlicht haben, in eine segmentierte Tabelle mit einem Inspektor. Das funktionale Verhalten steht im Produkthandbuch unter [Pull Requests](../../project/pull-requests/README.md). Der Bildschirm liest ausschließlich vorhandene Projektionen und löst ausschließlich vorhandene Befehle aus; er führt keine neue IPC-Anfrage ein.

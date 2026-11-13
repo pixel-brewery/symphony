@@ -224,9 +224,9 @@
           }
         </div>
         } @else if (presenter.selectedWorkflow()) {
-        <symphony-actions-workflow-view />
+        <symphony-actions-workflow-view [runMenu]="runMenu" />
         } @else if (presenter.workflows().length || presenter.runRows().length) {
-        <symphony-actions-all-runs-view />
+        <symphony-actions-all-runs-view [runMenu]="runMenu" />
         } @else {
         <mosaik-empty-state
           test-id="actions-empty"
@@ -238,4 +238,55 @@
       </div>
     </div>
   </mosaik-split>
+  <ngp-context-menu #runMenu>
+    <ng-template [ngpContextMenuContent]="presenter.runRows()" let-row>
+      @let controls = presenter.runControls()(row);
+      <mosaik-menu>
+        <mosaik-menu-item
+          test-id="actions-run-log"
+          [label]="tr('loc.symphony.view.log.ccab91')"
+          [iconName]="'open'"
+          (activated)="presenter.openRunCommand.execute(row)"
+        />
+        @if (controls.canOpenInGitHub) {
+        <mosaik-menu-item
+          test-id="actions-run-open"
+          [label]="tr('loc.symphony.open.in.github.4fb788')"
+          [iconName]="'github'"
+          (activated)="presenter.openInGitHubCommand.execute(row)"
+        />
+        } @if (controls.canRerun) {
+        <mosaik-menu-item
+          test-id="actions-run-rerun"
+          [label]="tr('loc.symphony.rerun.on.github.5df0c3')"
+          [iconName]="'sync'"
+          (activated)="presenter.rerunCommand.execute(row)"
+        />
+        } @if (controls.canRunLocally) {
+        <mosaik-menu-item
+          test-id="actions-run-local"
+          [label]="tr('loc.symphony.rerun.locally.d96def')"
+          [iconName]="'play'"
+          (activated)="presenter.runLocallyCommand.execute(row)"
+        />
+        } @if (controls.canStop) {
+        <mosaik-menu-item
+          test-id="actions-run-stop"
+          [label]="tr('loc.symphony.stop.cae7d5')"
+          [iconName]="'clear'"
+          [variant]="'danger'"
+          (activated)="presenter.stopRunCommand.execute(row)"
+        />
+        } @if (controls.canCancel) {
+        <mosaik-menu-item
+          test-id="actions-run-cancel"
+          [label]="tr('loc.symphony.cancel.19766e')"
+          [iconName]="'clear'"
+          [variant]="'danger'"
+          (activated)="presenter.cancelRunCommand.execute(row)"
+        />
+        }
+      </mosaik-menu>
+    </ng-template>
+  </ngp-context-menu>
 </ng-container>

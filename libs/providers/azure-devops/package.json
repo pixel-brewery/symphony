@@ -24,6 +24,6 @@
     "@symphony/domain-workflow": "workspace:*",
     "@symphony/domain-workspace": "workspace:*",
     "@symphony/providers-work": "workspace:*",
-    "marked": "18.0.14"
+    "marked": "18.2.0"
   }
 }

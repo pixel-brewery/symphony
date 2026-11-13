@@ -574,16 +574,6 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     return entriesByColumn;
   });
 
-  private readonly _columnEntryKeysByColumn = computed(
-    () =>
-      new Map(
-        [...this._columnEntriesByColumn()].map(([columnId, entries]) => [
-          columnId,
-          entries.map((entry) => entry.id),
-        ]),
-      ),
-  );
-
   private readonly _projectFieldEntriesByWorkItem = computed(() => {
     const fields = this.projectFields();
     return new Map(
@@ -970,12 +960,6 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _setColumnExpandedCommand: Command<unknown> = new Command(
     (event) => void this.onExecuteSetColumnExpandedCommand(event),
   );
-  private readonly _expandColumnCommand: Command<string> = new Command((columnId) =>
-    this.onExecuteSetColumnExpandedCommand({ columnKey: columnId, isExpanded: true }),
-  );
-  private readonly _collapseColumnCommand: Command<string> = new Command((columnId) =>
-    this.onExecuteSetColumnExpandedCommand({ columnKey: columnId, isExpanded: false }),
-  );
   private readonly _selectSegmentCommand: Command<BoardSegment> = new Command((segment) =>
     this.onExecuteSelectSegmentCommand(segment),
   );
@@ -1257,24 +1241,6 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    */
   public get setColumnExpandedCommand(): Command<unknown> {
     return this._setColumnExpandedCommand;
-  }
-  /**
-   * Expands one collapsed column; its narrow strip is the control.
-   *
-   * @public
-   * @readonly
-   */
-  public get expandColumnCommand(): Command<string> {
-    return this._expandColumnCommand;
-  }
-  /**
-   * Collapses one expanded column into its narrow strip.
-   *
-   * @public
-   * @readonly
-   */
-  public get collapseColumnCommand(): Command<string> {
-    return this._collapseColumnCommand;
   }
   /**
    * Switches the filter-bar segment.
@@ -1700,26 +1666,6 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     this._columnEntriesByColumn().get(columnId) ?? [];
 
   /**
-   * Returns stable entry keys in the same order as the column projection.
-   *
-   * @param columnId - Column id.
-   * @public
-   * @readonly
-   */
-  public readonly columnEntryKeys = (columnId: string): readonly string[] =>
-    this._columnEntryKeysByColumn().get(columnId) ?? [];
-
-  /**
-   * Tracks a virtualized board entry.
-   *
-   * @param _index - Logical entry index.
-   * @param entry - Board entry.
-   * @public
-   * @readonly
-   */
-  public readonly trackColumnEntry = (_index: number, entry: IBoardColumnEntry): string => entry.id;
-
-  /**
    * Resolves a group member from the current provider projection.
    *
    * @public
@@ -1799,12 +1745,8 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    * @public
    * @readonly
    */
-  public readonly setItemSelected = (workItemId: string, selected: boolean): void => {
-    this._selectedItemKeys.update((current) => {
-      if (selected) return current.includes(workItemId) ? current : [...current, workItemId];
-      return current.filter((currentId) => currentId !== workItemId);
-    });
-  };
+  public readonly setItemSelected = (workItemId: string, selected: boolean): void =>
+    this.updateSelectedItem(workItemId, selected);
 
   /**
    * Clears the delivery selection on the board and in the presenter mirror.
@@ -1889,6 +1831,25 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     const detail = event as { itemKey?: unknown; toColumnKey?: unknown } | null;
     if (typeof detail?.itemKey !== 'string' || typeof detail.toColumnKey !== 'string') return;
     await this.moveBoardEntryToColumn(detail.itemKey, detail.toColumnKey);
+  };
+
+  /**
+   * Commits a controlled move of selected board entries to another column.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly moveBoardEntries = async (event: unknown): Promise<void> => {
+    const detail = event as { readonly items?: unknown; readonly toColumnKey?: unknown } | null;
+    if (!Array.isArray(detail?.items) || typeof detail.toColumnKey !== 'string') return;
+    const entries: readonly unknown[] = detail.items;
+    for (const entry of entries) {
+      if (!entry || typeof entry !== 'object') continue;
+      const item = entry as { readonly itemKey?: unknown; readonly fromColumnKey?: unknown };
+      if (typeof item.itemKey === 'string' && item.fromColumnKey !== detail.toColumnKey) {
+        await this.moveBoardEntryToColumn(item.itemKey, detail.toColumnKey);
+      }
+    }
   };
 
   /**
@@ -2031,7 +1992,7 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
-   * Mosaik reports the new state of one column; the wrapper forwards the event detail.
+   * Persists native column changes while ignoring events echoed from the projected input.
    *
    * @param event - Event.
    * @private
@@ -2039,6 +2000,7 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   private onExecuteSetColumnExpandedCommand(event: unknown): void {
     const detail = event as { columnKey?: unknown; isExpanded?: unknown } | null;
     if (typeof detail?.columnKey !== 'string' || typeof detail.isExpanded !== 'boolean') return;
+    if (this.resolveIsColumnExpanded(detail.columnKey) === detail.isExpanded) return;
     if (!detail.isExpanded) {
       const collapsedIds = new Set(this.resolveItems(detail.columnKey).map((item) => item.id));
       this._selectedItemKeys.update((selected) =>
@@ -2655,6 +2617,20 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   }
 
   /**
+   * Records the selected state and keeps the order of the operator's choices.
+   *
+   * @param workItemId - Work-item id.
+   * @param selected - Whether the item is selected.
+   * @private
+   */
+  private updateSelectedItem(workItemId: string, selected: boolean): void {
+    this._selectedItemKeys.update((current) => {
+      if (selected) return current.includes(workItemId) ? current : [...current, workItemId];
+      return current.filter((currentId) => currentId !== workItemId);
+    });
+  }
+
+  /**
    * Opens the task from card.
    *
    * @param event - Event.
@@ -2675,11 +2651,14 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
     // Command-, Control- or Shift-click adds the card to the delivery selection, as in a macOS
     // list; a plain click opens the work item.
     if (event.metaKey || event.ctrlKey || event.shiftKey) {
-      this._selectedItemKeys.update((current) =>
-        current.includes(workItemId)
-          ? current.filter((selectedId) => selectedId !== workItemId)
-          : [...current, workItemId],
-      );
+      const card = event
+        .composedPath()
+        .find(
+          (target): target is HTMLElementTagNameMap['mosaik-flow-board-column-item'] =>
+            target instanceof HTMLElement && target.localName === 'mosaik-flow-board-column-item',
+        );
+      // The first modifier click starts selection while native checkboxes are still hidden.
+      if (card?.selectionMode === 'none') this.updateSelectedItem(workItemId, true);
       return;
     }
     this.onExecuteOpenTaskCommand(workItemId);

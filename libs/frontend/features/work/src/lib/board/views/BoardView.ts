@@ -1,9 +1,8 @@
 // #region Imports
 
-import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
-import { type CdkDragDrop, CdkDrag, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
-import { CdkVirtualForOf, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ApplicationDatePipe as DatePipe, translateLabel } from '@symphony/frontend-intl';
+import { NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import {
   TranslateDirective,
   BannerComponent,
@@ -26,11 +25,9 @@ import {
 import { View, VIEW_PRESENTER, WindowToolbarDirective } from '@symphony/frontend-core';
 import { BooleanIconPipe } from '@symphony/frontend-ui';
 import { BoardColumnEntryComponent } from '../components/BoardColumnEntryComponent';
-import { DynamicSizeVirtualScrollDirective } from '../directives/DynamicSizeVirtualScrollDirective';
 import { BoardSourceSummaryPipe } from '../pipes/BoardSourceSummaryPipe';
 import { WorkspaceSelectionSummaryPipe } from '../pipes/WorkspaceSelectionSummaryPipe';
 import { BoardViewPresenter } from '../view-presenters/BoardViewPresenter';
-import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
 
 // #endregion
 
@@ -46,14 +43,8 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
     BoardSourceSummaryPipe,
     BooleanIconPipe,
     ButtonComponent,
-    CdkDrag,
-    CdkDropList,
-    CdkDropListGroup,
-    CdkVirtualForOf,
-    CdkVirtualScrollViewport,
     DatePipe,
     DropDownButtonComponent,
-    DynamicSizeVirtualScrollDirective,
     EmptyStateComponent,
     FlowBoardColumnComponent,
     FlowBoardComponent,
@@ -61,6 +52,7 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
     IconNameDirective,
     MenuComponent,
     MenuItemComponent,
+    NgTemplateOutlet,
     SkeletonComponent,
     TextComponent,
     TooltipDirective,
@@ -74,56 +66,43 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BoardView extends View<BoardViewPresenter> {
-  // #region Methods
+  // #region Fields
 
   /**
-   * Moves one virtualized entry when it is dropped onto another board column.
+   * Labels and announcements for the native FlowBoard controls.
    *
-   * @param event - CDK drop event carrying the logical entry and target column key.
    * @protected
+   * @readonly
    */
-  protected moveVirtualizedEntry(event: CdkDragDrop<string, string, IBoardColumnEntry>): void {
-    const targetEntry = this.boardEntryAt(event.dropPoint.x, event.dropPoint.y);
-    if (targetEntry && targetEntry.id !== event.item.data.id) {
-      const sourceMemberKeys =
-        event.item.data.kind === 'group'
-          ? event.item.data.group.workItemIds
-          : [event.item.data.item.id];
-      const targetRootItemKey =
-        targetEntry.kind === 'group' ? targetEntry.group.rootWorkItemId : targetEntry.item.id;
-      void this.presenter.groupBoardItems({ sourceMemberKeys, targetRootItemKey });
-      return;
-    }
-    if (event.previousContainer === event.container) return;
-    void this.presenter.moveBoardEntry({
-      itemKey: event.item.data.id,
-      toColumnKey: event.container.data,
-    });
-  }
-
-  /**
-   * Resolves a rendered entry under the CDK pointer so dropping directly on a card retains the
-   * FlowBoard grouping gesture while dropping into column space remains a column move.
-   *
-   * @param x - Viewport x coordinate.
-   * @param y - Viewport y coordinate.
-   * @returns The rendered target entry, when the pointer is over one.
-   * @private
-   */
-  private boardEntryAt(x: number, y: number): IBoardColumnEntry | undefined {
-    const host = document
-      .elementsFromPoint(x, y)
-      .find((element) => element.matches('symphony-board-column-entry')) as HTMLElement | undefined;
-    const entryKey = host?.dataset['boardVirtualKey'];
-    if (!entryKey) return undefined;
-    for (const column of this.presenter.columns()) {
-      const entry = this.presenter
-        .columnEntries(column.id)
-        .find((candidate) => candidate.id === entryKey);
-      if (entry) return entry;
-    }
-    return undefined;
-  }
+  protected readonly boardIntl = computed(() => ({
+    boardLabel: translateLabel('loc.symphony.labels.board.4816cbf'),
+    expandColumnLabel: translateLabel('loc.symphony.labels.expand.column.86f73ad'),
+    collapseColumnLabel: translateLabel('loc.symphony.labels.collapse.column.0aadc07'),
+    selectItemLabel: translateLabel('loc.symphony.labels.select.work.item.7fd6d96'),
+    columnLabel: translateLabel(
+      'loc.symphony.labels.0.1.work.items.249f37e',
+      '{column}',
+      '{count}',
+    ),
+    columnLabelSingle: translateLabel('loc.symphony.labels.0.1.work.item.f8e8baf', '{column}'),
+    itemMovedAnnouncement: translateLabel(
+      'loc.symphony.labels.0.moved.to.1.position.2.of.3.f538a2b',
+      '{item}',
+      '{column}',
+      '{position}',
+      '{count}',
+    ),
+    itemsMovedAnnouncement: translateLabel(
+      'loc.symphony.labels.0.cards.moved.to.1.9acac80',
+      '{count}',
+      '{column}',
+    ),
+    dropBlockedLabel: translateLabel('loc.symphony.labels.this.destination.is.not.allowed.717a149'),
+    moveBlockedAnnouncement: translateLabel(
+      'loc.symphony.labels.0.cannot.be.moved.there.a1b8767',
+      '{item}',
+    ),
+  }));
 
   // #endregion
 }

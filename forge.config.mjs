@@ -7,6 +7,7 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 // ARM64 releases. Keep the maker import here so archive updates can be restored.
 // import { MakerZIP } from '@electron-forge/maker-zip';
 import { readFileSync } from 'node:fs';
+import { rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,7 +39,13 @@ class MakerDMGWithDetachRetry extends MakerDMG {
     const maximumAttempts = 3;
     for (let attempt = 1; ; attempt += 1) {
       try {
-        return await super.make(options);
+        const artifacts = await super.make(options);
+        if (artifacts.length !== 1) throw new Error('Expected exactly one macOS disk image.');
+        const artifact = artifacts[0];
+        // Forge 8 writes into dmg/<arch>/; publish and verify the established path.
+        const destination = resolve(options.makeDir, `${this.config.name}.dmg`);
+        if (artifact !== destination) await rename(artifact, destination);
+        return [destination];
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
         const lostMount =

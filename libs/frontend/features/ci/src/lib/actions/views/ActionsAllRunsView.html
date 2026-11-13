@@ -159,29 +159,48 @@
           [text]="tr('loc.symphony.across.all.workflows.8c6fbe', [(presenter.sort() === 'started-ascending' ? tr('loc.symphony.oldest.first.6e2ebd') : tr('loc.symphony.newest.first.ffb6f5'))])"
         />
       </div>
-      <div
-        part="actions-frame"
-        class="flex min-h-0 min-w-0 flex-1 flex-col overflow-clip px-1 py-0.5"
-      >
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-clip">
         @if (presenter.overview().history.length) {
         <mosaik-table
           class="min-h-0 min-w-0 flex-1"
           test-id="actions-history-table"
           [attr.aria-label]="tr('loc.symphony.finished.runs.4ff936')"
-          [appearance]="'plain'"
-          [columns]="'100px 150px minmax(180px, 1fr) 120px 80px 110px'"
+          [virtualized]="true"
+          [ngpContextMenuTriggerFor]="runMenu()"
         >
           <mosaik-table-header test-id="actions-history-table-header">
             <mosaik-table-header-row>
-              <mosaik-table-header-cell [text]="tr('loc.symphony.result.6e7d50')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.workflow.2e2d5c')" />
               <mosaik-table-header-cell
+                key="result"
+                width="100px"
+                [text]="tr('loc.symphony.result.6e7d50')"
+              />
+              <mosaik-table-header-cell
+                key="workflow"
+                width="150px"
+                [text]="tr('loc.symphony.workflow.2e2d5c')"
+              />
+              <mosaik-table-header-cell
+                key="revision"
+                width="minmax(180px, 1fr)"
                 test-id="actions-history-revision-heading"
                 [text]="tr('loc.symphony.revision.2e516d')"
               />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.runner.2184a4')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.duration.4fc52a')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.started.ecbc89')" />
+              <mosaik-table-header-cell
+                key="runner"
+                width="120px"
+                [text]="tr('loc.symphony.runner.2184a4')"
+              />
+              <mosaik-table-header-cell
+                key="duration"
+                width="80px"
+                [text]="tr('loc.symphony.duration.4fc52a')"
+              />
+              <mosaik-table-header-cell
+                key="started"
+                width="110px"
+                [text]="tr('loc.symphony.started.ecbc89')"
+              />
             </mosaik-table-header-row>
           </mosaik-table-header>
           <mosaik-table-body>
@@ -191,8 +210,11 @@
               tabindex="0"
               [attr.test-id]="'actions-history-' + row.id"
               [attr.aria-label]="row.workflowName + ', ' + (row.status | actionRunBadge).label"
+              [key]="row.id"
+              [value]="row"
               (click)="presenter.openRunCommand.execute(row)"
               (keydown.enter)="presenter.openRunCommand.execute(row)"
+              (keydown.space)="$event.preventDefault(); presenter.openRunCommand.execute(row)"
             >
               <mosaik-table-body-cell>
                 <mosaik-badge

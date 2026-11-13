@@ -204,19 +204,18 @@ describe('ActionsViewPresenter', () => {
     expect(presenter.failingWorkflowCount()).toBe(1);
   });
 
-  it('selects the workflow and run of a run link and loads its steps', async () => {
+  it('selects the workflow and run of a run link without fetching nonfailed details', async () => {
     // arrange
     const { presenter, ci } = createPresenter({ run: 'ci:2' });
 
     // act
     TestBed.tick();
-    await vi.waitFor(() => expect(ci.loadContinuousIntegrationRunDetails).toHaveBeenCalled());
 
     // assert
     expect(presenter.selectedWorkflow()?.id).toBe(workflow.id);
     expect(presenter.selectedRun()?.id).toBe('ci:2');
     expect(presenter.workflowRuns().map((row) => row.id)).toEqual(['ci:3', 'ci:1', 'ci:2']);
-    expect(ci.loadContinuousIntegrationRunDetails).toHaveBeenCalledWith('ci:2');
+    expect(ci.loadContinuousIntegrationRunDetails).not.toHaveBeenCalled();
   });
 
   it('starts Fix with AI on the pull request the failed run checked', async () => {

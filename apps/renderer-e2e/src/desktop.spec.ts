@@ -11,6 +11,7 @@ import {
 } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron, type Page } from '@playwright/test';
+import type { FlowBoardColumnElement } from '@pixel-brewery/mosaik-elements-foundation';
 import { desktopChannels, type UpdateState } from '@symphony/ipc-contracts-desktop';
 import { type IOrchestrationApi } from '@symphony/ipc-contracts-composition';
 import { closeSettings } from './closeSettings';
@@ -259,8 +260,7 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('command-palette')).toHaveCount(0);
 
-    // The app-update button lives in the status bar: an icon-only download button, a progress
-    // ring that fills while the update downloads, then `Restart to update`.
+    // The status button swaps its download icon for a progress ring, then offers restart.
     await publishUpdateState({
       kind: 'available',
       currentVersion: applicationVersion,
@@ -269,11 +269,15 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
       lastCheckedAt: '2026-09-04T19:00:00.000Z',
     });
     const downloadAvailableUpdate = page.getByTestId('download-available-update');
+    const downloadIcon = page.getByTestId('update-download-icon');
+    const updateProgress = page.getByTestId('update-progress');
     await expect(downloadAvailableUpdate).toBeVisible();
     await expect(downloadAvailableUpdate).toHaveAttribute('aria-label', 'Download Symphony 98.0.0');
     await expect(
       page.getByTestId('window-status-bar').getByTestId('download-available-update'),
     ).toBeVisible();
+    await expect(downloadAvailableUpdate.getByTestId('update-download-icon')).toBeVisible();
+    await expect(updateProgress).toHaveCount(0);
     await publishUpdateState({
       kind: 'downloading',
       currentVersion: applicationVersion,
@@ -281,7 +285,34 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
       channel: 'stable',
       progress: 0.5,
     });
-    await expect(page.getByTestId('update-progress')).toHaveAttribute('aria-valuenow', '50');
+    const downloadingUpdate = page.getByTestId('update-downloading');
+    await expect(downloadingUpdate).toHaveJSProperty('disabled', true);
+    await expect(downloadingUpdate.getByTestId('update-progress')).toBeVisible();
+    await expect(updateProgress).toHaveAttribute('aria-valuenow', '50');
+    const updateButtonBounds = (await downloadingUpdate.boundingBox())!;
+    const progressBounds = (await updateProgress.boundingBox())!;
+    expect(progressBounds.x).toBeGreaterThanOrEqual(updateButtonBounds.x);
+    expect(progressBounds.x + progressBounds.width).toBeLessThanOrEqual(
+      updateButtonBounds.x + updateButtonBounds.width,
+    );
+    expect(progressBounds.y).toBeGreaterThanOrEqual(updateButtonBounds.y);
+    expect(progressBounds.y + progressBounds.height).toBeLessThanOrEqual(
+      updateButtonBounds.y + updateButtonBounds.height,
+    );
+    await expect(downloadIcon).toHaveCount(0);
+    await page.screenshot({
+      animations: 'disabled',
+      path: resolve(outputDirectory, 'desktop-downloading-update.png'),
+      fullPage: true,
+    });
+    await publishUpdateState({
+      kind: 'downloading',
+      currentVersion: applicationVersion,
+      channel: 'stable',
+    });
+    await expect(updateProgress).toHaveJSProperty('isIndeterminate', true);
+    await expect.poll(() => updateProgress.getAttribute('aria-valuenow')).toBeNull();
+    await expect(downloadIcon).toHaveCount(0);
     await publishUpdateState({
       kind: 'ready',
       currentVersion: applicationVersion,
@@ -289,7 +320,7 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
       channel: 'stable',
       downloadedAt: '2026-09-04T20:00:00.000Z',
     });
-    await expect(page.getByTestId('update-progress')).toHaveCount(0);
+    await expect(updateProgress).toHaveCount(0);
     const installReadyUpdate = page.getByTestId('install-ready-update');
     await expect(installReadyUpdate).toBeVisible();
     await expect(installReadyUpdate).toHaveJSProperty('label', 'Restart to update');
@@ -1107,23 +1138,27 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
     for (const columnHeight of boardLayout.columnHeights) {
       expect(columnHeight).toBeGreaterThanOrEqual(boardLayout.boardHeight - 24);
     }
-    const backlogColumn = page.locator('mosaik-flow-board-column[column-key="backlog"]');
-    const backlogViewport = page.getByTestId('board-column-viewport-backlog');
+    const backlogColumn = page.getByTestId('board-column-backlog');
     await expect(backlogColumn).toBeVisible();
-    // The bounded CDK viewport owns the virtualized column's vertical scroll: the wheel over a
-    // column moves that viewport alone while the FlowBoard's horizontal viewport stays put.
+    // Vertical wheel input scrolls the native FlowBoard column while the board stays put.
+    const backlogScrollTop = () =>
+      backlogColumn.evaluate(
+        (column) => (column as FlowBoardColumnElement).getScrollableElement().scrollTop,
+      );
     await expect
       .poll(
-        () => backlogViewport.evaluate((viewport) => viewport.scrollHeight - viewport.clientHeight),
+        () =>
+          backlogColumn.evaluate((column) => {
+            const viewport = (column as FlowBoardColumnElement).getScrollableElement();
+            return viewport.scrollHeight - viewport.clientHeight;
+          }),
         { timeout: 10_000 },
       )
       .toBeGreaterThan(0);
-    await expect(backlogViewport).toHaveJSProperty('scrollTop', 0);
+    await expect.poll(backlogScrollTop).toBe(0);
     await backlogColumn.hover();
     await page.mouse.wheel(0, 1_200);
-    await expect
-      .poll(() => backlogViewport.evaluate((viewport) => viewport.scrollTop))
-      .toBeGreaterThan(0);
+    await expect.poll(backlogScrollTop).toBeGreaterThan(0);
     expect(
       await page.locator('mosaik-flow-board').evaluate((board) => {
         const viewport = board.shadowRoot?.querySelector<HTMLElement>('[part~="viewport"]');
@@ -1419,16 +1454,15 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
     // would perform before exercising cancellation and restart.
     await page.getByTestId('navigate-back').click();
     await expect(page.getByTestId('task-drawer')).toHaveCount(0);
-    const analyzedEntry = page
-      .getByTestId(`board-item-${selectedWorkItemId}`)
-      .locator('xpath=ancestor::symphony-board-column-entry');
+    const analyzedEntry = page.getByTestId(`board-item-${selectedWorkItemId}`);
     // Qualified starts as a collapsed strip; the drop target is its expanded column.
     await expandBoardColumn(page, 'qualified');
     const qualifiedColumn = page.getByTestId('board-column-qualified');
-    const readyViewport = page.getByTestId('board-column-viewport-ready');
+    const readyColumn = page.getByTestId('board-column-ready');
     // The completed card is taller than the viewport; keep its drag origin inside the scrollport.
-    await readyViewport.evaluate((viewport) => viewport.scrollTo({ top: 0 }));
-    await expect(readyViewport).toHaveJSProperty('scrollTop', 0);
+    await readyColumn.evaluate((column) => {
+      (column as FlowBoardColumnElement).getScrollableElement().scrollTo({ top: 0 });
+    });
     const analyzedEntryBox = await analyzedEntry.boundingBox();
     const qualifiedColumnBox = await qualifiedColumn.boundingBox();
     expect(analyzedEntryBox).not.toBeNull();
@@ -1447,7 +1481,7 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
     await expect(qualifiedColumn.getByTestId(`board-item-${selectedWorkItemId}`)).toBeVisible();
     // Clear the completed move notification before starting the short cancellation window.
     await dismissNotifications();
-    await page.getByTestId(`board-item-${selectedWorkItemId}`).click();
+    await qualifiedColumn.getByTestId(`board-item-${selectedWorkItemId}`).click();
     await expect(page.getByTestId('task-loading-skeleton')).toHaveCount(0);
     await expect(page.getByTestId('task-step-by-step-controls')).toHaveAttribute('is-expanded', '');
     await page.getByTestId('task-analysis-mode-ai').click();

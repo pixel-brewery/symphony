@@ -5,8 +5,7 @@ import { expect, type Page } from '@playwright/test';
 // #endregion
 
 /**
- * Expands one board column. The board collapses `Backlog`, `Qualified` and `Done` into narrow
- * strips by default; a strip is a button that expands its column into a full Mosaik column.
+ * Expands one board column through Mosaik's own disclosure control.
  *
  * @param page - Main window.
  * @param columnId - Board column id, for example `backlog`.
@@ -15,6 +14,8 @@ import { expect, type Page } from '@playwright/test';
 export async function expandBoardColumn(page: Page, columnId: string): Promise<void> {
   const column = page.getByTestId(`board-column-${columnId}`);
   await expect(column).toBeVisible();
-  if ((await column.getAttribute('aria-expanded')) === 'false') await column.click();
-  await expect(page.locator(`mosaik-flow-board-column[column-key="${columnId}"]`)).toBeVisible();
+  const toggle = column.locator('[part="toggle"]');
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
+  await expect(column).toHaveJSProperty('isExpanded', true);
 }

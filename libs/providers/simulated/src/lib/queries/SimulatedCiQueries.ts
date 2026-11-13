@@ -153,7 +153,7 @@ export class SimulatedCiQueries {
         (candidate) => candidate.id === workflow.repositoryBindingId,
       );
       if (!repository) return [];
-      return Array.from({ length: layoutFixture ? 24 : 1 }, (_, historyIndex) => {
+      return Array.from({ length: layoutFixture ? 120 : 1 }, (_, historyIndex) => {
         const providerRunId = 7_000 + index + historyIndex * ciWorkflows.length;
         const startedAt = new Date(
           Date.now() - (index + 1) * 11 * 60_000 - historyIndex * 60_000,

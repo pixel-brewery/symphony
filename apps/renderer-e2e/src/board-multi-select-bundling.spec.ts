@@ -54,14 +54,14 @@ test('bundles two natively selected cards into an attested delivery group', asyn
 
     // At rest the cards show no selection checkbox, as drawn. Command-click (Control-click off
     // macOS) starts a selection without opening the card; from then on the board runs the native
-    // flow-board multi-selection, so every card renders its own checkbox in the shadow
-    // `selection` part, and the selected state lives on the card host as `aria-selected`.
+    // FlowBoard multi-selection, so every card renders its own selection checkbox.
     const rootCheckbox = rootCard.locator('[part="selectionCheckbox"]');
     await expect(rootCheckbox).toHaveCount(0);
     await rootCard.getByTestId(`board-item-title-${rootItemId}`).click({
       modifiers: ['ControlOrMeta'],
     });
-    await expect(rootCard).toHaveAttribute('aria-selected', 'true');
+    await expect(rootCard).toHaveJSProperty('isSelected', true);
+    await expect(rootCheckbox).toHaveJSProperty('isChecked', true);
     await expect(page.getByTestId('board-view')).toBeVisible();
 
     // One selected ticket cannot deliver alone; the action names the current count.
@@ -73,7 +73,8 @@ test('bundles two natively selected cards into an attested delivery group', asyn
     const memberCheckbox = memberCard.locator('[part="selectionCheckbox"]');
     await expect(memberCheckbox).toBeVisible();
     await memberCheckbox.click();
-    await expect(memberCard).toHaveAttribute('aria-selected', 'true');
+    await expect(memberCard).toHaveJSProperty('isSelected', true);
+    await expect(memberCheckbox).toHaveJSProperty('isChecked', true);
     await expect(deliverTogether).toHaveJSProperty('label', 'Deliver together (2)');
     await expect(deliverTogether).toHaveJSProperty('disabled', false);
     await page.evaluate(() =>
@@ -151,7 +152,9 @@ test('bundles two natively selected cards into an attested delivery group', asyn
     await expect(groupStack).toContainText('2 tickets');
     await expect(groupStack).toContainText('Root · #142');
     await expect(page.getByTestId('board-selection-actions')).toHaveCount(0);
-    await expect(page.getByTestId('board-view').locator('[aria-selected="true"]')).toHaveCount(0);
+    await expect(page.getByTestId('board-view').locator('[part="selectionCheckbox"]')).toHaveCount(
+      0,
+    );
     await page.screenshot({
       path: resolve(outputDirectory, 'board-multi-select-bundling-group.png'),
       fullPage: true,
