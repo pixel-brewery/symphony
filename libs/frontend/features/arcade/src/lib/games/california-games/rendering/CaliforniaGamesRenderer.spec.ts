@@ -45,11 +45,23 @@ describe('CaliforniaGamesRenderer', () => {
     const phases = ['intro', 'title', 'menu', 'high-scores'] as const;
 
     // act
-    const frames = phases.map((phase) => renderer.render({ ...BASE, phase }));
+    const frames = phases.map((phase) => {
+      const frame = renderer.render({ ...BASE, phase });
+      const colors = new Set<number>();
+      for (let y = 0; y < frame.height; y += 3)
+        for (let x = 0; x < frame.width; x += 3) colors.add(frame.getPixel(x, y));
+      return { width: frame.width, height: frame.height, colors };
+    });
 
     // assert
     expect(frames.every((frame) => frame.width === 160 && frame.height === 102)).toBe(true);
-    expect(frames.map((frame) => frame.getPixel(80, 50))).not.toEqual([0, 0, 0, 0]);
+    expect(frames.every((frame) => frame.colors.size >= 2)).toBe(true);
+    expect(frames.map((frame) => [...frame.colors])).not.toEqual([
+      [...frames[0]!.colors],
+      [...frames[0]!.colors],
+      [...frames[0]!.colors],
+      [...frames[0]!.colors],
+    ]);
     expect(renderer.render({ ...BASE, phase: 'high-scores' }).getPixel(11, 6)).toBe(15);
   });
 
@@ -183,7 +195,7 @@ describe('CaliforniaGamesRenderer', () => {
     ]);
   });
 
-  it('stretches the indexed buffer without interpolation and honors screen flipping', () => {
+  it('scales the indexed buffer without interpolation and honors screen flipping', () => {
     // arrange
     const canvas = document.createElement('canvas');
     canvas.width = 960;
@@ -196,6 +208,7 @@ describe('CaliforniaGamesRenderer', () => {
     const visible = {
       setTransform: vi.fn(),
       imageSmoothingEnabled: true,
+      fillRect: vi.fn(),
       drawImage: vi.fn(),
     };
     const renderer = new CaliforniaGamesRenderer();

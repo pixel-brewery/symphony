@@ -2237,8 +2237,9 @@ ownership but uses the Lynx's original 160×102, 16-color indexed presentation i
 Mosaik scheme tones used by the Atari 2600 reconstructions. The fixed palette inside the canvas is
 the requested historical content; the Page header, controls, instructions, error state and Arcade
 catalog remain Mosaik Soho. The renderer reconstructs sprite scale, flip, tilt, collision and
-checker transparency locally and stretches the nearest-neighbor frame across the complete inner
-pane. The four-channel mono Web Audio program follows the documented Mikey/LFSR architecture but
+checker transparency locally. Its canvas owns the complete inner pane, while the indexed frame uses
+the largest fitting integer scale, keeps the native 160:102 aspect ratio and letterboxes with the
+darkest game-palette tone instead of distorting pixels. The four-channel mono Web Audio program follows the documented Mikey/LFSR architecture but
 uses reconstructed music sequences rather than bundled samples or claimed register dumps. This is
 an intentional product difference because the inspected private upstream application has no game
 surface and Mosaik provides application chrome rather than a retro framebuffer.

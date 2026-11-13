@@ -15,8 +15,10 @@ const EVENT_NAMES: Readonly<Record<CaliforniaGamesEvent, string>> = {
   bmx: 'BMX',
   surfing: 'SURFING',
   'half-pipe': 'HALF PIPE',
-  'foot-bag': 'FOOT BAG',
+  'foot-bag': 'FOOTBAG',
 };
+
+type Point = readonly [number, number];
 
 /** Rasterizes the complete Lynx California Games flow into a 160×102 indexed framebuffer. @public */
 export class CaliforniaGamesRenderer {
@@ -30,7 +32,7 @@ export class CaliforniaGamesRenderer {
 
   // #region Methods
 
-  /** Draws one nearest-neighbor frame into the visible responsive canvas. @public */
+  /** Draws one nearest-neighbor frame into the visible responsive canvas without distorting pixels. @public */
   public draw(
     context: CanvasRenderingContext2D,
     snapshot: ICaliforniaGamesSnapshot,
@@ -48,9 +50,16 @@ export class CaliforniaGamesRenderer {
     const image = bitmap.createImageData(WIDTH, HEIGHT);
     surface.writeImageData(image, CaliforniaGamesPalette, snapshot.flipped);
     bitmap.putImageData(image, 0, 0);
+    const scale = Math.max(1, Math.floor(Math.min(canvas.width / WIDTH, canvas.height / HEIGHT)));
+    const targetWidth = WIDTH * scale;
+    const targetHeight = HEIGHT * scale;
+    const targetX = Math.floor((canvas.width - targetWidth) / 2);
+    const targetY = Math.floor((canvas.height - targetHeight) / 2);
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.imageSmoothingEnabled = false;
-    context.drawImage(this._buffer, 0, 0, canvas.width, canvas.height);
+    context.fillStyle = CaliforniaGamesPalette[0];
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(this._buffer, targetX, targetY, targetWidth, targetHeight);
   }
 
   /** Renders one frame and exposes the indexed result for deterministic visual tests. @public */
@@ -64,7 +73,7 @@ export class CaliforniaGamesRenderer {
         this.drawTitle(snapshot.frame);
         break;
       case 'menu':
-        this.drawMenu(snapshot.selectedEvent, snapshot.players, snapshot.frame);
+        this.drawMenu(snapshot.selectedEvent, snapshot.players);
         break;
       case 'high-scores':
         this.drawHighScores(snapshot);
@@ -73,81 +82,126 @@ export class CaliforniaGamesRenderer {
       case 'playing':
       case 'event-over':
         this.drawEvent(snapshot);
-        if (snapshot.phase === 'countdown')
-          this.drawCentered(String(Math.max(1, snapshot.countdown)), 43, 15, 2);
-        if (snapshot.phase === 'event-over') this.drawCentered('EVENT OVER', 44, 15, 1);
+        if (snapshot.phase === 'countdown' && snapshot.currentEvent !== 'surfing')
+          this.drawOutlinedCentered('GET READY', 47, 3, 0, 1);
+        if (snapshot.phase === 'event-over') this.drawOutlinedCentered('EVENT OVER', 45, 3, 0, 1);
         break;
     }
     if (snapshot.status === 'paused') {
-      this._surface.fillRect(46, 42, 68, 17, 0);
-      this.frame(45, 41, 70, 19, 15);
+      this._surface.fillRect(43, 41, 74, 19, 0);
+      this.frame(42, 40, 76, 21, 15);
       this.drawCentered('PAUSED', 47, 15, 1);
     }
     return this._surface;
   }
 
   private drawIntro(frame: number): void {
-    this._surface.clear(7);
-    const reveal = Math.min(4, Math.floor(frame / 8));
-    this._surface.fillRect(23, 24, 114, 54, 1);
-    this._surface.fillRect(27, 28, 106, 46, 5);
+    this._surface.clear(0);
+    const reveal = Math.min(10, Math.floor(frame / 5));
     for (let index = 0; index < reveal; index++) {
-      const color = [2, 3, 4, 6][index] ?? 15;
-      this._surface.line(35 + index * 4, 62 - index * 5, 56 + index * 4, 35, color);
-      this._surface.line(56 + index * 4, 35, 68 + index * 5, 62, color);
+      const x = 42 + index * 7;
+      const height = 6 + index * 3;
+      this._surface.line(x, 63, x + 15, 63 - height, index < 4 ? 6 : 7);
+      this._surface.line(x + 15, 63 - height, x + 24, 63, index < 6 ? 3 : 2);
     }
-    this.drawCentered('EPYX', 46, 15, 2);
-    this.drawCentered('PRESENTS', 85, 14, 1);
+    this.drawItalicText('EPYX', 46, 34, 6, 2);
+    this.drawOutlinedCentered('PRESENTS', 73, 3, 2, 1);
   }
 
   private drawTitle(frame: number): void {
-    this.drawBeach(frame);
-    this.drawSun(126, 19, 12);
-    this.drawPalm(17, 25);
-    this._surface.fillRect(32, 17, 95, 52, 8);
-    this._surface.fillRect(35, 20, 89, 46, 3);
-    this.frame(38, 23, 83, 40, 15);
-    this.drawCentered('CALIFORNIA', 29, 2, 1);
-    this.drawCentered('GAMES', 43, 15, 2);
-    this.drawCentered('PRESS A OR B', 84, frame % 48 < 36 ? 1 : 14, 1);
+    const skyVersion = frame >= 270;
+    if (skyVersion) this.drawTitleSky();
+    else this._surface.clear(0);
+    this.drawLicensePlate(skyVersion);
+    if (!skyVersion) {
+      this.drawItalicText('EPYX', 8, 8, 6, 1);
+      this.drawItalicText('PRESENTS', 47, 9, 3, 1);
+      this.drawText('Licensed to Atari Corp.', 45, 91, 6, 1);
+    } else {
+      this.drawOutlinedCentered('PRESS A OR B', 91, frame % 48 < 36 ? 1 : 6, 7, 1);
+    }
   }
 
-  private drawMenu(selected: CaliforniaGamesEvent, players: 1 | 2, frame: number): void {
-    this.drawBeach(frame);
-    this.drawSun(130, 15, 10);
-    this.drawPalm(18, 20);
-    this.drawText('SELECT EVENT', 65, 10, 1, 1);
+  private drawTitleSky(): void {
+    this._surface.clear(6);
+    this._surface.fillRect(0, 0, WIDTH, 8, 7);
+    this.drawCloud(14, 10, 1);
+    this.drawCloud(102, 15, 2);
+    this._surface.fillRect(0, 80, WIDTH, 22, 3);
+    this.ditherRect(0, 80, WIDTH, 22, 3, 9, 5);
+  }
+
+  private drawLicensePlate(skyVersion: boolean): void {
+    const top = skyVersion ? 19 : 27;
+    this._surface.fillRect(17, top + 3, 128, 57, 13);
+    this._surface.fillRect(19, top, 124, 57, 14);
+    this.frame(20, top + 1, 122, 55, 1);
+    this.frame(23, top + 5, 116, 47, 13);
+    for (const screwX of [25, 136]) {
+      this._surface.fillRect(screwX, top + 5, 3, 3, 13);
+      this._surface.setPixel(screwX + 1, top + 6, 1);
+    }
+    this._surface.fillRect(26, top + 10, 110, 2, 3);
+    this._surface.fillRect(26, top + 13, 110, 1, 1);
+    this.drawItalicText('CALIFORNIA', 47, top + 8, 2, 1);
+    this._surface.fillRect(77, top + 8, 8, 8, 3);
+    this._surface.fillRect(79, top + 10, 4, 4, 2);
+    this.drawText('GAMES', 36, top + 22, 13, 3);
+    this.drawText('GAMES', 34, top + 20, 15, 3);
+    this.drawText('GAMES', 32, top + 18, 7, 3);
+  }
+
+  private drawMenu(selected: CaliforniaGamesEvent, players: 1 | 2): void {
+    this._surface.clear(7);
+    const bands = [7, 5, 6, 5, 7, 6];
+    for (let index = 0; index < bands.length; index++)
+      this._surface.fillRect(0, 22 + index * 9, WIDTH, 7, bands[index] ?? 7);
+    this._surface.fillRect(0, 84, WIDTH, 18, 3);
+    this.ditherRect(0, 84, WIDTH, 18, 3, 1, 4);
+    this.drawMenuPalm();
     const events: readonly CaliforniaGamesEvent[] = ['bmx', 'surfing', 'half-pipe', 'foot-bag'];
     for (const [index, event] of events.entries()) {
-      const y = 28 + index * 14;
-      const chosen = event === selected;
-      if (chosen) this._surface.fillRect(63, y - 2, 86, 11, 1);
-      this.drawText(EVENT_NAMES[event], 69, y, chosen ? 2 : 15, 1);
-      if (chosen) this._surface.drawSprite(['f'], 61, y + 3);
+      const y = 7 + index * 21;
+      const text = EVENT_NAMES[event];
+      const width = this.textWidth(text, 2);
+      const x = Math.max(37, Math.floor((WIDTH + 24 - width) / 2));
+      this.drawItalicText(text, x + 2, y + 2, 14, 2);
+      this.drawItalicText(text, x + 1, y + 1, 6, 2);
+      this.drawItalicText(text, x, y, event === selected ? 2 : 15, 2);
     }
-    this.drawText(`${players} PLAYER${players === 1 ? '' : 'S'}`, 82, 88, 8, 1);
+    this.drawOutlinedText(`${players}P`, 139, 91, 1, 8, 1);
+  }
+
+  private drawMenuPalm(): void {
+    this._surface.drawSprite(CaliforniaGamesSpritePatterns.palmTop ?? [], -3, 11);
+    for (let row = 0; row < 69; row++) {
+      const x = 25 - Math.floor(row / 19);
+      this._surface.fillRect(x, 24 + row, 4, 1, row % 5 === 0 ? 9 : 8);
+      if (row % 7 === 0) this._surface.setPixel(x - 1, 24 + row, 13);
+    }
   }
 
   private drawHighScores(snapshot: ICaliforniaGamesSnapshot): void {
     this._surface.clear(7);
-    for (let y = 0; y < HEIGHT; y += 4) this._surface.fillRect(0, y, WIDTH, 1, y % 8 === 0 ? 5 : 0);
+    for (let y = 0; y < HEIGHT; y += 5) this._surface.fillRect(0, y, WIDTH, 2, y % 10 ? 5 : 6);
+    this._surface.fillRect(10, 5, 140, 92, 0);
     this.frame(11, 6, 138, 90, 15);
-    this.drawCentered('HIGH SCORES', 11, 3, 1);
-    this.drawCentered(EVENT_NAMES[snapshot.selectedEvent], 25, 3, 1);
+    this.drawOutlinedCentered('HIGH SCORES', 11, 3, 7, 1);
+    this.drawOutlinedCentered(EVENT_NAMES[snapshot.selectedEvent], 24, 2, 0, 1);
     const board = snapshot.highScores.find((entry) => entry.event === snapshot.selectedEvent);
     for (let index = 0; index < 3; index++) {
       const entry = board?.entries[index];
-      const color = entry && snapshot.newHighScorePlayers.includes(entry.player) ? 2 : 15;
-      this.drawText(`${index + 1}.`, 34, 44 + index * 13, color, 1);
-      this.drawText(entry ? `PLAYER ${entry.player}` : '---', 53, 44 + index * 13, color, 1);
+      const color = entry && snapshot.newHighScorePlayers.includes(entry.player) ? 3 : 15;
+      this.drawText(`${index + 1}.`, 30, 42 + index * 13, color, 1);
+      this.drawText(entry ? `PLAYER ${entry.player}` : '---', 49, 42 + index * 13, color, 1);
       this.drawRight(
         entry ? String(entry.score).padStart(6, '0') : '000000',
-        133,
-        44 + index * 13,
+        134,
+        42 + index * 13,
         color,
       );
     }
-    this.drawCentered('A/B CONTINUE', 86, 14, 1);
+    this.drawCentered('A/B CONTINUE', 86, 6, 1);
   }
 
   private drawEvent(snapshot: ICaliforniaGamesSnapshot): void {
@@ -158,7 +212,7 @@ export class CaliforniaGamesRenderer {
     }
     switch (state.kind) {
       case 'bmx':
-        this.drawBmx(snapshot, state);
+        this.drawBmx(state);
         break;
       case 'surfing':
         this.drawSurfing(snapshot, state);
@@ -173,39 +227,48 @@ export class CaliforniaGamesRenderer {
   }
 
   private drawBmx(
-    snapshot: ICaliforniaGamesSnapshot,
     state: Extract<NonNullable<ICaliforniaGamesSnapshot['eventState']>, { kind: 'bmx' }>,
   ): void {
-    this._surface.clear(6);
-    this._surface.fillRect(0, 22, WIDTH, 20, 4);
-    for (let x = -20; x < WIDTH + 30; x += 25) {
-      const offset = (x - Math.floor(state.progress / 8)) % 180;
-      this._surface.line(offset, 41, offset + 13, 31, 5);
-      this._surface.line(offset + 13, 31, offset + 27, 41, 5);
+    this._surface.clear(4);
+    this.ditherRect(0, 0, WIDTH, HEIGHT, 4, 5, 13);
+    this.polygon(
+      [
+        [-22, 17],
+        [27, 17],
+        [89, 102],
+        [-22, 102],
+      ],
+      8,
+    );
+    for (let y = 18; y < HEIGHT; y++) {
+      const left = -22;
+      const right = 27 + (y - 17) * 0.73;
+      for (let x = Math.max(0, Math.floor(left)); x < Math.min(WIDTH, right); x++) {
+        const pattern = this.noise(x, y, Math.floor(state.progress / 8)) % 23;
+        if (pattern < 6) this._surface.setPixel(x, y, pattern < 2 ? 9 : pattern === 2 ? 13 : 14);
+      }
     }
-    this._surface.fillRect(0, 42, WIDTH, 60, 8);
-    for (let y = 47; y < HEIGHT; y += 11) {
-      const width = Math.max(1, Math.floor((y - 38) / 10));
-      for (let x = (snapshot.frame * 2 + y * 3) % 31; x < WIDTH; x += 31)
-        this._surface.fillRect(x, y, width, 1, 9);
-    }
-    const horizon = state.progress;
+    this._surface.line(25, 18, 87, 102, 9);
+    this._surface.line(27, 18, 89, 102, 13);
     for (const obstacle of state.obstacles) {
-      const distance = obstacle.distance - horizon;
-      if (distance < -12 || distance > 115) continue;
-      const perspective = 1 - distance / 160;
-      const x = 80 + obstacle.lane * 24 * perspective;
-      const y = 89 - distance * 0.42;
+      const distance = obstacle.distance - state.progress;
+      if (distance < -12 || distance > 105) continue;
+      const y = 23 + (105 - distance) * 0.65;
+      const roadRight = 27 + (y - 17) * 0.73;
+      const center = roadRight * 0.52;
+      const x = center + obstacle.lane * Math.max(6, roadRight * 0.34);
       const pattern = CaliforniaGamesSpritePatterns[obstacle.kind] ?? [];
-      this._surface.drawSprite(pattern, x - 4, y, {
-        scaleX: distance < 30 ? 2 : 1,
+      this._surface.drawSprite(pattern, x - 5, y - 3, {
+        scaleX: y > 76 ? 2 : 1,
         shear: obstacle.kind === 'cliff' ? 0.3 : 0,
       });
     }
     for (const rider of state.riders) {
-      this._surface.drawSprite(CaliforniaGamesSpritePatterns.bmx ?? [], rider.x - 4, rider.y - 8, {
+      const x = 34 + rider.lane * 15;
+      const y = 50 - rider.height * 0.35;
+      this._surface.drawSprite(CaliforniaGamesSpritePatterns.bmx ?? [], x - 10, y - 12, {
         flipX: Math.cos(rider.rotation) < 0,
-        shear: Math.sin(rider.rotation) * 0.35,
+        shear: Math.sin(rider.rotation) * 0.2,
       });
     }
     this.drawHud(
@@ -219,30 +282,55 @@ export class CaliforniaGamesRenderer {
     state: Extract<NonNullable<ICaliforniaGamesSnapshot['eventState']>, { kind: 'surfing' }>,
   ): void {
     this._surface.clear(6);
-    this._surface.fillRect(0, 18, WIDTH, 84, 5);
-    this.drawSun(135, 22, 8);
-    const crest = 46 + Math.round(Math.sin(state.wavePhase) * 4);
+    this.drawCloud(17, 12, 1);
+    this._surface.fillRect(0, 26, WIDTH, 76, 7);
+    this._surface.fillRect(0, 27, WIDTH, 3, 5);
+    this._surface.fillRect(0, 30, WIDTH, 2, 15);
+    const crest = 32 + Math.round(Math.sin(state.wavePhase) * 2);
     for (let x = 0; x < WIDTH; x++) {
-      const wave = crest + Math.round(Math.sin((x + state.wavePhase * 18) / 13) * 5);
-      this._surface.fillRect(x, wave, 1, HEIGHT - wave, x % 5 === 0 ? 6 : 7);
-      if (x % 3 === 0) this._surface.setPixel(x, wave, 15);
+      const waveTop = crest + Math.round(Math.sin((x + state.wavePhase * 17) / 10) * 3);
+      this._surface.fillRect(x, waveTop, 1, HEIGHT - waveTop, 7);
+      if ((x + Math.floor(state.wavePhase * 10)) % 4 === 0) {
+        this._surface.setPixel(x, waveTop, 15);
+        this._surface.setPixel(x, waveTop + 1, 6);
+      }
+      for (let y = waveTop + 5; y < HEIGHT; y += 7)
+        if ((x * 7 + y * 3) % 13 < 3) this._surface.setPixel(x, y, y > 87 ? 6 : 5);
     }
-    const tubeX = 21 + Math.round((state.wavePhase * 9) % 38);
-    for (let ring = 0; ring < 22; ring++) {
-      const radius = Math.max(2, 18 - ring / 2);
-      const x = tubeX + ring;
-      this._surface.line(x, crest + 2 - radius, x, crest + 2 + radius, ring % 2 ? 6 : 15);
+    const tubeX = 92 + Math.round(Math.sin(state.wavePhase) * 5);
+    for (let column = tubeX; column < WIDTH; column++) {
+      const distance = column - tubeX;
+      const top = crest - Math.round(Math.sqrt(distance) * 1.7);
+      const bottom = Math.min(HEIGHT - 1, crest + 20 + Math.round(distance * 0.45));
+      this._surface.line(column, top, column, bottom, distance % 4 === 0 ? 15 : 6);
+      for (let y = top; y <= bottom; y++)
+        if ((column * 11 + y * 7) % 17 < 4) this._surface.setPixel(column, y, 15);
     }
     for (const surfer of state.surfers)
-      this._surface.drawSprite(CaliforniaGamesSpritePatterns.surfer ?? [], surfer.x, surfer.y, {
-        flipX: surfer.angle < 0,
-        shear: surfer.angle / 70,
-        checkerTransparency: surfer.tubeFrames > 0,
-      });
-    if (state.timer < 15 && snapshot.frame % 90 < 45)
-      this._surface.drawSprite(CaliforniaGamesSpritePatterns.pelican ?? [], 111, 25, {
-        flipX: true,
-      });
+      this._surface.drawSprite(
+        CaliforniaGamesSpritePatterns.surfer ?? [],
+        surfer.x - 9,
+        surfer.y - 13,
+        {
+          flipX: surfer.angle < 0,
+          shear: surfer.angle / 90,
+          checkerTransparency: surfer.tubeFrames > 0,
+        },
+      );
+    if (state.timer < 15)
+      this._surface.drawSprite(
+        CaliforniaGamesSpritePatterns.pelican ?? [],
+        state.pelicanX - 7,
+        24,
+        {
+          flipX: true,
+        },
+      );
+    if (
+      snapshot.phase === 'countdown' ||
+      state.surfers.every((surfer) => surfer.pose === 'waiting')
+    )
+      this.drawOutlinedCentered('GET READY', 54, 3, 0, 1);
     this.drawHud(
       state.timer,
       state.surfers.map((surfer) => surfer.score),
@@ -254,101 +342,238 @@ export class CaliforniaGamesRenderer {
     state: Extract<NonNullable<ICaliforniaGamesSnapshot['eventState']>, { kind: 'half-pipe' }>,
   ): void {
     this._surface.clear(6);
-    this._surface.fillRect(0, 25, WIDTH, 31, 3);
-    this._surface.fillRect(0, 56, WIDTH, 46, 8);
-    for (let y = 38; y < HEIGHT; y++) {
-      const inset = Math.max(0, Math.round((y - 38) * 0.78));
-      this._surface.fillRect(0, y, Math.min(53, inset), 1, 14);
-      this._surface.fillRect(WIDTH - Math.min(53, inset), y, Math.min(53, inset), 1, 14);
-      this._surface.fillRect(Math.min(53, inset), y, WIDTH - Math.min(106, inset * 2), 1, 1);
-    }
-    for (let y = 44; y < HEIGHT; y += 8) {
-      const inset = Math.max(0, Math.round((y - 38) * 0.78));
-      this._surface.fillRect(inset, y, Math.max(0, WIDTH - inset * 2), 1, 9);
-    }
-    for (const skater of state.skaters) {
-      const depthScale = skater.y > 64 ? 2 : 1;
+    this.drawCloud(55, 8, 2);
+    this.polygon(
+      [
+        [0, 45],
+        [25, 31],
+        [52, 41],
+        [75, 29],
+        [111, 45],
+        [160, 35],
+        [160, 61],
+        [0, 61],
+      ],
+      8,
+    );
+    this.ditherRect(0, 39, WIDTH, 22, 8, 9, 5);
+    this.drawText('HOLLYWOOD', -5, 45, 1, 1);
+    this._surface.fillRect(0, 61, WIDTH, 41, 8);
+    this.drawPipeSupports();
+    this.polygon(
+      [
+        [23, 43],
+        [46, 55],
+        [67, 81],
+        [94, 81],
+        [115, 55],
+        [137, 43],
+        [137, 102],
+        [23, 102],
+      ],
+      14,
+    );
+    this.polygon(
+      [
+        [35, 45],
+        [51, 59],
+        [69, 77],
+        [91, 77],
+        [109, 59],
+        [125, 45],
+        [125, 102],
+        [35, 102],
+      ],
+      13,
+    );
+    for (let y = 50; y < HEIGHT; y += 7) this._surface.line(24, y, 136, y, 1);
+    const closeScale = state.cameraScale > 1.34 ? 2 : 1;
+    for (const skater of state.skaters)
       this._surface.drawSprite(
         CaliforniaGamesSpritePatterns.skater ?? [],
-        skater.x - 4 * depthScale,
-        skater.y - 10 * depthScale,
+        skater.x - 5 * closeScale,
+        skater.y - 14 * closeScale,
         {
-          scaleX: depthScale,
-          scaleY: depthScale,
+          scaleX: closeScale,
+          scaleY: closeScale,
           flipX: skater.velocity < 0,
-          shear: skater.rotation / 540,
+          shear: skater.rotation / 720,
         },
       );
-    }
-    this.drawHud(
+    this.drawHalfPipeHud(
       state.timer,
       state.skaters.map((skater) => skater.score),
     );
-    if (snapshot.godMode) this.drawText('FREE', 68, 94, 3, 1);
+    if (snapshot.godMode) this.drawText('FREE', 69, 94, 3, 1);
+  }
+
+  private drawPipeSupports(): void {
+    for (const x of [18, 139]) {
+      this._surface.fillRect(x, 48, 4, 54, 14);
+      this._surface.fillRect(x + 2, 48, 1, 54, 1);
+    }
+    for (const x of [27, 128]) {
+      this._surface.line(x, 53, x + (x < 80 ? 17 : -17), 99, 0);
+      this._surface.line(x + (x < 80 ? 17 : -17), 53, x, 99, 0);
+    }
   }
 
   private drawFootBag(
     snapshot: ICaliforniaGamesSnapshot,
     state: Extract<NonNullable<ICaliforniaGamesSnapshot['eventState']>, { kind: 'foot-bag' }>,
   ): void {
-    this.drawBeach(snapshot.frame);
-    this.drawSun(133, 18, 9);
-    this.drawPalm(17, 19);
-    this._surface.drawSprite(CaliforniaGamesSpritePatterns.seagull ?? [], state.seagullX, 18, {
+    this._surface.clear(7);
+    this.drawSanFranciscoSkyline();
+    this._surface.fillRect(0, 49, WIDTH, 22, 7);
+    this.ditherRect(0, 49, WIDTH, 22, 7, 5, 3);
+    this._surface.fillRect(0, 71, WIDTH, 21, 4);
+    this.ditherRect(0, 71, WIDTH, 21, 4, 0, 4);
+    this._surface.fillRect(0, 92, WIDTH, 10, 13);
+    this._surface.fillRect(0, 94, WIDTH, 2, 14);
+    for (let x = 8; x < WIDTH; x += 22) {
+      this._surface.fillRect(x, 91, 3, 7, 14);
+      this._surface.fillRect(x - 2, 90, 7, 2, 13);
+    }
+    this._surface.drawSprite(CaliforniaGamesSpritePatterns.seagull ?? [], state.seagullX - 6, 15, {
       flipX: snapshot.frame % 180 > 90,
     });
     for (const player of state.playersState) {
       this._surface.drawSprite(
         CaliforniaGamesSpritePatterns.footbag ?? [],
-        player.x,
-        player.pose === 'jump' ? 64 : 72,
-        { flipX: player.player === 2, shear: player.pose === 'trip' ? 0.35 : 0 },
+        player.x - 5,
+        player.pose === 'jump' ? 43 : 54,
+        {
+          scaleY: 2,
+          flipX: player.player === 2,
+          shear: player.pose === 'trip' ? 0.15 : 0,
+        },
       );
       this._surface.drawSprite(CaliforniaGamesSpritePatterns.bag ?? [], player.bagX, player.bagY, {
         checkerTransparency: snapshot.frame % 4 < 2,
       });
-      if (player.combo > 0) this.drawText(String(player.combo), player.x - 2, 61, 2, 1);
     }
-    this.drawHud(
-      state.timer,
-      state.playersState.map((player) => player.score),
+    this.drawFootBagHud(state);
+  }
+
+  private drawSanFranciscoSkyline(): void {
+    this._surface.fillRect(0, 0, WIDTH, 18, 7);
+    this.polygon(
+      [
+        [0, 35],
+        [19, 24],
+        [43, 34],
+        [70, 19],
+        [93, 33],
+        [122, 17],
+        [160, 31],
+        [160, 49],
+        [0, 49],
+      ],
+      14,
     );
-  }
-
-  private drawBeach(frame: number): void {
-    this._surface.clear(6);
-    this._surface.fillRect(0, 55, WIDTH, 13, 5);
-    this._surface.fillRect(0, 68, WIDTH, 34, 3);
-    for (let x = (frame >> 2) % 14; x < WIDTH; x += 14)
-      this._surface.fillRect(x, 60 + ((x >> 1) % 3), 7, 1, 15);
-    for (let x = 0; x < WIDTH; x += 17) this._surface.setPixel(x, 80 + (x % 7), 9);
-  }
-
-  private drawPalm(x: number, y: number): void {
-    this._surface.drawSprite(CaliforniaGamesSpritePatterns.palmTop ?? [], x - 7, y);
-    for (let row = 0; row < 54; row++) {
-      const trunkX = x + Math.round(row / 17);
-      this._surface.fillRect(trunkX, y + 5 + row, 3, 1, row % 5 === 0 ? 9 : 8);
+    this.drawBridge();
+    const buildings: readonly (readonly [number, number, number, number])[] = [
+      [59, 23, 9, 26],
+      [69, 18, 11, 31],
+      [81, 12, 8, 37],
+      [91, 20, 12, 29],
+      [104, 7, 7, 42],
+      [112, 15, 12, 34],
+      [126, 23, 8, 26],
+    ];
+    for (const [x, y, width, height] of buildings) {
+      this._surface.fillRect(x, y, width, height, x % 3 === 0 ? 13 : 14);
+      for (let row = y + 3; row < y + height; row += 5)
+        for (let column = x + 2; column < x + width - 1; column += 4)
+          this._surface.setPixel(column, row, column % 2 ? 1 : 0);
     }
   }
 
-  private drawSun(x: number, y: number, radius: number): void {
-    for (let row = -radius; row <= radius; row++) {
-      const width = Math.floor(Math.sqrt(radius * radius - row * row));
-      this._surface.fillRect(x - width, y + row, width * 2 + 1, 1, row % 3 === 0 ? 2 : 3);
+  private drawBridge(): void {
+    this._surface.fillRect(7, 19, 4, 30, 13);
+    this._surface.fillRect(42, 20, 4, 29, 13);
+    this._surface.line(9, 21, 44, 22, 13);
+    this._surface.line(9, 24, 44, 25, 1);
+    for (let x = 11; x < 44; x += 4) {
+      const curve = Math.round(((x - 27) * (x - 27)) / 44);
+      this._surface.line(x, 21, x, 28 + curve, 13);
     }
+    this._surface.line(0, 34, 58, 34, 13);
+  }
+
+  private drawFootBagHud(
+    state: Extract<NonNullable<ICaliforniaGamesSnapshot['eventState']>, { kind: 'foot-bag' }>,
+  ): void {
+    const primary = state.playersState[0];
+    this.drawOutlinedText(String(primary?.score ?? 0).padStart(6, '0'), 2, 2, 4, 7, 1);
+    this.drawOutlinedText(String(primary?.combo ?? 0), 67, 2, 2, 7, 1);
+    this.drawOutlinedText(this.time(state.timer), 128, 2, 3, 7, 1);
   }
 
   private drawHud(timer: number, scores: readonly number[]): void {
-    this._surface.fillRect(0, 0, WIDTH, 9, 0);
-    this.drawText(this.time(timer), 3, 1, 15, 1);
+    this.drawOutlinedText(this.time(timer), 3, 2, 3, 0, 1);
     for (const [index, score] of scores.entries())
-      this.drawRight(
-        `P${index + 1} ${String(score).padStart(5, '0')}`,
-        157,
-        1 + index * 8,
-        index ? 3 : 15,
-      );
+      this.drawRightOutlined(String(score).padStart(5, '0'), 157, 2 + index * 8, index ? 1 : 3, 0);
+  }
+
+  private drawHalfPipeHud(timer: number, scores: readonly number[]): void {
+    this.drawOutlinedText(this.time(timer), 3, 93, 3, 0, 1);
+    for (const [index, score] of scores.entries())
+      this.drawRightOutlined(String(score).padStart(5, '0'), 157, 93 - index * 8, index ? 1 : 3, 0);
+  }
+
+  private drawCloud(x: number, y: number, scale: number): void {
+    this._surface.fillRect(x, y + 3 * scale, 20 * scale, 3 * scale, 1);
+    this._surface.fillRect(x + 4 * scale, y + scale, 11 * scale, 5 * scale, 1);
+    this._surface.fillRect(x + 8 * scale, y, 4 * scale, 6 * scale, 15);
+    this._surface.fillRect(x + 2 * scale, y + 4 * scale, 18 * scale, scale, 15);
+  }
+
+  private ditherRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    base: number,
+    accent: number,
+    modulus: number,
+  ): void {
+    this._surface.fillRect(x, y, width, height, base);
+    for (let row = y; row < y + height; row++)
+      for (let column = x; column < x + width; column++)
+        if (this.noise(column, row, modulus) % modulus === 0)
+          this._surface.setPixel(column, row, accent);
+  }
+
+  private noise(x: number, y: number, seed: number): number {
+    let value = (Math.floor(x) * 374_761_393 + Math.floor(y) * 668_265_263 + seed * 69_069) | 0;
+    value = (value ^ (value >>> 13)) * 1_274_126_177;
+    return (value ^ (value >>> 16)) >>> 0;
+  }
+
+  private polygon(points: readonly Point[], color: number): void {
+    const minimumY = Math.max(0, Math.floor(Math.min(...points.map((point) => point[1]))));
+    const maximumY = Math.min(HEIGHT - 1, Math.ceil(Math.max(...points.map((point) => point[1]))));
+    for (let y = minimumY; y <= maximumY; y++) {
+      const intersections: number[] = [];
+      for (let index = 0; index < points.length; index++) {
+        const start = points[index]!;
+        const end = points[(index + 1) % points.length]!;
+        if ((start[1] <= y && end[1] > y) || (end[1] <= y && start[1] > y))
+          intersections.push(
+            start[0] + ((y - start[1]) * (end[0] - start[0])) / (end[1] - start[1]),
+          );
+      }
+      intersections.sort((left, right) => left - right);
+      for (let index = 0; index + 1 < intersections.length; index += 2)
+        this._surface.fillRect(
+          Math.ceil(intersections[index] ?? 0),
+          y,
+          Math.floor(intersections[index + 1] ?? 0) - Math.ceil(intersections[index] ?? 0) + 1,
+          1,
+          color,
+        );
+    }
   }
 
   private time(seconds: number): string {
@@ -357,12 +582,76 @@ export class CaliforniaGamesRenderer {
   }
 
   private drawCentered(text: string, y: number, color: number, scale: number): void {
-    const width = this.textWidth(text, scale);
-    this.drawText(text, Math.floor((WIDTH - width) / 2), y, color, scale);
+    this.drawText(text, Math.floor((WIDTH - this.textWidth(text, scale)) / 2), y, color, scale);
+  }
+
+  private drawOutlinedCentered(
+    text: string,
+    y: number,
+    color: number,
+    outline: number,
+    scale: number,
+  ): void {
+    this.drawOutlinedText(
+      text,
+      Math.floor((WIDTH - this.textWidth(text, scale)) / 2),
+      y,
+      color,
+      outline,
+      scale,
+    );
   }
 
   private drawRight(text: string, right: number, y: number, color: number): void {
     this.drawText(text, right - this.textWidth(text, 1), y, color, 1);
+  }
+
+  private drawRightOutlined(
+    text: string,
+    right: number,
+    y: number,
+    color: number,
+    outline: number,
+  ): void {
+    this.drawOutlinedText(text, right - this.textWidth(text, 1), y, color, outline, 1);
+  }
+
+  private drawOutlinedText(
+    text: string,
+    x: number,
+    y: number,
+    color: number,
+    outline: number,
+    scale: number,
+  ): void {
+    for (const [offsetX, offsetY] of [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+    ] as const)
+      this.drawText(text, x + offsetX, y + offsetY, outline, scale);
+    this.drawText(text, x, y, color, scale);
+  }
+
+  private drawItalicText(text: string, x: number, y: number, color: number, scale: number): void {
+    let cursor = x;
+    for (const character of text.toUpperCase()) {
+      const rows = ArcadePixelFont[character] ?? ArcadePixelFont[' '];
+      for (const [row, cells] of (rows ?? []).entries()) {
+        const slant = Math.floor((7 - row) / 3) * scale;
+        for (let column = 0; column < cells.length; column++)
+          if (cells[column] === '1')
+            this._surface.fillRect(
+              cursor + column * scale + slant,
+              y + row * scale,
+              scale,
+              scale,
+              color,
+            );
+      }
+      cursor += 6 * scale;
+    }
   }
 
   private drawText(text: string, x: number, y: number, color: number, scale: number): void {

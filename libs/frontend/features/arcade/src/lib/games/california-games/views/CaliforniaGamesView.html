@@ -98,6 +98,8 @@
         [attr.data-players]="state().players"
         [attr.data-result-id]="state().resultId"
         [attr.data-flipped]="state().flipped"
+        [attr.data-control-metric]="controlMetric()"
+        [attr.data-primary-pose]="primaryPose()"
       ></span>
       @if (!screenAvailable()) {
       <div class="absolute inset-x-4 top-4" role="alert">

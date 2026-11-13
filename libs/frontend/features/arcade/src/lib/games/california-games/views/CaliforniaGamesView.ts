@@ -1,5 +1,6 @@
 // #region Imports
 
+import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,6 +8,7 @@ import {
   DestroyRef,
   effect,
   type ElementRef,
+  Inject,
   signal,
   viewChild,
 } from '@angular/core';
@@ -66,6 +68,11 @@ const EVENT_SECONDS = {
   'foot-bag': 90,
 } as const;
 
+const HEADER_CONTROL_TARGETS =
+  'button, a, [role="button"], [role="switch"], mosaik-button, mosaik-toggle-switch';
+const EDITABLE_OR_DIALOG_TARGETS =
+  'input, textarea, select, [contenteditable], [role="dialog"], mosaik-searchbox, mosaik-text-box, mosaik-number-box, mosaik-select';
+
 /** Owns the complete California Games cartridge flow and all browser resources. @public */
 @Component({
   selector: 'symphony-california-games-view',
@@ -96,8 +103,12 @@ export class CaliforniaGamesView {
   private readonly _game = new CaliforniaGamesGame();
   private readonly _renderer = new CaliforniaGamesRenderer();
   private readonly _audio = new CaliforniaGamesAudio();
+  private readonly _document: Document;
   private readonly _screen = viewChild<ElementRef<HTMLCanvasElement>>('playfieldCanvas');
   private readonly _leaderboard: ArcadeLeaderboardStore;
+  private readonly _reroutedKeys = new Set<string>();
+  private readonly _keyDownListener = (event: KeyboardEvent): void => this.onKeyDown(event);
+  private readonly _keyUpListener = (event: KeyboardEvent): void => this.onKeyUp(event);
   private _controller: ArcadeCanvasController<CaliforniaGamesControl> | undefined;
   private _recordedResultId = 0;
   private _resumeAfterInstructions = false;
@@ -118,6 +129,36 @@ export class CaliforniaGamesView {
   public readonly screenAvailable = signal(true);
   /** Sound preference for this route visit. @public */
   public readonly soundMuted = signal(false);
+  /** Observable primary-player movement used by accessibility and acceptance checks. @public */
+  public readonly controlMetric = computed(() => {
+    const state = this.state().eventState;
+    if (!state) return 0;
+    switch (state.kind) {
+      case 'bmx':
+        return Math.round(state.riders[0]?.progress ?? 0);
+      case 'surfing':
+        return state.surfers[0]?.rideFrames ?? 0;
+      case 'half-pipe':
+        return Math.round(Math.abs(state.skaters[0]?.velocity ?? 0) * 10_000);
+      case 'foot-bag':
+        return state.playersState[0]?.score ?? 0;
+    }
+  });
+  /** Observable primary-player pose used by accessibility and acceptance checks. @public */
+  public readonly primaryPose = computed(() => {
+    const state = this.state().eventState;
+    if (!state) return 'none';
+    switch (state.kind) {
+      case 'bmx':
+        return state.riders[0]?.pose ?? 'none';
+      case 'surfing':
+        return state.surfers[0]?.pose ?? 'none';
+      case 'half-pipe':
+        return state.skaters[0]?.pose ?? 'none';
+      case 'foot-bag':
+        return state.playersState[0]?.pose ?? 'none';
+    }
+  });
   /** Returns to the Arcade catalog. @public */
   public readonly backArcadeCommand: Command<void>;
   /** Restarts the original opening sequence for the configured number of players. @public */
@@ -170,7 +211,10 @@ export class CaliforniaGamesView {
     this._game.setInput(player === '1' ? 1 : 2, input, value.active);
   });
   /** Releases all held Lynx switches after focus loss or navigation. @public */
-  public readonly releaseInputsCommand = new Command(() => this._game.releaseInputs());
+  public readonly releaseInputsCommand = new Command(() => {
+    this._reroutedKeys.clear();
+    this._game.releaseInputs();
+  });
   /** Pauses without applying an option-button chord when application focus is lost. @public */
   public readonly focusLostCommand = new Command(() => {
     if (this.state().status === 'running') this._game.togglePause();
@@ -187,12 +231,16 @@ export class CaliforniaGamesView {
 
   /** Connects the self-contained game to navigation, scores, God mode and browser resources. @public */
   public constructor(
+    @Inject(DOCUMENT) document: Document,
     router: Router,
     leaderboard: ArcadeLeaderboardStore,
     godMode: ArcadeGodModeStore,
     destroyRef: DestroyRef,
   ) {
+    this._document = document;
     this._leaderboard = leaderboard;
+    this._document.addEventListener('keydown', this._keyDownListener, true);
+    this._document.addEventListener('keyup', this._keyUpListener, true);
     this.backArcadeCommand = new Command(() => {
       if (this._game.snapshot.status === 'running') this._game.togglePause();
       void router.navigate(['/main/arcade']);
@@ -231,6 +279,8 @@ export class CaliforniaGamesView {
       }
     });
     destroyRef.onDestroy(() => {
+      this._document.removeEventListener('keydown', this._keyDownListener, true);
+      this._document.removeEventListener('keyup', this._keyUpListener, true);
       this._controller?.dispose();
       this._game.releaseInputs();
       this._audio.dispose();
@@ -252,12 +302,61 @@ export class CaliforniaGamesView {
 
   /** Gives the playfield keyboard focus and unlocks browser audio after a gesture. @public */
   public focusScreen(): void {
+    if (this._controller) {
+      this._controller.focus();
+      return;
+    }
     queueMicrotask(() => this._controller?.focus());
   }
 
   /** Resumes Web Audio only while the cartridge is visible and running. @public */
   public enableAudio(): void {
     if (!this.instructionsVisible() && this.state().status === 'running') void this._audio.resume();
+  }
+
+  private onKeyDown(event: KeyboardEvent): void {
+    if (
+      event.repeat ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      this.instructionsVisible() ||
+      !this.shouldReroute(event)
+    )
+      return;
+    const control = INPUTS[event.code];
+    const pause = event.code === 'KeyP' || event.code === 'Escape';
+    if (control === undefined && !pause) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (pause) {
+      this.pauseCommand.execute();
+      this.focusScreen();
+      return;
+    }
+    if (control === undefined) return;
+    if (this._reroutedKeys.has(event.code)) return;
+    this._reroutedKeys.add(event.code);
+    this.inputCommand.execute({ control, active: true });
+    this.enableAudio();
+    this.focusScreen();
+  }
+
+  private onKeyUp(event: KeyboardEvent): void {
+    if (!this._reroutedKeys.delete(event.code)) return;
+    const control = INPUTS[event.code];
+    if (control === undefined) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    this.inputCommand.execute({ control, active: false });
+  }
+
+  private shouldReroute(event: Event): boolean {
+    const elements = event
+      .composedPath()
+      .filter((target): target is Element => target instanceof Element);
+    if (elements.some((target) => target.matches(EDITABLE_OR_DIALOG_TARGETS))) return false;
+    return elements.some((target) => target.matches(HEADER_CONTROL_TARGETS));
   }
 
   private projectSnapshot(): void {

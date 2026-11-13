@@ -96,6 +96,28 @@ describe('CaliforniaGamesGame', () => {
     });
   });
 
+  it('keeps the unused surfing B button inert', () => {
+    // arrange
+    const game = new CaliforniaGamesGame();
+    openMenu(game);
+    press(game, 'down');
+    startSelectedEvent(game);
+    press(game, 'a');
+    frames(game, 1);
+    const before = game.snapshot.eventState;
+
+    // act
+    game.setInput(1, 'b', true);
+    frames(game, 1);
+    game.setInput(1, 'b', false);
+    const after = game.snapshot.eventState;
+
+    // assert
+    expect(before?.kind === 'surfing' ? before.surfers[0]!.speed : 0).toBe(
+      after?.kind === 'surfing' ? after.surfers[0]!.speed : -1,
+    );
+  });
+
   it('supports Half Pipe starts, rhythm pumps, kick turns, aerials, and hand plants', () => {
     // arrange
     const game = new CaliforniaGamesGame();

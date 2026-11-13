@@ -585,7 +585,7 @@ export class CaliforniaGamesGame {
         player,
         score: 0,
         finished: false,
-        x: this._options.players === 2 ? (player === 1 ? 92 : 112) : 100,
+        x: this._options.players === 2 ? (player === 1 ? 52 : 70) : 58,
         angle: 0,
         speed: 0,
         wipeouts: 0,
@@ -644,7 +644,7 @@ export class CaliforniaGamesGame {
         } else {
           surfer.pose = 'waiting';
           surfer.angle = 0;
-          surfer.x = 105;
+          surfer.x = 58;
         }
       }
       return;
@@ -680,15 +680,13 @@ export class CaliforniaGamesGame {
       surfer.angle *= 0.985;
       surfer.pose = 'ride';
     }
-    surfer.speed =
-      (tight ? 0.75 : 1.15 + Math.cos(surfer.angle) * 0.45) +
-      (this.isHeld(surfer.player, 'b') ? 0.35 : 0);
+    surfer.speed = tight ? 0.75 : 1.15 + Math.cos(surfer.angle) * 0.45;
     surfer.x += Math.cos(surfer.angle) * surfer.speed * 0.12 - 0.08;
     surfer.rideFrames++;
     if (surfer.rideFrames % 90 === 0) surfer.score += 10;
 
-    const tubeEdge = 45 + Math.sin(state.wavePhase) * 9;
-    if (surfer.x < tubeEdge + 12 && surfer.x > tubeEdge - 8) {
+    const tubeEdge = 113 + Math.sin(state.wavePhase) * 9;
+    if (surfer.x < tubeEdge + 10 && surfer.x > tubeEdge - 16) {
       surfer.tubeFrames++;
       if (surfer.tubeFrames % 30 === 0) {
         surfer.score += 25;
@@ -708,10 +706,10 @@ export class CaliforniaGamesGame {
       }
     }
 
-    if (Math.abs(surfer.angle) > 1.47 || surfer.x < 20 || surfer.x > 154) {
+    if (Math.abs(surfer.angle) > 1.47 || surfer.x < 8 || surfer.x > 152) {
       if (this._godMode) {
         surfer.angle = Math.max(-1.2, Math.min(1.2, surfer.angle));
-        surfer.x = Math.max(24, Math.min(150, surfer.x));
+        surfer.x = Math.max(12, Math.min(148, surfer.x));
       } else {
         surfer.wipeouts++;
         surfer.wipeoutFrames = 85;

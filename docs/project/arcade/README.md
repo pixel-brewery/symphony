@@ -54,6 +54,8 @@ Der Bildschirm **Arcade** trägt in der Werkzeugleiste die Zahl der Spiele (`9 g
 
 **Option 1 + Pause** kehrt zum Titel zurück. **Option 2 + Pause** dreht Bildschirm und Steuerung wie beim Lynx. Zwei Spieler teilen sich in Symphony eine Tastatur; das ersetzt die zwei per ComLynx verbundenen Originalkonsolen. **How to play** erklärt die eventbezogenen Tasten. Die ursprünglichen Lynx-Farben bleiben im Spielfeld erhalten, während Kopfzeile und Bedienung dem Symphony-Design folgen.
 
+Das Canvas belegt die gesamte verbleibende Fläche der Spielansicht. Das 160:102-Bild behält dabei sein Lynx-Seitenverhältnis und harte Pixelkanten; bei einer anders proportionierten Fensterfläche füllt der dunkle Spielfeldton die ungenutzten Ränder. Eingaben funktionieren auch unmittelbar nach einer Aktion in der Kopfzeile, sofern kein Textfeld oder Dialog den Tastaturfokus besitzt.
+
 ## Leaderboard
 
 **Leaderboard** öffnet eine Übersicht **Your best results from every Arcade game.** mit einem Abschnitt je Spiel. Jeder Abschnitt zeigt die besten zu Ende gespielten Partien dieses Spiels, das beste zuerst, mit Punkten oder Spielstand und Datum sowie den Angaben, die zum Spiel gehören (etwa gefundene Schätze, Level, Spieler oder Sieger). In California Games bleiben die besten drei Ergebnisse je Disziplin erhalten; die übrigen Spiele behalten bis zu zehn Ergebnisse. Ohne Ergebnis steht dort etwa **No finished games yet.**

@@ -3,6 +3,7 @@
 // #region Imports
 
 import '@angular/compiler';
+import { DOCUMENT } from '@angular/common';
 import { DestroyRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
@@ -123,6 +124,7 @@ function createView() {
   const view = TestBed.runInInjectionContext(
     () =>
       new CaliforniaGamesView(
+        TestBed.inject(DOCUMENT),
         TestBed.inject(Router),
         TestBed.inject(ArcadeLeaderboardStore),
         TestBed.inject(ArcadeGodModeStore),
@@ -160,6 +162,56 @@ describe('CaliforniaGamesView', () => {
     expect(view.snapshot.phase).toBe('menu');
     expect(view.snapshot.players).toBe(1);
     expect(view.screen()).toBe('menu');
+  });
+
+  it('reroutes cartridge controls from a focused header button but not an editable field', () => {
+    // arrange
+    const { view } = createView();
+    const options = browser.options;
+    if (!options) throw new Error('Canvas controller was not created.');
+    const button = document.createElement('button');
+    const input = document.createElement('input');
+    document.body.append(button, input);
+
+    // act
+    button.focus();
+    button.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        code: 'KeyZ',
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+      }),
+    );
+    options.onAdvance(17);
+    button.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'KeyZ', bubbles: true, cancelable: true, composed: true }),
+    );
+    button.focus();
+    button.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        code: 'KeyX',
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+      }),
+    );
+    options.onAdvance(17);
+    button.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'KeyX', bubbles: true, cancelable: true, composed: true }),
+    );
+    input.focus();
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'ArrowDown', bubbles: true, composed: true }),
+    );
+    options.onAdvance(17);
+
+    // assert
+    expect(view.snapshot.phase).toBe('menu');
+    expect(view.snapshot.selectedEvent).toBe('bmx');
+    expect(browser.controller.focus).toHaveBeenCalled();
+    button.remove();
+    input.remove();
   });
 
   it('restarts for two players and preserves an existing pause across the instructions', () => {

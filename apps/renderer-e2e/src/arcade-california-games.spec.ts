@@ -38,19 +38,93 @@ test('plays the four-event Lynx cartridge flow with pause, flip and local player
     });
 
     // act
-    await screen.focus();
     await expect(status).toHaveAttribute('data-phase', 'title', { timeout: 5_000 });
+    await page.getByTestId('california-games-sound').focus();
+    await expect(page.getByTestId('california-games-sound')).toBeFocused();
+    await page.keyboard.press('KeyZ');
+    await expect(status).toHaveAttribute('data-phase', 'menu');
+    await page.keyboard.press('ArrowDown');
+    await expect(status).toHaveAttribute('data-event', 'surfing');
+    await page.keyboard.press('ArrowUp');
+    await expect(status).toHaveAttribute('data-event', 'bmx');
+    await page.keyboard.press('KeyX');
+    await expect(status).toHaveAttribute('data-phase', 'countdown');
+    await expect(status).toHaveAttribute('data-event', 'bmx');
+    await expect(status).toHaveAttribute('data-players', '1');
+    await expect(status).toHaveAttribute('data-phase', 'playing', { timeout: 5_000 });
+    await screen.click();
+    await expect(screen).toBeFocused();
+    await page.keyboard.down('ArrowUp');
+    await expect
+      .poll(async () => Number((await status.getAttribute('data-control-metric')) ?? '0'))
+      .toBeGreaterThan(0);
+    await page.keyboard.up('ArrowUp');
+    await page.screenshot({
+      path: resolve(outputDirectory, 'california-games-bmx.png'),
+      animations: 'disabled',
+    });
+
+    // act
+    await page.keyboard.down('KeyQ');
+    await page.keyboard.press('KeyP');
+    await page.keyboard.up('KeyQ');
+    await expect(status).toHaveAttribute('data-phase', 'title');
     await page.keyboard.press('KeyZ');
     await expect(status).toHaveAttribute('data-phase', 'menu');
     await page.keyboard.press('ArrowDown');
     await expect(status).toHaveAttribute('data-event', 'surfing');
     await page.keyboard.press('KeyZ');
-    await expect(status).toHaveAttribute('data-phase', 'countdown');
-    await expect(status).toHaveAttribute('data-event', 'surfing');
-    await expect(status).toHaveAttribute('data-players', '1');
     await expect(status).toHaveAttribute('data-phase', 'playing', { timeout: 5_000 });
+    await page.keyboard.press('KeyZ');
+    await page.keyboard.down('ArrowLeft');
+    await expect
+      .poll(async () => Number((await status.getAttribute('data-control-metric')) ?? '0'))
+      .toBeGreaterThan(0);
+    await page.keyboard.up('ArrowLeft');
     await page.screenshot({
       path: resolve(outputDirectory, 'california-games-surfing.png'),
+      animations: 'disabled',
+    });
+
+    // act
+    await page.keyboard.down('KeyQ');
+    await page.keyboard.press('KeyP');
+    await page.keyboard.up('KeyQ');
+    await expect(status).toHaveAttribute('data-phase', 'title');
+    await page.keyboard.press('KeyZ');
+    await expect(status).toHaveAttribute('data-phase', 'menu');
+    await page.keyboard.press('ArrowDown');
+    await expect(status).toHaveAttribute('data-event', 'surfing');
+    await page.keyboard.press('ArrowDown');
+    await expect(status).toHaveAttribute('data-event', 'half-pipe');
+    await page.keyboard.press('KeyZ');
+    await expect(status).toHaveAttribute('data-phase', 'playing', { timeout: 5_000 });
+    await page.keyboard.press('KeyZ');
+    await expect(status).toHaveAttribute('data-primary-pose', 'skate');
+    await page.screenshot({
+      path: resolve(outputDirectory, 'california-games-half-pipe.png'),
+      animations: 'disabled',
+    });
+
+    // act
+    await page.keyboard.down('KeyQ');
+    await page.keyboard.press('KeyP');
+    await page.keyboard.up('KeyQ');
+    await expect(status).toHaveAttribute('data-phase', 'title');
+    await page.keyboard.press('KeyZ');
+    await expect(status).toHaveAttribute('data-phase', 'menu');
+    await page.keyboard.press('ArrowDown');
+    await expect(status).toHaveAttribute('data-event', 'surfing');
+    await page.keyboard.press('ArrowDown');
+    await expect(status).toHaveAttribute('data-event', 'half-pipe');
+    await page.keyboard.press('ArrowDown');
+    await expect(status).toHaveAttribute('data-event', 'foot-bag');
+    await page.keyboard.press('KeyZ');
+    await expect(status).toHaveAttribute('data-phase', 'playing', { timeout: 5_000 });
+    await page.keyboard.press('KeyZ');
+    await expect(status).toHaveAttribute('data-primary-pose', 'kick');
+    await page.screenshot({
+      path: resolve(outputDirectory, 'california-games-foot-bag.png'),
       animations: 'disabled',
     });
 
