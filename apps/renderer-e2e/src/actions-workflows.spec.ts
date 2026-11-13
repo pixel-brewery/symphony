@@ -3,7 +3,10 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
-import type { FlowElement } from '@pixel-brewery/mosaik-elements-foundation/components/flow';
+import type {
+  FlowEdgeElement,
+  FlowElement,
+} from '@pixel-brewery/mosaik-elements-foundation/components/flow';
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
 import type { BrowserWindow } from 'electron';
 import { prepareMainWindow } from './prepareMainWindow';
@@ -231,8 +234,7 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     await expect(toolbar.getByTestId('action-detail-close')).toBeVisible();
     await expect(page.getByTestId('ci-job-minimap')).toHaveCount(0);
     await expect(page.getByTestId('ci-job-controls')).toHaveCount(0);
-    const flowBounds = await flow.boundingBox();
-    expect(flowBounds?.height ?? 0).toBeCloseTo(192, 0);
+    await expect(page.getByTestId('action-detail-graph-frame')).toHaveCSS('height', '192px');
     // The link also selects the run's workflow and the run behind the drawer.
     await expect(page.getByTestId('actions-workflow-title')).toHaveJSProperty('text', 'PR Quality');
     await expect(page.getByTestId(`action-run-${runId}`)).toHaveAttribute('aria-selected', 'true');
@@ -345,8 +347,25 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     });
     const loadedFlow = drawer.getByTestId('ci-job-flow');
     await expect(loadedFlow).toBeVisible();
-    const loadedBounds = await loadedFlow.boundingBox();
+    const graphFrame = drawer.getByTestId('action-detail-graph-frame');
+    const loadedBounds = await graphFrame.boundingBox();
+    await expect(graphFrame).toHaveCSS('border-top-style', 'solid');
+    await expect(graphFrame).toHaveCSS('border-top-width', '1px');
+    const viewport = loadedFlow.locator('[part="viewport"]');
+    await expect(viewport).toHaveCSS('background-image', /^radial-gradient/u);
     const loadedHeading = await drawer.getByTestId('action-detail-log-heading').boundingBox();
+    const parallelEdges = loadedFlow.getByTestId(/^ci-graph-dependency-/u);
+    await expect
+      .poll(() =>
+        parallelEdges.evaluateAll((edges) => {
+          const routes = (edges as FlowEdgeElement[]).map((edge) => edge.geometry);
+          return {
+            sources: new Set(routes.map((route) => JSON.stringify(route?.sourcePoint))).size,
+            targets: new Set(routes.map((route) => JSON.stringify(route?.targetPoint))).size,
+          };
+        }),
+      )
+      .toEqual({ sources: 1, targets: 29 });
     expect(skeletonBounds?.height).toBeCloseTo(loadedBounds?.height ?? 0, 0);
     expect(skeletonHeading?.y).toBeCloseTo(loadedHeading?.y ?? 0, 0);
     await expect(
@@ -358,11 +377,41 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     await expect(
       layoutPage.getByTestId('action-detail-step-protocol-actions-ci:7001:job:quality:step:test'),
     ).toContainText('Verification output 40');
+    const log = drawer.getByTestId('action-detail-log-scroll');
+    const stepMarker = drawer
+      .getByTestId('action-detail-step-actions-ci:7001:job:quality:step:test')
+      .locator(':scope > mosaik-timeline-marker');
+    await expect(stepMarker).toHaveJSProperty('iconSize', 'medium');
+    await expect(stepMarker).toHaveJSProperty('size', 'large');
+    await log.focus();
+    await layoutPage.keyboard.press('End');
+    await expect.poll(() => log.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    expect(await graphFrame.boundingBox()).toEqual(loadedBounds);
+    expect(await drawer.getByTestId('action-detail-log-heading').boundingBox()).toEqual(
+      loadedHeading,
+    );
+    await layoutPage.keyboard.press('Home');
+    await expect.poll(() => log.evaluate((element) => element.scrollTop)).toBe(0);
+
+    const openRun = layoutPage.getByTestId('action-detail-open-run');
+    const openRunTooltip = layoutPage.getByTestId('action-detail-open-run-tooltip');
+    await openRun.hover();
+    await expect(openRunTooltip).toHaveJSProperty('isOpen', true);
+    await expect(openRunTooltip).toHaveJSProperty('content', 'Open run in GitHub');
     await layoutPage.screenshot({
       animations: 'disabled',
       path: resolve(outputDirectory, 'actions-run-drawer-dark.png'),
     });
-    await layoutPage.keyboard.press('Escape');
+    await layoutPage.getByTestId('action-detail-log-heading').hover();
+    await expect(openRunTooltip).toHaveJSProperty('isOpen', false);
+    await openRun.focus();
+    await expect(openRunTooltip).toHaveJSProperty('isOpen', true);
+    await layoutPage.getByTestId('action-detail-close').focus();
+    await expect(layoutPage.getByTestId('action-detail-close-tooltip')).toHaveJSProperty(
+      'isOpen',
+      true,
+    );
+    await layoutPage.getByTestId('action-detail-close').click();
     await expect(drawer).toHaveCount(0);
     await expect(failedRun).toHaveAttribute('aria-selected', 'true');
 
