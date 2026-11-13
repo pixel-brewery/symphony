@@ -35,51 +35,86 @@
       >
         <div slot="end" class="flex min-w-0 flex-wrap items-center justify-end gap-0.5">
           @if (presenter.run().externalUrl; as runUrl) {
-          <mosaik-button
-            test-id="action-detail-open-run"
-            [attr.aria-label]="tr('loc.symphony.open.run.in.github.3085ec')"
-            [iconName]="'open'"
-            [appearance]="'plain'"
-            [size]="'small'"
-            [href]="runUrl"
-            [target]="'_blank'"
-            [rel]="'noreferrer'"
-          />
+          <mosaik-tooltip
+            test-id="action-detail-open-run-tooltip"
+            [content]="tr('loc.symphony.open.run.in.github.3085ec')"
+            [placement]="'bottom'"
+            [attr.trigger]="'hover focus'"
+          >
+            <mosaik-button
+              test-id="action-detail-open-run"
+              [attr.aria-label]="tr('loc.symphony.open.run.in.github.3085ec')"
+              [iconName]="'open'"
+              [appearance]="'plain'"
+              [size]="'small'"
+              [href]="runUrl"
+              [target]="'_blank'"
+              [rel]="'noreferrer'"
+            />
+          </mosaik-tooltip>
           } @if (presenter.controls().canStopLocal) {
-          <mosaik-button
-            test-id="action-detail-stop-local"
-            [label]="tr('loc.symphony.stop.local.runner.fd14eb')"
-            [appearance]="'outline'"
-            [variant]="'danger'"
-            [size]="'small'"
-            (click)="presenter.stopLocalRunCommand.execute()"
-          />
+          <mosaik-tooltip
+            test-id="action-detail-stop-local-tooltip"
+            [content]="tr('loc.symphony.stop.local.runner.fd14eb')"
+            [placement]="'bottom'"
+            [attr.trigger]="'hover focus'"
+          >
+            <mosaik-button
+              test-id="action-detail-stop-local"
+              [label]="tr('loc.symphony.stop.local.runner.fd14eb')"
+              [appearance]="'outline'"
+              [variant]="'danger'"
+              [size]="'small'"
+              (click)="presenter.stopLocalRunCommand.execute()"
+            />
+          </mosaik-tooltip>
           } @if (presenter.controls().canRerunRemote) {
-          <mosaik-button
-            test-id="action-detail-run-remote"
-            [label]="tr('loc.symphony.rerun.on.github.5df0c3')"
-            [appearance]="'outline'"
-            [size]="'small'"
-            (click)="presenter.rerunRemoteCommand.execute()"
-          />
+          <mosaik-tooltip
+            test-id="action-detail-run-remote-tooltip"
+            [content]="tr('loc.symphony.rerun.on.github.5df0c3')"
+            [placement]="'bottom'"
+            [attr.trigger]="'hover focus'"
+          >
+            <mosaik-button
+              test-id="action-detail-run-remote"
+              [label]="tr('loc.symphony.rerun.on.github.5df0c3')"
+              [appearance]="'outline'"
+              [size]="'small'"
+              (click)="presenter.rerunRemoteCommand.execute()"
+            />
+          </mosaik-tooltip>
           } @if (presenter.controls().canRunLocally) {
-          <mosaik-button
-            test-id="action-detail-run-local"
-            [label]="tr('loc.symphony.run.locally.a28ec8')"
-            [appearance]="'solid'"
-            [variant]="'primary'"
-            [size]="'small'"
-            (click)="presenter.runLocallyCommand.execute()"
-          />
+          <mosaik-tooltip
+            test-id="action-detail-run-local-tooltip"
+            [content]="tr('loc.symphony.run.locally.a28ec8')"
+            [placement]="'bottom'"
+            [attr.trigger]="'hover focus'"
+          >
+            <mosaik-button
+              test-id="action-detail-run-local"
+              [label]="tr('loc.symphony.run.locally.a28ec8')"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [size]="'small'"
+              (click)="presenter.runLocallyCommand.execute()"
+            />
+          </mosaik-tooltip>
           }
-          <mosaik-button
-            test-id="action-detail-close"
-            [attr.aria-label]="tr('loc.symphony.close.7d9eb7')"
-            [iconName]="'clear'"
-            [appearance]="'plain'"
-            [size]="'small'"
-            (click)="presenter.closeCommand.execute()"
-          />
+          <mosaik-tooltip
+            test-id="action-detail-close-tooltip"
+            [content]="tr('loc.symphony.close.7d9eb7')"
+            [placement]="'bottom'"
+            [attr.trigger]="'hover focus'"
+          >
+            <mosaik-button
+              test-id="action-detail-close"
+              [attr.aria-label]="tr('loc.symphony.close.7d9eb7')"
+              [iconName]="'clear'"
+              [appearance]="'plain'"
+              [size]="'small'"
+              (click)="presenter.closeCommand.execute()"
+            />
+          </mosaik-tooltip>
         </div>
       </mosaik-toolbar>
     </mosaik-drawer-header>
@@ -132,14 +167,21 @@
         />}
       </section>
       } @if (details && details.workflowGraph; as graph) { @if (graph.jobs.length) {
-      <div class="h-[12rem] shrink-0">
+      <mosaik-card
+        test-id="action-detail-graph-frame"
+        class="h-[12rem] shrink-0"
+        [appearance]="'outline'"
+        [orientation]="'horizontal'"
+        [inset]="'none'"
+      >
         <symphony-ci-job-graph
+          slot="content"
           [graph]="graph"
           [jobs]="details.jobs"
           [pending]="presenter.isRunning() || presenter.currentCiRun()?.status === 'queued'"
           (selected)="revealJob(logSurface, $event)"
         />
-      </div>
+      </mosaik-card>
       } } @else if (loading && presenter.githubContext()) {
       <div class="h-[12rem] shrink-0" aria-hidden="true">
         <mosaik-skeleton

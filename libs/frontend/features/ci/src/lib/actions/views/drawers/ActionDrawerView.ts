@@ -7,6 +7,7 @@ import {
   TranslateDirective,
   AnchorComponent,
   ButtonComponent,
+  CardComponent,
   DisclosureComponent,
   DrawerContentDirective,
   DrawerHeaderComponent,
@@ -22,6 +23,7 @@ import {
   TimelineItemComponent,
   TimelineMarkerComponent,
   ToolbarComponent,
+  TooltipComponent,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { ApplicationDatePipe as DatePipe } from '@symphony/frontend-intl';
 import { View, VIEW_PRESENTER } from '@symphony/frontend-core';
@@ -45,6 +47,7 @@ import { ActionDrawerViewPresenter } from '../../view-presenters/ActionDrawerVie
     CiJobGraphComponent,
     AnchorComponent,
     ButtonComponent,
+    CardComponent,
     CiLogStatusIconPipe,
     CiLogStatusLabelPipe,
     CiLogStatusVariantPipe,
@@ -64,6 +67,7 @@ import { ActionDrawerViewPresenter } from '../../view-presenters/ActionDrawerVie
     TimelineItemComponent,
     TimelineMarkerComponent,
     ToolbarComponent,
+    TooltipComponent,
   ],
   providers: [{ provide: VIEW_PRESENTER, useClass: ActionDrawerViewPresenter }],
   templateUrl: './ActionDrawerView.html',

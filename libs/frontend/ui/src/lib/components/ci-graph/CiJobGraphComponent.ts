@@ -70,7 +70,7 @@ const graphPadding = 24;
         direction: 'left-to-right',
         edgeRouting: 'orthogonal',
         edgeMarkerEnd: 'none',
-        grid: 'none',
+        grid: 'dots',
         fitPadding: graphPadding,
         layout: 'auto',
         layoutEngine: new DagreLayoutEngine(),
