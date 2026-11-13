@@ -12,4 +12,5 @@ export const ArcadeGameIds = [
   'seaquest',
   'jungle-hunt',
   'realsports-boxing',
+  'california-games',
 ] as const;

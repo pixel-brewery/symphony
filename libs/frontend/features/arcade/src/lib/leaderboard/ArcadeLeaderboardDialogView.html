@@ -224,6 +224,39 @@
           } @empty { <mosaik-cell [label]="tr('loc.symphony.no.finished.games.yet.a03451')" /> }
         </mosaik-cell-group>
       </section>
+      <section
+        class="flex min-w-0 flex-col gap-2"
+        aria-labelledby="leaderboard-california-games-title"
+      >
+        <h2 id="leaderboard-california-games-title" [mosaikTypography]="'headline5'">
+          {{ tr('loc.symphony.california.games.152b3b') }}
+        </h2>
+        <mosaik-cell-group class="h-auto min-w-0" test-id="leaderboard-california-games-results">
+          @for (entry of presenter.californiaGamesEntries; track entry.id; let rank = $index) {
+          <mosaik-cell
+            test-id="leaderboard-california-games-result"
+            [attr.data-event]="entry.event"
+            [attr.data-score]="entry.score"
+            [attr.data-player]="entry.player"
+          >
+            <span slot="label"
+              >{{ tr('loc.symphony.points.f4aa81', [rank + 1, entry.score | number]) }}</span
+            >
+            <span slot="subLabel"
+              >@switch (entry.event) { @case ('bmx') { {{ tr('loc.symphony.bmx.069a67') }} } @case
+              ('surfing') { {{ tr('loc.symphony.surfing.6cf044') }} } @case ('half-pipe') { {{
+              tr('loc.symphony.half.pipe.febb83') }} } @case ('foot-bag') { {{
+              tr('loc.symphony.foot.bag.4a2fca') }} } } · {{
+              tr('loc.symphony.player.of.seconds.48b2cb', [entry.player, entry.players,
+              entry.elapsedSeconds | number:'1.0-1', entry.completedAt | date:'mediumDate'])
+              }}</span
+            >
+          </mosaik-cell>
+          } @empty {
+          <mosaik-cell [label]="tr('loc.symphony.no.finished.events.yet.78442f')" />
+          }
+        </mosaik-cell-group>
+      </section>
     </div>
   </ng-template>
 

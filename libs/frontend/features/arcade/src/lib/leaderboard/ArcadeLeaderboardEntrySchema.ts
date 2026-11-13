@@ -18,6 +18,16 @@ const scoreGameFields = {
 
 /** Validates every persisted Arcade result before it reaches the leaderboard. @public */
 export const ArcadeLeaderboardEntrySchema = z.discriminatedUnion('game', [
+  z.object({
+    id,
+    game: z.literal('california-games'),
+    completedAt,
+    event: z.enum(['bmx', 'surfing', 'half-pipe', 'foot-bag']),
+    score: z.number().int().min(0).max(1000000),
+    player: z.union([z.literal(1), z.literal(2)]),
+    players: z.union([z.literal(1), z.literal(2)]),
+    elapsedSeconds: z.number().finite().min(0).max(90),
+  }),
   z.object({ ...scoreGameFields, game: z.literal('jungle-hunt'), player: z.literal(1) }),
   z.object({ ...scoreGameFields, game: z.literal('seaquest') }),
   z.object({ ...scoreGameFields, game: z.literal('river-raid') }),

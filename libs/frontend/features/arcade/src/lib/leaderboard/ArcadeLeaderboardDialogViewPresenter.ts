@@ -21,6 +21,10 @@ type JungleHuntLeaderboardEntry = Extract<ArcadeLeaderboardEntry, { game: 'jungl
 type PongLeaderboardEntry = Extract<ArcadeLeaderboardEntry, { game: 'pong' }>;
 type SeaquestLeaderboardEntry = Extract<ArcadeLeaderboardEntry, { game: 'seaquest' }>;
 type RiverRaidLeaderboardEntry = Extract<ArcadeLeaderboardEntry, { game: 'river-raid' }>;
+type CaliforniaGamesLeaderboardEntry = Extract<
+  ArcadeLeaderboardEntry,
+  { game: 'california-games' }
+>;
 
 /** Projects the shared result history into independently ranked game sections. @public */
 @Injectable()
@@ -61,6 +65,10 @@ export class ArcadeLeaderboardDialogViewPresenter extends ViewPresenter {
   /** Ranked River Raid results. @public @readonly */
   public readonly riverRaidEntries = this._data.entries.filter(
     (entry): entry is RiverRaidLeaderboardEntry => entry.game === 'river-raid',
+  );
+  /** Ranked California Games event results. @public @readonly */
+  public readonly californiaGamesEntries = this._data.entries.filter(
+    (entry): entry is CaliforniaGamesLeaderboardEntry => entry.game === 'california-games',
   );
   /** Closes the read-only leaderboard. @public @readonly */
   public readonly closeCommand = new Command(() => {

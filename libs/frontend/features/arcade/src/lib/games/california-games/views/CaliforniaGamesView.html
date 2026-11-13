@@ -1,0 +1,155 @@
+<ng-container *mosaikTranslate="let tr">
+  <mosaik-page
+    class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+    test-id="california-games-view"
+    [attr.data-screen]="screen()"
+    [attr.data-phase]="state().phase"
+  >
+    <mosaik-page-header
+      [text]="tr('loc.symphony.california.games.152b3b')"
+      [inset]="'all'"
+      test-id="california-games-header"
+    >
+      <mosaik-button
+        slot="prefix"
+        test-id="california-games-back-arcade"
+        [label]="tr('loc.symphony.all.games.cf2bf1')"
+        [appearance]="'plain'"
+        [variant]="'neutral'"
+        [command]="{ click: backArcadeCommand }"
+      />
+      <div
+        slot="subHeader"
+        id="california-games-controls"
+        class="flex flex-wrap items-center gap-x-4 gap-y-1"
+        [mosaikTypography]="'body2'"
+      >
+        <div class="flex items-center gap-2">
+          <span>{{ tr('loc.symphony.player.1.27a99f') }}</span>
+          <mosaik-kbd [value]="['←', '↑', '↓', '→']" />
+          <mosaik-kbd [value]="['Z', 'X']" />
+        </div>
+        @if (players() === 2) {
+        <div class="flex items-center gap-2">
+          <span>{{ tr('loc.symphony.player.2.4b6783') }}</span>
+          <mosaik-kbd [value]="['W', 'A', 'S', 'D']" />
+          <mosaik-kbd [value]="['F', 'G']" />
+        </div>
+        }
+        <div class="flex items-center gap-2">
+          <mosaik-kbd [value]="['P']" /><span>{{ tr('loc.symphony.pause.858e4b') }}</span>
+        </div>
+      </div>
+      <div slot="suffix" class="flex flex-wrap items-center gap-2">
+        <mosaik-button
+          test-id="california-games-players"
+          [label]="players() === 1 ? tr('loc.symphony.1.player.fef3e5') : tr('loc.symphony.2.players.205592')"
+          [appearance]="'plain'"
+          [variant]="'neutral'"
+          [command]="{ click: togglePlayersCommand }"
+        />
+        <mosaik-button
+          test-id="california-games-instructions"
+          [label]="tr('loc.symphony.how.to.play.13a6b2')"
+          [appearance]="'plain'"
+          [variant]="'neutral'"
+          [command]="{ click: instructionsCommand }"
+        />
+        <mosaik-button
+          test-id="california-games-sound"
+          [label]="soundMuted() ? tr('loc.symphony.sound.off.3f5d70') : tr('loc.symphony.sound.on.8c477e')"
+          [attr.aria-pressed]="!soundMuted()"
+          [appearance]="'plain'"
+          [variant]="'neutral'"
+          [command]="{ click: toggleSoundCommand }"
+          (click)="enableAudio()"
+        />
+        <mosaik-button
+          test-id="california-games-reset"
+          [label]="tr('loc.symphony.new.game.946ed7')"
+          [appearance]="'outline'"
+          [variant]="'primary'"
+          [command]="{ click: newGameCommand }"
+          (click)="focusScreen()"
+        />
+      </div>
+    </mosaik-page-header>
+    <mosaik-page-content
+      [inset]="'none'"
+      class="relative flex min-h-0 w-full min-w-0 flex-1 overflow-hidden"
+      test-id="california-games-playfield"
+    >
+      <canvas
+        #playfieldCanvas
+        test-id="california-games-screen"
+        class="absolute inset-0 block h-full w-full"
+        [attr.tabindex]="instructionsVisible() ? -1 : 0"
+        role="img"
+        [attr.aria-label]="tr('loc.symphony.california.games.playfield.choose.bmx.surfing.half.p.f79491')"
+        aria-describedby="california-games-controls"
+        (click)="focusScreen()"
+      ></canvas>
+      <span
+        class="sr-only"
+        test-id="california-games-status"
+        [attr.data-status]="state().status"
+        [attr.data-phase]="state().phase"
+        [attr.data-event]="state().currentEvent ?? state().selectedEvent"
+        [attr.data-players]="state().players"
+        [attr.data-result-id]="state().resultId"
+        [attr.data-flipped]="state().flipped"
+        [attr.data-control-metric]="controlMetric()"
+        [attr.data-primary-pose]="primaryPose()"
+      ></span>
+      @if (!screenAvailable()) {
+      <div class="absolute inset-x-4 top-4" role="alert">
+        <mosaik-text
+          [text]="tr('loc.symphony.the.playfield.could.not.be.loaded.return.to.arcade.a.42eb0f')"
+          [wrap]="true"
+        />
+      </div>
+      } @if (instructionsVisible()) {
+      <div class="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
+        <mosaik-card class="my-auto w-full max-w-3xl shrink-0">
+          <mosaik-card-header
+            [text]="tr('loc.symphony.how.to.play.13a6b2')"
+            [subText]="tr('loc.symphony.atari.lynx.1989.0805f4')"
+          />
+          <mosaik-card-content>
+            <div class="flex flex-col gap-4" [mosaikTypography]="'body2'">
+              <p>
+                <strong>{{ tr('loc.symphony.bmx.069a67') }}</strong> {{
+                tr('loc.symphony.accelerate.brake.and.steer.jump.with.a.and.flip.with.b.a831f2') }}
+              </p>
+              <p>
+                <strong>{{ tr('loc.symphony.surfing.6cf044') }}</strong> {{
+                tr('loc.symphony.press.a.to.catch.the.wave.steer.with.left.and.right.ho.635667') }}
+              </p>
+              <p>
+                <strong>{{ tr('loc.symphony.half.pipe.febb83') }}</strong> {{
+                tr('loc.symphony.build.speed.with.up.use.a.for.turns.and.aerials.and.b.1380a9') }}
+              </p>
+              <p>
+                <strong>{{ tr('loc.symphony.foot.bag.4a2fca') }}</strong> {{
+                tr('loc.symphony.move.jump.turn.and.press.a.in.rhythm.to.keep.the.bag.a.027e45') }}
+              </p>
+              <p>
+                {{ tr('loc.symphony.option.1.pause.returns.to.the.title.option.2.pause.f.85285d') }}
+              </p>
+            </div>
+          </mosaik-card-content>
+          <mosaik-card-actions>
+            <mosaik-button
+              test-id="california-games-close-instructions"
+              [label]="tr('loc.symphony.resume.d640c7')"
+              [appearance]="'solid'"
+              [variant]="'primary'"
+              [command]="{ click: closeInstructionsCommand }"
+            />
+          </mosaik-card-actions>
+        </mosaik-card>
+      </div>
+      }
+    </mosaik-page-content>
+  </mosaik-page>
+</ng-container>

@@ -11,6 +11,7 @@ describe('projectArcadePaletteResults', () => {
   it('offers to play the matching games while the Arcade is on', () => {
     // act
     const pitfall = projectArcadePaletteResults(true, 'pitfall');
+    const california = projectArcadePaletteResults(true, 'california');
     const games = projectArcadePaletteResults(true, 'arcade');
 
     // assert
@@ -18,7 +19,10 @@ describe('projectArcadePaletteResults', () => {
       ['Play Pitfall!', { kind: 'navigate', path: '/main/arcade/pitfall' }],
       ['Play Pitfall II: Lost Caverns', { kind: 'navigate', path: '/main/arcade/pitfall-ii' }],
     ]);
-    expect(games).toHaveLength(8);
+    expect(california.map((result) => [result.title, result.action])).toEqual([
+      ['Play California Games', { kind: 'navigate', path: '/main/arcade/california-games' }],
+    ]);
+    expect(games).toHaveLength(9);
     expect(games.every((result) => result.group === 'commands' && result.icon === 'games')).toBe(
       true,
     );

@@ -69,6 +69,13 @@ export const arcadeRoutes: Routes = [
         loadComponent: () =>
           import('../games/river-raid/views/RiverRaidView').then((module) => module.RiverRaidView),
       },
+      {
+        path: 'california-games',
+        loadComponent: () =>
+          import('../games/california-games/views/CaliforniaGamesView').then(
+            (module) => module.CaliforniaGamesView,
+          ),
+      },
     ],
   },
 ];
