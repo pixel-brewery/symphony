@@ -1,3 +1,7 @@
+## 0.1.45 (2026-11-13)
+
+This was a version bump only, there were no code changes.
+
 ## 0.1.44 (2026-11-13)
 
 ### 🚀 Features
