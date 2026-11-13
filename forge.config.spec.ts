@@ -25,12 +25,20 @@ interface IDiskImageConfiguration {
 const run = promisify(execFile);
 
 describe('macOS installer creation', () => {
-  it('retries only a lost Symphony mount and preserves a permanent maker failure', async () => {
+  it('retries lost mounts, normalizes the Forge 8 output path and preserves permanent failures', async () => {
     // arrange
     const script = `
       const { MakerDMG } = await import('@electron-forge/maker-dmg');
       const { default: config } = await import('./forge.config.mjs');
+      const { mkdtemp, mkdir, writeFile, readFile, rm } = await import('node:fs/promises');
+      const { join } = await import('node:path');
+      const { tmpdir } = await import('node:os');
+      const makeDir = await mkdtemp(join(tmpdir(), 'symphony-forge-'));
       const maker = config.makers.find((candidate) => candidate.name === 'dmg').clone();
+      await maker.prepareConfig('arm64');
+      const nativeOutput = join(makeDir, 'dmg', 'arm64');
+      await mkdir(nativeOutput, { recursive: true });
+      const original = join(nativeOutput, maker.config.name + '.dmg');
       const lostMount = new Error('Command failed: hdiutil detach /Volumes/Symphony\\nhdiutil: detach failed - No such file or directory');
       const otherFailure = new Error('Cannot copy application');
       const outcomes = [];
@@ -39,14 +47,21 @@ describe('macOS installer creation', () => {
         MakerDMG.prototype.make = async () => {
           const failure = failures[calls++];
           if (failure) throw failure;
-          return ['installer.dmg'];
+          await writeFile(original, 'disk image');
+          return [original];
         };
         try {
-          outcomes.push({ result: await maker.make({}), calls });
+          const [result] = await maker.make({ makeDir });
+          outcomes.push({
+            normalized: result === join(makeDir, maker.config.name + '.dmg'),
+            contents: await readFile(result, 'utf8'),
+            calls,
+          });
         } catch (error) {
           outcomes.push({ original: error === failures.at(-1), calls });
         }
       }
+      await rm(makeDir, { recursive: true, force: true });
       process.stdout.write(JSON.stringify(outcomes));
     `;
 
@@ -58,7 +73,7 @@ describe('macOS installer creation', () => {
 
     // assert
     expect(JSON.parse(result.stdout)).toEqual([
-      { result: ['installer.dmg'], calls: 3 },
+      { normalized: true, contents: 'disk image', calls: 3 },
       { original: true, calls: 3 },
       { original: true, calls: 1 },
     ]);
