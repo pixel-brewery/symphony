@@ -22,7 +22,7 @@ export class ArcadeLeaderboardStore {
   private readonly _storage: Pick<Storage, 'getItem' | 'setItem'> | undefined;
   private readonly _entries = signal<readonly ArcadeLeaderboardEntry[]>([]);
 
-  /** Best ten completed sessions per game, grouped in Arcade order. @public @readonly */
+  /** Best completed sessions per game, grouped in Arcade order. @public @readonly */
   public readonly entries = this._entries.asReadonly();
 
   // #endregion
@@ -116,13 +116,21 @@ export class ArcadeLeaderboardStore {
         'pong',
         'seaquest',
         'river-raid',
+        'california-games',
       ] as const
-    ).flatMap((game) =>
-      unique
-        .filter((entry) => entry.game === game)
-        .sort((left, right) => this.compare(right, left))
-        .slice(0, MAX_ENTRIES_PER_GAME),
-    );
+    ).flatMap((game) => {
+      const gameEntries = unique.filter((entry) => entry.game === game);
+      if (game !== 'california-games')
+        return gameEntries
+          .sort((left, right) => this.compare(right, left))
+          .slice(0, MAX_ENTRIES_PER_GAME);
+      return (['bmx', 'surfing', 'half-pipe', 'foot-bag'] as const).flatMap((event) =>
+        gameEntries
+          .filter((entry) => entry.game === 'california-games' && entry.event === event)
+          .sort((left, right) => this.compare(right, left))
+          .slice(0, 3),
+      );
+    });
   }
 
   private compare(left: ArcadeLeaderboardEntry, right: ArcadeLeaderboardEntry): number {
@@ -143,6 +151,10 @@ export class ArcadeLeaderboardStore {
     if ('level' in left && 'level' in right) {
       const levelDifference = left.level - right.level;
       if (levelDifference !== 0) return levelDifference;
+    }
+    if (left.game === 'california-games' && right.game === 'california-games') {
+      const elapsedDifference = right.elapsedSeconds - left.elapsedSeconds;
+      if (elapsedDifference !== 0) return elapsedDifference;
     }
     return left.completedAt.localeCompare(right.completedAt);
   }

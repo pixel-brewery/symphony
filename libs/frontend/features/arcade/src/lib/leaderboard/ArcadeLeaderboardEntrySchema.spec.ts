@@ -16,6 +16,56 @@ const completedExpedition = {
 };
 
 describe('ArcadeLeaderboardEntrySchema', () => {
+  it.each(['bmx', 'surfing', 'half-pipe', 'foot-bag'])(
+    'accepts a finished California Games %s event',
+    (event) => {
+      // arrange
+      const entry = {
+        id: `california-${event}`,
+        game: 'california-games',
+        completedAt: completedExpedition.completedAt,
+        event,
+        score: 1200,
+        player: 1,
+        players: 2,
+        elapsedSeconds: 90,
+      };
+
+      // act
+      const parsed = ArcadeLeaderboardEntrySchema.safeParse(entry);
+
+      // assert
+      expect(parsed.success).toBe(true);
+    },
+  );
+
+  it.each([
+    { event: 'skating' },
+    { score: -1 },
+    { player: 3 },
+    { players: 4 },
+    { elapsedSeconds: 91 },
+  ])('rejects invalid California Games results: %j', (invalid) => {
+    // arrange
+    const entry = {
+      id: 'california-invalid',
+      game: 'california-games',
+      completedAt: completedExpedition.completedAt,
+      event: 'bmx',
+      score: 100,
+      player: 1,
+      players: 1,
+      elapsedSeconds: 90,
+      ...invalid,
+    };
+
+    // act
+    const parsed = ArcadeLeaderboardEntrySchema.safeParse(entry);
+
+    // assert
+    expect(parsed.success).toBe(false);
+  });
+
   it.each(['jungle-hunt', 'seaquest', 'river-raid'])('accepts a finished %s expedition', (game) => {
     // arrange
     const entry = {

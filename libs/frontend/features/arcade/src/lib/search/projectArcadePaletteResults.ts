@@ -15,6 +15,7 @@ const GAMES: readonly (readonly [title: string, slug: string])[] = [
   ['Pong', 'pong'],
   ['Seaquest', 'seaquest'],
   ['River Raid', 'river-raid'],
+  ['California Games', 'california-games'],
 ];
 
 /**
@@ -35,7 +36,11 @@ export function projectArcadePaletteResults(
   return GAMES.map(([title, slug]) => ({
     title,
     slug,
-    rank: scorePaletteMatch(normalizedQuery, [`Play ${title}`], ['arcade', 'game', 'pinball']),
+    rank: scorePaletteMatch(
+      normalizedQuery,
+      [`Play ${title}`],
+      ['arcade', 'game', 'atari', 'lynx', 'sports'],
+    ),
   }))
     .filter((game) => game.rank > 0)
     .map(({ title, slug, rank }): IPaletteResult => ({

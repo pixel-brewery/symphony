@@ -8,6 +8,16 @@ import type { BoxingContenderId } from '../games/realsports-boxing/model/BoxingC
 export type ArcadeLeaderboardEntry =
   | {
       readonly id: string;
+      readonly game: 'california-games';
+      readonly completedAt: string;
+      readonly event: 'bmx' | 'surfing' | 'half-pipe' | 'foot-bag';
+      readonly score: number;
+      readonly player: 1 | 2;
+      readonly players: 1 | 2;
+      readonly elapsedSeconds: number;
+    }
+  | {
+      readonly id: string;
       readonly game: 'jungle-hunt';
       readonly completedAt: string;
       readonly score: number;

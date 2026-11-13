@@ -149,6 +149,46 @@ describe('ArcadeLeaderboardStore', () => {
     expect(leaderboard.entries()).toEqual([second, first]);
   });
 
+  it('keeps the best three California Games scores for each event', () => {
+    // arrange
+    const leaderboard = new ArcadeLeaderboardStore({
+      getItem: () => null,
+      setItem: () => undefined,
+    });
+
+    // act
+    for (const event of ['bmx', 'surfing', 'half-pipe', 'foot-bag'] as const)
+      for (let score = 100; score <= 400; score += 100)
+        leaderboard.add({
+          id: `${event}-${score}`,
+          game: 'california-games',
+          completedAt: '2026-11-13T12:00:00.000Z',
+          event,
+          score,
+          player: 1,
+          players: 1,
+          elapsedSeconds: 90,
+        });
+
+    // assert
+    const results = leaderboard.entries().filter((entry) => entry.game === 'california-games');
+    expect(results).toHaveLength(12);
+    expect(results.map((entry) => [entry.event, entry.score])).toEqual([
+      ['bmx', 400],
+      ['bmx', 300],
+      ['bmx', 200],
+      ['surfing', 400],
+      ['surfing', 300],
+      ['surfing', 200],
+      ['half-pipe', 400],
+      ['half-pipe', 300],
+      ['half-pipe', 200],
+      ['foot-bag', 400],
+      ['foot-bag', 300],
+      ['foot-bag', 200],
+    ]);
+  });
+
   it('ranks completed Lost Caverns expeditions by score, gold and then shortest elapsed time', () => {
     // arrange
     const leaderboard = new ArcadeLeaderboardStore({

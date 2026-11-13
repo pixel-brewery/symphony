@@ -1,6 +1,6 @@
 # Arcade
 
-**Arcade** ist eine Sammlung von acht klassischen Spielen für eine kurze Pause, während das AI-Team arbeitet. Arcade ist ausgeschaltet, bis du es in den Einstellungen einblendest. Die Spiele laufen vollständig auf diesem Computer; Ergebnisse bleiben lokal und werden mit niemandem geteilt.
+**Arcade** ist eine Sammlung von neun klassischen Spielen für eine kurze Pause, während das AI-Team arbeitet. Arcade ist ausgeschaltet, bis du es in den Einstellungen einblendest. Die Spiele laufen vollständig auf diesem Computer; Ergebnisse bleiben lokal und werden mit niemandem geteilt.
 
 ## Arcade einblenden
 
@@ -18,7 +18,7 @@ Schlägt das Speichern fehl, meldet Symphony **Unable to save settings.**, und d
 
 ## Ein Spiel wählen
 
-Der Bildschirm **Arcade** trägt in der Werkzeugleiste die Zahl der Spiele (`8 games`) und rechts **Leaderboard**. Darunter steht **Choose a game** mit dem Hinweis, dass **Esc** ein laufendes Spiel pausiert. Jedes Spiel erscheint als Karte mit Titelbild, Titel, Spielerzahl und **Play**; bei schmalem Fenster rücken die Karten in weniger Spalten.
+Der Bildschirm **Arcade** trägt in der Werkzeugleiste die Zahl der Spiele (`9 games`) und rechts **Leaderboard**. Darunter steht **Choose a game** mit dem Hinweis, dass **Esc** ein laufendes Spiel pausiert. Jedes Spiel erscheint als Karte mit Titelbild, Titel, Spielerzahl und **Play**; bei schmalem Fenster rücken die Karten in weniger Spalten.
 
 | Spiel             | Spieler |
 | ----------------- | ------- |
@@ -30,6 +30,7 @@ Der Bildschirm **Arcade** trägt in der Werkzeugleiste die Zahl der Spiele (`8 g
 | Seaquest          | 1–2     |
 | Jungle Hunt       | 1       |
 | RealSports Boxing | 1–2     |
+| California Games  | 1–2     |
 
 **Play** öffnet den Titelbildschirm des Spiels. Mehrere Spieler teilen sich eine Tastatur oder spielen abwechselnd, je nach Spiel.
 
@@ -39,9 +40,23 @@ Der Bildschirm **Arcade** trägt in der Werkzeugleiste die Zahl der Spiele (`8 g
 - **Esc** oder **P** pausiert ein laufendes Spiel und setzt es fort.
 - **All games** führt zurück zur Auswahl.
 
+### California Games
+
+**California Games** bildet die Atari-Lynx-Fassung mit Epyx-Intro, Titel, Eventauswahl und eigener Top-3-Anzeige je Disziplin nach. Die vier Disziplinen sind **BMX**, **Surfing**, **Half Pipe** und **Foot Bag**. BMX, Surfing und Foot Bag dauern 90 Sekunden, Half Pipe 75 Sekunden. Nach einer Disziplin kehrst du über A oder B zur Auswahl zurück.
+
+| Eingabe      | Spieler 1     | Spieler 2     |
+| ------------ | ------------- | ------------- |
+| Bewegung     | Pfeiltasten   | W, A, S, D    |
+| Lynx-Taste A | Z             | F             |
+| Lynx-Taste B | X             | G             |
+| Option 1 / 2 | Q / E         | R / T         |
+| Pause        | P oder Escape | P oder Escape |
+
+**Option 1 + Pause** kehrt zum Titel zurück. **Option 2 + Pause** dreht Bildschirm und Steuerung wie beim Lynx. Zwei Spieler teilen sich in Symphony eine Tastatur; das ersetzt die zwei per ComLynx verbundenen Originalkonsolen. **How to play** erklärt die eventbezogenen Tasten. Die ursprünglichen Lynx-Farben bleiben im Spielfeld erhalten, während Kopfzeile und Bedienung dem Symphony-Design folgen.
+
 ## Leaderboard
 
-**Leaderboard** öffnet eine Übersicht **Your best results from every Arcade game.** mit einem Abschnitt je Spiel. Jeder Abschnitt zeigt die zehn besten zu Ende gespielten Partien dieses Spiels, das beste zuerst, mit Punkten oder Spielstand und Datum sowie den Angaben, die zum Spiel gehören (etwa gefundene Schätze, Level, Spieler oder Sieger). Ohne Ergebnis steht dort etwa **No finished games yet.**
+**Leaderboard** öffnet eine Übersicht **Your best results from every Arcade game.** mit einem Abschnitt je Spiel. Jeder Abschnitt zeigt die besten zu Ende gespielten Partien dieses Spiels, das beste zuerst, mit Punkten oder Spielstand und Datum sowie den Angaben, die zum Spiel gehören (etwa gefundene Schätze, Level, Spieler oder Sieger). In California Games bleiben die besten drei Ergebnisse je Disziplin erhalten; die übrigen Spiele behalten bis zu zehn Ergebnisse. Ohne Ergebnis steht dort etwa **No finished games yet.**
 
 - Gezählt werden nur zu Ende gespielte Spiele; ein vorzeitig verlassenes Spiel erscheint nicht. Bei Pitfall II zählen nur vollständig abgeschlossene Expeditionen.
 - Die Ergebnisse bleiben auf diesem Computer gespeichert und überstehen einen Neustart von Symphony.
