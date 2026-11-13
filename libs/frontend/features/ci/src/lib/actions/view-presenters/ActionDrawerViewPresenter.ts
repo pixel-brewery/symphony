@@ -43,7 +43,6 @@ export class ActionDrawerViewPresenter extends Hydratable(ViewPresenter) {
   /** @public */ public readonly approvalBusy = signal(false);
   /** @public */ public readonly approvalUncertain = signal(false);
   /** @public */ public readonly approvalComment = signal('');
-  /** @public */ public readonly selectedJobId = signal<string | undefined>(undefined);
   private _refreshTimer?: number;
   private _logOffset = 0;
   private _logComplete = false;
@@ -180,7 +179,6 @@ export class ActionDrawerViewPresenter extends Hydratable(ViewPresenter) {
       repositoryLabel: repository.displayName,
       repositoryUrl: new URL(`/${repository.owner}/${repository.name}`, root).toString(),
       branch: ciRun.branch,
-      targetUrl: this.run().externalUrl,
     };
   });
 
@@ -226,9 +224,6 @@ export class ActionDrawerViewPresenter extends Hydratable(ViewPresenter) {
     return status === undefined || !['queued', 'in-progress'].includes(status);
   });
 
-  private readonly _cancelRemoteRunCommand: Command<void> = new Command(
-    () => void this.onExecuteCancelRemoteRunCommand(),
-  );
   private readonly _rerunRemoteCommand: Command<void> = new Command(
     () => void this.onExecuteRerunRemoteCommand(),
   );
@@ -244,22 +239,10 @@ export class ActionDrawerViewPresenter extends Hydratable(ViewPresenter) {
   /** @public */ public readonly reviewApprovalCommand = new Command<
     readonly [number, 'approved' | 'rejected']
   >((args) => void this.reviewApproval(args[0], args[1]));
-  /** @public */ public readonly selectJobCommand = new Command<string>(
-    (args) => void this.selectJob(args),
-  );
   // #endregion
 
   // #region Properties
 
-  /**
-   * The cancelRemoteRun command.
-   *
-   * @public
-   * @readonly
-   */
-  public get cancelRemoteRunCommand(): Command<void> {
-    return this._cancelRemoteRunCommand;
-  }
   /**
    * The rerunRemote command.
    *
@@ -318,17 +301,6 @@ export class ActionDrawerViewPresenter extends Hydratable(ViewPresenter) {
     if (this._refreshTimer !== undefined) window.clearTimeout(this._refreshTimer);
     this._refreshTimer = undefined;
     super.dispose();
-  }
-
-  /**
-   * Cancels the remote run.
-   *
-   * @private
-   */
-  private async onExecuteCancelRemoteRunCommand(): Promise<void> {
-    const run = this.currentCiRun();
-    if (!run || !this.controls().canCancelRemote) return;
-    await this._ci.cancelCiRun(run.id);
   }
 
   /**
@@ -412,16 +384,6 @@ export class ActionDrawerViewPresenter extends Hydratable(ViewPresenter) {
       await this.refreshDetails();
       this.approvalBusy.set(false);
     }
-  }
-
-  /** Brings an actual matrix execution into the existing accessible log surface. @public */
-  private selectJob(id: string): void {
-    this.selectedJobId.set(id);
-    requestAnimationFrame(() =>
-      document
-        .querySelector(`[test-id="action-detail-job-${CSS.escape(id)}"]`)
-        ?.scrollIntoView({ block: 'nearest' }),
-    );
   }
 
   private async refreshDetails(): Promise<void> {

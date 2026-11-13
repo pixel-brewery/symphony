@@ -2,20 +2,13 @@
   <section
     test-id="ci-job-graph"
     [attr.aria-label]="tr('loc.symphony.workflow.job.graph.db235a')"
-    class="flex min-w-0 flex-col gap-3"
+    class="h-full min-w-0"
   >
-    <mosaik-hint
-      [text]="tr('loc.symphony.revision.6756b0', [graph().path, graph().revision])"
-      [textOverflow]="'wrap'"
-    />
-    @for (reason of graph().unresolved; track reason) {
-    <mosaik-hint [text]="reason" [textOverflow]="'wrap'" />
-    }
     <mosaik-flow
       test-id="ci-job-flow"
-      class="block h-[24rem] w-full"
+      class="block h-full w-full"
       [label]="tr('loc.symphony.workflow.jobs.0b67f3')"
-      [fitOnLoad]="graph().jobs.length <= 24"
+      [fitOnLoad]="false"
       [selectedKey]="selectedKey()"
       (flowSelectionChanged)="onSelectionChanged($event)"
       (flowLayoutCompleted)="onLayoutCompleted($event)"
@@ -23,8 +16,8 @@
       @for (job of nodes(); track job.definition.id) {
       <mosaik-flow-node
         [nodeKey]="'job:' + job.definition.id"
-        [label]="job.definition.name + ' · ' + (job.status ? (job.status | ciLogStatusLabel) : 'Waiting for pending jobs')"
-        [variant]="job.unresolved ? 'warning' : job.status ? (job.status | ciLogStatusVariant) : 'neutral'"
+        [label]="job.status ? job.definition.name + ' · ' + (job.status | ciLogStatusLabel) : job.definition.name"
+        [variant]="job.status ? (job.status | ciLogStatusVariant) : 'neutral'"
         [attr.test-id]="'ci-graph-job-' + job.definition.id"
       >
         <div class="flex min-w-0 flex-col gap-2">
@@ -38,7 +31,7 @@
               class="min-w-0 flex-1"
               [attr.test-id]="'ci-open-job-' + job.definition.id"
               [label]="job.definition.name"
-              [appearance]="'plain'"
+              [appearance]="'outline'"
               [size]="'small'"
               (click)="openExecution(job.definition.id)"
             />
@@ -53,9 +46,9 @@
           </div>
           @if (job.definition.matrix && job.status; as status) {
           <mosaik-hint [text]="status | ciLogStatusLabel" />
-          } @else if (!job.status) {
+          } @else if (!job.status && pending()) {
           <mosaik-hint [text]="tr('loc.symphony.waiting.for.pending.jobs.3c15cc')" />
-          } @if (job.definition.matrix || job.executions.length > 1) {
+          } @if (job.executions.length > 1 || (job.definition.matrix && job.executions.length)) {
           <mosaik-disclosure
             [attr.test-id]="'ci-matrix-' + job.definition.id"
             [summary]="(job.definition.matrix ? 'Matrix executions (' : 'Executions (') + job.executions.length + ')'"
@@ -67,7 +60,7 @@
                 [label]="run.name + ' · ' + (run.status | ciLogStatusLabel)"
                 [iconName]="run.status | ciLogStatusIcon"
                 [variant]="run.status | ciLogStatusVariant"
-                [appearance]="'plain'"
+                [appearance]="'outline'"
                 [size]="'small'"
                 (click)="selected.emit(run.id)"
               />
@@ -85,34 +78,6 @@
         [attr.test-id]="'ci-graph-dependency-' + edge.key"
       />
       }
-      <mosaik-flow-minimap slot="minimap" test-id="ci-job-minimap" />
-      <mosaik-flow-controls slot="controls" test-id="ci-job-controls" />
     </mosaik-flow>
-    @if (inspected(); as job) { @if (job.unresolved || job.definition.condition ||
-    job.definition.environment) {
-    <div test-id="ci-job-inspection" class="flex min-w-0 flex-col gap-2">
-      <mosaik-text [text]="job.definition.name" [wrap]="true" />
-      @if (job.unresolved) {
-      <mosaik-hint [text]="tr('loc.symphony.dependency.unresolved.93d2ed')" /> } @if
-      (job.definition.environment) {
-      <mosaik-text
-        [text]="tr('loc.symphony.target.13d85e', [job.definition.environment])"
-        [wrap]="true"
-      />
-      } @if (job.definition.condition) {
-      <mosaik-text
-        [text]="tr('loc.symphony.condition.7cb2e3', [job.definition.condition])"
-        [wrap]="true"
-      />
-      }
-    </div>
-    } } @for (job of unmatched(); track job.id) {
-    <mosaik-button
-      [attr.test-id]="'ci-unmatched-run-' + job.id"
-      [label]="tr('loc.symphony.definition.association.unresolved.81be4d', [job.name])"
-      [appearance]="'plain'"
-      (click)="selected.emit(job.id)"
-    />
-    }
   </section>
 </ng-container>

@@ -28,6 +28,7 @@ import {
   WindowToolbarDirective,
   WorkspaceScopePresenter,
 } from '@symphony/frontend-core';
+import { ContextMenuComponent, ContextMenuContentDirective } from '@pixel-brewery/ngpel-ui';
 import { RelativeTimePipe } from '@symphony/frontend-ui';
 import { WorkflowHealthPresentationPipe } from '../../pipes/WorkflowHealthPresentationPipe';
 import { ActionsViewPresenter } from '../view-presenters/ActionsViewPresenter';
@@ -53,6 +54,8 @@ import { ActionsWorkflowView } from './ActionsWorkflowView';
     BannerHeaderComponent,
     BannerSubHeaderComponent,
     ButtonComponent,
+    ContextMenuComponent,
+    ContextMenuContentDirective,
     DatePipe,
     DotComponent,
     DropDownButtonComponent,

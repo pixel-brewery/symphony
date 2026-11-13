@@ -49,9 +49,9 @@ Segment, Repository und zuständige Person gelten nur, solange das Board geöffn
 
 ### Spalten
 
-Jede Spalte zeigt ihren Namen und die Zahl ihrer sichtbaren Work Items, daneben **+** (**New work item in …**) und einen Pfeil zum Einklappen (**Collapse …**). Eine leere Spalte sagt **No items in …**.
+Jede Spalte zeigt ihren Namen und die Zahl ihrer sichtbaren Work Items, daneben **+** (**New work item in …**) und einen Pfeil zum Einklappen. Eine leere Spalte sagt **No items in …**.
 
-Eine eingeklappte Spalte ist ein schmaler Streifen mit der Zahl und dem senkrecht laufenden Namen. Ein Klick, **Enter** oder die Leertaste klappt sie auf; Karten lassen sich auch auf einen Streifen ziehen.
+Eine eingeklappte Spalte ist ein schmaler Streifen mit der Zahl und dem senkrecht laufenden Namen. Der Pfeil klappt sie auf. Ist er fokussiert, geht das auch mit **Enter** oder der Leertaste. Du kannst Karten auf einen eingeklappten Streifen ziehen.
 
 | Ausgangslage                                                                                            | Darstellung                                                                            |
 | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -114,7 +114,7 @@ Erledigte Schritte sind gefüllt; ein Schritt, der auf dich wartet oder fehlgesc
 
 ## Work Item öffnen
 
-Ein Klick auf eine Karte öffnet den [Work-Item-Bildschirm](work-item.md); **Back** führt zurück auf das Board. Ein Klick mit ⌘ (Ctrl außerhalb von macOS) oder Shift öffnet die Karte nicht, sondern nimmt sie in die Auswahl auf oder heraus. Klicks auf Schaltflächen und Menüs in der Karte öffnen sie ebenfalls nicht.
+Ein Klick auf eine Karte oder **Enter** auf der fokussierten Karte öffnet den [Work-Item-Bildschirm](work-item.md). **Back** führt zurück auf das Board. ⌘-Klick (Ctrl außerhalb von macOS) schaltet die Auswahl einer Karte um. Bei aktiver Auswahl markiert Shift-Klick den Bereich seit der letzten Auswahl in derselben Spalte. Schaltflächen und Menüs in der Karte führen ihre jeweilige Aktion aus.
 
 ## Kartenmenü
 
@@ -133,6 +133,7 @@ Ein Eintrag, der gerade nicht möglich ist, bleibt sichtbar, ist gesperrt und ne
 - Ziehe eine Karte in eine andere Spalte oder auf einen eingeklappten Streifen. Die Karte wechselt sofort; Symphony schreibt die Spalte in den Tracker und meldet **Moved to …**. Lehnt der Tracker ab, kehrt die Karte zurück, und Symphony meldet **Unable to move the work item.**
 - Bei **All boards** landet eine gezogene Karte in der Spalte ihres eigenen Boards mit derselben Workflow-Stufe (sonst demselben Namen), auch wenn die zusammengeführte Spalte zuerst von einem anderen Board stammt. Hat ihr Board keine solche Spalte, bleibt sie stehen, und Symphony meldet **Not moved** („The board of ‹Kennung› has no ‹Spalte› column.“).
 - **Move forward**, **Move backward** und **Move to** im Kartenmenü verschieben ebenso, immer in eine Spalte des eigenen Boards.
+- Ziehst du eine ausgewählte Karte, können weitere ausgewählte Karten mit in die Zielspalte wechseln. Für jede Karte gelten dieselben Regeln wie beim einzelnen Verschieben.
 - Eine Karte, an der gerade ein Lauf arbeitet, bleibt oben in ihrer Spalte und lässt sich nicht ziehen.
 - Verbindet eine offene Einschätzung das Work Item mit anderen (**Take together?** oder **Critical path**), verschiebt Symphony nicht sofort, sondern öffnet die Einschätzung mit dem gewünschten Ziel: Die Bestätigung, etwa **Group and move together**, gruppiert und verschiebt alle gemeinsam, **Keep separate** verwirft die Einschätzung und verschiebt nur dieses Work Item.
 
@@ -145,7 +146,7 @@ Zusammengehörige Work Items können als Gruppe in einem gemeinsamen Ablauf ausg
 3. **Deliver together** fragt **Group selected tickets**: **Copy directly without AI analysis** gruppiert sofort, **Analyze relationship with AI first** lässt zuerst die AI die Beziehung einschätzen und öffnet danach die Einschätzung zur Bestätigung. Findet die AI nur schwache Hinweise, heißt die Bestätigung **Deliver together anyway**.
 4. Ist die Gruppe entstanden, endet die Auswahl.
 
-Eine Karte auf eine andere Karte oder einen Stapel zu ziehen, stellt dieselbe Frage; die Zielkarte, bei einem Stapel dessen führende Karte, wird führend.
+Ziehst du eine Karte auf die Mitte einer anderen Karte oder eines Stapels, erscheint dieselbe Frage. Die Zielkarte oder die führende Karte des Zielstapels wird führend.
 
 | Regel für die Auswahl                                                  | Grund, wenn sie verletzt ist                                                        |
 | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |

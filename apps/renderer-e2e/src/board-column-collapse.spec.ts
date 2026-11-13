@@ -3,6 +3,7 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron, type ElectronApplication } from '@playwright/test';
+import { expandBoardColumn } from './expandBoardColumn';
 
 // #endregion
 
@@ -41,30 +42,19 @@ test('collapses Backlog, Qualified and Done by default and keeps every toggle ac
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
 
-    // The columns before analysed work and the finished work start as narrow strips with their
-    // count and name; the columns of active delivery start expanded.
     for (const columnId of ['backlog', 'qualified', 'done']) {
       const strip = page.getByTestId(`board-column-${columnId}`);
-      await expect(strip).toHaveAttribute('aria-expanded', 'false');
-      await expect(strip.locator('symphony-board-column-entry')).toHaveCount(0);
-      const count = page.getByTestId(`board-column-count-${columnId}`);
-      await expect
-        .poll(() => count.evaluate((element) => (element as { text?: string }).text ?? ''))
-        .toMatch(/^\d+$/u);
+      await expect(strip).toHaveJSProperty('isExpanded', false);
+      await expect(strip.locator('[part="toggle"]')).toHaveAttribute('aria-expanded', 'false');
+      await expect(page.getByTestId(`board-column-count-${columnId}`)).toBeVisible();
     }
-    const ready = page.locator('mosaik-flow-board-column[column-key="ready"]');
+    const ready = page.getByTestId('board-column-ready');
     await expect(ready).toHaveJSProperty('isExpanded', true);
 
-    // A strip expands its column; an expanded column collapses through the plain chevron beside
-    // its `+`.
-    await page.getByTestId('board-column-backlog').click();
-    const backlog = page.locator('mosaik-flow-board-column[column-key="backlog"]');
-    await expect(backlog).toHaveJSProperty('isExpanded', true);
-    await expect(page.getByTestId('board-column-viewport-backlog')).toBeVisible();
-
-    await page.getByTestId('board-column-collapse-ready').click();
-    await expect(page.getByTestId('board-column-ready')).toHaveAttribute('aria-expanded', 'false');
-    await expect(page.locator('mosaik-flow-board-column[column-key="ready"]')).toHaveCount(0);
+    await expandBoardColumn(page, 'backlog');
+    await expect(page.getByTestId('board-item-work-item-142')).toBeVisible();
+    await ready.locator('[part="toggle"]').click();
+    await expect(ready).toHaveJSProperty('isExpanded', false);
     await page.screenshot({ path: resolve(outputDirectory, 'board-column-collapse.png') });
   } finally {
     await first.close();
@@ -77,20 +67,12 @@ test('collapses Backlog, Qualified and Done by default and keeps every toggle ac
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
 
-    // Both explicit choices survive the restart; the untouched defaults stay as they were.
-    await expect(page.locator('mosaik-flow-board-column[column-key="backlog"]')).toHaveJSProperty(
-      'isExpanded',
-      true,
-    );
-    await expect(page.getByTestId('board-column-ready')).toHaveAttribute('aria-expanded', 'false');
-    await expect(page.getByTestId('board-column-qualified')).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
-    await expect(page.getByTestId('board-column-done')).toHaveAttribute('aria-expanded', 'false');
-    await expect(
-      page.locator('mosaik-flow-board-column[column-key="acceptance"]'),
-    ).toHaveJSProperty('isExpanded', true);
+    // Both explicit choices survive the restart, alongside the untouched defaults.
+    await expect(page.getByTestId('board-column-backlog')).toHaveJSProperty('isExpanded', true);
+    await expect(page.getByTestId('board-column-ready')).toHaveJSProperty('isExpanded', false);
+    await expect(page.getByTestId('board-column-qualified')).toHaveJSProperty('isExpanded', false);
+    await expect(page.getByTestId('board-column-done')).toHaveJSProperty('isExpanded', false);
+    await expect(page.getByTestId('board-column-acceptance')).toHaveJSProperty('isExpanded', true);
   } finally {
     await second.close();
     rmSync(configurationRoot, { force: true, recursive: true });

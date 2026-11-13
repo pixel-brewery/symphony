@@ -181,17 +181,21 @@ Alle Projektionen (Befunde, Stufenschritte, Pull-Request-Kontext, Kartenzustand,
 
 ## Einträge, Stapel und Virtualisierung
 
+Die Komposition folgt den Aufgaben- und Auftragsansichten der Renderer-Referenz. Die Spalten stammen aus der projizierten Collection, ihre Karten haben stabile Schlüssel und Mosaiks Slots trennen Titel, Metadaten, Aktionen und Leerzustand. Symphony bindet diese Darstellung an die providerneutralen Work-Item- und Auslieferungsgruppenverträge.
+
 Eine Spalte rendert eine Liste von Einträgen `{ id, kind: 'group', group } | { id, kind: 'item', item }`:
 
 1. Kompakte Gruppen zuerst: Gruppen im Zustand `active` oder `synchronizing`, deren führende Karte eine Spalte hat, deren Mitglieder alle in dieser Spalte stehen und alle die Filter passieren. Sie erscheinen in der Spalte der führenden Karte als Stapel (`n tickets`, warning während `synchronizing`; Titel der führenden Karte; `Root · <Kennung> · <Repository>`; `Delivered in one shared workflow`; Titel der übrigen).
 2. Danach die übrigen gefilterten Work Items in Snapshot-Reihenfolge, ohne Mitglieder kompakter Gruppen.
 
-Jede aufgeklappte Spalte virtualisiert ihre Einträge mit einer Strategie für natürliche Höhen: Schätzung 160 px für ungemessene Einträge, 640 px Überhang, Messung gerenderter Einträge über `ResizeObserver`, verankerter erster sichtbarer Eintrag bei Höhenänderungen im vorderen Puffer. Schlüssel sind die Eintrags-Ids, damit Auswahl und Messungen das Recycling überstehen.
+Mosaik FlowBoard verwaltet die Scrollbereiche seiner Spalten und erhält `virtualized: true`. Jede Spalte bekommt die Karten und Stapel aus einer Angular-Template-Instanz als direkte Light-DOM-Kinder. Die stabilen Eintrags-Ids identifizieren die Karten auch nach einem Spaltenwechsel. Spalten und der horizontale Board-Viewport haben jeweils einen begrenzten Scrollbereich. Mosaik berechnet das sichtbare Fenster je aufgeklappter Spalte. Ab 50 Einträgen misst Mosaik sichtbare Karten, schätzt unbekannte Höhen zunächst mit 96 px und rendert einen Überhang von acht Einträgen je Kante. Platzhalter erhalten die Scrollhöhe. Außerhalb des Fensters blendet Mosaik die Karten aus. Angular behält ihre Einträge für Auswahl und Änderungserkennung. Fokussierte oder gezogene Karten bleiben gerendert.
+
+Jede Spalte bleibt beim Einklappen ein FlowBoard-Spaltenelement und damit ein mögliches Drop-Ziel. Der native Umschalter meldet `flowBoardColumnExpandChange` mit `columnKey` und `isExpanded`. Der Presenter speichert die Abweichung vom projizierten Zustand. Mosaiks Rückmeldung auf eine vom Presenter gesetzte Änderung wird ignoriert, damit eine Filterung keine gespeicherte Bedienerwahl erzeugt.
 
 ## Karte aktivieren und Kartenmenü
 
-- Klick ohne Modifikator: Auswahl des Work Items im Store, Navigation nach `/main/board/<id>` (die Id ist ein kodiertes Segment). Klicks, deren Pfad durch Dropdown, Menü, Menüeintrag, Schaltfläche oder Checkbox führt, werden ignoriert.
-- Klick mit ⌘, Ctrl oder Shift: Umschalten der Auswahl, keine Navigation.
+- Klick ohne Modifikator oder Enter auf der fokussierten Karte: Auswahl des Work Items im Store, Navigation nach `/main/board/<id>` (die Id ist ein kodiertes Segment). Klicks, deren Pfad durch Dropdown, Menü, Menüeintrag, Schaltfläche oder Checkbox führt, werden ignoriert.
+- Erster Klick mit ⌘, Ctrl oder Shift startet die Auswahl. Bei aktiver Auswahl schaltet ⌘- oder Ctrl-Klick eine Karte um. Shift-Klick in derselben Spalte erweitert die Auswahl über den Bereich seit dem letzten Auswahlanker. Diese Gesten öffnen keine Karte.
 - Rechtsklick oder **More actions**: lädt bei Bedarf die zuweisbaren Personen (mit erneutem Versuch nach einem Fehlschlag) und aktualisiert bei vorhandenem Pull Request die CI-Läufe, damit kein bereits gestarteter oder beendeter Lauf angeboten wird; öffnet dann das Menü.
 
 Menüzusammensetzung:
@@ -227,7 +231,9 @@ Ausführung: Ein Eintrag mit Sperrgrund wird nicht ausgeführt. `analyze` und `s
 | Gruppenmenü verschieben                                            | nicht beschäftigt, Ziel ungleich Spalte der führenden Karte | `moveDeliveryGroup(gruppe, führende Karte, providerColumnFor(führende Karte, ziel))`: verschiebt die führende Karte und gleicht danach alle Mitglieder an (`alignDeliveryGroup`)                                                                                                                                                                                                           |
 | `Align to root column` im Gruppen-Drawer                           | Gruppe `paused`                                             | `alignDeliveryGroup`; erreichbar über **Group needs attention** auf den Mitgliedskarten. Das Stapelmenü hat den Eintrag nicht: eine angehaltene Gruppe wird nie als Stapel gezeichnet (nur `active`/`synchronizing` mit allen Mitgliedern in einer Spalte)                                                                                                                                 |
 
-Ziehen ist für Karten gesperrt, deren neueste Ausführung `running` ist; diese Karten sind in ihrer Spalte angeheftet. Die Spaltensortierung beim Ziehen ist abgeschaltet; die Reihenfolge bestimmt der Snapshot.
+Ziehen ist für Karten gesperrt, deren neueste Ausführung `running` ist. Diese Karten sind in ihrer Spalte angeheftet. FlowBoard arbeitet im Modus `controlled`. Bei einem Wechsel liefert `flowBoardItemMove` den Eintrag und die Zielspalte. Der Presenter lässt die Reihenfolge innerhalb einer Spalte aus dem Snapshot entstehen. Beim Ziehen einer ausgewählten Karte kann `flowBoardItemsMove` mehrere Einträge melden. Der Presenter führt die gemeldeten Spaltenwechsel nacheinander über denselben Pfad aus. Das Fallenlassen über der Mitte einer anderen Karte oder eines Stapels erzeugt `flowBoardItemGroup`, das die Schlüssel der beteiligten Work Items und die führende Zielkarte liefert. Symphony hält diese Absicht bis zur Entscheidung im Gruppierungsdialog zurück.
+
+Die gezogene Karte bleibt während der Vorschau im Angular-eigenen DOM-Elternknoten. Der Platzhalter darf zwischen Spalten wechseln. Mosaik 0.1.199 benötigt dafür den in Symphony gepinnten [Foundation-Patch](../../../.yarn/patches/mosaik-foundation-0.1.199-flow-board-source.patch), der die vorhandene Option `preserveSourceParent` aktiviert. Ohne diese Option fügt Mosaik nach dem Drop das alte Kartenelement in die Zielspalte ein. Die nächste Angular-Projektion erstellt dort bereits das neue Element, wodurch ein bedienbares Duplikat entsteht. Ein Ersatz für den Patch muss nach erfolgreichem oder abgelehntem Drop die DOM-Elternschaft allein der Anwendungsprojektion überlassen und den Platzhalter entfernen.
 
 `moveWorkItem` aktualisiert die Projektion sofort (Spalte und die Stufe der Zielspalte, ohne Stufe ungestuft), sendet `work-items.move`, ersetzt das Work Item durch die Antwort und meldet `Moved to <Spalte>.`; bei einem Fehler stellt es das vorige Work Item wieder her und meldet `Unable to move the work item.`. Eine Aktualisierung, die vor der Mutation begann, wird danach wiederholt, damit sie die Änderung nicht überschreibt. Die Auswahl des Work Items ändert sich durch Verschieben nicht.
 
@@ -235,7 +241,7 @@ Moduswahl `Group selected tickets` (modal, 34 rem, Escape schließt, Klick daneb
 
 ## Auswahl und gemeinsame Auslieferung
 
-Die Auswahl ist eine geordnete Liste stabiler Work-Item-Ids im Presenter, damit sie das Recycling der virtualisierten Karten übersteht; die erste Id ist die führende Karte. Die Flow-Board-Mehrfachauswahl ist nur aktiv, solange die Liste nicht leer ist.
+Die Auswahl ist eine geordnete Liste stabiler Work-Item-Ids im Presenter. Die erste Id ist die führende Karte. Die FlowBoard-Mehrfachauswahl ist nur aktiv, solange die Liste Einträge enthält. Der Presenter spiegelt den Zustand über die nativen Kartenereignisse und die Eigenschaft `isSelected`, auch wenn eine Karte außerhalb des Scrollfensters liegt. Das native Auswahlkästchen vermittelt ihren Zustand.
 
 Zulässigkeit von `Deliver together (n)` in Prüfreihenfolge:
 
@@ -300,7 +306,7 @@ Eine leere Spalte zeigt `No items in <spaltenname klein>`.
 | Kartenzustand und Status         | `board/view-presenters/boardCard/*`, `board/pipes/BoardCardStatusPresentationPipe.ts`, `WorkItemHealthPresentationPipe.ts`                                                                          | `resolveBoardCardState.spec.ts`                                                                                                                     |
 | Menüeinträge                     | `board/view-presenters/boardContextAction/*`, `boardPullRequestAction/*`, `libs/domain/features/execution/src/lib/actions/resolveWorkItemActions.ts`, `board/pipes/WorkItemLinkPresentationPipe.ts` | `resolveBoardContextActions.spec.ts`, `resolveBoardPullRequestActions.spec.ts`, `resolveBoardPullRequest.spec.ts`, `resolveWorkItemActions.spec.ts` |
 | Spaltenwahl                      | `board/state/BoardColumnCollapseStore.ts`, `board/state/boardColumnCollapse/*`                                                                                                                      | `readCollapsedBoardColumnIds.spec.ts`, `persistCollapsedBoardColumnIds.spec.ts`, `board-column-collapse.spec.ts`                                    |
-| Virtualisierung                  | `board/directives/DynamicSizeVirtualScroll{Directive,Strategy}.ts`                                                                                                                                  | `DynamicSizeVirtualScrollStrategy.spec.ts`, `board-scroll.spec.ts`                                                                                  |
+| Virtualisierung                  | `board/views/BoardView.html`, `board/components/BoardColumnEntryComponent.*`, Mosaik FlowBoard                                                                                                      | `board-scroll.spec.ts`                                                                                                                              |
 | Hydrierung                       | `board/view-presenters/routeHydration/hydrateBoardRoute.ts`                                                                                                                                         | `hydrateBoardRoute.spec.ts`, `remote-projection.spec.ts`                                                                                            |
 | Gruppen                          | `board/views/dialogs/DeliveryGroup{ModeDialog,Drawer}View.*`, `board/view-presenters/DeliveryGroup*`                                                                                                | `board-multi-select-bundling.spec.ts`                                                                                                               |
 | Lokale Ausführungsfreigabe       | `board/services/LocalExecutionApprovalService.ts`                                                                                                                                                   | –                                                                                                                                                   |
@@ -334,7 +340,7 @@ Eine leere Spalte zeigt `No items in <spaltenname klein>`.
 - [Fensterrahmen und Navigation](../window-and-navigation/README.md)
 - [Befehlspalette](../command-palette/README.md)
 - [Pull-Request-Bildschirm](../pull-requests/README.md)
-- [Workflow-Modell](../workflow-model.md), [FlowBoard-Adaption](../flowboard-adaptation.md), [Agentic Delivery](../agentic-delivery.md)
+- [Workflow-Modell](../workflow-model.md), [Frontend-Referenz](../frontend-reference/README.md), [Agentic Delivery](../agentic-delivery.md)
 - [Production Orbit](../orbit/README.md)
 
 ## Identität des ausgelieferten Workflows

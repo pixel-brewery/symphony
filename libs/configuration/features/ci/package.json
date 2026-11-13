@@ -17,6 +17,6 @@
     "@symphony/configuration-core": "workspace:*",
     "@symphony/domain-ci": "workspace:*",
     "@symphony/domain-core": "workspace:*",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   }
 }

@@ -16,7 +16,7 @@
   "dependencies": {
     "@symphony/configuration-core": "workspace:*",
     "@symphony/domain-delivery": "workspace:*",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

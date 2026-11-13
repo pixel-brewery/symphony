@@ -21,27 +21,6 @@
   background-color: var(--mosaik-color-neutral-50);
 }
 
-// Column titles are semibold, as drawn.
-[part~='board-column-title'] {
-  --text-font-weight: 600;
-}
-
-// A collapsed column is a rounded neutral strip whose name reads downwards.
-[part~='board-collapsed-column'] {
-  background-color: var(--mosaik-color-neutral-100);
-  border-radius: var(--mosaik-layout-radius);
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: var(--mosaik-layout-thickness) solid var(--mosaik-scheme-foreground);
-  }
-}
-
-[part~='board-collapsed-column-label'] {
-  --text-font-weight: 600;
-  writing-mode: vertical-rl;
-}
-
 // The loading cards take the card surface they stand for.
 [part~='board-skeleton-card'] {
   background-color: var(--mosaik-scheme-surface);

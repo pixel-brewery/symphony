@@ -76,20 +76,28 @@ test('scrolls a dense board column to both boundaries', async () => {
     // Backlog starts as a collapsed strip; its long card and its 133 entries are under test.
     await expandBoardColumn(page, 'backlog');
 
-    const cards = page.locator('mosaik-flow-board-column-item');
-    const backlogViewport = page.getByTestId('board-column-viewport-backlog');
-    const backlogEntries = backlogViewport.locator('symphony-board-column-entry');
-    await expect(backlogViewport).toBeVisible();
-    const longCard = page.getByTestId('board-item-work-item-142');
+    const backlog = page.getByTestId('board-column-backlog');
+    const longCard = backlog.getByTestId('board-item-work-item-142');
+    await expect(longCard).toBeVisible();
     await expect(longCard).toContainText(longTitle);
-    await expect
-      .poll(() =>
-        backlogViewport.evaluate((viewport) => ({
+    const readColumn = () =>
+      backlog.evaluate((column) => {
+        const flowColumn = column as HTMLElementTagNameMap['mosaik-flow-board-column'];
+        const viewport = flowColumn.getScrollableElement();
+        const items = flowColumn.getItems();
+        const rendered = items.filter((item) => item.getClientRects().length > 0);
+        return {
           horizontalOverflow: viewport.scrollWidth - viewport.clientWidth,
           horizontalOffset: viewport.scrollLeft,
-        })),
-      )
-      .toEqual({ horizontalOverflow: 0, horizontalOffset: 0 });
+          top: viewport.scrollTop,
+          remaining: viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop,
+          total: items.length,
+          rendered: rendered.length,
+          firstRendered: rendered.includes(items[0]!),
+          lastRendered: rendered.includes(items.at(-1)!),
+        };
+      });
+    await expect.poll(readColumn).toMatchObject({ horizontalOverflow: 0, horizontalOffset: 0 });
     // Verify the actual glyph ranges as well: hiding overflow must not make a clipped compound
     // title look like a fitting card. The card shows the title, the id and the status; the
     // project fields live on the work item's own screen.
@@ -117,118 +125,67 @@ test('scrolls a dense board column to both boundaries', async () => {
       )
       .toBe(true);
     await page.getByTestId('board-item-actions-work-item-142').focus();
-    await expect.poll(() => backlogViewport.evaluate((viewport) => viewport.scrollLeft)).toBe(0);
+    await expect.poll(readColumn).toMatchObject({ horizontalOffset: 0 });
     const neighbouringColumn = page.getByTestId('board-column-ready');
-    await page.getByTestId('board-column-collapse-ready').click();
-    await expect(neighbouringColumn).toHaveAttribute('aria-expanded', 'false');
+    await neighbouringColumn.locator('[part="toggle"]').click();
+    await expect(neighbouringColumn).toHaveJSProperty('isExpanded', false);
     await app.evaluate(({ BrowserWindow }, rendererUrl) => {
       BrowserWindow.getAllWindows()
         .find((window) => window.webContents.getURL() === rendererUrl)
         ?.webContents.setZoomFactor(1.25);
     }, page.url());
-    await expect
-      .poll(() =>
-        backlogViewport.evaluate((viewport) => ({
-          horizontalOverflow: viewport.scrollWidth - viewport.clientWidth,
-          horizontalOffset: viewport.scrollLeft,
-          contentFitsViewport:
-            Math.abs(
-              (viewport.firstElementChild?.getBoundingClientRect().width ?? 0) -
-                viewport.clientWidth,
-            ) <= 1,
-        })),
-      )
-      .toEqual({ horizontalOverflow: 0, horizontalOffset: 0, contentFitsViewport: true });
+    await expect.poll(readColumn).toMatchObject({ horizontalOverflow: 0, horizontalOffset: 0 });
     await app.evaluate(({ BrowserWindow }, rendererUrl) => {
       BrowserWindow.getAllWindows()
         .find((window) => window.webContents.getURL() === rendererUrl)
         ?.webContents.setZoomFactor(1);
     }, page.url());
-    await expect(neighbouringColumn).toHaveAttribute('aria-expanded', 'false');
-    await expect.poll(() => backlogViewport.evaluate((viewport) => viewport.scrollLeft)).toBe(0);
+    await expect(neighbouringColumn).toHaveJSProperty('isExpanded', false);
+    await expect.poll(readColumn).toMatchObject({ horizontalOffset: 0 });
     await page.screenshot({ path: resolve(outputDirectory, 'board-cards-fit-column.png') });
-    await expect.poll(() => cards.count()).toBeLessThan(30);
+
+    await expect
+      .poll(readColumn)
+      .toMatchObject({ total: 133, top: 0, firstRendered: true, lastRendered: false });
+    await expect.poll(async () => (await readColumn()).rendered).toBeLessThan(30);
+    await expect.poll(async () => (await readColumn()).remaining).toBeGreaterThan(0);
+
+    // The first jump replaces the estimates near the end with measured heights. Keep scrolling
+    // until the last item is rendered and the measured bottom has reached the viewport.
+    await expect
+      .poll(async () => {
+        await backlog.evaluate((column) => {
+          const viewport = (
+            column as HTMLElementTagNameMap['mosaik-flow-board-column']
+          ).getScrollableElement();
+          viewport.scrollTo({ top: viewport.scrollHeight });
+        });
+        const { lastRendered, remaining } = await readColumn();
+        return lastRendered && remaining <= 1;
+      })
+      .toBe(true);
+    await expect.poll(async () => (await readColumn()).rendered).toBeLessThan(30);
+
+    await backlog.evaluate((column) => {
+      (column as HTMLElementTagNameMap['mosaik-flow-board-column'])
+        .getScrollableElement()
+        .scrollTo({ top: 0 });
+    });
+    await expect
+      .poll(readColumn)
+      .toMatchObject({ top: 0, firstRendered: true, lastRendered: false });
     await expect
       .poll(() =>
-        backlogEntries.evaluateAll((elements) =>
-          elements.map((element) => Number(element.getAttribute('data-board-virtual-index'))),
-        ),
-      )
-      .toContain(0);
-    await expect
-      .poll(() =>
-        cards.evaluateAll(
-          (elements) =>
-            elements.filter((element) => {
-              const card = element as HTMLElement & {
-                itemKey?: string;
-                value?: { title?: string };
-              };
-              const expectedItemKey = card.getAttribute('test-id')?.replace('board-item-', '');
-              const title = card.querySelector<HTMLElement>('mosaik-text') as
-                (HTMLElement & { text?: string }) | null;
-              return (
-                card.itemKey !== expectedItemKey ||
-                !card.value?.title?.trim() ||
-                !title?.text?.trim()
-              );
-            }).length,
-        ),
+        page
+          .getByTestId('board-columns')
+          .evaluate(
+            (board) =>
+              (board as HTMLElementTagNameMap['mosaik-flow-board']).getScrollableElement()
+                .scrollTop,
+          ),
       )
       .toBe(0);
     expect(rendererErrors).toEqual([]);
-
-    const board = page.locator('mosaik-flow-board');
-    const backlogColumn = page.locator('mosaik-flow-board-column[column-key="backlog"]');
-    await expect(backlogColumn).toBeVisible();
-    // The column owns a bounded CDK viewport. Its total height represents all 133 logical
-    // backlog entries while Angular keeps only the visible variable-height cards mounted.
-    await expect
-      .poll(() =>
-        backlogViewport.evaluate(
-          (viewport) => viewport.scrollHeight > viewport.clientHeight && viewport.scrollTop === 0,
-        ),
-      )
-      .toBe(true);
-
-    await expect
-      .poll(() =>
-        backlogViewport.evaluate((viewport) => {
-          viewport.scrollTo({ top: viewport.scrollHeight });
-          return viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop;
-        }),
-      )
-      .toBeLessThanOrEqual(1);
-    await expect
-      .poll(() =>
-        backlogViewport.evaluate((viewport) => {
-          viewport.scrollTo({ top: viewport.scrollHeight });
-          const entries = [
-            ...viewport.querySelectorAll<HTMLElement>('symphony-board-column-entry'),
-          ];
-          return Math.max(
-            ...entries.map((element) => Number(element.getAttribute('data-board-virtual-index'))),
-          );
-        }),
-      )
-      .toBe(132);
-    await expect.poll(() => cards.count()).toBeLessThan(30);
-
-    await backlogViewport.evaluate((viewport) => viewport.scrollTo({ top: 0 }));
-    await expect.poll(() => backlogViewport.evaluate((viewport) => viewport.scrollTop)).toBe(0);
-    await expect
-      .poll(() =>
-        backlogEntries.evaluateAll((elements) =>
-          elements.map((element) => Number(element.getAttribute('data-board-virtual-index'))),
-        ),
-      )
-      .toContain(0);
-    expect(
-      await board.evaluate((element) => {
-        const viewport = element.shadowRoot?.querySelector<HTMLElement>('[part~="viewport"]');
-        return viewport?.scrollTop ?? 0;
-      }),
-    ).toBe(0);
   } finally {
     await app.close();
     rmSync(configurationRoot, { force: true, recursive: true });

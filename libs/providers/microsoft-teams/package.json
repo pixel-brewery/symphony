@@ -21,6 +21,6 @@
     "@symphony/application-feedback": "workspace:*",
     "@symphony/configuration-composition": "workspace:*",
     "@symphony/domain-feedback": "workspace:*",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   }
 }

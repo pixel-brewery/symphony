@@ -55,14 +55,12 @@
   @if (presenter.dispatchProposal()?.id === workflow.id && presenter.dispatchProposal(); as
   proposal) {
   <section
-    part="actions-frame"
     class="flex max-h-[45%] min-h-0 min-w-0 flex-none flex-col gap-1.5 overflow-y-auto overscroll-contain p-2"
     test-id="workflow-dispatch-proposal"
     [attr.aria-label]="tr('loc.symphony.run.on.github.c0b37d')"
   >
     <div class="flex min-w-0 flex-col gap-[2px]">
       <mosaik-text
-        part="actions-section-heading"
         [mosaikTypography]="'subtitle2'"
         [text]="tr('loc.symphony.run.on.github.0314c3', [proposal.name])"
       />
@@ -119,32 +117,46 @@
   }
 
   <div
-    class="grid min-h-0 min-w-0 flex-1 grid-rows-2 gap-2.5 overflow-clip"
+    class="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-clip"
     test-id="actions-workflow-panes"
   >
-    <div
-      part="actions-frame"
-      class="flex min-h-0 min-w-0 flex-col overflow-clip px-1 py-0.5"
-      test-id="actions-workflow-runs"
-    >
+    <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-clip" test-id="actions-workflow-runs">
       @if (presenter.workflowRuns().length) {
       <mosaik-table
         class="min-h-0 min-w-0 flex-1"
         test-id="actions-workflow-table"
         [attr.aria-label]="tr('loc.symphony.workflow.runs.c454be')"
-        [appearance]="'plain'"
-        [columns]="'110px minmax(180px, 1fr) 120px 90px 120px'"
+        [virtualized]="true"
+        [ngpContextMenuTriggerFor]="runMenu()"
       >
         <mosaik-table-header test-id="actions-workflow-table-header">
           <mosaik-table-header-row>
-            <mosaik-table-header-cell [text]="tr('loc.symphony.result.6e7d50')" />
             <mosaik-table-header-cell
+              key="result"
+              width="110px"
+              [text]="tr('loc.symphony.result.6e7d50')"
+            />
+            <mosaik-table-header-cell
+              key="revision"
+              width="minmax(180px, 1fr)"
               test-id="actions-workflow-revision-heading"
               [text]="tr('loc.symphony.revision.2e516d')"
             />
-            <mosaik-table-header-cell [text]="tr('loc.symphony.runner.2184a4')" />
-            <mosaik-table-header-cell [text]="tr('loc.symphony.duration.4fc52a')" />
-            <mosaik-table-header-cell [text]="tr('loc.symphony.started.ecbc89')" />
+            <mosaik-table-header-cell
+              key="runner"
+              width="120px"
+              [text]="tr('loc.symphony.runner.2184a4')"
+            />
+            <mosaik-table-header-cell
+              key="duration"
+              width="90px"
+              [text]="tr('loc.symphony.duration.4fc52a')"
+            />
+            <mosaik-table-header-cell
+              key="started"
+              width="120px"
+              [text]="tr('loc.symphony.started.ecbc89')"
+            />
           </mosaik-table-header-row>
         </mosaik-table-header>
         <mosaik-table-body>
@@ -155,8 +167,11 @@
             [attr.test-id]="'action-run-' + row.id"
             [attr.aria-selected]="presenter.selectedRun()?.id === row.id"
             [isSelected]="presenter.selectedRun()?.id === row.id"
-            (click)="presenter.selectRunCommand.execute(row)"
-            (keydown.enter)="presenter.selectRunCommand.execute(row)"
+            [key]="row.id"
+            [value]="row"
+            (click)="presenter.openRunCommand.execute(row)"
+            (keydown.enter)="presenter.openRunCommand.execute(row)"
+            (keydown.space)="$event.preventDefault(); presenter.openRunCommand.execute(row)"
           >
             <mosaik-table-body-cell>
               @if (row.status === 'in-progress') {
@@ -216,405 +231,138 @@
       }
     </div>
 
-    @if (presenter.selectedRun(); as row) {
-    <section
-      class="flex min-h-0 min-w-0 flex-col gap-1.25 overflow-clip"
-      test-id="actions-selected-run"
-      [attr.aria-label]="tr('loc.symphony.run.815f13', [(row.revision | shortRevision)])"
+    @if (presenter.selectedRun(); as row) { @if (row.status === 'failed') { @for (failedRun of
+    [row]; track failedRun.id) {
+    <mosaik-banner
+      class="min-w-0 flex-none"
+      test-id="actions-diagnosis"
+      [header]="tr('loc.symphony.diagnosis.2e3074') + ' · ' + (failedRun | actionRunRevision)"
+      [isOpen]="true"
+      [collapsible]="true"
+      [isExpanded]="expandedDiagnosisId() === failedRun.id"
+      (expanded)="expandedDiagnosisId.set(failedRun.id)"
+      (collapsed)="expandedDiagnosisId.set(undefined)"
+      [variant]="'highlight'"
+      [appearance]="'soft'"
+      [orientation]="'horizontal'"
+      [iconName]="'sparkle'"
+      [iconSize]="'small'"
     >
-      <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
-        <div class="flex min-w-0 flex-1 flex-col gap-[2px]">
-          <mosaik-text
-            part="actions-section-heading"
-            test-id="actions-selected-run-title"
-            [mosaikTypography]="'subtitle2'"
-            [truncate]="true"
-            [text]="tr('loc.symphony.run.649713', [(row.revision ? (row.revision | shortRevision) : row.run?.runNumber ? '#' + row.run.runNumber : ''), (row.status === 'in-progress'
-            ? tr('loc.symphony.running.for.90808b', [(row.startedAt | relativeTime: presenter.now())])
-            : row.status === 'queued'
-              ? tr('loc.symphony.waiting.for.0a870f', [(row.startedAt | relativeTime: presenter.now())])
-              : (row.status | actionRunBadge).label.toLowerCase()
-                + ((row.startedAt | actionRunDuration: row.finishedAt) ? ' after ' + (row.startedAt | actionRunDuration: row.finishedAt) : ''))])"
-          />
-          <mosaik-text
-            [mosaikTypography]="'caption'"
-            [variant]="'neutral'"
-            [truncate]="true"
-            [text]="row.runner === 'github-local' && row.run
-          ? tr('loc.symphony.github.local.runner.cbf87b', [(row.run.status | actionRunBadge).label.toLowerCase(), ((row.runningLocally ? 'in-progress' : (row.localExecution?.state ?? row.status)) | actionRunBadge).label.toLowerCase()])
-          : (row.run?.title ?? row.workflowName) + (row.actor ? ' · by ' + row.actor : '')"
-          />
-        </div>
-        @if (presenter.runControls()(row); as controls) {
-        <div class="flex flex-none items-center gap-0.5">
-          @if (controls.canViewLog) {
-          <mosaik-button
-            test-id="actions-run-log"
-            [label]="tr('loc.symphony.view.log.ccab91')"
-            [iconName]="'open'"
-            [iconSize]="'small'"
-            [appearance]="'plain'"
-            (click)="presenter.viewLogCommand.execute(row)"
-          />
-          } @if (controls.canStop) {
-          <mosaik-button
-            test-id="actions-run-stop"
-            [label]="tr('loc.symphony.stop.cae7d5')"
-            [iconName]="'clear'"
-            [iconSize]="'small'"
-            [appearance]="'outline'"
-            (click)="presenter.stopRunCommand.execute(row)"
-          />
-          } @if (controls.canCancel) {
-          <mosaik-button
-            test-id="actions-run-cancel"
-            [label]="tr('loc.symphony.cancel.19766e')"
-            [iconName]="'clear'"
-            [iconSize]="'small'"
-            [appearance]="'outline'"
-            (click)="presenter.cancelRunCommand.execute(row)"
-          />
-          } @if (row.run && presenter.localCiEnabled()(row.run) && !row.runningLocally) {
-          <mosaik-button
-            test-id="actions-run-local"
-            [label]="tr('loc.symphony.rerun.locally.d96def')"
-            [iconName]="'play'"
-            [iconSize]="'small'"
-            [appearance]="'outline'"
-            [disabled]="!controls.canRunLocally"
-            [mosaikTooltip]="controls.canRunLocally ? tr('loc.symphony.run.this.revision.on.the.managed.local.linux.vm.33f633') : tr('loc.symphony.another.local.action.is.using.the.single.managed.run.c4a008')"
-            (click)="presenter.runLocallyCommand.execute(row)"
-          />
-          } @if (row.status !== 'failed') { @if (controls.canRerun) {
-          <mosaik-button
-            test-id="actions-run-rerun"
-            [label]="tr('loc.symphony.rerun.on.github.5df0c3')"
-            [iconName]="'sync'"
-            [iconSize]="'small'"
-            [appearance]="'outline'"
-            (click)="presenter.rerunCommand.execute(row)"
-          />
-          } @if (controls.canOpenInGitHub) {
-          <mosaik-button
-            test-id="actions-run-open"
-            [label]="tr('loc.symphony.open.in.github.4fb788')"
-            [iconName]="'open'"
-            [iconSize]="'small'"
-            [appearance]="'plain'"
-            (click)="presenter.openInGitHubCommand.execute(row)"
-          />
-          } }
-        </div>
+      <div slot="actions" class="flex flex-wrap items-center justify-end gap-1">
+        @if (presenter.recovery().repair; as repair) {
+        <mosaik-badge
+          test-id="actions-repair-state"
+          [label]="repair.state === 'succeeded' ? tr('loc.symphony.repaired.c7531e') : repair.state === 'failed' || repair.state === 'cancelled' ? tr('loc.symphony.repair.failed.9445b1') : tr('loc.symphony.repairing.e2c520')"
+          [variant]="repair.state === 'succeeded' ? 'success' : repair.state === 'failed' || repair.state === 'cancelled' ? 'danger' : 'info'"
+          [appearance]="'soft'"
+        />
         }
+        <mosaik-button
+          test-id="actions-fix-with-ai"
+          [size]="'small'"
+          [label]="tr('loc.symphony.fix.with.ai.c4c097')"
+          [iconName]="'sparkle'"
+          [iconSize]="'small'"
+          [appearance]="'outline'"
+          [variant]="'highlight'"
+          [isBusy]="presenter.fixingRunId() === failedRun.id"
+          [disabled]="presenter.fixWithAi().state !== 'available' || !!presenter.fixingRunId()"
+          (click)="presenter.fixWithAiCommand.execute()"
+        />
+        <mosaik-button
+          test-id="actions-toggle-diagnosis"
+          [iconName]="expandedDiagnosisId() === failedRun.id ? 'chevron-up' : 'chevron-down'"
+          [attr.aria-label]="tr('loc.symphony.diagnosis.2e3074')"
+          [attr.aria-expanded]="expandedDiagnosisId() === failedRun.id"
+          [appearance]="'plain'"
+          [size]="'small'"
+          (click)="expandedDiagnosisId.set(expandedDiagnosisId() === failedRun.id ? undefined : failedRun.id)"
+        />
       </div>
-
-      <div
-        class="grid min-h-0 min-w-0 flex-1 gap-2.5 overflow-clip"
-        [class]="row.status === 'failed' ? 'grid-rows-2' : 'grid-rows-1'"
-        test-id="actions-run-details"
-      >
+      <div slot="subHeader">
+        @if (expandedDiagnosisId() === failedRun.id) {
         <div
-          class="grid min-h-0 min-w-0 grid-cols-2 gap-1.25 overflow-clip"
-          test-id="actions-run-output"
+          class="flex max-h-18 min-w-0 flex-col gap-1 overflow-y-auto overscroll-contain"
+          test-id="actions-diagnosis-content"
         >
-          @if (row.run) {
-          <div
-            part="actions-frame"
-            class="flex min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain"
-            role="list"
-            test-id="actions-run-steps"
-          >
-            @if (presenter.runDetailsLoading() && !presenter.runSteps().length) { @for (line of [1,
-            2, 3]; track line) {
-            <div
-              class="flex h-[42px] min-w-0 flex-none items-center gap-1 px-1.75"
-              aria-hidden="true"
-            >
-              <mosaik-skeleton
-                [shape]="'circle'"
-                [width]="'20px'"
-                [height]="'20px'"
-                [shimmer]="true"
-              />
-              <mosaik-skeleton
-                [width]="line === 2 ? '12rem' : '8rem'"
-                [height]="'14px'"
-                [shimmer]="true"
-              />
-            </div>
-            } } @else if (presenter.runDetailsFailed()) {
-            <div
-              class="flex min-w-0 flex-none flex-col gap-[2px] px-1.75 py-1.25"
-              test-id="actions-run-steps-failed"
-            >
-              <mosaik-text
-                [mosaikTypography]="'body2'"
-                [text]="tr('loc.symphony.steps.unavailable.ec9e2e')"
-              />
-              <mosaik-text
-                [mosaikTypography]="'caption'"
-                [variant]="'neutral'"
-                [text]="tr('loc.symphony.github.did.not.report.the.jobs.of.this.run.view.the.fd1341')"
-              />
-            </div>
-            } @else { @for (step of presenter.runSteps(); track step.id) {
-            <div
-              class="flex min-w-0 flex-none items-center gap-1 py-[9px]"
-              role="listitem"
-              [class]="step.nested ? 'pr-1.75 pl-4.75' : 'px-1.75'"
-              [attr.test-id]="'actions-run-step-' + step.id"
-            >
-              @if (step.status === 'in-progress') {
+          <div class="flex min-w-0 flex-none flex-col gap-1" test-id="actions-diagnosis-body">
+            @if (presenter.recovery().diagnosis; as diagnosis) { @if (diagnosis.state ===
+            'succeeded') {
+            <mosaik-text
+              test-id="actions-diagnosis-text"
+              [mosaikTypography]="'body2'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="diagnosis.summary || tr('loc.symphony.the.ai.diagnosis.reported.no.explanation.c6bd31')"
+            />
+            } @else if (diagnosis.state === 'failed' || diagnosis.state === 'cancelled') {
+            <mosaik-text
+              test-id="actions-diagnosis-text"
+              [mosaikTypography]="'body2'"
+              [variant]="'neutral'"
+              [wrap]="true"
+              [text]="diagnosis.error || tr('loc.symphony.the.ai.diagnosis.did.not.complete.372946')"
+            />
+            } @else {
+            <div class="flex min-w-0 items-center gap-1">
               <mosaik-progress-ring
-                class="flex-none"
                 role="img"
-                [attr.aria-label]="step.status | ciLogStatusLabel"
+                [attr.aria-label]="tr('loc.symphony.diagnosing.362fa4')"
                 [isIndeterminate]="true"
                 [variant]="'primary'"
                 [radius]="8"
                 [thickness]="2"
               />
-              } @else {
-              <mosaik-icon
-                class="flex-none"
-                role="img"
-                [attr.aria-label]="step.status | ciLogStatusLabel"
-                [icon]="(step.status | runStepPresentation).icon"
-                [variant]="(step.status | runStepPresentation).variant"
-                [size]="'small'"
-              />
-              }
               <mosaik-text
-                class="min-w-0 flex-1"
-                [mosaikTypography]="step.kind === 'job' ? 'subtitle2' : 'body2'"
-                [truncate]="true"
-                [text]="step.name + (step.status === 'skipped' ? ' · skipped' : '')"
-              />
-              <mosaik-text
-                class="flex-none"
-                [mosaikTypography]="'caption'"
-                [variant]="'neutral'"
-                [text]="(step.startedAt | actionRunDuration: step.finishedAt) || '—'"
-              />
-            </div>
-            } @empty {
-            <div
-              class="flex min-w-0 flex-none flex-col gap-[2px] px-1.75 py-1.25"
-              test-id="actions-run-steps-empty"
-            >
-              <mosaik-text
+                test-id="actions-diagnosis-text"
                 [mosaikTypography]="'body2'"
-                [text]="tr('loc.symphony.no.jobs.reported.yet.4ea162')"
-              />
-              <mosaik-text
-                [mosaikTypography]="'caption'"
                 [variant]="'neutral'"
-                [text]="tr('loc.symphony.steps.appear.when.the.workflow.schedules.its.first.j.f2c7e4')"
+                [text]="tr('loc.symphony.an.agent.is.diagnosing.this.failure.d63b0b')"
               />
             </div>
-            } }
-          </div>
-          }
-          <section
-            class="flex min-h-0 min-w-0 flex-col gap-0.5 overflow-clip"
-            test-id="actions-run-log-region"
-            [attr.aria-label]="tr('loc.symphony.run.log.22ae6e')"
-          >
+            } } @else {
             <mosaik-text
-              class="flex-none"
-              [mosaikTypography]="'caption'"
-              [text]="tr('loc.symphony.run.log.22ae6e')"
-            />
-            @if (presenter.logExcerpt(); as excerpt) {
-            <pre
-              part="actions-log-excerpt"
-              class="technical-value m-0 min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain px-1.75 py-1.5"
-              test-id="actions-run-log-excerpt"
-            >
-{{ excerpt }}</pre>
-            } @else {
-            <mosaik-text
-              class="min-h-0 overflow-y-auto"
-              test-id="actions-run-log-empty"
-              [mosaikTypography]="'caption'"
+              test-id="actions-diagnosis-text"
+              [mosaikTypography]="'body2'"
               [variant]="'neutral'"
               [wrap]="true"
-              [text]="tr('loc.symphony.no.log.excerpt.is.available.open.the.full.log.to.ins.1cc2c6')"
+              [text]="tr('loc.symphony.no.ai.diagnosis.yet.symphony.diagnoses.failed.checks.4e8f5e', [(presenter.failedStep() ? tr('loc.symphony.the.run.failed.in.630229', [presenter.failedStep()?.name]) : '')])"
             />
-            }
-          </section>
-        </div>
-
-        @if (row.status === 'failed') {
-        <section
-          part="actions-frame"
-          class="flex min-h-0 min-w-0 flex-col gap-1 overflow-clip p-1"
-          test-id="actions-diagnosis"
-          [attr.aria-label]="tr('loc.symphony.diagnosis.2e3074')"
-        >
-          <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
-            @if (presenter.diagnosisAgentName(); as agentName) {
-            <mosaik-avatar
-              class="flex-none"
-              [text]="agentName"
-              [size]="'small'"
-              [appearance]="'soft'"
-            />
-            } @else {
-            <mosaik-avatar
-              class="flex-none"
-              [icon]="'sparkle'"
-              [size]="'small'"
-              [appearance]="'soft'"
-            />
-            }
-            <div class="flex min-w-0 flex-1 items-center gap-1">
-              <div class="flex min-w-0 items-center gap-1">
-                <mosaik-text
-                  [mosaikTypography]="'subtitle2'"
-                  [text]="tr('loc.symphony.diagnosis.2e3074')"
-                />
-                @if (presenter.recovery().repair; as repair) {
-                <mosaik-badge
-                  test-id="actions-repair-state"
-                  [label]="repair.state === 'succeeded' ? tr('loc.symphony.repaired.c7531e') : repair.state === 'failed' || repair.state === 'cancelled' ? tr('loc.symphony.repair.failed.9445b1') : tr('loc.symphony.repairing.e2c520')"
-                  [variant]="repair.state === 'succeeded' ? 'success' : repair.state === 'failed' || repair.state === 'cancelled' ? 'danger' : 'info'"
-                  [appearance]="'soft'"
-                />
-                }
-              </div>
-            </div>
-            <div class="flex min-w-0 flex-none flex-wrap items-center gap-1">
-              <mosaik-button
-                test-id="actions-fix-with-ai"
-                [size]="'small'"
-                [label]="tr('loc.symphony.fix.with.ai.c4c097')"
-                [iconName]="'sparkle'"
-                [iconSize]="'small'"
-                [appearance]="'solid'"
-                [variant]="'primary'"
-                [isBusy]="presenter.fixingRunId() === row.id"
-                [disabled]="presenter.fixWithAi().state !== 'available' || !!presenter.fixingRunId()"
-                [mosaikTooltip]="presenter.fixWithAi().state === 'available'
-        ? tr('loc.symphony.an.agent.revises.the.pull.request.with.this.failure.226e04')
-        : ''"
-                (click)="presenter.fixWithAiCommand.execute()"
-              />
-              @if (presenter.runControls()(row).canRerun) {
-              <mosaik-button
-                test-id="actions-diagnosis-rerun"
-                [size]="'small'"
-                [attr.aria-label]="tr('loc.symphony.rerun.on.github.5df0c3')"
-                [mosaikTooltip]="tr('loc.symphony.rerun.on.github.5df0c3')"
-                [iconName]="'sync'"
-                [iconSize]="'small'"
-                [appearance]="'outline'"
-                (click)="presenter.rerunCommand.execute(row)"
-              />
-              } @if (presenter.runControls()(row).canOpenInGitHub) {
-              <mosaik-button
-                test-id="actions-diagnosis-open"
-                [size]="'small'"
-                [attr.aria-label]="tr('loc.symphony.open.in.github.4fb788')"
-                [mosaikTooltip]="tr('loc.symphony.open.in.github.4fb788')"
-                [iconName]="'open'"
-                [iconSize]="'small'"
-                [appearance]="'plain'"
-                (click)="presenter.openInGitHubCommand.execute(row)"
-              />
-              }
-            </div>
-          </div>
-          <div
-            class="flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain"
-            test-id="actions-diagnosis-content"
-          >
-            <div class="flex min-w-0 flex-none flex-col gap-1" test-id="actions-diagnosis-body">
-              @if (presenter.recovery().diagnosis; as diagnosis) { @if (diagnosis.state ===
-              'succeeded') {
+            } @if (presenter.fixWithAi().state !== 'available') {
+            <div
+              class="flex min-w-0 flex-wrap items-center gap-1"
+              test-id="actions-fix-with-ai-reason"
+            >
               <mosaik-text
-                test-id="actions-diagnosis-text"
-                [mosaikTypography]="'body2'"
+                class="min-w-0"
+                [mosaikTypography]="'caption'"
                 [variant]="'neutral'"
                 [wrap]="true"
-                [text]="diagnosis.summary || tr('loc.symphony.the.ai.diagnosis.reported.no.explanation.c6bd31')"
-              />
-              } @else if (diagnosis.state === 'failed' || diagnosis.state === 'cancelled') {
-              <mosaik-text
-                test-id="actions-diagnosis-text"
-                [mosaikTypography]="'body2'"
-                [variant]="'neutral'"
-                [wrap]="true"
-                [text]="diagnosis.error || tr('loc.symphony.the.ai.diagnosis.did.not.complete.372946')"
-              />
-              } @else {
-              <div class="flex min-w-0 items-center gap-1">
-                <mosaik-progress-ring
-                  role="img"
-                  [attr.aria-label]="tr('loc.symphony.diagnosing.362fa4')"
-                  [isIndeterminate]="true"
-                  [variant]="'primary'"
-                  [radius]="8"
-                  [thickness]="2"
-                />
-                <mosaik-text
-                  test-id="actions-diagnosis-text"
-                  [mosaikTypography]="'body2'"
-                  [variant]="'neutral'"
-                  [text]="tr('loc.symphony.an.agent.is.diagnosing.this.failure.d63b0b')"
-                />
-              </div>
-              } } @else {
-              <mosaik-text
-                test-id="actions-diagnosis-text"
-                [mosaikTypography]="'body2'"
-                [variant]="'neutral'"
-                [wrap]="true"
-                [text]="tr('loc.symphony.no.ai.diagnosis.yet.symphony.diagnoses.failed.checks.4e8f5e', [(presenter.failedStep() ? tr('loc.symphony.the.run.failed.in.630229', [presenter.failedStep()?.name]) : '')])"
-              />
-              } @if (presenter.fixWithAi().state !== 'available') {
-              <div
-                class="flex min-w-0 flex-wrap items-center gap-1"
-                test-id="actions-fix-with-ai-reason"
-              >
-                <mosaik-text
-                  class="min-w-0"
-                  [mosaikTypography]="'caption'"
-                  [variant]="'neutral'"
-                  [wrap]="true"
-                  [text]="presenter.fixWithAi().state === 'policy'
+                [text]="presenter.fixWithAi().state === 'policy'
         ? tr('loc.symphony.fix.with.ai.needs.fix.failed.checks.set.to.repair.or.8c778f')
         : presenter.fixWithAi().state === 'busy'
           ? tr('loc.symphony.an.agent.is.already.working.on.this.pull.request.365257')
           : presenter.fixWithAi().state === 'unavailable'
             ? tr('loc.symphony.ai.agents.are.not.part.of.this.symphony.setup.5a7dea')
             : tr('loc.symphony.fix.with.ai.revises.symphony.s.own.pull.requests.thi.7428f7')"
-                />
-                @if (presenter.fixWithAi().state === 'policy') {
-                <mosaik-button
-                  test-id="actions-open-automation-settings"
-                  [label]="tr('loc.symphony.open.automation.settings.f04940')"
-                  [appearance]="'plain'"
-                  [size]="'small'"
-                  (click)="presenter.openAutomationSettingsCommand.execute()"
-                />
-                }
-              </div>
+              />
+              @if (presenter.fixWithAi().state === 'policy') {
+              <mosaik-button
+                test-id="actions-open-automation-settings"
+                [label]="tr('loc.symphony.open.automation.settings.f04940')"
+                [appearance]="'plain'"
+                [size]="'small'"
+                (click)="presenter.openAutomationSettingsCommand.execute()"
+              />
               }
             </div>
+            }
           </div>
-        </section>
+        </div>
         }
       </div>
-    </section>
-    } @else {
-    <mosaik-empty-state
-      test-id="actions-no-selected-run"
-      [iconName]="'executionOutline'"
-      [header]="tr('loc.symphony.no.run.selected.0faf87')"
-      [content]="tr('loc.symphony.select.a.workflow.run.to.inspect.its.steps.and.log.9dfc29')"
-    />
-    }
+    </mosaik-banner>
+    } } }
   </div>
   }
 </ng-container>

@@ -9,7 +9,7 @@ Nx builds Angular into `dist/apps/renderer/browser`, Electron Main and sandbox-c
 ## Cross-platform consumer build contract
 
 `yarn design:md` and `yarn design:md-check` use the installed public
-`mosaik-design-md` CLI from `@pixel-brewery/mosaik-themes` version `0.1.183`.
+`mosaik-design-md` CLI from `@pixel-brewery/mosaik-themes` version `0.1.199`.
 Its configuration serializes repository-relative source paths into the generated
 Markdown headers. The upstream CLI uses native path separators there, making a
 Windows check report the committed `DESIGN.md` as stale even when the theme and
@@ -17,7 +17,7 @@ component values are unchanged. This CLI version exposes no public path-header
 normalizer option.
 
 The native Yarn patch
-[@pixel-brewery/mosaik-themes 0.1.183](../../../.yarn/patches/@pixel-brewery-mosaik-themes-npm-0.1.183-c669e27788.patch)
+[@pixel-brewery/mosaik-themes 0.1.199](../../../.yarn/patches/mosaik-themes-0.1.199-path-separators.patch)
 changes only `config.where` in `bin/design-md.mjs`: its relative display path
 replaces backslashes with `/` before rendering Markdown. It does not change
 filesystem resolution, theme evaluation, component APIs or runtime styling.
@@ -29,7 +29,7 @@ The committed patch, central [Yarn resolution](../../../package.json) and
 [lockfile](../../../yarn.lock) are one dependency contract.
 `yarn install --immutable` selects and applies the patch from that contract;
 manual edits to `node_modules` and a parallel generator wrapper are not part of
-the build. All direct Mosaik family versions remain pinned to `0.1.183`, with
+the build. All direct Mosaik family versions remain pinned to `0.1.199`, with
 no upstream release or runtime/component patch introduced by this correction.
 The [design CLI policy regression](../../../tools/design-md-portability.policy.spec.ts)
 invokes the actual installed CLI with native and Windows-style path serialization

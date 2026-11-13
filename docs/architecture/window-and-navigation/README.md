@@ -169,12 +169,12 @@ Relative Zeiten verwenden eine gemeinsame Uhr, die alle 30 Sekunden tickt. `form
 
 Ist ein Updatezustand bekannt, zeigt die Statusleiste ausschließlich `V<currentVersion>` ohne Produktnamen. Die Versionsquelle und etwaige Prerelease-Zusätze bleiben unverändert. Die Updateschaltfläche folgt dem Zustand:
 
-| `UpdateState.kind` | Darstellung                                                                                                                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `available`        | Nur-Symbol-Schaltfläche `download`, Beschriftung und Tooltip `Download Symphony <targetVersion>`; Klick startet den Download, solange der Store nicht beschäftigt ist                          |
-| `downloading`      | dieselbe Schaltfläche gesperrt, Tooltip `Downloading the update…`; darüber ein `ProgressRing` 0–100 mit `role="progressbar"` und `aria-valuenow` in ganzen Prozent; ohne `progress` unbestimmt |
-| `ready`            | beschriftete Schaltfläche **Restart to update** mit Symbol `sync`, `aria-label` `Install Symphony <targetVersion> and restart`, Busy während der Anfrage                                       |
-| sonst              | keine Schaltfläche                                                                                                                                                                             |
+| `UpdateState.kind` | Darstellung                                                                                                                                                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `available`        | Nur-Symbol-Schaltfläche `download`, Beschriftung und Tooltip `Download Symphony <targetVersion>`; Klick startet den Download, solange der Store nicht beschäftigt ist                                                                             |
+| `downloading`      | dieselbe Schaltfläche gesperrt, Tooltip `Downloading the update…`; im `icon`-Slot ersetzt ein `ProgressRing` das Downloadsymbol; der Ring meldet 0–100 mit `role="progressbar"` und `aria-valuenow` in ganzen Prozent; ohne `progress` unbestimmt |
+| `ready`            | beschriftete Schaltfläche **Restart to update** mit Symbol `sync`, `aria-label` `Install Symphony <targetVersion> and restart`, Busy während der Anfrage                                                                                          |
+| sonst              | keine Schaltfläche                                                                                                                                                                                                                                |
 
 Zwischen Synchronisierungshinweis und Version sitzt die Glocke **Notifications** (Symbol `bell`, `test-id="notification-bell"`) des Notification-Pakets mit ihrem Zähler; sie öffnet das Benachrichtigungscenter, dessen Inhalt nicht zu diesem Vertrag gehört.
 

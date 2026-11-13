@@ -59,7 +59,7 @@ export default defineConfig({
     setupFiles: ['apps/renderer/src/test-setup.ts'],
     server: {
       deps: {
-        inline: [/@pixel-brewery\/mosaik-elements-(angular|foundation)/],
+        inline: [/@pixel-brewery\/(?:mosaik-elements-(?:angular|foundation)|ngpel-)/],
       },
     },
     include: ['apps/renderer/**/*.spec.ts', 'libs/frontend/**/*.spec.ts'],

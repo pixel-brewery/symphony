@@ -7,6 +7,7 @@ import type { FlowElement } from '@pixel-brewery/mosaik-elements-foundation/comp
 import type { IOrchestrationApi } from '@symphony/ipc-contracts-composition';
 import type { BrowserWindow } from 'electron';
 import { prepareMainWindow } from './prepareMainWindow';
+import { closeSettings } from './closeSettings';
 
 // #endregion
 
@@ -130,7 +131,16 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     // `View log` opens the Action drawer of the run without leaving `All runs`.
     await page.getByTestId('actions-running-log-actions-ci:7001').click();
     await expect(page.getByTestId('action-detail-drawer')).toBeVisible();
+    await expect(page.getByTestId('action-detail-cancel-remote')).toHaveCount(0);
     await page.keyboard.press('Escape');
+    await expect(page.getByTestId('action-detail-drawer')).toHaveCount(0);
+
+    // A finished run opens its log directly and leaves All runs selected behind it.
+    await page.getByTestId('actions-history-actions-ci:7002').click();
+    await expect(page.getByTestId('action-detail-drawer')).toBeVisible();
+    await expect(page.getByTestId('action-detail-job-actions-ci:7002:job:quality')).toBeVisible();
+    await expect(page.getByTestId('actions-scope-all')).toHaveAttribute('aria-current', 'page');
+    await page.getByTestId('action-detail-close').click();
     await expect(page.getByTestId('action-detail-drawer')).toHaveCount(0);
 
     const filterMenu = page.getByTestId('actions-filter');
@@ -163,7 +173,13 @@ test('navigates repository workflows and exposes remote and managed-local dispat
       'text',
       '.github/workflows/deploy.yml',
     );
-    await expect(page.getByTestId('action-run-actions-ci:7001')).toBeVisible();
+    const queuedWorkflowRun = page.getByTestId('action-run-actions-ci:7001');
+    await queuedWorkflowRun.click({ button: 'right' });
+    await expect(page.getByTestId('actions-run-cancel')).toBeVisible();
+    await expect(page.getByTestId('actions-run-rerun')).toHaveCount(0);
+    await expect(page.getByTestId('action-detail-drawer')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('actions-run-cancel')).toBeHidden();
     await expect(page.getByTestId('workflow-dispatch-available')).toBeVisible();
     await page.getByTestId('workflow-dispatch-remote-actions-ci:102').click();
     await expect(page.getByTestId('workflow-dispatch-ref').locator('input')).toHaveValue('main');
@@ -209,6 +225,14 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     }, runId);
     const flow = page.getByTestId('ci-job-flow');
     await expect(flow).toBeVisible();
+    const toolbar = page.getByTestId('action-detail-toolbar');
+    await expect(toolbar.getByTestId('action-detail-open-run')).toBeVisible();
+    await expect(toolbar.getByTestId('action-detail-run-remote')).toBeVisible();
+    await expect(toolbar.getByTestId('action-detail-close')).toBeVisible();
+    await expect(page.getByTestId('ci-job-minimap')).toHaveCount(0);
+    await expect(page.getByTestId('ci-job-controls')).toHaveCount(0);
+    const flowBounds = await flow.boundingBox();
+    expect(flowBounds?.height ?? 0).toBeCloseTo(192, 0);
     // The link also selects the run's workflow and the run behind the drawer.
     await expect(page.getByTestId('actions-workflow-title')).toHaveJSProperty('text', 'PR Quality');
     await expect(page.getByTestId(`action-run-${runId}`)).toHaveAttribute('aria-selected', 'true');
@@ -217,6 +241,9 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     await expect
       .poll(() => flow.evaluate((element) => ((element as FlowElement).bounds?.width ?? 0) > 520))
       .toBe(true);
+    await expect
+      .poll(() => flow.evaluate((element) => (element as FlowElement).zoom))
+      .toBeCloseTo(0.8, 2);
     await expect(flow).toHaveJSProperty('errors', []);
     await page.screenshot({
       animations: 'disabled',
@@ -228,7 +255,8 @@ test('navigates repository workflows and exposes remote and managed-local dispat
       path: resolve(outputDirectory, 'actions-flow-diagram.png'),
     });
 
-    // Keyboard activation opens the same job log as a pointer activation.
+    // The native Home command fits all jobs; activation still opens the same job log.
+    await flow.locator('[part=viewport]').press('Home');
     const job = page.getByTestId('ci-open-job-job-1');
     await job.focus();
     await job.press('Enter');
@@ -241,7 +269,7 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     await expect(page.getByTestId(`action-detail-job-${runId}:job:quality`)).toBeInViewport();
     await job.click();
     await expect(page.getByTestId(`action-detail-job-${runId}:job:job-1`)).toBeInViewport();
-    // Long histories, steps and failure output stay in independently bounded desktop regions.
+    // A long workflow history stays bounded and exposes each run's full output through its drawer.
     await app.close();
     app = await electron.launch({
       ...launchOptions,
@@ -255,6 +283,11 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     const layoutPage = await prepareMainWindow(app, 'actions-view');
     layoutPage.on('pageerror', (error) => rendererErrors.push(error.stack ?? error.message));
     const layoutWindow = await app.browserWindow(layoutPage);
+    await layoutPage.getByTestId('navigation-settings').click();
+    await layoutPage.getByTestId('global-settings-section-appearance').click();
+    await layoutPage.getByTestId('theme-dark').click();
+    await closeSettings(layoutPage);
+    await expect(layoutPage.locator('html')).toHaveAttribute('theme-mode', 'dark');
     await layoutPage.getByTestId('actions-scope-all').click();
     await expect(layoutPage.getByTestId('actions-history-table')).toBeVisible();
     await expect(layoutPage.getByTestId('actions-all-runs-header')).toBeInViewport({ ratio: 1 });
@@ -288,15 +321,80 @@ test('navigates repository workflows and exposes remote and managed-local dispat
 
     const table = layoutPage.getByTestId('actions-workflow-table');
     const tableHeader = layoutPage.getByTestId('actions-workflow-table-header');
-    await expect(layoutPage.getByTestId(/^action-run-actions-ci:/u)).toHaveCount(24);
-    await expect(layoutPage.getByTestId('actions-run-log-excerpt')).toBeVisible();
-    await expect(layoutPage.getByTestId('actions-diagnosis')).toBeVisible();
-    await expect(layoutPage.getByTestId('actions-diagnosis-rerun')).toHaveAccessibleName(
-      'Rerun on GitHub',
-    );
-    await expect(layoutPage.getByTestId('actions-diagnosis-open')).toHaveAccessibleName(
-      'Open in GitHub',
-    );
+    const drawer = layoutPage.getByTestId('action-detail-drawer');
+    const failedRun = layoutPage.getByTestId('action-run-actions-ci:7001');
+    const olderRun = layoutPage.getByTestId('action-run-actions-ci:7004');
+    const lastRun = layoutPage.getByTestId('action-run-actions-ci:7358');
+    const diagnosis = layoutPage.getByTestId('actions-diagnosis');
+    const diagnosisHeading = diagnosis.locator('[part~="heading"]');
+    const diagnosisContent = layoutPage.getByTestId('actions-diagnosis-content');
+    await expect(layoutPage.getByTestId('actions-run-log-region')).toHaveCount(0);
+    await expect(diagnosis).toHaveJSProperty('variant', 'highlight');
+    await expect(diagnosis).toHaveJSProperty('isExpanded', false);
+    await expect(diagnosisContent).toBeHidden();
+
+    await failedRun.click();
+    await expect(drawer).toBeVisible();
+    const graphSkeleton = layoutPage.getByTestId('action-detail-graph-skeleton');
+    await expect(graphSkeleton).toBeVisible();
+    const skeletonBounds = await graphSkeleton.boundingBox();
+    const skeletonHeading = await drawer.getByTestId('action-detail-log-heading').boundingBox();
+    await layoutPage.screenshot({
+      animations: 'disabled',
+      path: resolve(outputDirectory, 'actions-run-skeleton-dark.png'),
+    });
+    const loadedFlow = drawer.getByTestId('ci-job-flow');
+    await expect(loadedFlow).toBeVisible();
+    const loadedBounds = await loadedFlow.boundingBox();
+    const loadedHeading = await drawer.getByTestId('action-detail-log-heading').boundingBox();
+    expect(skeletonBounds?.height).toBeCloseTo(loadedBounds?.height ?? 0, 0);
+    expect(skeletonHeading?.y).toBeCloseTo(loadedHeading?.y ?? 0, 0);
+    await expect(
+      layoutPage.getByTestId('action-detail-job-actions-ci:7001:job:quality'),
+    ).toBeVisible();
+    await expect(
+      layoutPage.getByTestId('action-detail-step-actions-ci:7001:job:quality:step:test'),
+    ).toBeVisible();
+    await expect(
+      layoutPage.getByTestId('action-detail-step-protocol-actions-ci:7001:job:quality:step:test'),
+    ).toContainText('Verification output 40');
+    await layoutPage.screenshot({
+      animations: 'disabled',
+      path: resolve(outputDirectory, 'actions-run-drawer-dark.png'),
+    });
+    await layoutPage.keyboard.press('Escape');
+    await expect(drawer).toHaveCount(0);
+    await expect(failedRun).toHaveAttribute('aria-selected', 'true');
+
+    await olderRun.click({ button: 'right' });
+    const contextLog = layoutPage.getByTestId('actions-run-log');
+    await expect(contextLog).toBeVisible();
+    await expect(layoutPage.getByTestId('actions-run-open')).toBeVisible();
+    await expect(layoutPage.getByTestId('actions-run-rerun')).toBeVisible();
+    await expect(layoutPage.getByTestId('actions-run-cancel')).toHaveCount(0);
+    await expect(drawer).toHaveCount(0);
+    await layoutPage.keyboard.press('Escape');
+    await expect(contextLog).toBeHidden();
+    await expect(drawer).toHaveCount(0);
+
+    await olderRun.press('Shift+F10');
+    await contextLog.click();
+    await expect(drawer).toBeVisible();
+    await expect(
+      layoutPage.getByTestId('action-detail-job-actions-ci:7004:job:quality'),
+    ).toBeVisible();
+    await layoutPage.keyboard.press('Escape');
+    await expect(drawer).toHaveCount(0);
+
+    await failedRun.focus();
+    await failedRun.press('Enter');
+    await expect(drawer).toBeVisible();
+    await expect(
+      layoutPage.getByTestId('action-detail-job-actions-ci:7001:job:quality'),
+    ).toBeVisible();
+    await layoutPage.getByTestId('action-detail-close').click();
+    await expect(drawer).toHaveCount(0);
+
     for (const size of [
       { width: 1024, height: 674 },
       { width: 960, height: 674 },
@@ -309,43 +407,24 @@ test('navigates repository workflows and exposes remote and managed-local dispat
         ({ width, height }) => window.innerWidth === width && window.innerHeight === height,
         size,
       );
-      const upper = layoutPage.getByTestId('actions-workflow-runs');
-      const lower = layoutPage.getByTestId('actions-selected-run');
-      await expect(upper).toBeInViewport({ ratio: 1 });
-      await expect(lower).toBeInViewport({ ratio: 1 });
+      await expect(table).toBeInViewport({ ratio: 1 });
       await expect(layoutPage.getByTestId('actions-workflow-header')).toBeInViewport({ ratio: 1 });
-      await expect(layoutPage.getByTestId('actions-run-log-region')).toBeInViewport({ ratio: 1 });
-      await expect(layoutPage.getByTestId('actions-diagnosis')).toBeInViewport({ ratio: 1 });
-      await expect(layoutPage.getByTestId('actions-diagnosis-content')).toBeInViewport({
-        ratio: 1,
-      });
-      const diagnosisCopy = await layoutPage.getByTestId('actions-diagnosis-content').boundingBox();
-      expect(diagnosisCopy?.height ?? 0).toBeGreaterThan(12);
-      await expect(layoutPage.getByTestId('actions-fix-with-ai')).toBeInViewport({ ratio: 1 });
-      const upperBounds = await upper.boundingBox();
-      const lowerBounds = await lower.boundingBox();
-      if (!upperBounds || !lowerBounds) throw new Error('The workflow panes are not rendered.');
-      expect(Math.abs(upperBounds.height - lowerBounds.height)).toBeLessThanOrEqual(2);
+      await expect(diagnosis).toBeInViewport({ ratio: 1 });
+      await diagnosisHeading.press('Enter');
+      await expect(diagnosis).toHaveJSProperty('isExpanded', true);
+      await expect(diagnosisContent).toBeVisible();
+      await expect(diagnosisContent.getByTestId('actions-fix-with-ai-reason')).toBeVisible();
+      if (size.width === 1024) {
+        await layoutPage.screenshot({
+          animations: 'disabled',
+          path: resolve(outputDirectory, 'actions-diagnosis-dark.png'),
+        });
+      }
+      await expect(layoutPage.getByTestId('actions-fix-with-ai')).toBeVisible();
+      await layoutPage.getByTestId('actions-toggle-diagnosis').click();
+      await expect(diagnosis).toHaveJSProperty('isExpanded', false);
+      await expect(diagnosisContent).toBeHidden();
     }
-    const diagnosis = layoutPage.getByTestId('actions-diagnosis-content');
-    const explanationBounds = await layoutPage.getByTestId('actions-diagnosis-text').boundingBox();
-    const policyBounds = await layoutPage.getByTestId('actions-fix-with-ai-reason').boundingBox();
-    if (!explanationBounds || !policyBounds) throw new Error('The diagnosis copy is not rendered.');
-    expect(policyBounds.y).toBeGreaterThanOrEqual(explanationBounds.y + explanationBounds.height);
-    const diagnosisScroll = await diagnosis.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-      return {
-        top: element.scrollTop,
-        height: element.clientHeight,
-        content: element.scrollHeight,
-      };
-    });
-    expect(diagnosisScroll.content).toBeGreaterThan(diagnosisScroll.height);
-    expect(diagnosisScroll.top).toBeGreaterThan(0);
-    await expect(layoutPage.getByTestId('actions-fix-with-ai')).toBeInViewport({ ratio: 1 });
-    await diagnosis.evaluate((element) => {
-      element.scrollTop = 0;
-    });
 
     const revisionBounds = await layoutPage
       .getByTestId('actions-workflow-revision-heading')
@@ -365,6 +444,9 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     });
     expect(horizontalScroll.content).toBeGreaterThan(horizontalScroll.width);
     expect(horizontalScroll.left).toBeGreaterThan(0);
+    // Declarative Mosaik Table keeps every row in the DOM and projects only its current window.
+    await expect(lastRun).toHaveCount(1);
+    await expect(lastRun).toBeHidden();
     const headerBefore = await tableHeader.boundingBox();
     const scrollResult = await table.evaluate((element) => {
       const viewport = element.shadowRoot?.querySelector<HTMLElement>('[part="viewport"]');
@@ -378,23 +460,13 @@ test('navigates repository workflows and exposes remote and managed-local dispat
     });
     expect(scrollResult.content).toBeGreaterThan(scrollResult.height);
     expect(scrollResult.top).toBeGreaterThan(0);
-    await expect(tableHeader).toBeInViewport({ ratio: 1 });
+    await expect(lastRun).toBeInViewport();
+    await expect(failedRun).toBeHidden();
+    await expect(tableHeader).toBeInViewport();
     const headerAfter = await tableHeader.boundingBox();
     if (!headerBefore || !headerAfter) throw new Error('The table header is not rendered.');
     expect(Math.abs(headerBefore.y - headerAfter.y)).toBeLessThanOrEqual(2);
-    const logScroll = await layoutPage
-      .getByTestId('actions-run-log-excerpt')
-      .evaluate((element) => {
-        element.scrollTop = element.scrollHeight;
-        return {
-          top: element.scrollTop,
-          height: element.clientHeight,
-          content: element.scrollHeight,
-        };
-      });
-    expect(logScroll.content).toBeGreaterThan(logScroll.height);
-    expect(logScroll.top).toBeGreaterThan(0);
-    await expect(layoutPage.getByTestId('actions-diagnosis-rerun')).toBeInViewport({ ratio: 1 });
+    await expect(diagnosis).toBeInViewport({ ratio: 1 });
     await expect(layoutPage.getByTestId('actions-workflow-header')).toBeInViewport({ ratio: 1 });
     await layoutPage.screenshot({
       animations: 'disabled',
@@ -411,8 +483,7 @@ test('navigates repository workflows and exposes remote and managed-local dispat
       'Cache Maintenance with a deliberately long workflow name for layout inspection · Disabled on GitHub',
     );
     await disabledWorkflow.click();
-    await expect(layoutPage.getByTestId('actions-diagnosis')).toHaveCount(0);
-    await expect(layoutPage.getByTestId('actions-run-log-empty')).toBeVisible();
+    await expect(diagnosis).toHaveCount(0);
     expect(rendererErrors).toEqual([]);
   } finally {
     await app.close();

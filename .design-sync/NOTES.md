@@ -16,10 +16,10 @@ overlay providers and `Theme2`).
   The setup reuses the installed package artifacts when all five match; otherwise
   it installs the published artifacts from GitHub Packages. A companion build
   is not a substitute: its version may still match while its source has moved on.
-  Mosaik runtime and component fixes ship in the published packages. The sole
-  consumer Yarn patch normalizes path headers in the `0.1.183` design-document
-  CLI; the [consumer build contract](../docs/architecture/application-updates/packaging.md#cross-platform-consumer-build-contract)
-  defines that build-only exception. Avatar and Persona retain their
+  The published Mosaik packages are used with two scoped consumer patches: the
+  [design CLI path normalizer](../docs/architecture/application-updates/packaging.md#cross-platform-consumer-build-contract)
+  and the [controlled FlowBoard drag correction](../docs/architecture/board/README.md#einträge-stapel-und-virtualisierung).
+  Avatar and Persona retain their
   published API; employee figures belong to Symphony's Angular component.
   No Mosaik runtime or component source is copied into Symphony.
 - `libs/frontend/ui` is Angular and cannot render in Claude Design. Do not try.

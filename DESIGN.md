@@ -11,7 +11,7 @@ colors:
   mosaik-scheme-middlelight: '#737373'
   mosaik-scheme-lowlight: '#525252'
   mosaik-scheme-transparent: 'rgba(255, 255, 255, 0)'
-  mosaik-scheme-semi-transparent: 'rgba(0, 0, 0, 0.5019607843137255)'
+  mosaik-scheme-semi-transparent: 'rgba(0, 0, 0, 0.5)'
   mosaik-scheme-disabled: '#a1a1a1'
   mosaik-scheme-contrast: '#fafafa'
   mosaik-scheme-selection: '#d4d4d4'
@@ -499,10 +499,10 @@ the complete component-token model with the values Symphony renders.
 
 | Layer | Count | Source |
 |---|---|---|
-| Global tokens (compiled) | 507 | `@pixel-brewery/mosaik-themes@0.1.183` |
+| Global tokens (compiled) | 507 | `@pixel-brewery/mosaik-themes@0.1.199` |
 | Runtime custom properties (light) | 653 | base theme plus the overrides of this product |
-| Components with a token file | 378 | `design/soho/model.json` |
-| Component tokens (mixins expanded) | 11128 | `design/soho/model.json` |
+| Components with a token file | 385 | `design/soho/model.json` |
+| Component tokens (mixins expanded) | 11454 | `design/soho/model.json` |
 | Component tokens that do not resolve | 2 | [Known gaps](#known-gaps) |
 <!-- /design-md:stats -->
 <!-- prettier-ignore-end -->
@@ -556,11 +556,11 @@ The effective scheme roles Symphony renders; the custom property is mode-neutral
 | `surface` | `--mosaik-scheme-surface` | `#ffffff` | `#171717` | Elevated surfaces: cards, dialogs, panels. |
 | `background` | `--mosaik-scheme-background` | `#ffffff` | `#0a0a0a` | Page canvas and the default component fill. |
 | `foreground` | `--mosaik-scheme-foreground` | `#0a0a0a` | `#fafafa` | Default text and icon color. |
-| `highlight` | `--mosaik-scheme-highlight` | `#e5e5e5` | `rgba(255, 255, 255, 0.10196078431372549)` | Borders, dividers, hover fills. |
+| `highlight` | `--mosaik-scheme-highlight` | `#e5e5e5` | `rgba(255, 255, 255, 0.1)` | Borders, dividers, hover fills. |
 | `middlelight` | `--mosaik-scheme-middlelight` | `#737373` | `#a1a1a1` | Medium contrast - strokes, dividers, inactive marks and quiet fills. |
 | `lowlight` | `--mosaik-scheme-lowlight` | `#525252` | `#d4d4d4` | The stronger secondary grey - secondary text, placeholders, captions and hints. |
 | `transparent` | `--mosaik-scheme-transparent` | `rgba(255, 255, 255, 0)` | `rgba(10, 10, 10, 0)` | Fully transparent fill. |
-| `semi-transparent` | `--mosaik-scheme-semi-transparent` | `rgba(0, 0, 0, 0.5019607843137255)` | `rgba(0, 0, 0, 0.5019607843137255)` | Glass-like overlays and backdrops. |
+| `semi-transparent` | `--mosaik-scheme-semi-transparent` | `rgba(0, 0, 0, 0.5)` | `rgba(0, 0, 0, 0.5)` | Glass-like overlays and backdrops. |
 | `disabled` | `--mosaik-scheme-disabled` | `#a1a1a1` | `#525252` | Disabled text and controls. |
 | `contrast` | `--mosaik-scheme-contrast` | `#fafafa` | `#171717` | Content on strongly colored surfaces. |
 | `selection` | `--mosaik-scheme-selection` | `#d4d4d4` | `#404040` | Text selection background. |
@@ -900,8 +900,9 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [carouselItem](COMPONENTS.md#carousel-item) | `mosaik-carousel-item` | 22 |
 | [cell](COMPONENTS.md#cell) | `mosaik-cell` | 30 |
 | [cellGroup](COMPONENTS.md#cell-group) | `mosaik-cell-group` | 28 |
-| [chart](COMPONENTS.md#chart) | `mosaik-chart` | 24 |
-| [chartToolbox](COMPONENTS.md#chart-toolbox) | `mosaik-chart-toolbox` | 23 |
+| [chart](COMPONENTS.md#chart) | `mosaik-chart` | 64 |
+| [chartLegend](COMPONENTS.md#chart-legend) | `mosaik-chart-legend` | 18 |
+| [chartTooltip](COMPONENTS.md#chart-tooltip) | `mosaik-chart-tooltip` | 22 |
 | [chat](COMPONENTS.md#chat) | `mosaik-chat` | 30 |
 | [chatHeader](COMPONENTS.md#chat-header) | `mosaik-chat-header` | 23 |
 | [chatMarker](COMPONENTS.md#chat-marker) | `mosaik-chat-marker` | 28 |
@@ -947,6 +948,7 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [cursorEffect](COMPONENTS.md#cursor-effect) | `mosaik-cursor-effect` | 21 |
 | [dataList](COMPONENTS.md#data-list) | `mosaik-data-list` | 22 |
 | [dataTable](COMPONENTS.md#data-table) | `mosaik-data-table` | 24 |
+| [dataTree](COMPONENTS.md#data-tree) | `mosaik-data-tree` | 22 |
 | [dateBox](COMPONENTS.md#datebox) | `mosaik-datebox` | 41 |
 | [dateTimeBox](COMPONENTS.md#datetimebox) | `mosaik-datetimebox` | 41 |
 | [designer](COMPONENTS.md#designer) | `mosaik-designer` | 22 |
@@ -1009,9 +1011,11 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [flowBoard](COMPONENTS.md#flow-board) | `mosaik-flow-board` | 24 |
 | [flowBoardColumn](COMPONENTS.md#flow-board-column) | `mosaik-flow-board-column` | 44 |
 | [flowBoardColumnComposer](COMPONENTS.md#flow-board-column-composer) | `mosaik-flow-board-column-composer` | 30 |
+| [flowBoardColumnGroup](COMPONENTS.md#flow-board-column-group) | `mosaik-flow-board-column-group` | 32 |
 | [flowBoardColumnItem](COMPONENTS.md#flow-board-column-item) | `mosaik-flow-board-column-item` | 37 |
 | [flowBoardColumnItemComposer](COMPONENTS.md#flow-board-column-item-composer) | `mosaik-flow-board-column-item-composer` | 30 |
 | [flowBoardColumnItemGroup](COMPONENTS.md#flow-board-column-item-group) | `mosaik-flow-board-column-item-group` | 36 |
+| [flowBoardSwimlane](COMPONENTS.md#flow-board-swimlane) | `mosaik-flow-board-swimlane` | 32 |
 | [flowControls](COMPONENTS.md#flow-controls) | `mosaik-flow-controls` | 37 |
 | [flowEdge](COMPONENTS.md#flow-edge) | `mosaik-flow-edge` | 39 |
 | [flowMinimap](COMPONENTS.md#flow-minimap) | `mosaik-flow-minimap` | 42 |
@@ -1040,9 +1044,10 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [gaugeValue](COMPONENTS.md#gauge-value) | `mosaik-gauge-value` | 26 |
 | [gaugeZones](COMPONENTS.md#gauge-zones) | `mosaik-gauge-zones` | 25 |
 | [ghost](COMPONENTS.md#ghost) | `mosaik-ghost` | 27 |
-| [globe](COMPONENTS.md#globe) | `mosaik-globe` | 24 |
+| [globe](COMPONENTS.md#globe) | `mosaik-globe` | 28 |
 | [grid](COMPONENTS.md#grid) | `mosaik-grid` | 22 |
 | [gridItem](COMPONENTS.md#grid-item) | `mosaik-grid-item` | 22 |
+| [helix](COMPONENTS.md#helix) | `mosaik-helix` | 24 |
 | [helmet](COMPONENTS.md#helmet) | `mosaik-helmet` | 22 |
 | [hint](COMPONENTS.md#hint) | `mosaik-hint` | 28 |
 | [icon](COMPONENTS.md#icon) | `mosaik-icon` | 28 |
@@ -1056,7 +1061,7 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [kbdShortcut](COMPONENTS.md#kbd-shortcut) | `mosaik-kbd-shortcut` | 22 |
 | [knob](COMPONENTS.md#knob) | `mosaik-knob` | 41 |
 | [lightChain](COMPONENTS.md#light-chain) | `mosaik-light-chain` | 22 |
-| [list](COMPONENTS.md#list) | `mosaik-list` | 29 |
+| [list](COMPONENTS.md#list) | `mosaik-list` | 30 |
 | [listItem](COMPONENTS.md#list-item) | `mosaik-list-item` | 34 |
 | [listItemGroup](COMPONENTS.md#list-item-group) | `mosaik-list-item-group` | 39 |
 | [listing](COMPONENTS.md#listing) | `mosaik-listing` | 24 |
@@ -1088,6 +1093,7 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [parallax](COMPONENTS.md#parallax) | `mosaik-parallax` | 16 |
 | [passwordBox](COMPONENTS.md#passwordbox) | `mosaik-passwordbox` | 41 |
 | [pattern](COMPONENTS.md#pattern) | `mosaik-pattern` | 23 |
+| [pendulum](COMPONENTS.md#pendulum) | `mosaik-pendulum` | 29 |
 | [persona](COMPONENTS.md#persona) | `mosaik-persona` | 28 |
 | [perspective](COMPONENTS.md#perspective) | `mosaik-perspective` | 22 |
 | [pinBox](COMPONENTS.md#pinbox) | `mosaik-pinbox` | 34 |
@@ -1125,15 +1131,15 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [routerLink](COMPONENTS.md#router-link) | `mosaik-router-link` | 22 |
 | [routerOutlet](COMPONENTS.md#router-outlet) | `mosaik-router-outlet` | 22 |
 | [scale](COMPONENTS.md#scale) | `mosaik-scale` | 22 |
-| [scheduler](COMPONENTS.md#scheduler) | `mosaik-scheduler` | 73 |
+| [scheduler](COMPONENTS.md#scheduler) | `mosaik-scheduler` | 127 |
 | [schedulerAgendaView](COMPONENTS.md#scheduler-agenda-view) | `mosaik-scheduler-agenda-view` | 40 |
 | [schedulerDatescale](COMPONENTS.md#scheduler-datescale) | `mosaik-scheduler-datescale` | 41 |
-| [schedulerEvent](COMPONENTS.md#scheduler-event) | `mosaik-scheduler-event` | 54 |
-| [schedulerMonthView](COMPONENTS.md#scheduler-month-view) | `mosaik-scheduler-month-view` | 58 |
-| [schedulerNowIndicator](COMPONENTS.md#scheduler-now-indicator) | `mosaik-scheduler-now-indicator` | 25 |
-| [schedulerTimeGridView](COMPONENTS.md#scheduler-time-grid-view) | `mosaik-scheduler-time-grid-view` | 67 |
+| [schedulerEvent](COMPONENTS.md#scheduler-event) | `mosaik-scheduler-event` | 58 |
+| [schedulerMonthView](COMPONENTS.md#scheduler-month-view) | `mosaik-scheduler-month-view` | 76 |
+| [schedulerNowIndicator](COMPONENTS.md#scheduler-now-indicator) | `mosaik-scheduler-now-indicator` | 27 |
+| [schedulerTimeGridView](COMPONENTS.md#scheduler-time-grid-view) | `mosaik-scheduler-time-grid-view` | 89 |
 | [schedulerTimelineView](COMPONENTS.md#scheduler-timeline-view) | `mosaik-scheduler-timeline-view` | 66 |
-| [schedulerTimescale](COMPONENTS.md#scheduler-timescale) | `mosaik-scheduler-timescale` | 34 |
+| [schedulerTimescale](COMPONENTS.md#scheduler-timescale) | `mosaik-scheduler-timescale` | 35 |
 | [scroll](COMPONENTS.md#scroll) | `mosaik-scroll` | 24 |
 | [scrubSlider](COMPONENTS.md#scrub-slider) | `mosaik-scrub-slider` | 64 |
 | [searchBox](COMPONENTS.md#searchbox) | `mosaik-searchbox` | 34 |
@@ -1174,6 +1180,7 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [tabItem](COMPONENTS.md#tab-item) | `mosaik-tab-item` | 25 |
 | [tabPanel](COMPONENTS.md#tab-panel) | `mosaik-tab-panel` | 23 |
 | [tabStrip](COMPONENTS.md#tab-strip) | `mosaik-tab-strip` | 28 |
+| [tabStripGroupItem](COMPONENTS.md#tab-strip-group-item) | `mosaik-tab-strip-group-item` | 24 |
 | [tabStripItem](COMPONENTS.md#tab-strip-item) | `mosaik-tab-strip-item` | 36 |
 | [table](COMPONENTS.md#table) | `mosaik-table` | 38 |
 | [tableBody](COMPONENTS.md#table-body) | `mosaik-table-body` | 28 |

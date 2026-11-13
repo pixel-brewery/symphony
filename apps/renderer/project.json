@@ -83,6 +83,7 @@
     },
     "serve": {
       "executor": "@angular/build:dev-server",
+      "readyWhen": { "signal": true },
       "configurations": {
         "development": {
           "buildTarget": "renderer:build:development"

@@ -1,19 +1,17 @@
 // #region Imports
 
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   TranslateDirective,
-  AvatarComponent,
+  BannerComponent,
   BadgeComponent,
   ButtonComponent,
   EmptyStateComponent,
-  IconComponent,
   IconNameDirective,
   ProgressRingComponent,
   SelectComponent,
   SelectItemComponent,
-  SkeletonComponent,
   TableBodyCellComponent,
   TableBodyComponent,
   TableBodyRowComponent,
@@ -26,22 +24,18 @@ import {
   TooltipDirective,
   TypographyDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
-import { CiLogStatusLabelPipe, RelativeTimePipe } from '@symphony/frontend-ui';
+import { ContextMenuTriggerDirective, type ContextMenuComponent } from '@pixel-brewery/ngpel-ui';
 import { ActionRunBadgePipe } from '../../pipes/ActionRunBadgePipe';
 import { ActionRunDurationPipe } from '../../pipes/ActionRunDurationPipe';
 import { ActionRunRevisionPipe } from '../../pipes/ActionRunRevisionPipe';
 import { ActionRunnerLabelPipe } from '../../pipes/ActionRunnerLabelPipe';
 import { ActionRunStartedPipe } from '../../pipes/ActionRunStartedPipe';
-import { RunStepPresentationPipe } from '../../pipes/RunStepPresentationPipe';
-import { ShortRevisionPipe } from '../../pipes/ShortRevisionPipe';
 import { ActionsViewPresenter } from '../view-presenters/ActionsViewPresenter';
 
 // #endregion
 
 /**
- * A selected workflow: its file, `Run locally` and `Run on GitHub`, its runs, and the selected
- * run's steps, log excerpt and diagnosis with `Fix with AI`, `Rerun on GitHub` and
- * `Open in GitHub`.
+ * Displays workflow dispatch, the run history and the selected failed run's diagnosis.
  *
  * @public
  */
@@ -55,21 +49,16 @@ import { ActionsViewPresenter } from '../view-presenters/ActionsViewPresenter';
     ActionRunnerLabelPipe,
     ActionRunRevisionPipe,
     ActionRunStartedPipe,
-    AvatarComponent,
+    BannerComponent,
     BadgeComponent,
     ButtonComponent,
-    CiLogStatusLabelPipe,
+    ContextMenuTriggerDirective,
     EmptyStateComponent,
     FormsModule,
-    IconComponent,
     IconNameDirective,
     ProgressRingComponent,
-    RelativeTimePipe,
-    RunStepPresentationPipe,
     SelectComponent,
     SelectItemComponent,
-    ShortRevisionPipe,
-    SkeletonComponent,
     TableBodyCellComponent,
     TableBodyComponent,
     TableBodyRowComponent,
@@ -96,6 +85,22 @@ export class ActionsWorkflowView {
    * @readonly
    */
   protected readonly presenter = inject(ActionsViewPresenter);
+
+  /**
+   * The shared context menu for rows in the Actions tables.
+   *
+   * @public
+   * @readonly
+   */
+  public readonly runMenu = input.required<ContextMenuComponent>();
+
+  /**
+   * The failed run whose diagnosis is expanded.
+   *
+   * @protected
+   * @readonly
+   */
+  protected readonly expandedDiagnosisId = signal<string | undefined>(undefined);
 
   // #endregion
 }

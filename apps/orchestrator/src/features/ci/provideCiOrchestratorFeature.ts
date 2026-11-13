@@ -1,5 +1,6 @@
 // #region Imports
 import { createHash } from 'node:crypto';
+import { setTimeout as delay } from 'node:timers/promises';
 import { type ICiRunDetails } from '@symphony/domain-ci';
 import { type IProvideCiOrchestratorFeatureDependencies } from './IProvideCiOrchestratorFeatureDependencies';
 import { ciRequestSchemas, ciResponseSchemas } from '@symphony/ipc-contracts-ci';
@@ -147,6 +148,7 @@ export function provideCiOrchestratorFeature(
       ciResponseSchemas['ci.run.details'],
       async (input) => {
         if (process.env['SYMPHONY_CONNECTION_MODE'] === 'simulated') {
+          if (process.env['SYMPHONY_SIMULATED_CI_LAYOUT_FIXTURE'] === '1') await delay(800);
           return simulatedContinuousIntegrationDetails(input.runId);
         }
         const setupDiagnostics = localCiSetupDiagnostics().get(input.runId);

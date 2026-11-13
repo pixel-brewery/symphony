@@ -93,6 +93,7 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "readyWhen": { "signal": true },
       "defaultConfiguration": "development",
       "configurations": {
         "production": {
@@ -132,6 +133,8 @@
     "serve-static": {
       "continuous": true,
       "executor": "@nx/web:file-server",
+      "readyWhen": { "signal": true },
+      "dependsOn": ["build"],
       "options": {
         "buildTarget": "mobile:build",
         "staticFilePath": "dist/apps/mobile/browser",

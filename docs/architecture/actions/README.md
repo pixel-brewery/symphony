@@ -12,9 +12,10 @@ Der vollständige Laufzeitvertrag für Runner, Freigaben, automatische Übernahm
 
 | Einheit                | Verantwortung                                                                                                                                                     |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ActionsView`          | Werkzeugleisten-Registrierung (`WindowToolbarDirective`), Workflow-Liste, Hinweis bei veralteten Daten, Lade- und Leerzustand, Wahl der Unteransicht              |
+| `ActionsView`          | Werkzeugleisten-Registrierung (`WindowToolbarDirective`), Workflow-Liste, veraltete Daten, Lade- und Leerzustand, Wahl der Unteransicht, gemeinsames Kontextmenü  |
 | `ActionsAllRunsView`   | `Running now` und `History`                                                                                                                                       |
-| `ActionsWorkflowView`  | Workflow-Kopf mit Dispatch, Lauftabelle, Schritte, Protokollauszug, `Diagnosis`                                                                                   |
+| `ActionsWorkflowView`  | Workflow-Kopf mit Dispatch, Lauftabelle und aufklappbares Diagnosebanner für einen fehlgeschlagenen ausgewählten Lauf                                             |
+| `ActionDrawerView`     | Laufaktionen im Drawer-Kopf, Jobdiagramm, Timeline mit Jobs, Schritten und Protokoll sowie ausstehende Deployment-Freigaben                                       |
 | `ActionsViewPresenter` | Zustand (Filter, Sortierung, Seitengröße, Laufwahl, Dispatch-Formular), Projektionen und alle Befehle; einzige Instanz je Route, von den Unteransichten injiziert |
 | `actionsOverview/*`    | reine Projektionsfunktionen, je Datei eine, mit Spezifikation daneben                                                                                             |
 | `pipes/*`              | reine Formatierungen (Ergebnis-Badge, Runner, Dauer, Startzeit, Revisionszeile, Workflow-Punkt, Schrittsymbol)                                                    |
@@ -35,9 +36,9 @@ Die Actions-Route erhält eine begrenzte verfügbare Höhe aus der Fensterkompos
 
 `All runs` teilt den verbleibenden Platz in zwei gleich hohe Grid-Zeilen. Die erste besitzt den festen Titel `Running now` und eine intern scrollbar begrenzte Aktivitätsliste. Die zweite besitzt den festen Titel `History`, eine begrenzte Tabelle sowie bei Bedarf `Show older runs` außerhalb des Tabellen-Scrollers. Es entsteht dort kein zusätzliches Detail-/Logpanel.
 
-Die Workflow-Ansicht hält Workflow-Name, Dateipfad und Dispatch-Aktionen fest. Ein offenes Dispatch-Formular nimmt höchstens 45 Prozent ihrer Höhe ein und scrollt intern. Der übrige Platz wird nach Abzug des Abstands in zwei gleich hohe Grid-Zeilen geteilt: Lauftabelle oben und gewählter Lauf unten. Die Mosaik-Tabelle erhält eine begrenzte Höhe; ihr öffentlicher Komponentenvertrag stellt einen eigenen Viewport und einen darin oben haftenden Tabellenkopf bereit. Die Anwendung fügt keinen zweiten Tabellen-Scroller und keine Überschreibung interner Mosaik-Stile hinzu. Revisionsspalten behalten mindestens 180 Pixel Breite; reicht der Platz nicht für alle Spalten, scrollt die Tabelle innerhalb desselben Mosaik-Viewports horizontal, statt die Revision vollständig zusammenzudrücken.
+Die Workflow-Ansicht hält Workflow-Name, Dateipfad und Dispatch-Aktionen fest. Ein offenes Dispatch-Formular nimmt höchstens 45 Prozent der Höhe ein und scrollt intern. Die Lauftabelle belegt den übrigen Platz abzüglich eines etwaigen Diagnosebanners. Die Mosaik-Tabelle ist die einzige Oberfläche mit Rahmen um das Grid. Ihr begrenzter Viewport scrollt vertikal und horizontal, der Tabellenkopf haftet oben. Die Virtualisierung rendert den sichtbaren Zeilenbereich und einen Überhang, sodass auch bei langen Historien nur ein Teil der Zeilen im DOM steht. Die Revisionsspalte behält mindestens 180 Pixel Breite.
 
-Der gewählte Lauf hält seine Überschrift und Aktionen außerhalb seiner Inhaltsscroller. Schritte und `Run log` stehen in zwei gleich breiten Spalten mit eigener Scrollbegrenzung. Bei einem fehlgeschlagenen Lauf teilt eine zweite gleich hohe Zeile den Detailinhalt mit der Diagnose. Deren Überschrift, Reparaturstatus und Laufaktionen bleiben fest; die sekundären Aktionen zum Wiederholen und Öffnen nutzen kompakte Mosaik-Icon-Buttons mit zugänglichem Namen und Tooltip, damit der Kopf auch in schmalen Fenstern einzeilig bleibt; Diagnose- und Richtlinienerklärungen teilen einen internen Scrollbereich. Darin hält ein nicht schrumpfender innerer Inhaltscontainer beide Erklärungen in ihrer natürlichen Höhe, sodass knappe Höhe zu Scrollen und nicht zu überlappenden Textzeilen führt. Auch die einzelnen Schrittzeilen behalten ihre natürliche Höhe. Bei anderen Laufzuständen füllt die Ausgabe den gesamten Detailinhalt. Fehlende Logs zeigen eine explizite Leerinformation. Ohne ausgewählten Lauf nimmt ein Leerzustand die untere Hälfte ein. Lade-, Filterleer- und Abfragefehler bleiben innerhalb dieser Aufteilung. Lauf- und Fenstergrößenwechsel erhalten die Begrenzung; ein anderer Lauf übernimmt keine Diagnose des vorherigen.
+Unter der Tabelle erscheint für einen ausgewählten fehlgeschlagenen Lauf ein Mosaik Banner mit `variant="highlight"` und `appearance="soft"`. Sein Kopf nennt den Lauf und hält die verfügbare Reparaturaktion sowie einen etwaigen Reparaturstatus sichtbar. Die Erklärung ist standardmäßig eingeklappt und an die Laufkennung gebunden. Beim Aufklappen scrollt der Erklärungsinhalt innerhalb eines auf 144 Pixel begrenzten Bereichs. Der Bereich darf den Tabellen-Viewport verkleinern, ohne den Workflow-Kopf oder die Tabelle aus dem Fenster zu schieben. Bei anderen Laufzuständen füllt die Tabelle diesen Platz.
 
 Workflow-Punkt und Name sind über den öffentlichen `icon`- beziehungsweise `label`-Slot eines einzigen Mosaik-Buttons zusammengesetzt. Derselbe Button besitzt Auswahl, Hover, Tastaturbedienung und den vollständigen zugänglichen Namen. Ein explizites Mosaik-Tooltip umschließt den Button als sein öffentliches Control und zeigt den vollständigen Namen; deaktivierte Workflows ergänzen `Disabled on GitHub`. Der native öffentliche `trigger`-Tokenvertrag `hover focus` aktiviert beide Bedienwege; die Bibliothek übernimmt Platzierung, Randbegrenzung, Escape und Aufräumen beim Entfernen. Die Auswahl deaktivierter Workflows bleibt erlaubt, ihre Dispatch-Bedingungen bleiben unverändert.
 
@@ -55,26 +56,37 @@ Alle Zeilen sind absteigend nach `startedAt`, ersatzweise `finishedAt`, sortiert
 
 ### Projektionen
 
-| Projektion           | Regel                                                                                                                                                                       |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Filter               | `status` (aus `?status=` oder Menü), `actor`, `query` (`?q=`, kleingeschrieben) über Workflow, Titel, Autor, Ereignis, Branch, Revision, Status, Laufnummer                 |
-| `Running now`        | gefilterte Zeilen mit `queued` oder `in-progress`; `in-progress` vor `queued`, dann neueste zuerst                                                                          |
-| `History`            | gefilterte abgeschlossene Zeilen nach Startzeit (`started-descending` Standard); Seite = 10, `Show older runs` +10; `hasOlderRuns`, solange weitere existieren              |
-| Workflow-Punkt       | `failing`, wenn die abgeschlossene Zeile mit dem jüngsten `finishedAt` `failed` ist; sonst `running` bei einer aktiven Zeile; sonst `passing` bei `succeeded`; sonst `idle` |
-| Workflow-Reihenfolge | `failing`, `running`, `passing`, `idle`, innerhalb gleich nach Name                                                                                                         |
-| Untertitel           | Repository-Anzeigename (bei mehreren `<n> repositories`), ` · <n> running` (aktive Zeilen, ungefiltert), ` · <n> failing` (Workflows mit Punkt `failing`)                   |
-| Gewählter Lauf       | explizite Wahl, sonst `?run=`, sonst die jüngste abgeschlossene, sonst die erste Zeile des Workflows                                                                        |
-| Schritte             | ein Job: seine Schritte (ohne Schritte: der Job selbst); mehrere Jobs: je Job eine Kopfzeile und eingerückte Schritte                                                       |
-| Protokollauszug      | nur bei `failed` (`failureLog`, sonst lokales `failureLog`, sonst `logOutput`) oder aktiven Läufen (`logOutput`); die letzten 12 Zeilen ohne Leerzeilen an den Rändern      |
+| Projektion           | Regel                                                                                                                                                                                                                                                                             |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Filter               | `status` (aus `?status=` oder Menü), `actor`, `query` (`?q=`, kleingeschrieben) über Workflow, Titel, Autor, Ereignis, Branch, Revision, Status, Laufnummer                                                                                                                       |
+| `Running now`        | gefilterte Zeilen mit `queued` oder `in-progress`; `in-progress` vor `queued`, dann neueste zuerst                                                                                                                                                                                |
+| `History`            | gefilterte abgeschlossene Zeilen nach Startzeit (`started-descending` Standard); Seite = 10, `Show older runs` +10; `hasOlderRuns`, solange weitere existieren                                                                                                                    |
+| Workflow-Punkt       | `failing`, wenn die abgeschlossene Zeile mit dem jüngsten `finishedAt` `failed` ist; sonst `running` bei einer aktiven Zeile; sonst `passing` bei `succeeded`; sonst `idle`                                                                                                       |
+| Workflow-Reihenfolge | `failing`, `running`, `passing`, `idle`, innerhalb gleich nach Name                                                                                                                                                                                                               |
+| Untertitel           | Repository-Anzeigename (bei mehreren `<n> repositories`), ` · <n> running` (aktive Zeilen, ungefiltert), ` · <n> failing` (Workflows mit Punkt `failing`)                                                                                                                         |
+| Gewählter Lauf       | explizite Wahl, sonst `?run=`, sonst die jüngste abgeschlossene, sonst die erste Zeile des Workflows                                                                                                                                                                              |
+| Fehlernachweise      | Die Workflow-Ansicht ermittelt bei `failed` den ersten fehlgeschlagenen Schritt, ersatzweise den fehlgeschlagenen Job. Der Auszug für Reparaturen nutzt `failureLog`, lokales `failureLog` oder `logOutput` in dieser Reihenfolge und begrenzt sich auf die letzten zwölf Zeilen. |
 
-Die Details (`ci.run.details`) werden je Schlüssel `<runId>:<runAttempt>:<status>` einmal geladen; aktive Läufe werden alle 10 s erneut gelesen. Ein Fehler setzt `Steps unavailable`.
+Der Presenter liest `ci.run.details` in der Workflow-Ansicht nur für den ausgewählten fehlgeschlagenen GitHub-Lauf. Der Schlüssel `<runId>:<runAttempt>:<status>` bindet das Ergebnis an die konkrete Auswahl. Ein Ergebnis für einen inzwischen abgewählten Lauf wird verworfen. Fehlt der Abruf, kann ein bereits vorhandener lokaler Fehlernachweis weiter als Reparaturkontext dienen.
 
 ### Adresse und Navigation
 
 - `?workflow=<id>` wählt den Workflow; `selectWorkflowCommand` navigiert mit `queryParamsHandling: 'merge'` und entfernt `run`, damit Back/Forward die Auswahl schrittweise zurücknehmen. Unbekannte IDs zeigen `All runs`.
 - `?workflow=<id>&dispatch=github` (Befehl `Run <workflow> on GitHub` der Befehlspalette) ist eine einmalige Absicht: Sobald die Workflows geladen sind, öffnet der Bildschirm das Dispatch-Formular dieses Workflows (unbekannte IDs: kein Formular) und entfernt `dispatch` mit `replaceUrl`; `workflow` bleibt als Auswahl stehen. Das Formular erscheint nur in der Ansicht seines eigenen Workflows.
 - `?run=<ciRunId>` ohne `workflow` wählt den Workflow des Laufs und den Lauf. Den Drawer öffnet weiterhin die Shell (`PresenterViewPresenter`) einmal je Lauf-ID.
-- `View log` öffnet `ActionDrawerView` direkt über `DrawerService` mit `toActionDrawerRun`; ein bereits offener Drawer dieses Bildschirms erhält `requestAttention()`.
+- Klick, Eingabetaste und Leertaste auf einer Laufzeile in History oder im Workflow-Grid führen in denselben Drawer. Die Workflow-Ansicht übernimmt die Laufkennung für die Auswahl und das Diagnosebanner. In beiden Fällen bleibt die aktuelle Route stehen.
+- Ein Rechtsklick oder Umschalt+F10 öffnet ein gemeinsames ngPEL-Kontextmenü mit der betroffenen Zeile als Kontext. Beide Tabellen verwenden `ngpContextMenuTriggerFor`. Der Mosaik-Zeilenwert enthält das Laufobjekt, das die Integration aus dem Menüereignis ermittelt. Die Route stellt ein `ngp-context-menu` mit Mosaik Menu und Menu Items bereit. Die Menüöffnung löst weder eine Laufaktion noch die Drawer-Öffnung aus. Erst die Aktivierung eines Eintrags führt den Befehl für dessen Zeile aus.
+- `View log` verwendet denselben Öffnungspfad. Die Route ruft `DrawerService` mit `ActionDrawerView` und der Projektion `toActionDrawerRun` auf. Ein bereits offener Drawer dieses Bildschirms erhält `requestAttention()`.
+
+### Laufdetails, Diagramm und Protokoll
+
+Der Drawer zeigt die verfügbare Zusammenfassung sofort. Seine feste Werkzeugleiste im `suffix`-Slot des Mosaik Drawer Header gruppiert den externen Lauflink, zulässige Wiederholungen, gegebenenfalls das Stoppen des lokalen Runners und Schließen. Remote Stop und Cancel gehören zum Kontextmenü der Laufzeile und zu den aktiven Läufen unter `Running now`. Ausstehende Deployment-Freigaben bleiben am Lauf, weil die Entscheidung an Zielumgebung und exakte Revision gebunden ist.
+
+Der Drawer lädt Details über `ci.run.details`. Während dieses Abrufs nimmt für bekannte GitHub-Läufe ein Mosaik Skeleton die Diagrammhöhe von 12 rem ein. Die Action-Log-Überschrift bleibt an derselben Stelle. Ein Job-Platzhalter verwendet die Marker-, Titel- und Statusanordnung der echten Timeline, da die Job- und Schrittzahl vor dem Abruf unbekannt ist. Sobald die Details vorliegen, rendert der Drawer ihre Jobs und Schritte auch dann, wenn das vollständige Protokoll noch lädt. Ein leerer oder fehlgeschlagener Abruf zeigt einen passenden Leerzustand. Abgeschlossene Läufe lesen das Protokoll über den bestehenden geordneten Chunk-Vertrag. Der Drawer aktualisiert wartende und laufende Läufe etwa alle fünf Sekunden, bis kein weiterer aktiver Zustand vorliegt. Weitere verfügbare Chunks werden im Abstand von 250 Millisekunden gelesen. Ein fehlgeschlagener Abruf des vollständigen Protokolls wird bei einem abgeschlossenen Lauf beim nächsten Öffnen erneut versucht. Das Schließen räumt den Timer des Drawers auf.
+
+Eine verfügbare Workflow-Definition mit Jobs wird als Mosaik Flow dargestellt. Die Darstellung nutzt die beim Lauf verwendete Definition, die daraus aufgelösten Abhängigkeiten und die tatsächlich gemeldeten Jobausführungen. Dagre misst und ordnet die Knoten von links nach rechts an. Der erste gemessene Ausschnitt startet mit Zoom 0,8. Passt das Diagramm mit Innenabstand vollständig hinein, wird es zentriert. Andernfalls zeigt der Ausschnitt den linken Rand des Diagramms und zentriert den ersten Job ohne eingehende Abhängigkeit vertikal. Danach bleiben Verschieben, Zoom und Fit per nativer Maus-, Touch- oder Tastaturbedienung von Mosaik verfügbar. Die optionalen Slots für Minimap und Zoomschaltflächen bleiben frei. Weitere Layout-Ereignisse lassen den gewählten Ausschnitt stehen.
+
+Ein aktivierter Einzeljob fokussiert den zugehörigen Eintrag im Log und scrollt ihn in den sichtbaren Bereich. Matrix-Jobs mit Ausführungen bieten eine Auswahl der konkreten Ausführung. Die Timeline enthält auch nicht zugeordnete Jobs und unzugeordnetes Protokoll. Ein vorhandener Job-Link öffnet den Job auf GitHub. Die Graphprojektion benötigt keine neue Persistenz, keine geänderte IPC-Nachricht und keine eigene Workflow-Ausführung.
 
 ### Befehle und Bedingungen (`resolveActionRunControls`)
 
@@ -171,8 +183,7 @@ mit `annotation_level: failure` zählen; Warnungen und Hinweise werden verworfen
 Jobname, optionaler Annotationstitel und Meldung bilden je eine Zeile des
 bestehenden Felds `failureLog`. Die vorhandene Begrenzung auf 64.000 Zeichen und
 Zugangsdatenbereinigung gelten auch für diesen Ersatzinhalt. Der Actions-Bildschirm
-nutzt ihn über seinen vorhandenen Protokollauszug; der IPC-Vertrag erhält kein
-zusätzliches Feld.
+nutzt ihn als Fehlernachweis für Diagnose und Reparatur. Der Drawer zeigt den verfügbaren Inhalt im Protokoll. Der IPC-Vertrag erhält kein zusätzliches Feld.
 
 Scheitert der normale Abruf des Fehlerprotokolls, verwendet auch der bestehende
 streambare Protokollabruf mit `kind: failure` dieses Detailergebnis als Ersatz.
@@ -194,8 +205,7 @@ keine Actions-Budgets, Berechtigungen oder Repository-Dateien.
 Spezifikation muss vorhandene Fehlerprotokolle, Jobs mit Schritten, die Grenzen
 von fünf Jobs und 100 Annotationen, das Verwerfen anderer Meldungsstufen,
 Zugangsdatenbereinigung, unbrauchbare Check-Verweise sowie fehlschlagende und
-limitierte Annotationen sowie den Fehlerprotokoll-Stream abdecken. Die Darstellung und die Auswahl der letzten
-zwölf nicht leeren Protokollzeilen bleiben in der vorhandenen Actions-Projektion.
+limitierte Annotationen sowie den Fehlerprotokoll-Stream abdecken. Die Actions-Projektion verwendet für die Reparaturrückmeldung weiter die letzten zwölf Zeilen nach Entfernen äußerer Leerzeilen.
 
 ## Migrationsverträge und offene Punkte
 
@@ -212,7 +222,9 @@ zwölf nicht leeren Protokollzeilen bleiben in der vorhandenen Actions-Projektio
 - Ein Workflow-Klick setzt `?workflow=`; Back führt zu `All runs` zurück.
 - `?run=` öffnet den Drawer und wählt Workflow und Lauf.
 - Filter, Suche und `?status=` grenzen alle Listen ein.
-- Lange Lauflisten bleiben in der oberen Hälfte, Details/Log und zutreffende Diagnose in der unteren; Tabellenköpfe und Workflow-Kopf bleiben bei internem Scrollen sichtbar.
+- Lange Lauflisten scrollen im begrenzten Mosaik-Viewport bei sichtbarem Tabellenkopf. Ein aufklappbares Diagnosebanner bleibt bei einem fehlgeschlagenen ausgewählten Lauf unter der Tabelle erreichbar.
+- Einzelklick, Eingabetaste und Leertaste öffnen den Lauf in seiner aktuellen Ansicht. Rechtsklick und Umschalt+F10 öffnen das Menü der korrekten Zeile. Remote Stop und Cancel sind aus dem passenden Menüeintrag erreichbar.
+- Der Drawer hält seine Aktionen neben Schließen. Der Ladezustand reserviert dieselbe Diagrammhöhe wie der geladene Zustand. Das kompakte Diagramm beginnt bei 80 Prozent Zoom. Job-Aktivierung per Maus und Tastatur fokussiert den richtigen Logeintrag, auch nach Matrix-Auswahl.
 - Klick auf Statuspunkt und Name wählt dasselbe Workflow-Item; Hover und Tastaturfokus zeigen dessen vollständigen Namen, bei deaktivierten Workflows zusätzlich den Grund.
-- Das simulierte Testprofil `SYMPHONY_SIMULATED_CI_LAYOUT_FIXTURE=1` liefert ausschließlich im simulierten CI-Adapter eine feste Obergrenze von 24 Läufen je Workflow, einen fehlgeschlagenen Lauf mit langem Protokoll und einen deaktivierten Workflow mit langem Namen. Ohne das Profil bleiben Katalog, Laufanzahl und Ergebniszustände unverändert. Der bestehende `SYMPHONY_SIMULATED_CI_JOB_COUNT` erzeugt lange Joblisten. Beide Einstellungen sind interne Teststeuerung und keine Produkteinstellungen.
+- Das simulierte Testprofil `SYMPHONY_SIMULATED_CI_LAYOUT_FIXTURE=1` liefert ausschließlich im simulierten CI-Adapter bis zu 120 Läufe je Workflow, eine kurze Verzögerung beim Laden der Laufdetails für die Skeleton-Prüfung, einen fehlgeschlagenen Lauf mit langem Protokoll und einen deaktivierten Workflow mit langem Namen. Ohne das Profil bleiben Katalog, Laufanzahl und Ergebniszustände unverändert. Der bestehende `SYMPHONY_SIMULATED_CI_JOB_COUNT` erzeugt lange Joblisten. Beide Einstellungen sind interne Teststeuerung und keine Produkteinstellungen.
 - Spezifikationen: `libs/frontend/features/ci/src/lib/actions/view-presenters/**/*.spec.ts`, `libs/frontend/features/ci/src/lib/pipes/*.spec.ts`; E2E: `apps/renderer-e2e/src/actions-workflows.spec.ts`.

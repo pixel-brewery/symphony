@@ -41,7 +41,7 @@ Für eine Prüfung zu einem selbst gewählten Zeitpunkt öffne **Settings → Sy
 ## Update herunterladen und installieren
 
 1. Wähle die Downloadschaltfläche in der Statusleiste oder auf macOS **Download update** im Menüleisten-Menü.
-2. Symphony lädt das Installationsprogramm im Hintergrund. In der Statusleiste füllt sich ein Fortschrittsring um das Downloadsymbol in ganzen Prozentschritten; die Schaltfläche ist währenddessen gesperrt. Die Einstellungen zeigen `Downloading a new version in the background…`, das Menüleisten-Menü `Downloading update…`. Du kannst Symphony währenddessen normal weiter verwenden.
+2. Symphony lädt das Installationsprogramm im Hintergrund. In der Statusleiste ersetzt ein Fortschrittsring das Downloadsymbol und zeigt den Fortschritt in ganzen Prozent. Die Schaltfläche ist währenddessen gesperrt. Die Einstellungen zeigen `Downloading a new version in the background…`, das Menüleisten-Menü `Downloading update…`. Du kannst Symphony währenddessen normal weiter verwenden.
 3. Nach dem Download prüft Symphony, ob die Datei genau die vom Updatekanal angekündigte Größe und Prüfsumme hat. Nur eine vollständig übereinstimmende Datei wird behalten.
 4. Die Schaltfläche in der Statusleiste wird zu **Restart to update**. Im Menüleisten-Menü heißt die Aktion **Restart and update to** mit der Versionsnummer; die Einstellungen zeigen `Version <Version> is ready to install.` Ein zusätzliches Hinweisfenster erscheint für ein so heruntergeladenes Update nicht.
 5. Wähle **Restart to update**, wenn du bereit bist. Symphony prüft zuerst, ob noch Aufgaben laufen (siehe unten).

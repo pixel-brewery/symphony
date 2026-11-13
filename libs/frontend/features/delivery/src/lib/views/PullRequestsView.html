@@ -161,23 +161,46 @@
       </div>
       } } }
 
-      <div class="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain px-1.5 py-1">
+      <div class="flex min-h-0 flex-1 flex-col overflow-clip px-1.5 py-1">
         @if (presenter.isHydrating()) {
         <mosaik-table
           test-id="pull-requests-loading-skeleton"
           [attr.aria-label]="tr('loc.symphony.loading.pull.requests.83ec6f')"
-          [columns]="'minmax(0, 1fr) 90px 130px 130px 64px 96px 32px'"
           [appearance]="'plain'"
         >
           <mosaik-table-header>
             <mosaik-table-header-row>
-              <mosaik-table-header-cell [text]="tr('loc.symphony.pull.request.f3dba6')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.item.652bcc')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.checks.de07d0')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.merge.8851aa')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.agent.11b39c')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.updated.3a5ecc')" />
-              <mosaik-table-header-cell [text]="''" />
+              <mosaik-table-header-cell
+                key="pull-request"
+                width="minmax(0, 1fr)"
+                [text]="tr('loc.symphony.pull.request.f3dba6')"
+              />
+              <mosaik-table-header-cell
+                key="item"
+                width="90px"
+                [text]="tr('loc.symphony.item.652bcc')"
+              />
+              <mosaik-table-header-cell
+                key="checks"
+                width="130px"
+                [text]="tr('loc.symphony.checks.de07d0')"
+              />
+              <mosaik-table-header-cell
+                key="merge"
+                width="130px"
+                [text]="tr('loc.symphony.merge.8851aa')"
+              />
+              <mosaik-table-header-cell
+                key="agent"
+                width="64px"
+                [text]="tr('loc.symphony.agent.11b39c')"
+              />
+              <mosaik-table-header-cell
+                key="updated"
+                width="96px"
+                [text]="tr('loc.symphony.updated.3a5ecc')"
+              />
+              <mosaik-table-header-cell key="actions" width="32px" [text]="''" />
             </mosaik-table-header-row>
           </mosaik-table-header>
           <mosaik-table-body>
@@ -220,20 +243,45 @@
         </mosaik-table>
         } @else if (presenter.visibleRows().length) {
         <mosaik-table
+          class="min-h-0 flex-1"
           test-id="pull-requests-list"
+          [virtualized]="true"
           [attr.aria-label]="tr('loc.symphony.pull.requests.d9e3f2')"
-          [columns]="'minmax(0, 1fr) 90px 130px 130px 64px 96px 32px'"
           [appearance]="'plain'"
         >
           <mosaik-table-header>
             <mosaik-table-header-row>
-              <mosaik-table-header-cell [text]="tr('loc.symphony.pull.request.f3dba6')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.item.652bcc')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.checks.de07d0')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.merge.8851aa')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.agent.11b39c')" />
-              <mosaik-table-header-cell [text]="tr('loc.symphony.updated.3a5ecc')" />
-              <mosaik-table-header-cell [text]="''" />
+              <mosaik-table-header-cell
+                key="pull-request"
+                width="minmax(0, 1fr)"
+                [text]="tr('loc.symphony.pull.request.f3dba6')"
+              />
+              <mosaik-table-header-cell
+                key="item"
+                width="90px"
+                [text]="tr('loc.symphony.item.652bcc')"
+              />
+              <mosaik-table-header-cell
+                key="checks"
+                width="130px"
+                [text]="tr('loc.symphony.checks.de07d0')"
+              />
+              <mosaik-table-header-cell
+                key="merge"
+                width="130px"
+                [text]="tr('loc.symphony.merge.8851aa')"
+              />
+              <mosaik-table-header-cell
+                key="agent"
+                width="64px"
+                [text]="tr('loc.symphony.agent.11b39c')"
+              />
+              <mosaik-table-header-cell
+                key="updated"
+                width="96px"
+                [text]="tr('loc.symphony.updated.3a5ecc')"
+              />
+              <mosaik-table-header-cell key="actions" width="32px" [text]="''" />
             </mosaik-table-header-row>
           </mosaik-table-header>
           <mosaik-table-body>
@@ -243,6 +291,7 @@
               #pullRequestRow
               part="pull-request-row"
               tabindex="0"
+              [key]="pullRequest.id"
               [attr.test-id]="'pull-request-' + pullRequest.id"
               [attr.aria-label]="pullRequest.title + ', #' + pullRequest.number"
               [isSelected]="presenter.selectedRow()?.pullRequest?.id === pullRequest.id"

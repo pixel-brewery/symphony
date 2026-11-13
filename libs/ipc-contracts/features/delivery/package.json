@@ -17,6 +17,6 @@
     "@symphony/configuration-delivery": "workspace:*",
     "@symphony/ipc-contracts-ci": "workspace:*",
     "@symphony/ipc-contracts-execution": "workspace:*",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   }
 }
