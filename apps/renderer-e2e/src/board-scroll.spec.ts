@@ -9,7 +9,7 @@ import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
-test('scrolls a dense board column to both boundaries', async () => {
+test('virtualizes 200 cards while scrolling and reopening a dense board column', async () => {
   // arrange
   const workspace = resolve('.');
   const outputDirectory = resolve('output/playwright');
@@ -29,7 +29,7 @@ test('scrolls a dense board column to both boundaries', async () => {
       SYMPHONY_EXTERNAL_LINKS_MODE: 'blocked',
       SYMPHONY_WORKSPACE_MODE: 'simulated',
       SYMPHONY_AGENT_MODE: 'simulated',
-      SYMPHONY_SIMULATED_ADDITIONAL_WORK_ITEMS: '132',
+      SYMPHONY_SIMULATED_ADDITIONAL_WORK_ITEMS: '199',
     },
   });
 
@@ -73,7 +73,7 @@ test('scrolls a dense board column to both boundaries', async () => {
     await page.getByTestId('navigation-board').click();
     await expect(page.getByTestId('board-view')).toBeVisible();
     await expect(page.getByTestId('board-loading-skeleton')).toHaveCount(0);
-    // Backlog starts as a collapsed strip; its long card and its 133 entries are under test.
+    // Backlog starts as a collapsed strip; its long card and its 200 entries are under test.
     await expandBoardColumn(page, 'backlog');
 
     const backlog = page.getByTestId('board-column-backlog');
@@ -146,7 +146,10 @@ test('scrolls a dense board column to both boundaries', async () => {
 
     await expect
       .poll(readColumn)
-      .toMatchObject({ total: 133, top: 0, firstRendered: true, lastRendered: false });
+      .toMatchObject({ total: 200, top: 0, firstRendered: true, lastRendered: false });
+    await expect
+      .poll(() => backlog.locator('[test-id^="board-item-title-"]').count())
+      .toBeLessThan(30);
     await expect.poll(async () => (await readColumn()).rendered).toBeLessThan(30);
     await expect.poll(async () => (await readColumn()).remaining).toBeGreaterThan(0);
 
@@ -174,6 +177,15 @@ test('scrolls a dense board column to both boundaries', async () => {
     await expect
       .poll(readColumn)
       .toMatchObject({ top: 0, firstRendered: true, lastRendered: false });
+    await backlog.locator('[part="toggle"]').click();
+    await expect(backlog).toHaveJSProperty('isExpanded', false);
+    await expect.poll(() => backlog.locator('[test-id^="board-item-title-"]').count()).toBe(0);
+    await expandBoardColumn(page, 'backlog');
+    await expect(backlog).toHaveJSProperty('isExpanded', true);
+    await expect
+      .poll(() => backlog.locator('[test-id^="board-item-title-"]').count())
+      .toBeLessThan(30);
+    await expect(longCard).toBeVisible();
     await expect
       .poll(() =>
         page

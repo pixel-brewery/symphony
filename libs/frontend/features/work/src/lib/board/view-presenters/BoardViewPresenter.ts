@@ -6,7 +6,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
   DialogService,
   DrawerService,
-  DropDownButtonComponent,
   type IDrawerRef,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { firstValueFrom } from 'rxjs';
@@ -1055,7 +1054,7 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
   private readonly _moveByOffsetCommand: Command<readonly [item: IWorkItem, offset: 1 | -1]> =
     new Command((parameters) => void this.onExecuteMoveByOffsetCommand(...parameters));
   private readonly _openContextActionsCommand: Command<
-    readonly [event: MouseEvent, menu: DropDownButtonComponent, item: IWorkItem]
+    readonly [event: MouseEvent, item: IWorkItem]
   > = new Command((parameters) => void this.onExecuteOpenContextActionsCommand(...parameters));
   private readonly _assignableUsers = computed(
     () => (item: IWorkItem) => this.resolveAssignableUsers(item),
@@ -1502,9 +1501,7 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    * @public
    * @readonly
    */
-  public get openContextActionsCommand(): Command<
-    readonly [event: MouseEvent, menu: DropDownButtonComponent, item: IWorkItem]
-  > {
+  public get openContextActionsCommand(): Command<readonly [event: MouseEvent, item: IWorkItem]> {
     return this._openContextActionsCommand;
   }
   /**
@@ -2431,19 +2428,14 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    * Opens the context actions.
    *
    * @param event - Event.
-   * @param menu - Menu.
    * @param item - Item.
    * @private
    */
-  private onExecuteOpenContextActionsCommand(
-    event: MouseEvent,
-    menu: DropDownButtonComponent,
-    item: IWorkItem,
-  ): void {
+  private onExecuteOpenContextActionsCommand(event: MouseEvent, item: IWorkItem): void {
     event.preventDefault();
     event.stopPropagation();
     void this.onExecutePrepareContextActionsCommand(item);
-    menu.invoke('open');
+    this.openCardContextMenu(event);
   }
 
   /**
@@ -2461,21 +2453,34 @@ export class BoardViewPresenter extends Hydratable(ViewPresenter) {
    * Opens the action menu for a delivery group without opening its drawer.
    *
    * @param event - Context-menu event.
-   * @param menu - Group menu.
    * @param group - Delivery group.
    * @public
    * @readonly
    */
   public readonly openDeliveryGroupContextActions = (
     event: MouseEvent,
-    menu: DropDownButtonComponent,
     group: IDeliveryGroup,
   ): void => {
     event.preventDefault();
     event.stopPropagation();
     void this.prepareDeliveryGroupActions(group);
-    menu.invoke('open');
+    this.openCardContextMenu(event);
   };
+
+  /**
+   * Opens the dropdown rendered inside the card that received a context-menu event.
+   *
+   * @param event - Context-menu event dispatched by a board card host.
+   * @private
+   */
+  private openCardContextMenu(event: MouseEvent): void {
+    const card = event.currentTarget;
+    if (!(card instanceof HTMLElement)) return;
+
+    card
+      .querySelector<HTMLElementTagNameMap['mosaik-dropdown-button']>('mosaik-dropdown-button')
+      ?.open();
+  }
 
   private deliveryGroupMoveTargetsFor(group: IDeliveryGroup): readonly IBoardColumn[] {
     const root = this.deliveryGroupItem(group, group.rootWorkItemId);
