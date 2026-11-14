@@ -219,7 +219,7 @@ The redesign has one thread: the delivery flow. A work item passes five steps â€
 - `yarn verify` passes.
 - End-to-end tests cover launching on `Overview`, the reporting period switch, sidebar navigation, back and forward, the run panel switch, the command palette keyboard flow, creating a work item from the sheet, and opening Settings with `Skills`.
 - Screenshots of each screen at 1440 Ã— 900 in light and dark mode are compared side by side with `artboards/` (for Settings, the section content against `Settings-*` and `Sheet-*`).
-- `yarn design:md-check` and `yarn ui:check` stay green.
+- `yarn design:md-check` and the affected Nx lint targets stay green.
 
 ## Evidence and open questions
 
