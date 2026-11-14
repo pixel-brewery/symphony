@@ -30,7 +30,7 @@ Die gemeinsame Katalogprozedur wird nicht lokal dupliziert. Öffentliche Katalog
 
 ## Ein lokaler Mosaik-Server
 
-Die kanonische Registry definiert genau einen Mosaik-Server: `mosaik` startet das bereits installierte Paket `@pixel-brewery/mosaik-mcp@0.1.199` über `yarn exec mosaik-mcp` im Repository-Arbeitsverzeichnis. Die Konfiguration enthält `command: "yarn"` und `args: ["exec", "mosaik-mcp"]`; Yarn löst damit den installierten Workspace-Bin auf. Ein interner JavaScript-Pfad, ein Download beim Start oder ein HTTP-Katalog ist nicht konfiguriert. CLI-Clients werden vom Repository-Root gestartet. Claudes bereits aktiviertes Nx-Plugin bleibt zuständig für Nx; der lokale Mosaik-Server wird daneben einmal registriert.
+Die kanonische Registry definiert genau einen Mosaik-Server: `mosaik` startet das bereits installierte Paket `@pixel-brewery/mosaik-mcp@0.1.202` über `yarn exec mosaik-mcp` im Repository-Arbeitsverzeichnis. Die Konfiguration enthält `command: "yarn"` und `args: ["exec", "mosaik-mcp"]`; Yarn löst damit den installierten Workspace-Bin auf. Ein interner JavaScript-Pfad, ein Download beim Start oder ein HTTP-Katalog ist nicht konfiguriert. CLI-Clients werden vom Repository-Root gestartet. Claudes bereits aktiviertes Nx-Plugin bleibt zuständig für Nx; der lokale Mosaik-Server wird daneben einmal registriert.
 
 Der bestehende Generator projiziert die Verbindung in sieben Clientformen. Die Registry bleibt die einzige MCP-Quelle; die Projektionen werden durch `yarn agents:sync` erzeugt und durch `yarn agents:check` gegen sie geprüft.
 

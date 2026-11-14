@@ -9,39 +9,14 @@ Nx builds Angular into `dist/apps/renderer/browser`, Electron Main and sandbox-c
 ## Cross-platform consumer build contract
 
 `yarn design:md` and `yarn design:md-check` use the installed public
-`mosaik-design-md` CLI from `@pixel-brewery/mosaik-themes` version `0.1.199`.
-Its configuration serializes repository-relative source paths into the generated
-Markdown headers. The upstream CLI uses native path separators there, making a
-Windows check report the committed `DESIGN.md` as stale even when the theme and
-component values are unchanged. This CLI version exposes no public path-header
-normalizer option.
-
-The native Yarn patch
-[@pixel-brewery/mosaik-themes 0.1.199](../../../.yarn/patches/mosaik-themes-0.1.199-path-separators.patch)
-changes only `config.where` in `bin/design-md.mjs`: its relative display path
-replaces backslashes with `/` before rendering Markdown. It does not change
-filesystem resolution, theme evaluation, component APIs or runtime styling.
-The existing generator and stale-output check remain authoritative; committed
-`DESIGN.md` and `COMPONENTS.md` must remain byte-for-byte unchanged by this
-portability correction.
-
-The committed patch, central [Yarn resolution](../../../package.json) and
-[lockfile](../../../yarn.lock) are one dependency contract.
-`yarn install --immutable` selects and applies the patch from that contract;
-manual edits to `node_modules` and a parallel generator wrapper are not part of
-the build. All direct Mosaik family versions remain pinned to `0.1.199`, with
-no upstream release or runtime/component patch introduced by this correction.
-The [design CLI policy regression](../../../tools/design-md-portability.policy.spec.ts)
-invokes the actual installed CLI with native and Windows-style path serialization
-and compares its outputs and unchanged document bytes. A simulated separator
-check is not evidence of a completed Windows CI run or a desktop release.
-
-Remove this consumer patch only during a coordinated Mosaik upgrade after the
-upstream CLI supplies the same platform-independent header behavior. Update the
-resolution and lockfile together, and require the actual design checks on both
-Windows and a POSIX platform to pass with unchanged reviewed design documents
-before accepting removal. A matching package version alone does not establish
-that the upstream fix exists.
+`mosaik-design-md` CLI from `@pixel-brewery/mosaik-themes` version `0.1.202`.
+The published CLI serializes repository-relative source paths with portable `/`
+separators, so the committed `DESIGN.md` and `COMPONENTS.md` remain stable on
+Windows and POSIX systems. Symphony consumes that published package directly;
+the dependency contract contains no Yarn consumer patch or local `node_modules`
+modification. A future dependency defect that appears to require patching must
+be resolved in a published owner package or explicitly approved by the owner
+before Symphony changes dependency source locally.
 
 ## Native application assets
 

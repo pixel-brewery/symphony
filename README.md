@@ -156,7 +156,7 @@ system sees.
 Quality gates:
 
 ```bash
-yarn verify        # agents:check, ui:check, format:check, lint, typecheck, test, build
+yarn verify        # agents:check, format:check, lint, typecheck, test, build
 yarn e2e           # real three-process Electron app under Playwright, hidden locally
 yarn e2e:visible   # opt into native windows for local lifecycle debugging
 yarn forge:package # packaging smoke test

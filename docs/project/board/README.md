@@ -63,7 +63,7 @@ Eine eingeklappte Spalte ist ein schmaler Streifen mit der Zahl und dem senkrech
 | Der Repository-Chip schränkt ein.                                                                       | Eingeklappte Spalten bleiben eingeklappt.                                              |
 | Du klappst eine Spalte zu, deren Karten ausgewählt sind.                                                | Diese Karten verlassen die Auswahl.                                                    |
 
-Lange Spalten scrollen für sich; auch Spalten mit Hunderten von Karten bleiben flüssig.
+Lange Spalten scrollen für sich; auch Spalten mit Hunderten von Karten bleiben flüssig, weil nur der sichtbare Bereich samt kleinem Überhang aufgebaut wird.
 
 ## Die Karte
 

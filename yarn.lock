@@ -2904,14 +2904,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/config-array@npm:^0.23.5":
-  version: 0.23.5
-  resolution: "@eslint/config-array@npm:0.23.5"
+"@eslint/config-array@npm:^0.23.6":
+  version: 0.23.6
+  resolution: "@eslint/config-array@npm:0.23.6"
   dependencies:
     "@eslint/object-schema": "npm:^3.0.5"
     debug: "npm:^4.3.1"
-    minimatch: "npm:^10.2.4"
-  checksum: 10c0/b24833c4c76e78ee075d306cd3f095db46b2db0f90cc13a6ee6e4275f9889731c05bf5403ab5fefb79c756e07ac9184ed0e04570341382f9eccbccc80e6d1a0c
+    minimatch: "npm:^11.0.5"
+  checksum: 10c0/adf798a55b4f58e1db954347633ca2c07c51d413590f274f77d1d94d3413de3d321e3558e313f616a822cb76d90e9c378ec6dd2f49b3e51a2070e61f4405f2ae
   languageName: node
   linkType: hard
 
@@ -4725,24 +4725,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/markdowner-core@npm:0.1.199":
-  version: 0.1.199
-  resolution: "@pixel-brewery/markdowner-core@npm:0.1.199::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmarkdowner-core%2F0.1.199%2F40fe82062cc6f4c44241f58b7e09203b167c5c0f"
+"@pixel-brewery/markdowner-core@npm:0.1.202":
+  version: 0.1.202
+  resolution: "@pixel-brewery/markdowner-core@npm:0.1.202::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmarkdowner-core%2F0.1.202%2F438ef7cc7b89bdb633d5ac1d97add41b0dfdd9b0"
   dependencies:
     tslib: "npm:2.9.1"
   peerDependencies:
     marked: ">=18.0.0"
-  checksum: 10c0/4586936ed6404668727a90ae267ebbe8de4b8c29d4ddbd58d0de090c16aee381c659611e7b484f41926ba2bf54a259f896ef83e607f89b877c30593b26703d80
+  checksum: 10c0/92b424322c74242786396b89625b2b9c58e59d14e3ba0d66dbf93326a5849c813854469b303f553254eee2f0c1072453df05098dee76ce8f29c9f19c1cf598eb
   languageName: node
   linkType: hard
 
-"@pixel-brewery/mosaik-elements-angular@npm:0.1.199":
-  version: 0.1.199
-  resolution: "@pixel-brewery/mosaik-elements-angular@npm:0.1.199::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-elements-angular%2F0.1.199%2Fdca7d4f69f087f8bcaa35a3e6cf66ff9e337e859"
+"@pixel-brewery/mosaik-elements-angular@npm:0.1.202":
+  version: 0.1.202
+  resolution: "@pixel-brewery/mosaik-elements-angular@npm:0.1.202::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-elements-angular%2F0.1.202%2F5be742c0676f43cf5e057c5cee3e12afc0215cb2"
   dependencies:
-    "@pixel-brewery/mosaik-elements": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.199"
-    "@pixel-brewery/mosaik-icons": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.202"
+    "@pixel-brewery/mosaik-icons": "npm:0.1.202"
     tslib: "npm:2.9.1"
   peerDependencies:
     "@angular/cdk": ">=18.0.0"
@@ -4799,18 +4799,18 @@ __metadata:
     rxjs: ">=7.0.0"
     signature_pad: ">=5.0.0"
     three: ^0.187.0
-  checksum: 10c0/b29d0bd94acd61c6bddeb65d490617c78b933b2130b2513573f53d37bf647736d027cb660cd4efa54aecb26863944f3b945696400f374d7d86b2399cff61dfbf
+  checksum: 10c0/25ac15b7d04fcac6a7dd6f93bc55dfb608805d3660a43a951a65724c9b832c1807e60f098fc21582baec9838406b7113d729dcc384b58071bee3cbad33d48d99
   languageName: node
   linkType: hard
 
-"@pixel-brewery/mosaik-elements-foundation@npm:0.1.199":
-  version: 0.1.199
-  resolution: "@pixel-brewery/mosaik-elements-foundation@npm:0.1.199::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-elements-foundation%2F0.1.199%2F0732f10bac2ae344b753d5843f48db9e30fe22c6"
+"@pixel-brewery/mosaik-elements-foundation@npm:0.1.202":
+  version: 0.1.202
+  resolution: "@pixel-brewery/mosaik-elements-foundation@npm:0.1.202::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-elements-foundation%2F0.1.202%2Fa4f542a843dc37bd8da9215aff061887e2bab64c"
   dependencies:
     "@dagrejs/dagre": "npm:3.1.3"
-    "@pixel-brewery/mosaik-elements": "npm:0.1.199"
-    "@pixel-brewery/mosaik-icons": "npm:0.1.199"
-    "@pixel-brewery/mosaik-themes": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements": "npm:0.1.202"
+    "@pixel-brewery/mosaik-icons": "npm:0.1.202"
+    "@pixel-brewery/mosaik-themes": "npm:0.1.202"
     elkjs: "npm:0.12.1"
     reflect-metadata: "npm:^0.2.2"
     tslib: "npm:2.9.1"
@@ -4872,119 +4872,46 @@ __metadata:
     rxjs: ">=7.0.0"
     signature_pad: ">=5.0.0"
     three: ^0.187.0
-  checksum: 10c0/1a476af2b893b41f4966c0fd52054ef18753ef7d4b0aea12d6051db115d9e0d04613d4f0680b64a5cf3d5a6f8619054b3c743305c7f92e49a2490367216777e5
+  checksum: 10c0/6d90807ee365cb0bc770cf4172d91182ddaac40c6766b8a28d28c3b83aa09a6ec0ad03862cc141401163e55dd0d10bf9a78d08a3eb6a3b43440c42767ac8ec31
   languageName: node
   linkType: hard
 
-"@pixel-brewery/mosaik-elements-foundation@patch:@pixel-brewery/mosaik-elements-foundation@npm%3A0.1.199#~/.yarn/patches/mosaik-foundation-0.1.199-flow-board-source.patch":
-  version: 0.1.199
-  resolution: "@pixel-brewery/mosaik-elements-foundation@patch:@pixel-brewery/mosaik-elements-foundation@npm%3A0.1.199%3A%3A__archiveUrl=https%253A%252F%252Fnpm.pkg.github.com%252Fdownload%252F%2540pixel-brewery%252Fmosaik-elements-foundation%252F0.1.199%252F0732f10bac2ae344b753d5843f48db9e30fe22c6#~/.yarn/patches/mosaik-foundation-0.1.199-flow-board-source.patch::version=0.1.199&hash=3ff2d7"
-  dependencies:
-    "@dagrejs/dagre": "npm:3.1.3"
-    "@pixel-brewery/mosaik-elements": "npm:0.1.199"
-    "@pixel-brewery/mosaik-icons": "npm:0.1.199"
-    "@pixel-brewery/mosaik-themes": "npm:0.1.199"
-    elkjs: "npm:0.12.1"
-    reflect-metadata: "npm:^0.2.2"
-    tslib: "npm:2.9.1"
-  peerDependencies:
-    "@codemirror/autocomplete": ">=6.20.3"
-    "@codemirror/commands": ">=6.11.1"
-    "@codemirror/lang-angular": ">=0.1.4"
-    "@codemirror/lang-css": ">=6.3.1"
-    "@codemirror/lang-html": ">=6.4.12"
-    "@codemirror/lang-javascript": ">=6.2.5"
-    "@codemirror/lang-json": ">=6.0.2"
-    "@codemirror/lang-sass": ">=6.0.2"
-    "@codemirror/lang-vue": ">=0.1.3"
-    "@codemirror/lang-xml": ">=6.1.0"
-    "@codemirror/lang-yaml": ">=6.1.3"
-    "@codemirror/language": ">=6.12.4"
-    "@codemirror/lint": ">=6.9.7"
-    "@codemirror/search": ">=6.7.2"
-    "@codemirror/state": ">=6.7.6"
-    "@codemirror/view": ">=6.43.13"
-    "@floating-ui/dom": ">=1.0.0"
-    "@lezer/highlight": ">=1.2.4"
-    "@lit-labs/virtualizer": ">=2.0.0"
-    "@lit/context": ">=1.0.0"
-    "@lit/task": ">=1.0.0"
-    "@replit/codemirror-lang-svelte": ">=6.0.0"
-    "@splinetool/runtime": ^2.0.111
-    "@tiptap/core": ">=3.31.3"
-    "@tiptap/extension-blockquote": ">=3.31.3"
-    "@tiptap/extension-bold": ">=3.31.3"
-    "@tiptap/extension-code": ">=3.31.3"
-    "@tiptap/extension-code-block": ">=3.31.3"
-    "@tiptap/extension-document": ">=3.31.3"
-    "@tiptap/extension-emoji": ">=3.31.3"
-    "@tiptap/extension-hard-break": ">=3.31.3"
-    "@tiptap/extension-heading": ">=3.31.3"
-    "@tiptap/extension-highlight": ">=3.31.3"
-    "@tiptap/extension-image": ">=3.31.3"
-    "@tiptap/extension-italic": ">=3.31.3"
-    "@tiptap/extension-link": ">=3.31.3"
-    "@tiptap/extension-list": ">=3.31.3"
-    "@tiptap/extension-mention": ">=3.31.3"
-    "@tiptap/extension-paragraph": ">=3.31.3"
-    "@tiptap/extension-placeholder": ">=3.31.3"
-    "@tiptap/extension-strike": ">=3.31.3"
-    "@tiptap/extension-subscript": ">=3.31.3"
-    "@tiptap/extension-superscript": ">=3.31.3"
-    "@tiptap/extension-text": ">=3.31.3"
-    "@tiptap/extension-text-align": ">=3.31.3"
-    "@tiptap/extension-underline": ">=3.31.3"
-    "@tiptap/extensions": ">=3.31.3"
-    "@tiptap/pm": ">=3.31.3"
-    "@tiptap/suggestion": ">=3.31.3"
-    chroma-js: ">=3.0.0"
-    lit: ">=3.0.0"
-    maplibre-gl: 6.15.0
-    prettier: ">=3.0.0"
-    qr-creator: ">=1.0.0"
-    rxjs: ">=7.0.0"
-    signature_pad: ">=5.0.0"
-    three: ^0.187.0
-  checksum: 10c0/731810c658c02ba0c28f65d880b63f088fbc28b048d23ed95eef48af29629c2e958b1658b76911426eaea88e5bc57c1b2ca5ca59baf7ce27a2f3e111e496da5f
-  languageName: node
-  linkType: hard
-
-"@pixel-brewery/mosaik-elements@npm:0.1.199":
-  version: 0.1.199
-  resolution: "@pixel-brewery/mosaik-elements@npm:0.1.199::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-elements%2F0.1.199%2F32dc5b22a238f229643bcebb864bf7facd26c0c8"
+"@pixel-brewery/mosaik-elements@npm:0.1.202":
+  version: 0.1.202
+  resolution: "@pixel-brewery/mosaik-elements@npm:0.1.202::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-elements%2F0.1.202%2Ffec5a8bb88c7b8978ff5c98d6a512613bed54376"
   dependencies:
     tslib: "npm:2.9.1"
-  checksum: 10c0/e2fb3e9baa40271b195edeaa938bd7ad882a2ab34528ecc2b1a4a51e0789454c4a42907be29da16d9b224ad5b0993a41b093c71f1f4fc4370d85dfb07c513301
+  checksum: 10c0/a472f1cb4777093a5212f1da5947312524e6776beba8005258bad8e5d45745d2907679b12ab240bc0a65330e2f91112e7d6c7d3917cbe0e55682e8bbdab01143
   languageName: node
   linkType: hard
 
-"@pixel-brewery/mosaik-icons@npm:0.1.199":
-  version: 0.1.199
-  resolution: "@pixel-brewery/mosaik-icons@npm:0.1.199::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-icons%2F0.1.199%2F89599db4148b786917b3b40fbe57db6ee3115901"
+"@pixel-brewery/mosaik-icons@npm:0.1.202":
+  version: 0.1.202
+  resolution: "@pixel-brewery/mosaik-icons@npm:0.1.202::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-icons%2F0.1.202%2F58635052e96cd267f978db9fc421e81e27edad8b"
   dependencies:
     tslib: "npm:2.9.1"
-  checksum: 10c0/1a21b23b274caf514d288f0f4b013d5e792efb202e7ea20d10b48e72c8242ea78cbf191b867db352d095a07de3b4926a55576c846bb7027fb059d8edcf39fa70
+  checksum: 10c0/151b04995ee80556b27aad72e4e73e7403a4bff9d2afc0d7cfeddc447ab4a75abeec43bbe5ca2cdccbf8134b733742d6f6b78a824b271f08e1cbd453941abe9f
   languageName: node
   linkType: hard
 
-"@pixel-brewery/mosaik-mcp@npm:0.1.199":
-  version: 0.1.199
-  resolution: "@pixel-brewery/mosaik-mcp@npm:0.1.199::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-mcp%2F0.1.199%2Fed97e38b19155e45f54ceb69f44a984a7d7ba83a"
+"@pixel-brewery/mosaik-mcp@npm:0.1.202":
+  version: 0.1.202
+  resolution: "@pixel-brewery/mosaik-mcp@npm:0.1.202::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-mcp%2F0.1.202%2Fb0de47d4e7c9ba0a996abc38eb56d52f5032e3b2"
   dependencies:
     "@modelcontextprotocol/sdk": "npm:^1.32.2"
     chroma-js: "npm:^3.3.0"
     zod: "npm:^4.6.7"
   bin:
     mosaik-mcp: dist/main.js
-  checksum: 10c0/141fe2af5133c096d07dda7bb2acdf25bca94514afd3eca8c0a83bffe0f1f81afff24d92bac092ff730d94c09b4f41570fdcdacec7fe55b67f80a71f20445da3
+  checksum: 10c0/da7c220e2853e93cf0c610a9e1afaf2044c24bc1501d6e03a4229f4ea01e3b2d2efa177110f58f0ce8c1a6c71a6cd9b153a91f82745e80e5eb6099602126296b
   languageName: node
   linkType: hard
 
-"@pixel-brewery/mosaik-themes@npm:0.1.199":
-  version: 0.1.199
-  resolution: "@pixel-brewery/mosaik-themes@npm:0.1.199::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-themes%2F0.1.199%2F3ce4b9d1a8dad2a7d2df8db4e1e54845e5b5f88e"
+"@pixel-brewery/mosaik-themes@npm:0.1.202":
+  version: 0.1.202
+  resolution: "@pixel-brewery/mosaik-themes@npm:0.1.202::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fmosaik-themes%2F0.1.202%2F18e0d8df3c5eec1c5915ab225d5de0427b6cb740"
   dependencies:
-    "@pixel-brewery/mosaik-elements": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements": "npm:0.1.202"
     tslib: "npm:2.9.1"
   peerDependencies:
     "@google/design.md": ">=0.4.0"
@@ -4992,70 +4919,54 @@ __metadata:
     typescript: ">=5.0.0"
   bin:
     mosaik-design-md: bin/design-md.mjs
-  checksum: 10c0/fc6bb228645dc017cf3ba957007fba46bda94c396667e46e8a7c6ee3928faaaed955de92b8e2dc1c7119742cdecd3db4986b12fa0f3914864a9c0352750f609a
+  checksum: 10c0/6888bb253c53b6c3e8807b21e3637c520b109b3c72ce36099420f8702d58728fd38c50a2a84ae542219bac541860f076c102e157474370a5f369b5c3e96f5677
   languageName: node
   linkType: hard
 
-"@pixel-brewery/mosaik-themes@patch:@pixel-brewery/mosaik-themes@npm%3A0.1.199#~/.yarn/patches/mosaik-themes-0.1.199-path-separators.patch":
-  version: 0.1.199
-  resolution: "@pixel-brewery/mosaik-themes@patch:@pixel-brewery/mosaik-themes@npm%3A0.1.199%3A%3A__archiveUrl=https%253A%252F%252Fnpm.pkg.github.com%252Fdownload%252F%2540pixel-brewery%252Fmosaik-themes%252F0.1.199%252F3ce4b9d1a8dad2a7d2df8db4e1e54845e5b5f88e#~/.yarn/patches/mosaik-themes-0.1.199-path-separators.patch::version=0.1.199&hash=e379cc"
-  dependencies:
-    "@pixel-brewery/mosaik-elements": "npm:0.1.199"
-    tslib: "npm:2.9.1"
-  peerDependencies:
-    "@google/design.md": ">=0.4.0"
-    chroma-js: ">=3.0.0"
-    typescript: ">=5.0.0"
-  bin:
-    mosaik-design-md: bin/design-md.mjs
-  checksum: 10c0/e523dbe5c5f8c806d3b0b6d28c5117d6ab78928630c0379098da8adb43653c32ef2ba298efc618b85e717d08dc48e9cc747d9e3b818aceb5be2f0f7eb49f7d6e
-  languageName: node
-  linkType: hard
-
-"@pixel-brewery/ngpel-core@npm:0.0.8":
-  version: 0.0.8
-  resolution: "@pixel-brewery/ngpel-core@npm:0.0.8::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fngpel-core%2F0.0.8%2F4b6a7580f9340cc1da94d473752c27bc2f0e3aa4"
+"@pixel-brewery/ngpel-core@npm:0.0.11":
+  version: 0.0.11
+  resolution: "@pixel-brewery/ngpel-core@npm:0.0.11::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fngpel-core%2F0.0.11%2F11a8a6efeb99897d625bcf13fbbc7453f6859adb"
   dependencies:
     tslib: "npm:2.9.1"
   peerDependencies:
     "@angular/core": ">=22.0.0 <23.0.0"
     "@angular/service-worker": ">=22.0.0 <23.0.0"
     rxjs: ">=7.8.0 <8.0.0"
-  checksum: 10c0/1deca64657cbb7d88c4110d750d7721efda68e2a6d3516dc4215f2d007e20f6d71014e35d7a1f8204b9023b51d671bca5d8e13b185b5bf8b4987e424194c1179
+  checksum: 10c0/69842e9616572b9b5f5a615df804c036bd35c83d861177fa27b01882fe0b64a025d7002678f8b955050024fca1d464440325b714f741f3ada9be55f1c74129fc
   languageName: node
   linkType: hard
 
-"@pixel-brewery/ngpel-mvp@npm:0.0.8":
-  version: 0.0.8
-  resolution: "@pixel-brewery/ngpel-mvp@npm:0.0.8::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fngpel-mvp%2F0.0.8%2Fbe8bcfcdc7aad2b2d868eefb367e82466e4e4b08"
+"@pixel-brewery/ngpel-mvp@npm:0.0.11":
+  version: 0.0.11
+  resolution: "@pixel-brewery/ngpel-mvp@npm:0.0.11::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fngpel-mvp%2F0.0.11%2F7f8a4abaa2c82de1f7b1c2761578fb3dd39c61ee"
   dependencies:
     tslib: "npm:2.9.1"
   peerDependencies:
     "@angular/common": ">=22.0.0 <23.0.0"
     "@angular/core": ">=22.0.0 <23.0.0"
     rxjs: ">=7.8.0 <8.0.0"
-  checksum: 10c0/8f240a4ea9d3bfbaea14d9bbf2033fb082c7446933fd49cf649984b12a333b7962f1f769022e7ac756357cf9caa54d4e1886dd3832de29f3da1424e5225550ce
+  checksum: 10c0/bd415d3ffe8c12341ec7e909af90bbf06a3853984b0230e8a3b1d6c4260e759a2fc385837d6f608b8a23fe516a417e19af7e96340f43dd61d16bc62dc621bc45
   languageName: node
   linkType: hard
 
-"@pixel-brewery/ngpel-router@npm:0.0.8":
-  version: 0.0.8
-  resolution: "@pixel-brewery/ngpel-router@npm:0.0.8::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fngpel-router%2F0.0.8%2Ff24da154c7845ce5ba1954474a0a0274fb2fdf6a"
+"@pixel-brewery/ngpel-router@npm:0.0.11":
+  version: 0.0.11
+  resolution: "@pixel-brewery/ngpel-router@npm:0.0.11::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fngpel-router%2F0.0.11%2Ffb8a2fee2afa6c79f5a02f53dcb3f714c3c0685b"
   dependencies:
     tslib: "npm:2.9.1"
   peerDependencies:
     "@angular/common": ">=22.0.0 <23.0.0"
     "@angular/core": ">=22.0.0 <23.0.0"
     "@angular/router": ">=22.0.0 <23.0.0"
-    "@pixel-brewery/ngpel-core": 0.0.8
+    "@pixel-brewery/ngpel-core": 0.0.11
     rxjs: ">=7.8.0 <8.0.0"
-  checksum: 10c0/409d8a19cef69e7469775e3ac2ac1b8d4fec0536363f9fd643bb6c0ded0e8d51b18bb4e2df10fdec90b88d320dd3a9129c56b14ddecce9629bf4f0e85879f1b6
+  checksum: 10c0/c918c8778547e2a19e59e55e010284a9b5e575e1cc87c71420dd8229dca0c7ba1a14d4e6af22cbff5495652872b459d0cf69b85139d8be8b2ab9ae5d87b3de01
   languageName: node
   linkType: hard
 
-"@pixel-brewery/ngpel-ui@npm:0.0.8":
-  version: 0.0.8
-  resolution: "@pixel-brewery/ngpel-ui@npm:0.0.8::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fngpel-ui%2F0.0.8%2F3e2d8010268b53a45fe9c09faaea485783cf24ce"
+"@pixel-brewery/ngpel-ui@npm:0.0.11":
+  version: 0.0.11
+  resolution: "@pixel-brewery/ngpel-ui@npm:0.0.11::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fngpel-ui%2F0.0.11%2F57fbfc6a1038dced5f664ac61614f08b9d9f297c"
   dependencies:
     diff: "npm:9.0.0"
     tslib: "npm:2.9.1"
@@ -5080,22 +4991,22 @@ __metadata:
     "@pixel-brewery/markdowner-core": ">=0.1.96"
     "@pixel-brewery/mosaik-elements-angular": ">=0.1.188"
     "@pixel-brewery/mosaik-elements-foundation": ">=0.1.188"
-    "@pixel-brewery/ngpel-core": 0.0.8
-    "@pixel-brewery/ngpel-mvp": 0.0.8
-    "@pixel-brewery/ngpel-router": 0.0.8
+    "@pixel-brewery/ngpel-core": 0.0.11
+    "@pixel-brewery/ngpel-mvp": 0.0.11
+    "@pixel-brewery/ngpel-router": 0.0.11
     marked: ">=18.0.0"
     rxjs: ">=7.8.0 <8.0.0"
-  checksum: 10c0/aafb3b278c4938634e688ac993996872d31ea549ca7e79999f632d08e7e0d9955cf96fd078e4920f9508ec008cb0bb762fd91e23355114a99783182146c006ea
+  checksum: 10c0/e63cf762c3a2cd089a313e66f3f42715e306e7235318c2b8e231883743486a432abf3f6f446cd487d38ce634a08f0bc96a53ae76c57eec29933e5820031313a5
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-auth@npm:0.0.15":
-  version: 0.0.15
-  resolution: "@pixel-brewery/synapse-auth@npm:0.0.15::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-auth%2F0.0.15%2F07cccbca6757fe04e78de5c1c25d22d20fe34844"
+"@pixel-brewery/synapse-auth@npm:0.0.16":
+  version: 0.0.16
+  resolution: "@pixel-brewery/synapse-auth@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-auth%2F0.0.16%2Fb6cfd2e383dbcfef1f2c04de09e382615f638b4a"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.15"
-    "@pixel-brewery/synapse-runtime": "npm:^0.0.15"
-  checksum: 10c0/10d3fd3adc492fb0f079f5d56b4a6f808068d627df80a28324d59daf5b58bcf9d722f598812ddd85ad1a9f1f2317dde82bb02f66d2013305e145752451d483ae
+    "@pixel-brewery/synapse-core": "npm:^0.0.16"
+    "@pixel-brewery/synapse-runtime": "npm:^0.0.16"
+  checksum: 10c0/85869766b27a4f4e39eda0e6015fdc702b21e343e484a5d2c5f406532fc7b9c13a15b67b8c40e1c3c6475079811404c13e8a42ec698fbd521229d52fe927abf6
   languageName: node
   linkType: hard
 
@@ -5109,10 +5020,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-core@npm:0.0.15, @pixel-brewery/synapse-core@npm:^0.0.15":
-  version: 0.0.15
-  resolution: "@pixel-brewery/synapse-core@npm:0.0.15::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-core%2F0.0.15%2Fa8d843ef8e3d0c558f1124005d23c5ac34257410"
-  checksum: 10c0/bc0af855d13b6e42de34de376b9e63607a4995b9eaa6d9f3759d893d406b2ceec64661eb5009c770e58b30bbbf48bbd5154bb03edb3e1dc12a37bba80a9f16a1
+"@pixel-brewery/synapse-core@npm:0.0.16, @pixel-brewery/synapse-core@npm:^0.0.16":
+  version: 0.0.16
+  resolution: "@pixel-brewery/synapse-core@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-core%2F0.0.16%2Fe1baa127d3c3997b3c982586a81027f04a35902e"
+  checksum: 10c0/51f7403bd6c09f5e5d0006ab9daeaeb4bb8f7c4cd40470b27f9a44dd5b5a590b48d95596ec03b22a8bf9183b0af59bb427a4c6ea4bfdc1a74295fac969b32d03
   languageName: node
   linkType: hard
 
@@ -5123,13 +5034,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-provider-claude@npm:0.0.15":
-  version: 0.0.15
-  resolution: "@pixel-brewery/synapse-provider-claude@npm:0.0.15::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-claude%2F0.0.15%2F744f46293f1a229aa158ab7411c16ad1b35b1048"
+"@pixel-brewery/synapse-provider-claude@npm:0.0.16":
+  version: 0.0.16
+  resolution: "@pixel-brewery/synapse-provider-claude@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-claude%2F0.0.16%2Fe5265ad6c0a9a38e8c80dc937b89c54f540586eb"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.15"
-    "@pixel-brewery/synapse-runtime": "npm:^0.0.15"
-  checksum: 10c0/6994a4a5b84211a32fcd5c8a7980cd675910c9ef11e7c713824e74d444186f0a26decb307962587c9bf3f039b3498df8c4f80a4e5f2bad1efeb7c64d11e632c6
+    "@pixel-brewery/synapse-core": "npm:^0.0.16"
+    "@pixel-brewery/synapse-runtime": "npm:^0.0.16"
+  checksum: 10c0/1f06bbeb324ce31ed416c8b127cb017d1b94d70840d260f547549e59de7c0ffddf815855f8151a1d0dcbffe8ed20e5708b8f9643d78932be2e5015a627d3e37b
   languageName: node
   linkType: hard
 
@@ -5143,14 +5054,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-provider-codex@npm:0.0.15":
-  version: 0.0.15
-  resolution: "@pixel-brewery/synapse-provider-codex@npm:0.0.15::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-codex%2F0.0.15%2Fbc4dabe0b8314c9c932d1086f7c3d351c0ef1757"
+"@pixel-brewery/synapse-provider-codex@npm:0.0.16":
+  version: 0.0.16
+  resolution: "@pixel-brewery/synapse-provider-codex@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-codex%2F0.0.16%2Fdcbc62acb092f3d76e28c1e0e9dcc226dc54f781"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.15"
-    "@pixel-brewery/synapse-runtime": "npm:^0.0.15"
+    "@pixel-brewery/synapse-core": "npm:^0.0.16"
+    "@pixel-brewery/synapse-runtime": "npm:^0.0.16"
     smol-toml: "npm:1.9.1"
-  checksum: 10c0/bbfe52b7df89653295c089cd81379c4d893f1b3c8cd48c3da7ba90c4bba6fad255711499e99e59dc430704689dd4796a4e8a7b3b213057ad95bb69feb562a984
+  checksum: 10c0/f5c65c348181fc9f7b2fd4682b82d8047941ccdc6a2c58c0d61cbd4fea62c68674445a6837d08b5b0b21a4e3308666f08727b11572dbaa2bd7c03d46c3863d18
   languageName: node
   linkType: hard
 
@@ -5165,13 +5076,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-provider-opencode@npm:0.0.15":
-  version: 0.0.15
-  resolution: "@pixel-brewery/synapse-provider-opencode@npm:0.0.15::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-opencode%2F0.0.15%2Ff1e0a4003468a46ab31cd29fc118deb61b3b676a"
+"@pixel-brewery/synapse-provider-opencode@npm:0.0.16":
+  version: 0.0.16
+  resolution: "@pixel-brewery/synapse-provider-opencode@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-opencode%2F0.0.16%2F3574c59169bf070c16ea34ed0b8d6f81bd134648"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.15"
-    "@pixel-brewery/synapse-runtime": "npm:^0.0.15"
-  checksum: 10c0/c0e6b80f18fd57747af9c8cae31f1c497162d0154cc9bed96c1f66f93479dbabc6e327111d52e3d4040bb302b9faeaa4e90de729b0c2c13f0d0cf5b824fdc469
+    "@pixel-brewery/synapse-core": "npm:^0.0.16"
+    "@pixel-brewery/synapse-runtime": "npm:^0.0.16"
+  checksum: 10c0/babf25515788e80c3c4726dace3e4f54b7a94a3d8dd15c27f83c8defa937cc9e1f620104b6c65031efc1600df45f915cb1e98597e2f496b4161d4dc48c5a463e
   languageName: node
   linkType: hard
 
@@ -5185,23 +5096,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-routing@npm:0.0.15":
-  version: 0.0.15
-  resolution: "@pixel-brewery/synapse-routing@npm:0.0.15::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-routing%2F0.0.15%2F91c907e1f71e589f0d84e43d738b7ab1b56834bf"
+"@pixel-brewery/synapse-routing@npm:0.0.16":
+  version: 0.0.16
+  resolution: "@pixel-brewery/synapse-routing@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-routing%2F0.0.16%2F7012e81e8dc14eba1e96ea20567c27e7a6e7cf32"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.15"
-  checksum: 10c0/2262f1698cc0c983f2effb87ec5caba92b1322b86a0bb4472471ca5c705c71d0aed234ea3d0443583d083c5725cfca7110a936d68bde500cd6db236fb05e78c0
+    "@pixel-brewery/synapse-core": "npm:^0.0.16"
+  checksum: 10c0/582c1cf10ddc79b8729c9b7fce822be029c34e4fe7cea818aec1a469ab3d14e90df88ac7d6067d36b759c1dfbc797dd8fed2ad73ec9e1eb5e0bac14d7070b26a
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-runtime@npm:0.0.15, @pixel-brewery/synapse-runtime@npm:^0.0.15":
-  version: 0.0.15
-  resolution: "@pixel-brewery/synapse-runtime@npm:0.0.15::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-runtime%2F0.0.15%2F82dfceb65f3d816b4be003783c29e3045320f58a"
+"@pixel-brewery/synapse-runtime@npm:0.0.16, @pixel-brewery/synapse-runtime@npm:^0.0.16":
+  version: 0.0.16
+  resolution: "@pixel-brewery/synapse-runtime@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-runtime%2F0.0.16%2F6596261da26e3edd9caaace41cd83f65d4645920"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.15"
+    "@pixel-brewery/synapse-core": "npm:^0.0.16"
     ajv: "npm:8.20.0"
     cross-spawn: "npm:7.0.6"
-  checksum: 10c0/ec24a5227606a784290d20b092a2cfc1c0d4dc9925c2084819865abdb447b4192f4d54db2c180f8f9f8331392edccefc0bcc4c01ca488976a459d299acb33bc5
+  checksum: 10c0/404be8de9ef157f7b409d9082f94e50b1f60528eeb209640d2fc03167c70a187aed75cf51993f919b430ed0827bc163beec98887d115b04d2457da455f18f694
   languageName: node
   linkType: hard
 
@@ -5381,14 +5292,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:1.65.0":
-  version: 1.65.0
-  resolution: "@playwright/test@npm:1.65.0"
+"@playwright/test@npm:1.65.1":
+  version: 1.65.1
+  resolution: "@playwright/test@npm:1.65.1"
   dependencies:
-    playwright: "npm:1.65.0"
+    playwright: "npm:1.65.1"
   bin:
     playwright: cli.js
-  checksum: 10c0/137a641e1be8035686a165e69d86d242ee7ed5cbe71e5230f9195cb6e65be37a66ba697f16919b508d04c4d682fd4e167d1a755b64ceb545afac780de72b594b
+  checksum: 10c0/f3c0c6ce1d426c84c2ee370e7b7a81fcd4a7a8eaa9d51a880ec853e98ce437482772a09c58c7fbb4444002b127068f076458bec99cecca60c3b51e9ba93e2cc6
   languageName: node
   linkType: hard
 
@@ -6094,7 +6005,7 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-themes": "npm:0.1.199"
+    "@pixel-brewery/mosaik-themes": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
     "@symphony/domain-core": "workspace:*"
@@ -6127,7 +6038,7 @@ __metadata:
     "@angular/compiler": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
@@ -6150,7 +6061,7 @@ __metadata:
     "@angular/forms": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
@@ -6171,7 +6082,7 @@ __metadata:
     "@angular/common": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-automation": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
@@ -6207,13 +6118,13 @@ __metadata:
     "@codemirror/state": "npm:6.7.6"
     "@codemirror/view": "npm:6.43.15"
     "@lezer/highlight": "npm:1.2.5"
-    "@pixel-brewery/markdowner-core": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.199"
-    "@pixel-brewery/ngpel-core": "npm:0.0.8"
-    "@pixel-brewery/ngpel-mvp": "npm:0.0.8"
-    "@pixel-brewery/ngpel-router": "npm:0.0.8"
-    "@pixel-brewery/ngpel-ui": "npm:0.0.8"
+    "@pixel-brewery/markdowner-core": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.202"
+    "@pixel-brewery/ngpel-core": "npm:0.0.11"
+    "@pixel-brewery/ngpel-mvp": "npm:0.0.11"
+    "@pixel-brewery/ngpel-router": "npm:0.0.11"
+    "@pixel-brewery/ngpel-ui": "npm:0.0.11"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
     "@symphony/domain-core": "workspace:*"
@@ -6244,8 +6155,8 @@ __metadata:
     "@angular/forms": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/configuration-delivery": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
@@ -6279,7 +6190,7 @@ __metadata:
     "@angular/common": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
     "@symphony/domain-execution": "workspace:*"
@@ -6301,7 +6212,7 @@ __metadata:
   dependencies:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
@@ -6323,7 +6234,7 @@ __metadata:
     "@angular/forms": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
     "@symphony/domain-delivery": "workspace:*"
@@ -6353,8 +6264,8 @@ __metadata:
     "@angular/common": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
-    "@pixel-brewery/mosaik-themes": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
+    "@pixel-brewery/mosaik-themes": "npm:0.1.202"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
     "@symphony/frontend-notification": "workspace:*"
@@ -6374,7 +6285,7 @@ __metadata:
     "@angular/common": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-platform": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
@@ -6397,7 +6308,7 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
     "@symphony/domain-team": "workspace:*"
@@ -6421,7 +6332,7 @@ __metadata:
     "@angular/compiler": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
     "@symphony/domain-team": "workspace:*"
@@ -6446,7 +6357,7 @@ __metadata:
     "@angular/forms": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-ci": "workspace:*"
     "@symphony/domain-core": "workspace:*"
@@ -6484,7 +6395,7 @@ __metadata:
     "@angular/common": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
@@ -6506,8 +6417,8 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
@@ -6530,7 +6441,7 @@ __metadata:
     "@angular/common": "npm:22.2.6"
     "@angular/compiler": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
     "@symphony/frontend-notification": "workspace:*"
@@ -6548,7 +6459,7 @@ __metadata:
     "@angular/common": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     vitest: "npm:5.1.0"
   languageName: unknown
   linkType: soft
@@ -6563,8 +6474,8 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.202"
     "@symphony/frontend-intl": "workspace:*"
     "@symphony/ipc-contracts-core": "workspace:*"
     rxjs: "npm:7.8.2"
@@ -6582,8 +6493,8 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-core": "workspace:*"
     "@symphony/domain-execution": "workspace:*"
@@ -6625,7 +6536,7 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
     vitest: "npm:5.1.0"
@@ -6641,7 +6552,7 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
@@ -6658,11 +6569,11 @@ __metadata:
     "@angular/common": "npm:22.2.6"
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/markdowner-core": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.199"
-    "@pixel-brewery/mosaik-icons": "npm:0.1.199"
-    "@pixel-brewery/mosaik-themes": "npm:0.1.199"
+    "@pixel-brewery/markdowner-core": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.202"
+    "@pixel-brewery/mosaik-icons": "npm:0.1.202"
+    "@pixel-brewery/mosaik-themes": "npm:0.1.202"
     "@symphony/domain-ci": "workspace:*"
     "@symphony/domain-delivery": "workspace:*"
     "@symphony/domain-team": "workspace:*"
@@ -6683,7 +6594,7 @@ __metadata:
   dependencies:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
     "@symphony/frontend-notification": "workspace:*"
@@ -6701,7 +6612,7 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-quick-create": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
@@ -7066,7 +6977,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/providers-ai@workspace:libs/providers/ai"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:0.0.15"
+    "@pixel-brewery/synapse-core": "npm:0.0.16"
     "@symphony/application-ai": "workspace:*"
     "@symphony/application-execution": "workspace:*"
     "@symphony/application-work": "workspace:*"
@@ -7235,13 +7146,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/providers-synapse@workspace:libs/providers/synapse"
   dependencies:
-    "@pixel-brewery/synapse-auth": "npm:0.0.15"
-    "@pixel-brewery/synapse-core": "npm:0.0.15"
-    "@pixel-brewery/synapse-provider-claude": "npm:0.0.15"
-    "@pixel-brewery/synapse-provider-codex": "npm:0.0.15"
-    "@pixel-brewery/synapse-provider-opencode": "npm:0.0.15"
-    "@pixel-brewery/synapse-routing": "npm:0.0.15"
-    "@pixel-brewery/synapse-runtime": "npm:0.0.15"
+    "@pixel-brewery/synapse-auth": "npm:0.0.16"
+    "@pixel-brewery/synapse-core": "npm:0.0.16"
+    "@pixel-brewery/synapse-provider-claude": "npm:0.0.16"
+    "@pixel-brewery/synapse-provider-codex": "npm:0.0.16"
+    "@pixel-brewery/synapse-provider-opencode": "npm:0.0.16"
+    "@pixel-brewery/synapse-routing": "npm:0.0.16"
+    "@pixel-brewery/synapse-runtime": "npm:0.0.16"
     "@symphony/application-ai": "workspace:*"
     "@symphony/application-execution": "workspace:*"
     "@symphony/application-work": "workspace:*"
@@ -7437,109 +7348,109 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tiptap/core@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/core@npm:3.33.1"
+"@tiptap/core@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/core@npm:3.34.0"
   peerDependencies:
-    "@tiptap/pm": 3.33.1
-  checksum: 10c0/da21baf19657b4de4f2aa517bacd04c63cabe293cc33b3cebd8314d5c0c30ecc40813b3e3c9a2a298de9784a4bf4954e59422650e9dd9cd73119c31431138ffe
+    "@tiptap/pm": 3.34.0
+  checksum: 10c0/9e92acad20bbb9b31260744956109de171d5a8eb475cd5290f66194b4d435f5e818a6f4425bb534558c1dd715a5359873dc5a5a38ee77f6851ed9d839f34b538
   languageName: node
   linkType: hard
 
-"@tiptap/extension-bold@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-bold@npm:3.33.1"
+"@tiptap/extension-bold@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-bold@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/4ead3b4a8ad50228fab8e09457084e0ffa9e09930569b6604d804792ba39361be67982fb69e3db88914899bd5eaaeea4e442b864525bf809deea5971ef1df4b3
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/36b6ce4451daabba3393700e016707440720623df822592edf81185f26fa4ba60e1c120a8f3799fd44f6d0ce48d5025797ac378722c614acc34a90d5340e9bac
   languageName: node
   linkType: hard
 
-"@tiptap/extension-code@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-code@npm:3.33.1"
+"@tiptap/extension-code@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-code@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/52dd29cde977c71b0962b5d1bfad8f8c64ede3d9e79926b7c2ee227184d186b55d6654e3dfdd7ac2b58c2352b5329fd876063f8fb75eece5ea78bf8d56a2b0c4
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/f507a03d41f3be03d1200bf42991b23a8780cec29c76d8de9bdd0e855ed4d13b23f31dac877a144834a34b65204a02674e57e5d86d743db8ce4b944f11987608
   languageName: node
   linkType: hard
 
-"@tiptap/extension-document@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-document@npm:3.33.1"
+"@tiptap/extension-document@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-document@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/38791a170ec3078b2de1e8e3db34d8277032779e88f9c93cad80c6cdc572908b47f8edeaa05c68a32006cf3802c87d7a1a419c274f7998cd3fd71940b8c62ebf
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/01fec1dce88c7ffb8337e096aeefb211882dab8bf2205b12f867e751f38f47e6895788d0e01b6a60ef5408a4ed1871b7be0362ca97a1b9c632ad3de7c91b8679
   languageName: node
   linkType: hard
 
-"@tiptap/extension-hard-break@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-hard-break@npm:3.33.1"
+"@tiptap/extension-hard-break@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-hard-break@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/96bd28b459da3eb34b3802cf34441f2ec65db942cd3bd7797a80f309787e8bd18b4f9d20ea49a9efbb5af16e0e6ff19cbd0b30e892795fba2bbdf2b1efa7f636
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/4a6a19f1f192965ba0f486cf5ac0511fcf2482fef9ca8aeec34c9b64be787b943732f4a9f052d75d105705a96228538d0fb2849ef06687205a6c396a3797f5e4
   languageName: node
   linkType: hard
 
-"@tiptap/extension-italic@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-italic@npm:3.33.1"
+"@tiptap/extension-italic@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-italic@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/6ef9ca2464e61312a8aea00c65aff5f99aa2f029d0a2bd362a8987d1d78766cedaad159a7433ba3cc83138eec6b7c785121bc473ca674a4f53843c4e9af3f356
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/11839d727488cb99a190d0f4e79a8b7789490c605caa4f2b092cc3de7e19baed4e4ef213741ea7792045278765882da21716a103108d829fc8cca6a3ef0028f6
   languageName: node
   linkType: hard
 
-"@tiptap/extension-paragraph@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-paragraph@npm:3.33.1"
+"@tiptap/extension-paragraph@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-paragraph@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/1227319fd7768cca307f347d43b2f922173e87816c7c7393860baadf4f9b9fa7b95549167c844b4af67b593780130c5581e628bdf1d5caa7f92e7931bc6194eb
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/89787ba7bab55c69c244b0286a53cdc56fe4da0ad4afbf11649352e3b0b9b3bb40b38fed7024fb4ecea9b8c6eebbbc9387fb73544d3df98db7ccf906320492f6
   languageName: node
   linkType: hard
 
-"@tiptap/extension-strike@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-strike@npm:3.33.1"
+"@tiptap/extension-strike@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-strike@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/fe1490bfb1aadf0540db6f7f87775abf0cb3e4ea01dd47df9e08fd77af277d7f2995411de4a8f817b9439234b37492040924328629afee1530b5b06949493af9
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/57a877ccf5baf62e25c8c8e68434537f2a3f1d9d3fee24285331b5cc543350b77eb2b5cac05874d33c2b389686da85f9bcf0045c5a6f56d8e24443e256391791
   languageName: node
   linkType: hard
 
-"@tiptap/extension-text@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-text@npm:3.33.1"
+"@tiptap/extension-text@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-text@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/aabf58e865cbc4cf3971a8e9b59178e290ee85db5a815cbe90cd0fb8650299e94b28131139cede4e1b5d0a00d58f12d3fcf090426b3ba4d882609acf854bcdb5
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/46dfb677bd36ce4406998e16efe8bcc80c039df1be82f155f6e6fdbeb232a392ceac47dcaa9555b606df1a28f8892eb60babdf4b8716b82a171a2651de080890
   languageName: node
   linkType: hard
 
-"@tiptap/extension-underline@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extension-underline@npm:3.33.1"
+"@tiptap/extension-underline@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extension-underline@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-  checksum: 10c0/07d5f9662824a4e81a6484490a2faeb1f4d5f6e10e16cc1b2135de4d87a468eaffa8086da8f583b1ed080403a75a8008f6cf05dd381148996df8279995552150
+    "@tiptap/core": 3.34.0
+  checksum: 10c0/93ab83881adf18cd1410ae1f4af43b2bccbbcb8fa33148fd4416fc501d636b100b03d80a5e8f36ed68d8b7346d45fb1a58ab56efe0d2c98d7e65b2eb5ff58f84
   languageName: node
   linkType: hard
 
-"@tiptap/extensions@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/extensions@npm:3.33.1"
+"@tiptap/extensions@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/extensions@npm:3.34.0"
   peerDependencies:
-    "@tiptap/core": 3.33.1
-    "@tiptap/pm": 3.33.1
-  checksum: 10c0/6d6084ef2b00c20c14ca899daaa608f75325b3f215a1587603626550ec22a2f9e10596789beb71ca2847b875d1311b1f114f6ca0251d65535bb19ee2c3081bb2
+    "@tiptap/core": 3.34.0
+    "@tiptap/pm": 3.34.0
+  checksum: 10c0/e7ad729017da753f3eb203b5914aa459d7aeef39867a641a72e744367e98f1219508682c00349683c3c565eaf769b323460bc892ac4ad4e38b572f559fdb2708
   languageName: node
   linkType: hard
 
-"@tiptap/pm@npm:3.33.1":
-  version: 3.33.1
-  resolution: "@tiptap/pm@npm:3.33.1"
+"@tiptap/pm@npm:3.34.0":
+  version: 3.34.0
+  resolution: "@tiptap/pm@npm:3.34.0"
   dependencies:
     prosemirror-changeset: "npm:^2.4.4"
     prosemirror-commands: "npm:^1.7.2"
@@ -7554,7 +7465,7 @@ __metadata:
     prosemirror-tables: "npm:^1.8.5"
     prosemirror-transform: "npm:^1.12.2"
     prosemirror-view: "npm:^1.42.6"
-  checksum: 10c0/57f7ec557bf19d01a5ab7126feb505bfada0e29fcebe290ed0a0e5d96012b595e0156f83026bb948d96dfb137854e54e9d066994f5cbbd7e8815ded890018027
+  checksum: 10c0/4e206f9c6363a111c1a4913eb89c115397329ad02f4e677ae12e5f413af57958dbccf1baadc9edcb9f9015471690cb94dc7d7dbee1914c9246368ef640696519
   languageName: node
   linkType: hard
 
@@ -9814,9 +9725,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:45.3.1":
-  version: 45.3.1
-  resolution: "electron@npm:45.3.1"
+"electron@npm:45.3.2":
+  version: 45.3.2
+  resolution: "electron@npm:45.3.2"
   dependencies:
     "@electron-internal/extract-zip": "npm:^1.0.1"
     "@electron/get": "npm:^5.0.0"
@@ -9824,7 +9735,7 @@ __metadata:
   bin:
     electron: cli.js
     install-electron: install.js
-  checksum: 10c0/d22a11c3e3ff2078608b76ac849d01cb23a6447a1a09438b14d8e165adb80b08e3d7ae1021f6fc7542e7ecac15a0a231e13f26263736ec77e12e943a67bf3981
+  checksum: 10c0/092b6a30bddb1858b0050997ea6495ecfb0b45dad615691cb80c5ccccbe3b4f4e665ef05a60187dba7d2bbee120733311e41304ba4ea40f33922ff9aeb7d5a98
   languageName: node
   linkType: hard
 
@@ -10198,13 +10109,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:10.14.0":
-  version: 10.14.0
-  resolution: "eslint@npm:10.14.0"
+"eslint@npm:10.15.0":
+  version: 10.15.0
+  resolution: "eslint@npm:10.15.0"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.8.0"
     "@eslint-community/regexpp": "npm:^4.12.2"
-    "@eslint/config-array": "npm:^0.23.5"
+    "@eslint/config-array": "npm:^0.23.6"
     "@eslint/config-helpers": "npm:^0.7.0"
     "@eslint/core": "npm:^1.2.1"
     "@eslint/plugin-kit": "npm:^0.7.3"
@@ -10229,7 +10140,7 @@ __metadata:
     imurmurhash: "npm:^0.1.4"
     is-glob: "npm:^4.0.0"
     json-stable-stringify-without-jsonify: "npm:^1.0.1"
-    minimatch: "npm:^10.2.6"
+    minimatch: "npm:^11.0.5"
     natural-compare: "npm:^1.4.0"
     optionator: "npm:^0.9.3"
   peerDependencies:
@@ -10239,7 +10150,7 @@ __metadata:
       optional: true
   bin:
     eslint: bin/eslint.js
-  checksum: 10c0/738cdd0a1aa37b8bddefb5c89206f9f202540e8fce57f7ef82649b5bdf0acd67f7b9f2724f538b11149bd9bfdd14605125568cf73b319baec007866677af72dd
+  checksum: 10c0/81775d3bc273007b3b6f08d114f57b0c83527e8ebbb89674726bbd29b66883a6fef016a0271e05014a067d1c1079514c5523df96b86740fdfe65ef56abacb030
   languageName: node
   linkType: hard
 
@@ -12758,7 +12669,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^10.0.1, minimatch@npm:^10.2.2, minimatch@npm:^10.2.4, minimatch@npm:^10.2.6":
+"minimatch@npm:^10.0.1, minimatch@npm:^10.2.2":
   version: 10.2.6
   resolution: "minimatch@npm:10.2.6"
   dependencies:
@@ -13748,23 +13659,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.65.0":
-  version: 1.65.0
-  resolution: "playwright-core@npm:1.65.0"
+"playwright-core@npm:1.65.1":
+  version: 1.65.1
+  resolution: "playwright-core@npm:1.65.1"
   bin:
     playwright-core: cli.js
-  checksum: 10c0/ed905c6fc2457a725c3fdb3ad4500f43c7a1bb2c6e4e8c708e1e314930c7dce446a5756ad073425bf3c6e3ca975e5a35fb0221118e2d51ef7b4b6c6d13d0644c
+  checksum: 10c0/4406d4f8eff668a93aaada8382d25fcce8da5f679e9f31311888178d631ed0270eb40c0288129e41e15709c957a31932cac9753fdb332547a19bc3541d317e44
   languageName: node
   linkType: hard
 
-"playwright@npm:1.65.0":
-  version: 1.65.0
-  resolution: "playwright@npm:1.65.0"
+"playwright@npm:1.65.1":
+  version: 1.65.1
+  resolution: "playwright@npm:1.65.1"
   dependencies:
-    playwright-core: "npm:1.65.0"
+    playwright-core: "npm:1.65.1"
   bin:
     playwright: cli.js
-  checksum: 10c0/a7d71f3ca5bcad0531b5f3c39ae1a9be0da8e74be6fee8510d99b9f5fc07fd5b3d889aa4ca487c70ca29aba8625f74e3c2c7473b4c8a784dc14fefff80474ac3
+  checksum: 10c0/30ce029c9fb2a6e88cf81b150b978fd60edb59b8af5a6460f5576f0fe6e2bb739454109f0ce4904eac63cb2cf10390518d7d71d335fd695b5897734a5af7250d
   languageName: node
   linkType: hard
 
@@ -15339,27 +15250,27 @@ __metadata:
     "@nx/vitest": "npm:24.0.6"
     "@nx/web": "npm:24.0.6"
     "@nx/workspace": "npm:24.0.6"
-    "@pixel-brewery/markdowner-core": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.199"
-    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.199"
-    "@pixel-brewery/mosaik-icons": "npm:0.1.199"
-    "@pixel-brewery/mosaik-mcp": "npm:0.1.199"
-    "@pixel-brewery/mosaik-themes": "npm:0.1.199"
-    "@pixel-brewery/ngpel-core": "npm:0.0.8"
-    "@pixel-brewery/ngpel-mvp": "npm:0.0.8"
-    "@pixel-brewery/ngpel-router": "npm:0.0.8"
-    "@pixel-brewery/ngpel-ui": "npm:0.0.8"
-    "@pixel-brewery/synapse-auth": "npm:0.0.15"
-    "@pixel-brewery/synapse-core": "npm:0.0.15"
-    "@pixel-brewery/synapse-provider-claude": "npm:0.0.15"
-    "@pixel-brewery/synapse-provider-codex": "npm:0.0.15"
-    "@pixel-brewery/synapse-provider-opencode": "npm:0.0.15"
-    "@pixel-brewery/synapse-routing": "npm:0.0.15"
-    "@pixel-brewery/synapse-runtime": "npm:0.0.15"
+    "@pixel-brewery/markdowner-core": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-angular": "npm:0.1.202"
+    "@pixel-brewery/mosaik-elements-foundation": "npm:0.1.202"
+    "@pixel-brewery/mosaik-icons": "npm:0.1.202"
+    "@pixel-brewery/mosaik-mcp": "npm:0.1.202"
+    "@pixel-brewery/mosaik-themes": "npm:0.1.202"
+    "@pixel-brewery/ngpel-core": "npm:0.0.11"
+    "@pixel-brewery/ngpel-mvp": "npm:0.0.11"
+    "@pixel-brewery/ngpel-router": "npm:0.0.11"
+    "@pixel-brewery/ngpel-ui": "npm:0.0.11"
+    "@pixel-brewery/synapse-auth": "npm:0.0.16"
+    "@pixel-brewery/synapse-core": "npm:0.0.16"
+    "@pixel-brewery/synapse-provider-claude": "npm:0.0.16"
+    "@pixel-brewery/synapse-provider-codex": "npm:0.0.16"
+    "@pixel-brewery/synapse-provider-opencode": "npm:0.0.16"
+    "@pixel-brewery/synapse-routing": "npm:0.0.16"
+    "@pixel-brewery/synapse-runtime": "npm:0.0.16"
     "@pixel-brewery/wortlaut-eslint-rules": "npm:0.2.7"
     "@pixel-brewery/wortlaut-nx-tasks": "npm:0.2.7"
-    "@playwright/test": "npm:1.65.0"
+    "@playwright/test": "npm:1.65.1"
     "@schematics/angular": "npm:22.2.7"
     "@swc/helpers": "npm:~0.5.24"
     "@symphony/application-ai": "workspace:*"
@@ -15469,18 +15380,18 @@ __metadata:
     "@symphony/providers-synapse": "workspace:*"
     "@symphony/providers-work": "workspace:*"
     "@tailwindcss/postcss": "npm:4.3.5"
-    "@tiptap/core": "npm:3.33.1"
-    "@tiptap/extension-bold": "npm:3.33.1"
-    "@tiptap/extension-code": "npm:3.33.1"
-    "@tiptap/extension-document": "npm:3.33.1"
-    "@tiptap/extension-hard-break": "npm:3.33.1"
-    "@tiptap/extension-italic": "npm:3.33.1"
-    "@tiptap/extension-paragraph": "npm:3.33.1"
-    "@tiptap/extension-strike": "npm:3.33.1"
-    "@tiptap/extension-text": "npm:3.33.1"
-    "@tiptap/extension-underline": "npm:3.33.1"
-    "@tiptap/extensions": "npm:3.33.1"
-    "@tiptap/pm": "npm:3.33.1"
+    "@tiptap/core": "npm:3.34.0"
+    "@tiptap/extension-bold": "npm:3.34.0"
+    "@tiptap/extension-code": "npm:3.34.0"
+    "@tiptap/extension-document": "npm:3.34.0"
+    "@tiptap/extension-hard-break": "npm:3.34.0"
+    "@tiptap/extension-italic": "npm:3.34.0"
+    "@tiptap/extension-paragraph": "npm:3.34.0"
+    "@tiptap/extension-strike": "npm:3.34.0"
+    "@tiptap/extension-text": "npm:3.34.0"
+    "@tiptap/extension-underline": "npm:3.34.0"
+    "@tiptap/extensions": "npm:3.34.0"
+    "@tiptap/pm": "npm:3.34.0"
     "@types/node": "npm:26.6.6"
     "@types/three": "npm:0.187.0"
     "@types/ws": "npm:8.18.2"
@@ -15491,10 +15402,10 @@ __metadata:
     chroma-js: "npm:3.3.0"
     concurrently: "npm:10.0.7"
     cross-env: "npm:10.1.0"
-    electron: "npm:45.3.1"
+    electron: "npm:45.3.2"
     electron-native-speech: "npm:0.1.6"
     esbuild: "npm:0.28.2"
-    eslint: "npm:10.14.0"
+    eslint: "npm:10.15.0"
     jsdom: "npm:^31.0.1"
     jsonc-parser: "npm:3.3.1"
     lit: "npm:3.3.3"

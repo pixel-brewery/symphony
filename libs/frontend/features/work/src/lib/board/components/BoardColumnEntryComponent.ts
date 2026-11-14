@@ -20,6 +20,7 @@ import {
   TextComponent,
   TooltipDirective,
   TypographyDirective,
+  VirtualItemContentDirective,
 } from '@pixel-brewery/mosaik-elements-angular';
 import { HoverRevealForDirective } from '@symphony/frontend-ui';
 import { BoardCardStatusPresentationPipe } from '../pipes/BoardCardStatusPresentationPipe';
@@ -60,6 +61,7 @@ import type { IBoardColumnEntry } from '../view-presenters/IBoardColumnEntry';
     TextComponent,
     TooltipDirective,
     TypographyDirective,
+    VirtualItemContentDirective,
     WorkItemHealthPresentationPipe,
     WorkItemLinkPresentationPipe,
   ],
