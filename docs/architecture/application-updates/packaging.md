@@ -9,7 +9,7 @@ Nx builds Angular into `dist/apps/renderer/browser`, Electron Main and sandbox-c
 ## Cross-platform consumer build contract
 
 `yarn design:md` and `yarn design:md-check` use the installed public
-`mosaik-design-md` CLI from `@pixel-brewery/mosaik-themes` version `0.1.202`.
+`mosaik-design-md` CLI from `@pixel-brewery/mosaik-themes` version `0.1.203`.
 The published CLI serializes repository-relative source paths with portable `/`
 separators, so the committed `DESIGN.md` and `COMPONENTS.md` remain stable on
 Windows and POSIX systems. Symphony consumes that published package directly;
