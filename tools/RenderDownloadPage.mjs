@@ -46,7 +46,7 @@ export function RenderDownloadPage(catalog) {
     <meta name="color-scheme" content="light">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
     <title>Download Symphony</title>
-    <link rel="icon" type="image/png" href="assets/symphony.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
     <link rel="apple-touch-icon" href="assets/symphony.png">
     <link rel="stylesheet" href="assets/downloads.css">
   </head>
@@ -62,12 +62,13 @@ export function RenderDownloadPage(catalog) {
       </header>
       <main>
         <section class="hero" aria-labelledby="page-title">
-          <div>
+          <div class="hero-copy">
             <p class="eyebrow">Symphony for desktop</p>
             <h1 id="page-title">Your work,<br><span>in concert.</span></h1>
             <p class="hero-description">Bring your software development workflows together in one desktop workspace.</p>
+            <a class="hero-link" href="#downloads">See downloads <span aria-hidden="true">↓</span></a>
           </div>
-          <img class="hero-icon" src="assets/symphony.png" alt="" width="192" height="192">
+          <img class="hero-art" src="assets/hero.webp" alt="" width="1820" height="700" fetchpriority="high">
         </section>
         ${renderRelease(stable, 'stable')}
         <aside class="installation-note" aria-labelledby="installation-title">

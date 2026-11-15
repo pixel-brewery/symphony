@@ -14,7 +14,7 @@ macOS downloads use an ad-hoc bundle seal and are not notarized; Windows and Deb
 
 ## Symphony manuell herunterladen
 
-Die öffentliche [Downloadseite](https://pixel-brewery.github.io/symphony/) bietet die Installer für macOS mit Apple Silicon, Windows auf ARM64 und Linux auf ARM64 als Debian-Paket. Sie zeigt die Stable-Version mit Veröffentlichungsdatum, Dateigrößen und SHA-256-Prüfsummen sowie einen Link zu den Release Notes. Ist Canary auf einer anderen Version, steht dafür ein eigener Downloadbereich bereit. Sind beide Kanäle gleich, wird derselbe Download nicht doppelt angeboten.
+Die öffentliche [Downloadseite](https://pixel-brewery.github.io/symphony/) bietet die Installer für macOS mit Apple Silicon, Windows auf ARM64 und Linux auf ARM64 als Debian-Paket. Über **See downloads** gelangst du direkt zu den Stable-Installern. Die Seite zeigt die Stable-Version mit Veröffentlichungsdatum, Dateigrößen und SHA-256-Prüfsummen sowie einen Link zu den Release Notes. Ist Canary auf einer anderen Version, steht dafür ein eigener Downloadbereich bereit. Sind beide Kanäle gleich, wird derselbe Download nicht doppelt angeboten.
 
 Nach jeder vollständig veröffentlichten Version und nach einer neuen Stable-Auswahl wird die Downloadseite automatisch aktualisiert. Angezeigt werden ausschließlich vollständige veröffentlichte Versionen; Entwürfe erscheinen nicht. Schlägt das Erstellen oder Bereitstellen der Seite fehl, bleibt der bisher veröffentlichte Seitenstand verfügbar. Die [offiziellen Releases](https://github.com/pixel-brewery/symphony/releases) bieten die veröffentlichten Versionen weiterhin direkt an.
 

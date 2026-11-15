@@ -114,8 +114,15 @@ describe('complete download site publication', () => {
         );
       }
     }
-    expect(await readFile(resolve(outputDirectory, 'index.html'), 'utf8')).toContain(
-      'Download Symphony',
+    const page = await readFile(resolve(outputDirectory, 'index.html'), 'utf8');
+    expect(page).toContain('Download Symphony');
+    expect(page).toContain('href="assets/favicon.png"');
+    expect(page).toContain('src="assets/hero.webp"');
+    expect(await readFile(resolve(outputDirectory, 'assets/favicon.png'))).toEqual(
+      await readFile('resources/icons/png/app/symphony-32.png'),
+    );
+    expect(await readFile(resolve(outputDirectory, 'assets/hero.webp'))).toEqual(
+      await readFile('resources/download-page/hero.webp'),
     );
     expect(
       (await readFile(resolve(outputDirectory, 'assets/symphony.png'))).length,
