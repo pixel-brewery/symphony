@@ -103,6 +103,14 @@ export async function BuildDownloadSite({ sourceDirectory, outputDirectory }) {
       fileURLToPath(new URL('../resources/icons/png/app/symphony-192.png', import.meta.url)),
       resolve(staging, 'assets', 'symphony.png'),
     );
+    await copyFile(
+      fileURLToPath(new URL('../resources/icons/png/app/symphony-32.png', import.meta.url)),
+      resolve(staging, 'assets', 'favicon.png'),
+    );
+    await copyFile(
+      fileURLToPath(new URL('../resources/download-page/hero.webp', import.meta.url)),
+      resolve(staging, 'assets', 'hero.webp'),
+    );
     await writeFile(resolve(staging, 'index.html'), html, 'utf8');
     // The earlier artifact remains untouched until all source data has been checked
     // and the complete replacement has been written successfully.
