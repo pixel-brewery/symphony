@@ -18,11 +18,18 @@ describe('documentation-only workflow policy', () => {
     const builder = readFileSync('tools/BuildDownloadSite.mjs', 'utf8');
 
     // act
-    const resourcePaths = paths.filter((path) => path.startsWith('resources/download-page/'));
+    const resourcePaths = paths.filter((path) => path.startsWith('resources/'));
 
     // assert
-    expect(resourcePaths).toEqual(['resources/download-page/downloads.css']);
-    expect(builder).toContain('../resources/download-page/downloads.css');
+    expect(resourcePaths).toEqual([
+      'resources/download-page/downloads.css',
+      'resources/download-page/hero.webp',
+      'resources/icons/png/app/symphony-32.png',
+      'resources/icons/png/app/symphony-192.png',
+    ]);
+    for (const resourcePath of resourcePaths) {
+      expect(builder).toContain(`../${resourcePath}`);
+    }
     expect(Object.keys(pages.on)).toEqual(
       expect.arrayContaining(['workflow_call', 'workflow_dispatch']),
     );

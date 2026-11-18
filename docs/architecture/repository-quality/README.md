@@ -109,10 +109,13 @@ Releasevorbereitung freigeben. Details der Veröffentlichung stehen unter
 [Desktop updates](../application-updates/README.md).
 
 Die automatische Veröffentlichung der Downloadseite reagiert im Ordner
-`resources/download-page/` ausschließlich auf die tatsächlich eingelesene Datei
-`downloads.css`. Ein zusätzliches README startet deshalb keine Seitenerstellung,
-Deploymentabnahme oder Veröffentlichung. Die übrigen bestehenden Workflow-,
-Icon- und Toolingauslöser sowie manuelle und wiederverwendbare Aufrufe bleiben aktiv.
+`resources/download-page/` ausschließlich auf die tatsächlich eingelesenen Dateien
+`downloads.css` und `hero.webp`. Als Icon-Ressourcen lösen ausschließlich
+`resources/icons/png/app/symphony-32.png` und
+`resources/icons/png/app/symphony-192.png` die Veröffentlichung aus. Ein zusätzliches
+README startet deshalb keine Seitenerstellung, Deploymentabnahme oder
+Veröffentlichung. Die übrigen bestehenden Workflow- und Toolingauslöser sowie
+manuelle und wiederverwendbare Aufrufe bleiben aktiv.
 
 ## Implementierung und Verifikation
 
