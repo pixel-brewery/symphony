@@ -7357,12 +7357,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tiptap/extension-bold@npm:3.34.0":
-  version: 3.34.0
-  resolution: "@tiptap/extension-bold@npm:3.34.0"
+"@tiptap/extension-bold@npm:3.35.0":
+  version: 3.35.0
+  resolution: "@tiptap/extension-bold@npm:3.35.0"
   peerDependencies:
-    "@tiptap/core": 3.34.0
-  checksum: 10c0/36b6ce4451daabba3393700e016707440720623df822592edf81185f26fa4ba60e1c120a8f3799fd44f6d0ce48d5025797ac378722c614acc34a90d5340e9bac
+    "@tiptap/core": 3.35.0
+  checksum: 10c0/1d63c1849acf3b00cf1f8bee88ad429201cd7f011117be102d7611d54f054c26df007aaf7383c45df92e5857b8e93e2868abe17885b4d8e4191f01ec82c979de
   languageName: node
   linkType: hard
 
@@ -15381,7 +15381,7 @@ __metadata:
     "@symphony/providers-work": "workspace:*"
     "@tailwindcss/postcss": "npm:4.3.5"
     "@tiptap/core": "npm:3.34.0"
-    "@tiptap/extension-bold": "npm:3.34.0"
+    "@tiptap/extension-bold": "npm:3.35.0"
     "@tiptap/extension-code": "npm:3.34.0"
     "@tiptap/extension-document": "npm:3.34.0"
     "@tiptap/extension-hard-break": "npm:3.34.0"
