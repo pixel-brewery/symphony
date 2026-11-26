@@ -1,3 +1,13 @@
+## 0.1.51 (2026-11-26)
+
+### 🩹 Fixes
+
+- **ci:** complete Dependabot verification and continuation ([#78](https://github.com/pixel-brewery/symphony/pull/78))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+
 ## 0.1.50 (2026-11-23)
 
 This was a version bump only, there were no code changes.
