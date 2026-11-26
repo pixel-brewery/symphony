@@ -5070,10 +5070,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-core@npm:0.0.16, @pixel-brewery/synapse-core@npm:^0.0.16":
-  version: 0.0.16
-  resolution: "@pixel-brewery/synapse-core@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-core%2F0.0.16%2Fe1baa127d3c3997b3c982586a81027f04a35902e"
-  checksum: 10c0/51f7403bd6c09f5e5d0006ab9daeaeb4bb8f7c4cd40470b27f9a44dd5b5a590b48d95596ec03b22a8bf9183b0af59bb427a4c6ea4bfdc1a74295fac969b32d03
+"@pixel-brewery/synapse-core@npm:0.0.20":
+  version: 0.0.20
+  resolution: "@pixel-brewery/synapse-core@npm:0.0.20::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-core%2F0.0.20%2F5e9aae271fdf04c7516d1f8ccc1b9b5a1eb3ec4d"
+  checksum: 10c0/3959ed7579649f7a780f0781ca916d7451022ce2840705cb1435455132b3b7f8b41940c5a60aa78cc2452d93efed931afe114e707f41d938073e87868e635a0b
   languageName: node
   linkType: hard
 
@@ -5081,6 +5081,13 @@ __metadata:
   version: 0.0.3
   resolution: "@pixel-brewery/synapse-core@npm:0.0.3::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-core%2F0.0.3%2Ff395a8dc7dd571101003af9c5a11038e7bd56889"
   checksum: 10c0/564fa9be0e16a8ba2625f6d125835acf8792ebe736429df00cc49e300cb0b5d5df72ef7e23206d3348a34c1b6b0a4695a53bd2af7f638d6d545f229584f042c6
+  languageName: node
+  linkType: hard
+
+"@pixel-brewery/synapse-core@npm:^0.0.16":
+  version: 0.0.16
+  resolution: "@pixel-brewery/synapse-core@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-core%2F0.0.16%2Fe1baa127d3c3997b3c982586a81027f04a35902e"
+  checksum: 10c0/51f7403bd6c09f5e5d0006ab9daeaeb4bb8f7c4cd40470b27f9a44dd5b5a590b48d95596ec03b22a8bf9183b0af59bb427a4c6ea4bfdc1a74295fac969b32d03
   languageName: node
   linkType: hard
 
@@ -7026,7 +7033,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/providers-ai@workspace:libs/providers/ai"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:0.0.16"
+    "@pixel-brewery/synapse-core": "npm:0.0.20"
     "@symphony/application-ai": "workspace:*"
     "@symphony/application-execution": "workspace:*"
     "@symphony/application-work": "workspace:*"
@@ -7196,7 +7203,7 @@ __metadata:
   resolution: "@symphony/providers-synapse@workspace:libs/providers/synapse"
   dependencies:
     "@pixel-brewery/synapse-auth": "npm:0.0.16"
-    "@pixel-brewery/synapse-core": "npm:0.0.16"
+    "@pixel-brewery/synapse-core": "npm:0.0.20"
     "@pixel-brewery/synapse-provider-claude": "npm:0.0.16"
     "@pixel-brewery/synapse-provider-codex": "npm:0.0.16"
     "@pixel-brewery/synapse-provider-opencode": "npm:0.0.16"
@@ -15307,7 +15314,7 @@ __metadata:
     "@pixel-brewery/remote-node": "npm:0.2.0"
     "@pixel-brewery/remote-protocol": "npm:0.2.0"
     "@pixel-brewery/synapse-auth": "npm:0.0.16"
-    "@pixel-brewery/synapse-core": "npm:0.0.16"
+    "@pixel-brewery/synapse-core": "npm:0.0.20"
     "@pixel-brewery/synapse-provider-claude": "npm:0.0.16"
     "@pixel-brewery/synapse-provider-codex": "npm:0.0.16"
     "@pixel-brewery/synapse-provider-opencode": "npm:0.0.16"
