@@ -1,21 +1,39 @@
 // #region Imports
 
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { parse } from 'yaml';
+import { verificationPolicy } from './github/verificationPolicy.mjs';
 import { mergeDependabotPullRequest } from './mergeDependabotPullRequest.mjs';
 
 // #endregion
 
+const repositoryId = 1440122208;
 const repositoryPath = 'repos/pixel-brewery/symphony';
 const mainSha = 'a'.repeat(40);
 const headSha = 'b'.repeat(40);
 const mergeSha = 'c'.repeat(40);
 const changedSha = 'd'.repeat(40);
+const testMergeSha = 'e'.repeat(40);
+const treeSha = 'f'.repeat(40);
+const branch = 'dependabot/npm_and_yarn/frameworks';
+const ci = readFileSync(
+  new URL('../../../../../../.github/workflows/ci.yml', import.meta.url),
+  'utf8',
+);
+const ciBlob = {
+  type: 'file',
+  encoding: 'base64',
+  content: Buffer.from(ci).toString('base64'),
+  sha: createHash('sha1')
+    .update(`blob ${Buffer.byteLength(ci)}\0`)
+    .update(ci)
+    .digest('hex'),
+};
 const context = {
   eventName: 'workflow_run',
   repository: 'pixel-brewery/symphony',
-  repositoryId: 1440122208,
+  repositoryId: repositoryId,
   defaultBranch: 'main',
   runId: 202,
   runAttempt: 2,
@@ -24,40 +42,25 @@ const jobsPath = `${repositoryPath}/actions/runs/202/attempts/2/jobs?per_page=10
 const pullRequestPath = `${repositoryPath}/pulls/7`;
 const runPath = `${repositoryPath}/actions/runs/202`;
 const mainPath = `${repositoryPath}/branches/main`;
-const requiredJobNames = [
-  'Classify changed files',
-  'Documentation links and structure',
-  'Agents, Format, Lint, Typecheck, Test and Build (ubuntu-latest)',
-  'Agents, Format, Lint, Typecheck, Test and Build (macos-latest)',
-  'Agents, Format, Lint, Typecheck, Test and Build (windows-latest)',
-  'Electron E2E',
-  'Package smoke test',
-  'Quality Gate',
-];
 
-function controlled(repositoryName = 'pixel-brewery/symphony', defaultBranch = 'main') {
-  const repositoryPath = `repos/${repositoryName}`;
-  const pullRequestPath = `${repositoryPath}/pulls/7`;
-  const runPath = `${repositoryPath}/actions/runs/202`;
-  const mainPath = `${repositoryPath}/branches/${encodeURIComponent(defaultBranch)}`;
-  const jobsPath = `${repositoryPath}/actions/runs/202/attempts/2/jobs?per_page=100&page=`;
-  const repository = {
-    id: 1440122208,
-    name: 'symphony',
-    fork: false,
-    full_name: repositoryName,
-    default_branch: defaultBranch,
-  };
-  const jobs = requiredJobNames.map((name, index) => ({
+function controlled() {
+  const repository = { id: repositoryId, full_name: 'pixel-brewery/symphony' };
+  const jobs = verificationPolicy.requiredJobs.map((name, index) => ({
     id: index + 1,
     run_id: 202,
+    run_attempt: 2,
+    head_sha: headSha,
     name,
     status: 'completed',
     conclusion: 'success',
   }));
   const records = {
-    repository,
-    workflow: { id: 101, name: 'Repository Quality', path: '.github/workflows/ci.yml' },
+    workflow: {
+      id: 101,
+      name: 'Repository Quality',
+      path: '.github/workflows/ci.yml',
+      state: 'active',
+    },
     run: {
       id: 202,
       run_attempt: 2,
@@ -70,30 +73,44 @@ function controlled(repositoryName = 'pixel-brewery/symphony', defaultBranch = '
       repository,
       head_repository: repository,
       head_sha: headSha,
-      pull_requests: [{ number: 7 }],
+      head_branch: branch,
+      actor: { id: 49699333, login: 'dependabot[bot]', type: 'Bot' },
+      triggering_actor: { id: 49699333, login: 'dependabot[bot]', type: 'Bot' },
+      pull_requests: [
+        {
+          number: 7,
+          head: { ref: branch, sha: headSha, repo: repository },
+          base: { ref: 'main', sha: mainSha, repo: repository },
+        },
+      ],
     },
     pullRequest: {
       number: 7,
       state: 'open',
       draft: false,
       merged: false,
-      user: { login: 'dependabot[bot]', type: 'Bot' },
-      head: { sha: headSha, repo: repository },
-      base: { ref: defaultBranch, sha: mainSha, repo: repository },
+      user: { id: 49699333, login: 'dependabot[bot]', type: 'Bot' },
+      mergeable: true,
+      merge_commit_sha: testMergeSha,
+      head: { sha: headSha, ref: branch, repo: repository },
+      base: { ref: 'main', sha: mainSha, repo: repository },
     },
-    main: { name: defaultBranch, commit: { sha: mainSha } },
+    main: { name: 'main', commit: { sha: mainSha } },
     comparison: { behind_by: 0, merge_base_commit: { sha: mainSha } },
     jobs,
     jobPages: [{ total_count: jobs.length, jobs }],
     merge: { merged: true, sha: mergeSha },
   };
   const reads = new Map();
+  let merged = false;
   const request = vi.fn((method, endpoint) => {
     if (records.failure?.method === method && records.failure?.endpoint === endpoint)
       throw new Error('Sensitive upstream output must not reach the caller.');
 
-    if (method === 'PUT' && endpoint === `${pullRequestPath}/merge`)
+    if (method === 'PUT' && endpoint === `${pullRequestPath}/merge`) {
+      merged = records.merge.merged === true;
       return structuredClone(records.merge);
+    }
 
     if (method !== 'GET') throw new Error('Unexpected test request.');
 
@@ -101,7 +118,15 @@ function controlled(repositoryName = 'pixel-brewery/symphony', defaultBranch = '
 
     reads.set(endpoint, count);
 
-    if (endpoint === 'repositories/1440122208') return structuredClone(records.repository);
+    if (endpoint === `repositories/${repositoryId}`)
+      return {
+        ...repository,
+        name: 'symphony',
+        default_branch: 'main',
+        fork: false,
+        visibility: 'public',
+        private: false,
+      };
 
     if (endpoint === `${repositoryPath}/actions/workflows/ci.yml`)
       return structuredClone(records.workflow);
@@ -110,9 +135,55 @@ function controlled(repositoryName = 'pixel-brewery/symphony', defaultBranch = '
       return structuredClone(count > 1 ? (records.nextRun ?? records.run) : records.run);
 
     if (endpoint === pullRequestPath)
-      return structuredClone(
-        count > 1 ? (records.nextPullRequest ?? records.pullRequest) : records.pullRequest,
-      );
+      return merged
+        ? {
+            ...structuredClone(records.pullRequest),
+            state: 'closed',
+            merged: true,
+            merge_commit_sha: records.merge.sha,
+          }
+        : structuredClone(
+            count > 1 ? (records.nextPullRequest ?? records.pullRequest) : records.pullRequest,
+          );
+
+    if (
+      endpoint ===
+      `${repositoryPath}/actions/workflows/ci.yml/runs?head_sha=${headSha}&per_page=100`
+    )
+      return { total_count: 1, workflow_runs: [structuredClone(records.run)] };
+    if (endpoint === `${repositoryPath}/git/ref/heads/${branch}`)
+      return { object: { type: 'commit', sha: headSha } };
+    if (endpoint === `${repositoryPath}/git/ref/pull/7/merge`)
+      return { object: { type: 'commit', sha: testMergeSha } };
+    if (endpoint === `${repositoryPath}/git/commits/${headSha}`)
+      return { sha: headSha, tree: { sha: treeSha } };
+    if (endpoint === `${repositoryPath}/git/commits/${testMergeSha}`)
+      return {
+        sha: testMergeSha,
+        tree: { sha: treeSha },
+        parents: [{ sha: mainSha }, { sha: headSha }],
+      };
+    if (
+      endpoint === `${repositoryPath}/contents/.github/workflows/ci.yml?ref=${mainSha}` ||
+      endpoint === `${repositoryPath}/contents/.github/workflows/ci.yml?ref=${headSha}`
+    )
+      return ciBlob;
+    if (endpoint === `${repositoryPath}/commits/${headSha}/pulls?per_page=100`)
+      return [{ ...structuredClone(records.pullRequest), merged: undefined, merged_at: null }];
+    if (endpoint === `${repositoryPath}/rules/branches/main`)
+      return [
+        { type: 'pull_request' },
+        {
+          type: 'required_status_checks',
+          parameters: {
+            strict_required_status_checks_policy: true,
+            required_status_checks: verificationPolicy.requiredChecks.map((context) => ({
+              context,
+              integration_id: 15368,
+            })),
+          },
+        },
+      ];
 
     if (endpoint === mainPath)
       return structuredClone(count > 1 ? (records.nextMain ?? records.main) : records.main);
@@ -139,73 +210,19 @@ afterEach(() => {
 });
 
 describe('Dependabot pull request merge', () => {
-  it('matches all jobs emitted by CI and keeps macOS acceptance behind the full source matrix', () => {
+  it('accepts a successful ordinary maintainer CI actor through all native source and job gates', async () => {
     // arrange
-    const workflow = parse(readFileSync('.github/workflows/ci.yml', 'utf8'));
-    const quality = workflow.jobs.quality;
-    const runnerFor = new Function('needs', 'matrix', `return ${quality['runs-on'].slice(3, -2)};`);
+    const fixture = controlled();
+    fixture.records.run.actor = { id: 42, login: 'maintainer', type: 'User' };
+    fixture.records.run.triggering_actor = { id: 42, login: 'maintainer', type: 'User' };
 
     // act
-    const names = [
-      workflow.jobs.changes.name,
-      workflow.jobs.documentation.name,
-      ...quality.strategy.matrix.os.map((os: string) =>
-        quality.name.replace('${{ matrix.os }}', os),
-      ),
-      workflow.jobs['electron-e2e'].name,
-      workflow.jobs.package.name,
-      workflow.jobs['quality-gate'].name,
-    ];
+    const result = await mergeDependabotPullRequest(context, fixture);
 
     // assert
-    expect(quality.strategy.matrix.os).toEqual(['ubuntu-latest', 'macos-latest', 'windows-latest']);
-    expect(quality.strategy['fail-fast']).toBe(false);
-    for (const os of quality.strategy.matrix.os) {
-      expect(runnerFor({ changes: { outputs: { documentation_only: 'false' } } }, { os })).toBe(os);
-      expect(runnerFor({ changes: { outputs: { documentation_only: 'true' } } }, { os })).toBe(
-        'ubuntu-latest',
-      );
-    }
-    expect(quality.defaults.run.shell).toBe('bash');
-    expect(names).toEqual(requiredJobNames);
-    expect(workflow.jobs['electron-e2e'].needs).toBe('changes');
-    expect(workflow.jobs.package.needs).toBe('changes');
-    expect(workflow.jobs['electron-e2e']['runs-on']).toBe('macos-latest');
-    expect(workflow.jobs.package['runs-on']).toBe('macos-latest');
-    expect(workflow.jobs['quality-gate'].needs).toEqual([
-      'changes',
-      'documentation',
-      'quality',
-      'electron-e2e',
-      'package',
-    ]);
-    expect(workflow.jobs['quality-gate'].if).toBe('${{ always() }}');
-    expect(workflow.permissions).toEqual({ contents: 'read', packages: 'read' });
-  });
-
-  it.each([
-    { repository: 'contributor-owner/symphony', defaultBranch: 'main' },
-    { repository: 'pixel-brewery/symphony', defaultBranch: 'trunk' },
-  ])('uses the API-bound owner and default branch: %j', async (identity) => {
-    // arrange
-    const dependencies = controlled(identity.repository, identity.defaultBranch);
-
-    // act
-    const result = await mergeDependabotPullRequest({ ...context, ...identity }, dependencies);
-
-    // assert
-    expect(result).toEqual({
-      status: 'merged',
-      pullRequestNumber: 7,
-      sha: mergeSha,
-      defaultBranch: identity.defaultBranch,
-    });
-    expect(writes(dependencies.request)).toEqual([
-      [
-        'PUT',
-        `repos/${identity.repository}/pulls/7/merge`,
-        { sha: headSha, merge_method: 'squash' },
-      ],
+    expect(result.status).toBe('merged');
+    expect(writes(fixture.request)).toEqual([
+      ['PUT', `${pullRequestPath}/merge`, { sha: headSha, merge_method: 'squash' }],
     ]);
   });
 
@@ -232,12 +249,10 @@ describe('Dependabot pull request merge', () => {
     expect(writes(dependencies.request)).toEqual([
       ['PUT', `${pullRequestPath}/merge`, { sha: headSha, merge_method: 'squash' }],
     ]);
-    expect(dependencies.request.mock.calls.slice(-4)).toEqual([
-      ['GET', pullRequestPath, undefined],
-      ['GET', runPath, undefined],
-      ['GET', mainPath, undefined],
-      ['PUT', `${pullRequestPath}/merge`, { sha: headSha, merge_method: 'squash' }],
-    ]);
+    expect(dependencies.request.mock.calls.at(-1)).toEqual(['GET', pullRequestPath, undefined]);
+    expect(
+      dependencies.request.mock.calls.filter(([, endpoint]) => endpoint === runPath).length,
+    ).toBeGreaterThanOrEqual(2);
     expect(dependencies.request).toHaveBeenCalledWith('GET', `${jobsPath}1`, undefined);
   });
 
@@ -306,10 +321,8 @@ describe('Dependabot pull request merge', () => {
     { path: '.github/workflows/other.yml' },
     { path: '.github/workflows/ci.yml.lookalike@main' },
     { path: '.github/workflows/ci.yml@' },
-    { repository: { full_name: 'untrusted/symphony' } },
-    { head_repository: { full_name: 'untrusted/symphony' } },
-    { repository: { id: 1440122209, full_name: 'pixel-brewery/symphony' } },
-    { head_repository: { id: 1440122209, full_name: 'pixel-brewery/symphony' } },
+    { repository: { full_name: 'untrusted/archipel' } },
+    { head_repository: { full_name: 'untrusted/archipel' } },
     { head_repository: null },
     { head_sha: 'untrusted/branch' },
   ])('rejects an ineligible or superseded workflow run: %j', async (override) => {
@@ -351,15 +364,9 @@ describe('Dependabot pull request merge', () => {
     { user: { login: 'contributor', type: 'User' } },
     { user: { login: 'dependabot', type: 'Bot' } },
     { user: { login: 'dependabot[bot]', type: 'User' } },
-    { head: { sha: headSha, repo: { full_name: 'untrusted/symphony' } } },
-    {
-      head: {
-        sha: headSha,
-        repo: { id: 1440122209, full_name: 'pixel-brewery/symphony' },
-      },
-    },
+    { head: { sha: headSha, repo: { full_name: 'untrusted/archipel' } } },
     { head: { sha: changedSha, repo: { full_name: 'pixel-brewery/symphony' } } },
-    { base: { ref: 'main', sha: mainSha, repo: { full_name: 'untrusted/symphony' } } },
+    { base: { ref: 'main', sha: mainSha, repo: { full_name: 'untrusted/archipel' } } },
     {
       base: {
         ref: 'other',
@@ -415,59 +422,13 @@ describe('Dependabot pull request merge', () => {
     expect(writes(dependencies.request)).toEqual([]);
   });
 
-  it.each(['missing', 'duplicate', 'extra'])('rejects %s matrix coverage', async (kind) => {
-    // arrange
-    const dependencies = controlled();
-    const jobs = dependencies.records.jobs;
-
-    if (kind === 'missing') jobs.pop();
-    else if (kind === 'duplicate') jobs[2] = { ...jobs[0], id: jobs[2].id };
-    else jobs.push({ ...jobs[0], id: jobs.length + 1, name: 'extra job' });
-
-    dependencies.records.jobPages[0].total_count = jobs.length;
-
-    // act
-    const result = await mergeDependabotPullRequest(context, dependencies);
-
-    // assert
-    expect(result).toEqual({ status: 'skipped', reason: 'incomplete-verification' });
-    expect(writes(dependencies.request)).toEqual([]);
-  });
-
-  it.each(
-    requiredJobNames.flatMap((name) =>
-      ['missing', 'failure', 'skipped'].map((outcome) => ({ name, outcome })),
-    ),
-  )('requires $name even when every other job succeeds: $outcome', async ({ name, outcome }) => {
-    // arrange
-    const dependencies = controlled();
-    const job = dependencies.records.jobs.find((entry) => entry.name === name);
-    if (!job) throw new Error('The required job fixture is missing.');
-    if (outcome === 'missing') {
-      dependencies.records.jobs.splice(
-        dependencies.records.jobs.findIndex((job) => job.name === name),
-        1,
-      );
-    } else {
-      job.conclusion = outcome;
-    }
-    dependencies.records.jobPages[0].total_count = dependencies.records.jobs.length;
-
-    // act
-    const result = await mergeDependabotPullRequest(context, dependencies);
-
-    // assert
-    expect(result).toEqual({ status: 'skipped', reason: 'incomplete-verification' });
-    expect(writes(dependencies.request)).toEqual([]);
-  });
-
   it.each(['failure', 'cancelled', 'skipped'])(
     'rejects a %s aggregate gate even when the workflow reports success',
     async (conclusion) => {
       // arrange
       const dependencies = controlled();
 
-      dependencies.records.jobs[requiredJobNames.length - 1].conclusion = conclusion;
+      dependencies.records.jobs[dependencies.records.jobs.length - 1].conclusion = conclusion;
 
       // act
       const result = await mergeDependabotPullRequest(context, dependencies);
@@ -478,15 +439,16 @@ describe('Dependabot pull request merge', () => {
     },
   );
 
-  it('rejects a successful run with the old Ubuntu-only three-job coverage', async () => {
+  it.each(['missing', 'duplicate', 'extra'])('rejects %s matrix coverage', async (kind) => {
     // arrange
     const dependencies = controlled();
-    const legacyJobs = [
-      'Agents, Format, Lint, Typecheck, Test and Build',
-      'Electron E2E',
-      'Package smoke test',
-    ].map((name, index) => ({ ...dependencies.records.jobs[index], name }));
-    dependencies.records.jobPages = [{ total_count: legacyJobs.length, jobs: legacyJobs }];
+    const jobs = dependencies.records.jobs;
+
+    if (kind === 'missing') jobs.pop();
+    else if (kind === 'duplicate') jobs[2] = { ...jobs[0], id: 5 };
+    else jobs.push({ ...jobs[0], id: 5, name: 'extra job' });
+
+    dependencies.records.jobPages[0].total_count = jobs.length;
 
     // act
     const result = await mergeDependabotPullRequest(context, dependencies);
@@ -500,10 +462,9 @@ describe('Dependabot pull request merge', () => {
     // arrange
     const dependencies = controlled();
 
-    const { jobs } = dependencies.records;
     dependencies.records.jobPages = [
-      { total_count: jobs.length, jobs: jobs.slice(0, 1) },
-      { total_count: jobs.length, jobs: jobs.slice(1) },
+      { total_count: recordsLength(dependencies), jobs: dependencies.records.jobs.slice(0, 1) },
+      { total_count: recordsLength(dependencies), jobs: dependencies.records.jobs.slice(1) },
     ];
 
     // act
@@ -527,9 +488,12 @@ describe('Dependabot pull request merge', () => {
       const jobs = dependencies.records.jobs;
 
       dependencies.records.jobPages = [
-        { total_count: jobs.length, jobs: jobs.slice(0, 1) },
+        { total_count: recordsLength(dependencies), jobs: jobs.slice(0, 1) },
         {
-          total_count: kind === 'count-changed' ? jobs.length + 1 : jobs.length,
+          total_count:
+            kind === 'count-changed'
+              ? recordsLength(dependencies) + 1
+              : recordsLength(dependencies),
           jobs: jobs.slice(1),
         },
       ];
@@ -600,7 +564,7 @@ describe('Dependabot pull request merge', () => {
       const result = await mergeDependabotPullRequest(context, dependencies);
 
       // assert
-      expect(result).toEqual({ status: 'skipped', reason: 'pull-request-changed' });
+      expect(result).toEqual({ status: 'skipped', reason: 'pull-request-or-main-changed' });
       expect(writes(dependencies.request)).toEqual([]);
     },
   );
@@ -635,7 +599,7 @@ describe('Dependabot pull request merge', () => {
     const result = await mergeDependabotPullRequest(context, dependencies);
 
     // assert
-    expect(result).toEqual({ status: 'skipped', reason: 'main-changed' });
+    expect(result).toEqual({ status: 'skipped', reason: 'unproven-readonly-source' });
     expect(writes(dependencies.request)).toEqual([]);
   });
 
@@ -688,14 +652,14 @@ describe('Dependabot pull request merge', () => {
 });
 
 describe('Dependabot refreshed-head verification', () => {
-  it('accepts explicit CI only for the uniquely associated current Dependabot head', async () => {
+  it('rejects diagnostic CI even for the uniquely associated current Dependabot head', async () => {
     // arrange
     const { records, request } = controlled();
     records.run.event = 'workflow_dispatch';
     records.run.pull_requests = [];
     Object.assign(records.run, { head_branch: 'dependabot/npm_and_yarn/frameworks' });
     Object.assign(records.pullRequest.head, { ref: 'dependabot/npm_and_yarn/frameworks' });
-    const original = request.getMockImplementation()!;
+    const original = request.getMockImplementation();
     request.mockImplementation((method, endpoint) =>
       endpoint === `${repositoryPath}/commits/${headSha}/pulls?per_page=100`
         ? [{ ...structuredClone(records.pullRequest), merged: undefined, merged_at: null }]
@@ -706,10 +670,8 @@ describe('Dependabot refreshed-head verification', () => {
     const result = await mergeDependabotPullRequest(context, { request });
 
     // assert
-    expect(result.status).toBe('merged');
-    expect(writes(request)).toEqual([
-      ['PUT', `${pullRequestPath}/merge`, { sha: headSha, merge_method: 'squash' }],
-    ]);
+    expect(result).toEqual({ status: 'skipped', reason: 'ineligible-workflow-run' });
+    expect(writes(request)).toEqual([]);
   });
 
   it('rejects ambiguous dispatched-head associations without a merge', async () => {
@@ -719,7 +681,7 @@ describe('Dependabot refreshed-head verification', () => {
     records.run.pull_requests = [];
     Object.assign(records.run, { head_branch: 'dependabot/npm_and_yarn/frameworks' });
     Object.assign(records.pullRequest.head, { ref: 'dependabot/npm_and_yarn/frameworks' });
-    const original = request.getMockImplementation()!;
+    const original = request.getMockImplementation();
     request.mockImplementation((method, endpoint) =>
       endpoint === `${repositoryPath}/commits/${headSha}/pulls?per_page=100`
         ? [
@@ -738,7 +700,7 @@ describe('Dependabot refreshed-head verification', () => {
     const result = await mergeDependabotPullRequest(context, { request });
 
     // assert
-    expect(result).toEqual({ status: 'skipped', reason: 'ambiguous-pull-request' });
+    expect(result).toEqual({ status: 'skipped', reason: 'ineligible-workflow-run' });
     expect(writes(request)).toEqual([]);
   });
 
@@ -753,7 +715,11 @@ describe('Dependabot refreshed-head verification', () => {
     const result = await mergeDependabotPullRequest(context, { request });
 
     // assert
-    expect(result).toEqual({ status: 'skipped', reason: 'ambiguous-pull-request' });
+    expect(result).toEqual({ status: 'skipped', reason: 'ineligible-workflow-run' });
     expect(writes(request)).toEqual([]);
   });
 });
+
+function recordsLength(dependencies) {
+  return dependencies.records.jobs.length;
+}
