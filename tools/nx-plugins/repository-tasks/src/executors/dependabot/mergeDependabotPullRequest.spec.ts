@@ -686,3 +686,74 @@ describe('Dependabot pull request merge', () => {
     expect(writes(dependencies.request)).toHaveLength(1);
   });
 });
+
+describe('Dependabot refreshed-head verification', () => {
+  it('accepts explicit CI only for the uniquely associated current Dependabot head', async () => {
+    // arrange
+    const { records, request } = controlled();
+    records.run.event = 'workflow_dispatch';
+    records.run.pull_requests = [];
+    Object.assign(records.run, { head_branch: 'dependabot/npm_and_yarn/frameworks' });
+    Object.assign(records.pullRequest.head, { ref: 'dependabot/npm_and_yarn/frameworks' });
+    const original = request.getMockImplementation()!;
+    request.mockImplementation((method, endpoint) =>
+      endpoint === `${repositoryPath}/commits/${headSha}/pulls?per_page=100`
+        ? [{ ...structuredClone(records.pullRequest), merged: undefined, merged_at: null }]
+        : original(method, endpoint),
+    );
+
+    // act
+    const result = await mergeDependabotPullRequest(context, { request });
+
+    // assert
+    expect(result.status).toBe('merged');
+    expect(writes(request)).toEqual([
+      ['PUT', `${pullRequestPath}/merge`, { sha: headSha, merge_method: 'squash' }],
+    ]);
+  });
+
+  it('rejects ambiguous dispatched-head associations without a merge', async () => {
+    // arrange
+    const { records, request } = controlled();
+    records.run.event = 'workflow_dispatch';
+    records.run.pull_requests = [];
+    Object.assign(records.run, { head_branch: 'dependabot/npm_and_yarn/frameworks' });
+    Object.assign(records.pullRequest.head, { ref: 'dependabot/npm_and_yarn/frameworks' });
+    const original = request.getMockImplementation()!;
+    request.mockImplementation((method, endpoint) =>
+      endpoint === `${repositoryPath}/commits/${headSha}/pulls?per_page=100`
+        ? [
+            { ...structuredClone(records.pullRequest), merged: undefined, merged_at: null },
+            {
+              ...structuredClone(records.pullRequest),
+              number: 8,
+              merged: undefined,
+              merged_at: null,
+            },
+          ]
+        : original(method, endpoint),
+    );
+
+    // act
+    const result = await mergeDependabotPullRequest(context, { request });
+
+    // assert
+    expect(result).toEqual({ status: 'skipped', reason: 'ambiguous-pull-request' });
+    expect(writes(request)).toEqual([]);
+  });
+
+  it('rejects a manually verified non-Dependabot branch without a merge', async () => {
+    // arrange
+    const { records, request } = controlled();
+    records.run.event = 'workflow_dispatch';
+    records.run.pull_requests = [];
+    Object.assign(records.run, { head_branch: 'feature/manual' });
+
+    // act
+    const result = await mergeDependabotPullRequest(context, { request });
+
+    // assert
+    expect(result).toEqual({ status: 'skipped', reason: 'ambiguous-pull-request' });
+    expect(writes(request)).toEqual([]);
+  });
+});

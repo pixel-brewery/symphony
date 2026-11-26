@@ -97,6 +97,74 @@ Dependabot-Mergehelfer prüft alle acht erfolgreichen Jobs des auslösenden Lauf
 Klassifizierung, Dokumentation, die drei Plattform-Jobs, Electron E2E, der Paket-Smoke-Test
 und das Quality Gate. Paket- und Workflowupdates durchlaufen die vollständige Prüfung.
 
+## Automatische Abhängigkeitsaktualisierung
+
+Dependabot prüft npm-Pakete und GitHub Actions wöchentlich. Alle Updatearten,
+einschließlich Major-Versionen, TypeScript und veröffentlichter Pixel-Brewery-Pakete,
+nehmen am selben Verfahren teil. Zusammengehörige Angular-, Nx-, Test- und
+Pixel-Brewery-Paketfamilien werden gruppiert; eine Major-Version setzt die
+Prüfanforderungen nicht herab. Der GitHub-Paketdienst verwendet die vorhandenen
+Paketfreigaben für das Repository; Zugangsdaten liegen nicht in der Konfiguration.
+
+Der privilegierte Controller läuft nach abgeschlossenen Qualitäts- und Releaseläufen,
+stündlich und auf ausdrückliche Workflowanforderung. Er lädt ausschließlich den
+vertrauenswürdigen Standardbranch, installiert keine Pakete und führt keinen
+PR-Code aus. Unveränderliche Repository-ID und bestätigte API-Metadaten begrenzen
+seinen Zielbereich. Die Inventur umfasst höchstens 500 offene PRs und bearbeitet
+höchstens 30 bot-eigene Requests je Lauf. Beiträge anderer Autoren, Forks,
+Entwürfe, geschlossene PRs und andere Zielbranches werden nicht verändert.
+
+Ist ein Dependabot-Branch hinter dem aktuellen Zielbranch, fordert der Controller
+`update-branch` mit `expected_head_sha` an. Er wartet höchstens 16 begrenzte
+Intervalle auf den neuen Head. Danach fordert er `ci.yml` auf genau diesem Branch
+mit `expected_head_sha` an. Der Qualitätsworkflow vergleicht die Eingabe vor der
+Klassifizierung mit `GITHUB_SHA`; eine inzwischen verschobene Revision schlägt
+fehl. Manuelle Läufe durchlaufen immer sämtliche Prüfungen. Bereits angeforderte
+Läufe derselben Revision werden beibehalten, einschließlich fehlgeschlagener
+Versuche; die Automatik wiederholt keine roten Tests blind. Ein auf Freigabe
+wartender PR-Lauf verhindert die ausdrückliche Verifikationsanforderung nicht.
+Ein Konflikt oder API-Fehler blockiert nur den betreffenden PR und wird mit einem
+festen, zugangsdatenfreien Ergebnis gemeldet. Der nächste periodische Lauf prüft
+den Bestand erneut.
+
+Ein erfolgreicher Qualitätslauf darf einen PR nur freigeben, wenn genau ein
+aktueller, offener Dependabot-PR aus demselben Repository zur geprüften Head-SHA
+gehört. Bei `workflow_dispatch` ohne direkte PR-Zuordnung löst der Controller die
+Zuordnung über die mit dem Commit verbundenen PRs auf und verlangt zusätzlich
+den identischen `dependabot/`-Branch. Mehrdeutige Zuordnungen bleiben gesperrt.
+Alle acht Jobs müssen im aktuellen Versuch erfolgreich sein; fehlende,
+übersprungene, abgebrochene, doppelte oder rote Jobs genügen nicht. Der Controller
+liest PR, Workflowversuch und Zielbranch vor dem Merge erneut und verlangt einen
+aktuellen gemeinsamen Vorfahren. Der normale Squash-Merge übergibt die geprüfte
+Head-SHA atomar an GitHub. GitHubs aktive PR- und erforderliche Checkregeln bleiben
+zusätzlich verbindlich; die Automatik erteilt keine Freigaben und nutzt keinen
+Bypass. Für den Zielbranch bietet der Merge-Endpunkt keinen atomaren
+Expected-Base-Parameter; verschiebt er sich zwischen letzter Prüfung und Merge,
+entscheidet die strikte GitHub-Branchregel.
+
+Ein mit `GITHUB_TOKEN` ausgeführter Merge startet keine gewöhnlichen Push-Workflows.
+Deshalb fordert die erfolgreiche Mergefortsetzung zunächst vollständige
+Hauptbranch-CI und danach die bestehende Patch-Releasepipeline ausdrücklich an.
+Beide Anforderungen sind an die bestätigte Merge-SHA gebunden, prüfen den aktuellen
+Hauptbranch vor und unmittelbar vor dem Dispatch und erkennen vorhandene
+Push-/Dispatch-Läufe derselben Quelle. Ein bereits gestarteter oder gescheiterter
+Versuch wird erhalten; eine überholte Quelle erzeugt keinen neuen Lauf. Die
+CI-Eingabe heißt `expected_head_sha`, die Releaseeingabe weiterhin `source_sha`.
+Eine Major-Version einer Abhängigkeit ändert den bestehenden Patch-Releasevertrag
+für Symphony nicht.
+
+Die Implementierung gehört zum lokalen Nx-Plugin
+`tools/nx-plugins/repository-tasks`, dessen nicht cachebares Ziel
+`repository-tasks:dependabot` die Modi `merge`, `reconcile` und `continue` besitzt.
+Die typisierte Executor-Schnittstelle, das JSON-Schema und die unmittelbar
+benachbarten Tests sind die kanonischen Eigentümer. Im privilegierten Workflow
+startet Node dieselbe Implementierung über `runDependabotAutomation.mjs` direkt:
+Dies ist die bewusste Sicherheitsanpassung an das Verbot, mit Schreibrechten
+Workspace-Abhängigkeiten zu installieren. Es gibt keine zweite CLI-Implementierung
+außerhalb des Plugins. Offlinefälle prüfen veraltete Heads, asynchrone Updates,
+mehrdeutige Zuordnung, fehlende Jobs, einen während der Prüfung veränderten PR,
+Dispatch-Deduplizierung und überholte Hauptbranchquellen.
+
 ## Releasefolgen
 
 Ein dokumentarischer automatischer Push auf `main` beendet den Releasepfad vor

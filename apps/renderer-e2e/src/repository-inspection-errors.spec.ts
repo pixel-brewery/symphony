@@ -41,6 +41,7 @@ test('isolates a broken Git worktree and groups its scoped errors while healthy 
     const gitEnvironment = {
       ...process.env,
       GIT_CONFIG_NOSYSTEM: '1',
+      GIT_CONFIG_COUNT: '0',
       GIT_CONFIG_GLOBAL: emptyGitConfig,
       GIT_TERMINAL_PROMPT: '0',
     };

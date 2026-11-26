@@ -1,32 +1,30 @@
 // #region Imports
 
-import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { requestDependabotGitHub } from './requestDependabotGitHub.mjs';
 
 // #endregion
 
 const repository = 'pixel-brewery/symphony';
 const repositoryId = 1440122208;
-const workflowName = 'Continuous Desktop Release';
-const workflowPath = '.github/workflows/release.yml';
+const workflowName = 'Repository Quality';
+const workflowPath = '.github/workflows/ci.yml';
 const repositoryPath = `repos/${repository}`;
 const shaPattern = /^[0-9a-f]{40}$/u;
 const requestFailure =
-  'Release request failed; inspect the original merge and release runs before retrying.';
+  'Verification request failed; inspect the original merge and verification runs before retrying.';
 
 /**
- * Requests a source-bound release after a successful native-token dependency merge.
+ * Requests full repository verification for a successful native-token dependency merge.
  *
  * @param context - The trusted workflow event, immutable repository identity and exact merge source.
  * @param dependencies - An optional request(method, endpoint, body) boundary for offline verification.
  * @returns The requested, already-requested or superseded source result.
  * @throws An Error with a controlled diagnostic for invalid metadata, credentials or failed requests.
- * @remarks Existing failed or cancelled release attempts are recovered in their original run; this owner never creates a second candidate for the same observed attempt. It checks out no PR code, performs no merge or publication, and uses only the supplied native GH_TOKEN.
+ * @remarks Existing successful, failed or cancelled verification attempts are retained instead of dispatched again. It checks out no PR code, performs no merge or publication, and uses only the supplied native GH_TOKEN.
  *
  * @internal
  */
-export async function requestMergedRelease(context, dependencies = {}) {
+export async function requestMergedVerification(context, dependencies = {}) {
   if (
     context?.eventName !== 'workflow_run' ||
     context?.repository !== repository ||
@@ -37,7 +35,7 @@ export async function requestMergedRelease(context, dependencies = {}) {
     throw new Error(requestFailure);
 
   const sourceSha = context.sourceSha;
-  const boundary = dependencies.request ?? requestGitHub;
+  const boundary = dependencies.request ?? requestDependabotGitHub;
   const request = async (method, endpoint, body) => {
     try {
       return await boundary(method, endpoint, body);
@@ -63,7 +61,7 @@ export async function requestMergedRelease(context, dependencies = {}) {
 
   if (main.commit.sha !== sourceSha) return { status: 'superseded', sourceSha };
 
-  const workflow = await request('GET', `${repositoryPath}/actions/workflows/release.yml`);
+  const workflow = await request('GET', `${repositoryPath}/actions/workflows/ci.yml`);
 
   if (
     !Number.isSafeInteger(workflow?.id) ||
@@ -100,7 +98,7 @@ export async function requestMergedRelease(context, dependencies = {}) {
 
   await request('POST', `${workflowEndpoint}/dispatches`, {
     ref: 'main',
-    inputs: { specifier: 'patch', source_sha: sourceSha },
+    inputs: { expected_head_sha: sourceSha },
   });
 
   return { status: 'requested', sourceSha };
@@ -123,53 +121,4 @@ function canonicalRun(run, workflowId, sourceSha) {
     canonicalRepository(run.repository) &&
     canonicalRepository(run.head_repository)
   );
-}
-
-function requestGitHub(method, endpoint, body) {
-  if (!process.env.GH_TOKEN) throw new Error(requestFailure);
-
-  const output = execFileSync(
-    'gh',
-    [
-      'api',
-      '--hostname',
-      'github.com',
-      '--method',
-      method,
-      '--header',
-      'Accept: application/vnd.github+json',
-      '--header',
-      'X-GitHub-Api-Version: 2022-11-28',
-      endpoint,
-      ...(body === undefined ? [] : ['--input', '-']),
-    ],
-    {
-      encoding: 'utf8',
-      env: { ...process.env, GH_PROMPT_DISABLED: '1' },
-      input: body === undefined ? undefined : JSON.stringify(body),
-      maxBuffer: 4 * 1024 * 1024,
-      timeout: 15_000,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    },
-  );
-
-  return output.trim() ? JSON.parse(output) : undefined;
-}
-
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  try {
-    if (process.argv.length !== 2) throw new Error(requestFailure);
-
-    const result = await requestMergedRelease({
-      eventName: process.env.GITHUB_EVENT_NAME,
-      repository: process.env.GITHUB_REPOSITORY,
-      repositoryId: process.env.GITHUB_REPOSITORY_ID,
-      sourceSha: process.env.MERGE_COMMIT_SHA,
-    });
-
-    console.log(JSON.stringify(result));
-  } catch {
-    console.error(requestFailure);
-    process.exitCode = 1;
-  }
 }
