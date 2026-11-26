@@ -8,6 +8,6 @@
   },
   "include": [
     "src/executors/dependabot/executor.ts",
-    "src/executors/dependabot/Interfaces/IDependabotExecutorOptions.ts"
+    "src/executors/dependabot/interfaces/IDependabotExecutorOptions.ts"
   ]
 }

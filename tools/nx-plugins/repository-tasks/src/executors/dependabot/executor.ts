@@ -1,6 +1,6 @@
 // #region Imports
 
-import type { IDependabotExecutorOptions } from './Interfaces/IDependabotExecutorOptions';
+import type { IDependabotExecutorOptions } from './interfaces/IDependabotExecutorOptions';
 
 // #endregion
 
