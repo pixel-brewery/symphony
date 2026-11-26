@@ -133,7 +133,8 @@ export class LocalMobileGateway {
       enabled: state.access.enabled,
       state: runtime,
       ...(state.host.endpoints[0] ? { origin: state.host.endpoints[0].origin } : {}),
-      ...(state.errorCode
+      // The SDK host keeps its last error code after a successful disable; only an unavailable host shows it.
+      ...(state.errorCode && runtime === 'unavailable'
         ? {
             unavailableReason:
               'Mobile access could not complete its last operation. Retry or check the local network.',

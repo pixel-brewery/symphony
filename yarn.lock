@@ -5000,53 +5000,53 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/remote-browser@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@pixel-brewery/remote-browser@npm:0.1.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-browser%2F0.1.0%2F179f0381c53c68cbfc70104de6e81190ee7bd520"
+"@pixel-brewery/remote-browser@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@pixel-brewery/remote-browser@npm:0.2.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-browser%2F0.2.0%2F0bf776a67552d88426b8041273cd5a0054f252ce"
   dependencies:
-    "@pixel-brewery/remote-client": "npm:0.1.0"
-    "@pixel-brewery/remote-protocol": "npm:0.1.0"
-  checksum: 10c0/99a6ed6b8240459a4cb75194ae952251a6a008506ed9c803c015dab90d565036a4802e39e71c760a50df508090590a7315498d9ee41ab40847a3ce2fbfccf096
+    "@pixel-brewery/remote-client": "npm:0.2.0"
+    "@pixel-brewery/remote-protocol": "npm:0.2.0"
+  checksum: 10c0/4811b4a21dc03b0bac9e4046ccd5d50fe5285c888514ebd12df372bd04108dfcead828444c2a08911ace9ca59c1d1a2472062705a17a9dc54c60583cc3686282
   languageName: node
   linkType: hard
 
-"@pixel-brewery/remote-client@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@pixel-brewery/remote-client@npm:0.1.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-client%2F0.1.0%2F83fc8eb8f49d8f85116f5eb3f317417c29fb3dcd"
+"@pixel-brewery/remote-client@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@pixel-brewery/remote-client@npm:0.2.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-client%2F0.2.0%2F4c49ae1f598daaf824c60ca1582de0a238ce14e1"
   dependencies:
-    "@pixel-brewery/remote-protocol": "npm:0.1.0"
-  checksum: 10c0/bba60672d585c273e5c8d6c355914f75f72c0bb913e2863d0b890f298f2205aa1a0f4b7dd37e2e9fe0b0172a4ef651d52c7090f02119620cfc7fcc6f080f4121
+    "@pixel-brewery/remote-protocol": "npm:0.2.0"
+  checksum: 10c0/0d1ee92d30b2110d2ae7f25f08a317061e68ec037b445636e72062971455d321e030a8719ed249878d9805d4f1a6f8208d11b47e8a9e1b6bb8ce46e793786412
   languageName: node
   linkType: hard
 
-"@pixel-brewery/remote-core@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@pixel-brewery/remote-core@npm:0.1.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-core%2F0.1.0%2F224897e2aec0ee4de3cc6434599d6ca1463ecf69"
+"@pixel-brewery/remote-core@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@pixel-brewery/remote-core@npm:0.2.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-core%2F0.2.0%2Fd7a01da71e0ec5268121f994324ebd2915430d51"
   dependencies:
-    "@pixel-brewery/remote-protocol": "npm:0.1.0"
-  checksum: 10c0/488302d456e100274153f10dd6ff88f190e6043af652deab07f06e0c9b8da0fa39f16126e2e809d7bcdb2621e10f70fd153a5bd355124a745d04409668537369
+    "@pixel-brewery/remote-protocol": "npm:0.2.0"
+  checksum: 10c0/7fc202a61917d50897842287cdda27c5db5a96a3aace7e8bc847e0f03cf760454eca0aa526dc022006077473e442d009e4bbc6118cb3062e23823460c3221032
   languageName: node
   linkType: hard
 
-"@pixel-brewery/remote-node@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@pixel-brewery/remote-node@npm:0.1.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-node%2F0.1.0%2F09fedaf2c0194b3d0885c04aea95167d0aee3445"
+"@pixel-brewery/remote-node@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@pixel-brewery/remote-node@npm:0.2.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-node%2F0.2.0%2Fcd6118c53d34f4484b4cf915c59dfe64e34002de"
   dependencies:
-    "@pixel-brewery/remote-client": "npm:0.1.0"
-    "@pixel-brewery/remote-core": "npm:0.1.0"
-    "@pixel-brewery/remote-protocol": "npm:0.1.0"
+    "@pixel-brewery/remote-client": "npm:0.2.0"
+    "@pixel-brewery/remote-core": "npm:0.2.0"
+    "@pixel-brewery/remote-protocol": "npm:0.2.0"
     "@types/ws": "npm:8.18.2"
     ws: "npm:8.23.0"
-  checksum: 10c0/9b7c7a1f310c0e192063abb2e64af4d58da22a714e80ee6ecf1cd9936d0e12402facb9a4522b5a82004a62c211debe6304615acd51cd0a80732f85546a120bbb
+  checksum: 10c0/4f14c063a00fe1713929f302a996d23f154d73976f85359ec184394f685c78edeaa270d1153cc482dbca98b3bf58fcabd48ea390a96be47f74c9f12851ac1bdc
   languageName: node
   linkType: hard
 
-"@pixel-brewery/remote-protocol@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@pixel-brewery/remote-protocol@npm:0.1.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-protocol%2F0.1.0%2F2f971814a8b05782e1a1039d28175866d027856a"
+"@pixel-brewery/remote-protocol@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@pixel-brewery/remote-protocol@npm:0.2.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fremote-protocol%2F0.2.0%2F4597e6658dfa64ae0a761721054e66a503adf798"
   dependencies:
     zod: "npm:4.6.7"
-  checksum: 10c0/c827de75027e4a276096b3e0ed08ebdbe14e948e81cd76a3ecabcb1eaff378baafb3d36ecc892398964ef14f2040a6da3396c153dd753dedcaee992f6d64e6ba
+  checksum: 10c0/2014e5d6d776819ad1b0bfc1381ffe314b4a78176e396f5c8eca02c99f0c94ac725cbb496720ee00d51dae5be29d33d4a934658850278e44900091b34c7c76ac
   languageName: node
   linkType: hard
 
@@ -6307,9 +6307,9 @@ __metadata:
     "@angular/platform-browser": "npm:22.2.6"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.203"
     "@pixel-brewery/mosaik-themes": "npm:0.1.203"
-    "@pixel-brewery/remote-browser": "npm:0.1.0"
-    "@pixel-brewery/remote-client": "npm:0.1.0"
-    "@pixel-brewery/remote-protocol": "npm:0.1.0"
+    "@pixel-brewery/remote-browser": "npm:0.2.0"
+    "@pixel-brewery/remote-client": "npm:0.2.0"
+    "@pixel-brewery/remote-protocol": "npm:0.2.0"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
     "@symphony/frontend-notification": "workspace:*"
@@ -6859,7 +6859,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/mobile-contracts@workspace:libs/mobile-contracts"
   dependencies:
-    "@pixel-brewery/remote-protocol": "npm:0.1.0"
+    "@pixel-brewery/remote-protocol": "npm:0.2.0"
     "@symphony/configuration-workspace": "workspace:*"
     "@symphony/domain-team": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
@@ -6960,9 +6960,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/persistence-mobile@workspace:libs/persistence/features/mobile"
   dependencies:
-    "@pixel-brewery/remote-core": "npm:0.1.0"
-    "@pixel-brewery/remote-node": "npm:0.1.0"
-    "@pixel-brewery/remote-protocol": "npm:0.1.0"
+    "@pixel-brewery/remote-core": "npm:0.2.0"
+    "@pixel-brewery/remote-node": "npm:0.2.0"
+    "@pixel-brewery/remote-protocol": "npm:0.2.0"
     "@symphony/mobile-contracts": "workspace:*"
     "@types/node": "npm:26.6.6"
   languageName: unknown
@@ -15308,11 +15308,11 @@ __metadata:
     "@pixel-brewery/ngpel-mvp": "npm:0.0.12"
     "@pixel-brewery/ngpel-router": "npm:0.0.12"
     "@pixel-brewery/ngpel-ui": "npm:0.0.12"
-    "@pixel-brewery/remote-browser": "npm:0.1.0"
-    "@pixel-brewery/remote-client": "npm:0.1.0"
-    "@pixel-brewery/remote-core": "npm:0.1.0"
-    "@pixel-brewery/remote-node": "npm:0.1.0"
-    "@pixel-brewery/remote-protocol": "npm:0.1.0"
+    "@pixel-brewery/remote-browser": "npm:0.2.0"
+    "@pixel-brewery/remote-client": "npm:0.2.0"
+    "@pixel-brewery/remote-core": "npm:0.2.0"
+    "@pixel-brewery/remote-node": "npm:0.2.0"
+    "@pixel-brewery/remote-protocol": "npm:0.2.0"
     "@pixel-brewery/synapse-auth": "npm:0.0.16"
     "@pixel-brewery/synapse-core": "npm:0.0.16"
     "@pixel-brewery/synapse-provider-claude": "npm:0.0.16"
