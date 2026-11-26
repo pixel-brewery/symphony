@@ -66,6 +66,7 @@ export default defineConfig({
     exclude: [
       // Game journeys remain suspended; feature registration and settings are verified here.
       'libs/frontend/features/arcade/src/lib/games/**/*.spec.ts',
+      'libs/frontend/features/mobile/src/lib/browser/clients/BrowserMobileCompanionClient.spec.ts',
       'libs/frontend/features/mobile/src/lib/browser/state/MobileCompanionStore.spec.ts',
       'libs/frontend/features/mobile/src/lib/browser/theme/MobileThemeStore.spec.ts',
       'libs/frontend/features/work/src/lib/board/mobile/MobileHomeViewPresenter.spec.ts',

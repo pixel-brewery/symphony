@@ -5,7 +5,7 @@ import { mobileSnapshotSchema } from '@symphony/mobile-contracts';
 
 // #endregion
 
-describe('MobileSnapshotSchema', () => {
+describe('mobileSnapshotSchema', () => {
   it('rejects provider payloads that do not match the mobile projection', () => {
     // assert
     expect(
