@@ -10,7 +10,7 @@ import { SettingsAlertService } from '@symphony/frontend-setting';
 import type { RequestPayload, ResponsePayload } from '@symphony/ipc-contracts-composition';
 import type { MobileAccessStatus } from '@symphony/mobile-contracts';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IMobileAccessClient } from '../ports/IMobileAccessClient';
+import type { IMobileAccessClient } from '../ports/interfaces/IMobileAccessClient';
 import type { MobileAccessRequestMethod } from '../ports/MobileAccessRequestMethod';
 import { provideMobileFeature } from '../provider/provideMobileFeature';
 import { MobileAccessStore } from '../state/MobileAccessStore';

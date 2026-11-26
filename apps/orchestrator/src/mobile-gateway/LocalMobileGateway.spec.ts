@@ -1,37 +1,42 @@
 // #region Imports
 
-import { createHash, randomBytes } from 'node:crypto';
+import { RemoteAccessService, type IRemoteAccessStore } from '@pixel-brewery/remote-core';
+import type { IRemoteAccessState } from '@pixel-brewery/remote-protocol';
+import { NodeRemoteSecurity } from '@pixel-brewery/remote-node/security';
 import { defaultWorkflow } from '@symphony/domain-workflow';
 import { createServer } from 'node:http';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { MobileAccessService, type IMobileAccessRepository } from '@symphony/application-mobile';
 import type { IExecutionRecord } from '@symphony/domain-execution';
 import type { IOrchestrationSnapshot } from '@symphony/ipc-contracts-composition';
-import { mobileSnapshotSchema, type PersistedMobileAccess } from '@symphony/mobile-contracts';
+import { mobileSnapshotSchema, symphonyRemoteCapabilities } from '@symphony/mobile-contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LocalMobileGateway } from './';
 
 // #endregion
 
-class MemoryMobileAccessRepository implements IMobileAccessRepository {
+class MemoryMobileAccessRepository implements IRemoteAccessStore {
   // #region Fields
 
-  public value: PersistedMobileAccess = { version: 1, enabled: false, devices: [] };
+  public value: IRemoteAccessState = {
+    version: 1,
+    identity: { appId: 'symphony', hostId: 'test-installation' },
+    enabled: false,
+    devices: [],
+  };
 
   // #endregion
 
   // #region Methods
 
-  public load(): PersistedMobileAccess {
+  public async load(): Promise<unknown> {
     return this.value;
   }
 
-  public save(settings: PersistedMobileAccess): PersistedMobileAccess {
+  public async save(settings: IRemoteAccessState): Promise<void> {
     this.value = structuredClone(settings);
-    return this.value;
   }
 
   // #endregion
@@ -39,23 +44,26 @@ class MemoryMobileAccessRepository implements IMobileAccessRepository {
 
 describe('LocalMobileGateway', () => {
   let gateway: LocalMobileGateway | undefined;
+  const assetRoots: string[] = [];
 
   afterEach(async () => {
     await gateway?.stop();
+    for (const root of assetRoots.splice(0)) await rm(root, { recursive: true, force: true });
   });
 
-  it('serves the packaged app and requires an approved device for task actions', async () => {
+  it('serves the packaged app and requires a QR-paired device for task actions', async () => {
     // arrange
     const repository = new MemoryMobileAccessRepository();
-    const access = new MobileAccessService({
-      repository,
-      security: {
-        randomToken: () => randomBytes(32).toString('base64url'),
-        hash: (value) => createHash('sha256').update(value).digest('hex'),
-      },
-      now: () => new Date('2026-08-10T18:00:00.000Z'),
+    const access = new RemoteAccessService({
+      identity: repository.value.identity,
+      store: repository,
+      security: new NodeRemoteSecurity(),
+      clock: { now: () => Date.parse('2026-08-10T18:00:00.000Z') },
+      capabilities: symphonyRemoteCapabilities,
     });
+    await access.initialize();
     const assetsPath = await mkdtemp(join(tmpdir(), 'symphony-mobile-assets-'));
+    assetRoots.push(assetsPath);
     mkdirSync(assetsPath, { recursive: true });
     writeFileSync(join(assetsPath, 'index.html'), '<!doctype html><title>Symphony Mobile</title>');
     const port = await availablePort();
@@ -83,9 +91,11 @@ describe('LocalMobileGateway', () => {
     }));
     let currentSnapshot = snapshot();
     const reportRequestFailure = vi.fn();
-    access.enable();
+    await access.setEnabled(true);
     gateway = new LocalMobileGateway({
       access,
+      identity: repository.value.identity,
+      allowLoopbackForTests: true,
       assetsPath,
       desktopName: 'Development Mac',
       remoteAutomationEnabled: () => true,
@@ -153,7 +163,7 @@ describe('LocalMobileGateway', () => {
     await gateway.start();
 
     // act
-    const origin = access.status().origin;
+    const origin = gateway.status().origin;
     // assert
     expect(origin).toBe(`http://127.0.0.1:${port}`);
     if (!origin) throw new Error('Mobile gateway did not publish an origin.');
@@ -161,64 +171,39 @@ describe('LocalMobileGateway', () => {
     expect(appResponse.headers.get('content-security-policy')).toContain("base-uri 'self'");
     expect(await appResponse.text()).toContain('Symphony Mobile');
 
-    const invalidPairingResponse = await fetch(`${origin}/api/mobile/v1/pairing/propose`, {
+    const invalidPairingResponse = await fetch(`${origin}/__remote/v1/pairings`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin },
-      body: JSON.stringify({ challenge: 'short', deviceName: 'Test phone' }),
+      body: JSON.stringify({
+        challenge: 'short',
+        deviceName: 'Test phone',
+        attemptId: 'attempt-1234567890',
+        credentialMode: 'cookie',
+      }),
     });
     expect(invalidPairingResponse.status).toBe(400);
-    expect(await invalidPairingResponse.json()).toEqual({
-      code: 'MOBILE_REQUEST_INVALID',
-      message: 'The mobile request is invalid.',
+    expect(await invalidPairingResponse.json()).toMatchObject({
+      error: { code: 'invalid-request' },
     });
-
-    const challenge = access.createChallenge();
+    const challenge = await gateway.createChallenge();
     const pairingSecret = new URLSearchParams(new URL(challenge.pairingUrl).hash.slice(1)).get(
       'pair',
     );
-    expect(pairingSecret).toBeTruthy();
-    const proposalResponse = await fetch(`${origin}/api/mobile/v1/pairing/propose`, {
+    const statusResponse = await fetch(`${origin}/__remote/v1/pairings`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin },
-      body: JSON.stringify({ challenge: pairingSecret, deviceName: 'Test phone' }),
-    });
-    expect(proposalResponse.status).toBe(202);
-    const proposal = (await proposalResponse.json()) as {
-      pairingId: string;
-      verificationCode: string;
-    };
-    expect(access.status().pendingPairings[0]?.verificationCode).toBe(proposal.verificationCode);
-
-    const resumedProposalResponse = await fetch(`${origin}/api/mobile/v1/pairing/propose`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', origin },
-      body: JSON.stringify({ challenge: pairingSecret, deviceName: 'Test phone' }),
-    });
-    expect(resumedProposalResponse.status).toBe(202);
-    expect(await resumedProposalResponse.json()).toEqual(proposal);
-    expect(access.status().pendingPairings).toHaveLength(1);
-
-    const reassignedProposalResponse = await fetch(`${origin}/api/mobile/v1/pairing/propose`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', origin },
-      body: JSON.stringify({ challenge: pairingSecret, deviceName: 'Different phone' }),
-    });
-    expect(reassignedProposalResponse.status).toBe(410);
-    expect(await reassignedProposalResponse.json()).toEqual({
-      code: 'MOBILE_PAIRING_EXPIRED',
-      message: 'The pairing code is invalid or has expired.',
-    });
-
-    access.approvePairing(proposal.pairingId);
-    const statusResponse = await fetch(`${origin}/api/mobile/v1/pairing/status`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', origin },
-      body: JSON.stringify({ pairingId: proposal.pairingId, challenge: pairingSecret }),
+      body: JSON.stringify({
+        challenge: pairingSecret,
+        deviceName: 'Test phone',
+        attemptId: 'attempt-1234567890',
+        credentialMode: 'cookie',
+      }),
     });
     expect(statusResponse.status).toBe(200);
-    expect(await statusResponse.json()).toMatchObject({ state: 'approved' });
+    expect(await statusResponse.json()).toMatchObject({ status: 'paired' });
+    expect(gateway.status().pendingPairings).toHaveLength(0);
     const cookie = statusResponse.headers.get('set-cookie')?.split(';', 1)[0];
-    expect(cookie).toMatch(/^symphony_mobile=/u);
+    expect(cookie).toBeTruthy();
 
     const snapshotResponse = await fetch(`${origin}/api/mobile/v1/snapshot`, {
       headers: { cookie: cookie! },
@@ -343,7 +328,11 @@ describe('LocalMobileGateway', () => {
       }),
     });
     expect(commandResponse.status).toBe(202);
-    expect(startAnalyzer).toHaveBeenCalledWith('ticket-2', 'Focus on the mobile contract.');
+    expect(startAnalyzer).toHaveBeenCalledWith(
+      'ticket-2',
+      'Focus on the mobile contract.',
+      expect.any(AbortSignal),
+    );
 
     // A step the stage does not own is refused by the desktop, whatever the phone last saw.
     const refusedResponse = await fetch(`${origin}/api/mobile/v1/commands`, {
@@ -373,7 +362,7 @@ describe('LocalMobileGateway', () => {
       }),
     });
     expect(moveResponse.status).toBe(202);
-    expect(moveWorkItem).toHaveBeenCalledWith('ticket-1', 'opt-qualified');
+    expect(moveWorkItem).toHaveBeenCalledWith('ticket-1', 'opt-qualified', expect.any(AbortSignal));
 
     const foreignColumnResponse = await fetch(`${origin}/api/mobile/v1/commands`, {
       method: 'POST',
@@ -452,7 +441,7 @@ describe('LocalMobileGateway', () => {
       }),
     );
 
-    access.revokeAllDevices();
+    await gateway.revokeAllDevices();
     const revokedResponse = await fetch(`${origin}/api/mobile/v1/snapshot`, {
       headers: { cookie: cookie! },
     });

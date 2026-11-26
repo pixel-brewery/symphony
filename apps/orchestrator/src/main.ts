@@ -21,7 +21,7 @@ import {
   SqliteContinuousIntegrationProjectionRepository,
 } from '@symphony/persistence-ci';
 import { SqliteWorkTrackingProjectionRepository } from '@symphony/persistence-work';
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { chmodSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir, hostname, tmpdir } from 'node:os';
@@ -29,7 +29,9 @@ import { AnalyzerService, WorkItemRelationAssessor } from '@symphony/application
 import { RemoteProjectionService } from '@symphony/application-composition';
 import { AutomationService } from '@symphony/application-automation';
 import { FeedbackIntakeService } from '@symphony/application-feedback';
-import { MobileAccessService } from '@symphony/application-mobile';
+import { RemoteAccessService } from '@pixel-brewery/remote-core';
+import { NodeRemoteSecurity } from '@pixel-brewery/remote-node/security';
+import { symphonyRemoteCapabilities } from '@symphony/mobile-contracts';
 import { RemoteProviderRateLimitError } from '@symphony/application-core';
 import { RepositoryRuntimeService } from '@symphony/application-workspace';
 import {
@@ -56,7 +58,7 @@ import {
   SqliteRemoteProjectionCache,
 } from '@symphony/persistence-platform';
 import { JsonWorkspaceBundleRepository } from '@symphony/persistence-workspace';
-import { JsonMobileAccessRepository } from '@symphony/persistence-mobile';
+import { SymphonyRemoteAccessStore } from '@symphony/persistence-mobile';
 import {
   WorkspaceAgentRouteTelemetryRepository,
   agentRouteTelemetrySchema,
@@ -205,18 +207,17 @@ settingsRepository.initialize();
 
 const workspaceBundles = new JsonWorkspaceBundleRepository();
 
-const mobileAccessRepository = new JsonMobileAccessRepository(mobileAccessPath);
-
-mobileAccessRepository.initialize();
-
-const mobileAccess = new MobileAccessService({
-  repository: mobileAccessRepository,
-  security: {
-    randomToken: () => randomBytes(32).toString('base64url'),
-    hash: (value) => createHash('sha256').update(value).digest('hex'),
-  },
-  now: () => new Date(),
+const mobileAccessRepository = new SymphonyRemoteAccessStore(mobileAccessPath);
+const mobileAuthorization = await mobileAccessRepository.initialize();
+const mobileAccess = new RemoteAccessService({
+  identity: mobileAuthorization.identity,
+  store: mobileAccessRepository,
+  security: new NodeRemoteSecurity(),
+  clock: { now: () => Date.now() },
+  capabilities: symphonyRemoteCapabilities,
+  pairingPolicy: 'qr-possession',
 });
+await mobileAccess.initialize();
 
 const generatedDefaults = createDefaultApplicationSettings(homedir());
 
@@ -1106,6 +1107,9 @@ const workflowFeature = provideWorkflowOrchestratorFeature({
 
 const mobileRuntime = createMobileGateway({
   mobileAccess: mobileAccess,
+  mobileIdentity: mobileAuthorization.identity,
+  recordMobileActivity: (deviceId) => mobileAccessRepository.recordActivity(deviceId),
+  lastMobileActivity: (deviceId) => mobileAccessRepository.lastSeenAt(deviceId),
   settingsState: settingsState,
   snapshotService: snapshotService,
   workItemService: workItemService,
@@ -1116,8 +1120,13 @@ const mobileRuntime = createMobileGateway({
   recordOperatorDecision: (...args) => workflowFeature.recordOperatorDecision(...args),
   logger: logger,
 });
+process.once('SIGTERM', () => {
+  void mobileRuntime.mobileGateway.stop();
+});
+process.once('SIGINT', () => {
+  void mobileRuntime.mobileGateway.stop();
+});
 const mobileFeature = provideMobileOrchestratorFeature({
-  mobileAccess: mobileAccess,
   mobileGateway: mobileRuntime.mobileGateway,
 });
 
