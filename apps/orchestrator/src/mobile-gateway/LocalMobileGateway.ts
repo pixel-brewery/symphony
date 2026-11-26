@@ -1,5 +1,5 @@
 // #region Imports
-import { NodeRemoteHost } from '@pixel-brewery/remote-node/host';
+import { NodeRemoteHost, RemoteHostRuntime } from '@pixel-brewery/remote-node/host';
 import { createRemotePairingUrl } from '@pixel-brewery/remote-protocol';
 import {
   mobileAccessStatusSchema,
@@ -13,13 +13,16 @@ import type { ILocalMobileGatewayDependencies } from './interfaces/ILocalMobileG
 // #endregion
 
 /**
- * Product lifecycle facade around one SDK host, access core and Symphony application adapter.
+ * Product lifecycle facade around one SDK host runtime, access core and Symphony application adapter.
  *
+ * @remarks The SDK runtime serializes every lifecycle and device command and rechecks the private network interface
+ * when access is enabled, before every invitation and on an explicit reconcile; nothing polls the network.
  * @public
  */
 export class LocalMobileGateway {
   // #region Fields
-  private readonly _host: NodeRemoteHost;
+  private readonly _runtime: RemoteHostRuntime;
+  private readonly _listeners = new Set<() => void>();
   private readonly _application: SymphonyMobileApplicationAdapter;
   // #endregion
   // #region Ctor
@@ -31,7 +34,7 @@ export class LocalMobileGateway {
    */
   public constructor(private readonly _dependencies: ILocalMobileGatewayDependencies) {
     this._application = new SymphonyMobileApplicationAdapter(_dependencies);
-    this._host = new NodeRemoteHost({
+    const host = new NodeRemoteHost({
       identity: _dependencies.identity,
       name: _dependencies.desktopName,
       access: _dependencies.access,
@@ -51,17 +54,22 @@ export class LocalMobileGateway {
         ? { allowLoopbackForTests: _dependencies.allowLoopbackForTests }
         : {}),
     });
+    this._runtime = new RemoteHostRuntime(host);
+    // The runtime releases this registration when it is disposed.
+    this._runtime.subscribe(() => this.notify());
+    this._application.subscribeConnections(() => this.notify());
   }
   // #endregion
   // #region Methods
   /**
    * Restores listeners only when the saved activation intent permits it.
    *
-   * @returns Resolves after initialization and any requested private binding.
+   * @returns Resolves after initialization and any requested private binding; a failed restoration is retained
+   * in {@link LocalMobileGateway.status} instead of rejecting.
    * @public
    */
   public start(): Promise<void> {
-    return this._host.initialize();
+    return this.notifyAfter(this._runtime.initialize());
   }
 
   /**
@@ -71,7 +79,7 @@ export class LocalMobileGateway {
    * @public
    */
   public enable(): Promise<void> {
-    return this._host.enable();
+    return this.notifyAfter(this._runtime.enable());
   }
 
   /**
@@ -81,7 +89,7 @@ export class LocalMobileGateway {
    * @public
    */
   public disable(): Promise<void> {
-    return this._host.disable();
+    return this.notifyAfter(this._runtime.disable());
   }
 
   /**
@@ -91,17 +99,17 @@ export class LocalMobileGateway {
    * @public
    */
   public stop(): Promise<void> {
-    return this._host.dispose();
+    return this._runtime.dispose();
   }
 
   /**
-   * Re-evaluates the private interface on startup, resume or the existing network timer.
+   * Re-evaluates the private interface on startup, resume or unlock; invitations recheck it themselves.
    *
    * @returns Resolves after serialized listener reconciliation.
    * @public
    */
   public reconcile(): Promise<void> {
-    return this._host.reconcile();
+    return this.notifyAfter(this._runtime.reconcile());
   }
 
   /**
@@ -111,7 +119,7 @@ export class LocalMobileGateway {
    * @public
    */
   public status(): MobileAccessStatus {
-    const state = this._host.status();
+    const state = this._runtime.status();
     const connected = this._application.connectedDeviceIds();
     const runtime =
       state.state === 'rebinding'
@@ -149,7 +157,7 @@ export class LocalMobileGateway {
    * @public
    */
   public async createChallenge(): Promise<MobilePairingChallenge> {
-    const bootstrap = await this._host.createPairing();
+    const bootstrap = await this.notifyAfter(this._runtime.createPairing());
     return mobilePairingChallengeSchema.parse({
       pairingUrl: createRemotePairingUrl(bootstrap),
       expiresAt: bootstrap.expiresAt,
@@ -186,7 +194,7 @@ export class LocalMobileGateway {
    * @public
    */
   public revokeDevice(deviceId: string): Promise<void> {
-    return this._host.revokeDevice(deviceId);
+    return this._runtime.revokeDevice(deviceId);
   }
 
   /**
@@ -196,7 +204,24 @@ export class LocalMobileGateway {
    * @public
    */
   public revokeAllDevices(): Promise<void> {
-    return this._host.revokeAllDevices();
+    return this._runtime.revokeAllDevices();
+  }
+
+  /**
+   * Observes changes the desktop shows: SDK access events (a paired or revoked phone, invalidated invitations, a
+   * disabled host), phones gaining or losing their event connection and the end of every lifecycle command, so a
+   * rebinding that finishes on a new address is shown as well.
+   *
+   * @param listener - Called synchronously for each change; it reads {@link LocalMobileGateway.status} itself.
+   * @returns Idempotent cleanup removing only this registration.
+   * @public
+   */
+  public subscribe(listener: () => void): () => void {
+    const registration = (): void => listener();
+    this._listeners.add(registration);
+    return () => {
+      this._listeners.delete(registration);
+    };
   }
 
   /**
@@ -206,6 +231,15 @@ export class LocalMobileGateway {
    */
   public broadcastSnapshotInvalidated(): void {
     this._application.broadcastSnapshotInvalidated();
+  }
+
+  /** Notifies once the command settled, whatever its outcome, because a failure can change the shown state too. */
+  private notifyAfter<T>(command: Promise<T>): Promise<T> {
+    return command.finally(() => this.notify());
+  }
+
+  private notify(): void {
+    for (const listener of [...this._listeners]) listener();
   }
   // #endregion
 }

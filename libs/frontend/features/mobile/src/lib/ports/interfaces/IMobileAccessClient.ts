@@ -21,4 +21,10 @@ export interface IMobileAccessClient {
     method: M,
     payload: RequestPayload<M>,
   ): Promise<ResponsePayload<M>>;
+  /**
+   * Observes the desktop's payload-free notice that the mobile access status changed.
+   * @param listener - Called once per notice; it reads the status itself.
+   * @returns Idempotent subscription cleanup.
+   */
+  onMobileAccessChanged(listener: () => void): () => void;
 }

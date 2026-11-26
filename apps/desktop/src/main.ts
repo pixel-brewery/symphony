@@ -33,6 +33,7 @@ import {
   type ResponsePayload,
 } from '@symphony/ipc-contracts-composition';
 import { utilityEventEnvelopeSchema } from '@symphony/ipc-contracts-execution';
+import { mobileAccessChangedEnvelopeSchema } from '@symphony/ipc-contracts-mobile';
 import {
   app,
   BrowserWindow,
@@ -417,6 +418,8 @@ function startOrchestrator(): void {
       message.type === 'orchestrator.ready'
     ) {
       synchronizeCredentialAvailabilityToOrchestrator();
+      // A restarted background service has new mobile access state; open windows read it again.
+      for (const window of rendererWindows()) window.webContents.send(channels.mobileAccessChanged);
       return;
     }
     const response = responseEnvelopeSchema.safeParse(message);
@@ -434,7 +437,10 @@ function startOrchestrator(): void {
       for (const window of rendererWindows()) {
         window.webContents.send(channels.event, event.data.event);
       }
+      return;
     }
+    if (mobileAccessChangedEnvelopeSchema.safeParse(message).success)
+      for (const window of rendererWindows()) window.webContents.send(channels.mobileAccessChanged);
   });
   orchestrator.on('exit', (code) => {
     orchestratorLogStream?.write(

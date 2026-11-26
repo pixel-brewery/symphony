@@ -79,6 +79,7 @@ describe('AutomationSettingsStore', () => {
       },
       selectPath: async () => ({ canceled: true, paths: [] }),
       onExecutionEvent: () => () => undefined,
+      onMobileAccessChanged: () => () => undefined,
     };
     TestBed.configureTestingModule({
       providers: [
@@ -139,6 +140,7 @@ describe('AutomationSettingsStore', () => {
       },
       selectPath: async () => ({ canceled: true, paths: [] }),
       onExecutionEvent: () => () => undefined,
+      onMobileAccessChanged: () => () => undefined,
     };
     TestBed.configureTestingModule({
       providers: [

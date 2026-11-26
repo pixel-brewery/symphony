@@ -1,6 +1,7 @@
 // #region Imports
 import { externalWriteOperationSchema } from '@symphony/ipc-contracts-ci';
 import { deliveryOperationSchema } from '@symphony/ipc-contracts-delivery';
+import { mobileAccessChangedEnvelopeSchema } from '@symphony/ipc-contracts-mobile';
 import {
   CiRunHistoryService,
   ExternalWriteService,
@@ -1235,10 +1236,12 @@ if (parentPort) {
     void requestProcessor.handleMessage(data);
   });
   parentPort.postMessage({ type: 'orchestrator.ready' });
-  const mobileNetworkTimer = setInterval(() => {
-    void mobileRuntime.mobileGateway.reconcile().catch(() => undefined);
-  }, 5_000);
-  mobileNetworkTimer.unref();
+  // Pairings, revocations and phone connections reach the desktop as a payload-free notice. The network is rechecked
+  // on startup, resume, unlock and before every invitation, never on a timer.
+  const mobileAccessChanged = mobileAccessChangedEnvelopeSchema.parse({
+    topic: 'mobile-access.changed',
+  });
+  mobileRuntime.mobileGateway.subscribe(() => parentPort?.postMessage(mobileAccessChanged));
 } else {
   const snapshot = await snapshotService.snapshot();
   process.stdout.write(`${JSON.stringify(snapshot, null, 2)}\n`);

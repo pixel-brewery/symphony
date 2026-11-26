@@ -30,26 +30,26 @@ describe('MobileSettingsCardViewPresenter', () => {
   });
   afterAll(() => TestBed.resetTestEnvironment());
 
-  it('polls only while access is enabled and stops when the mounted card is destroyed', async () => {
+  it('loads once when mounted, follows change notices and reads nothing on a timer', async () => {
     // arrange
-    let enabled = false;
-    const status = (): MobileAccessStatus => ({
-      enabled,
-      state: enabled ? 'available' : 'disabled',
+    let devices: MobileAccessStatus['devices'] = [];
+    const readStatus = vi.fn(async (): Promise<MobileAccessStatus> => ({
+      enabled: true,
+      state: 'available',
       pendingPairings: [],
-      devices: [],
-    });
-    const readStatus = vi.fn(async () => status());
+      devices,
+    }));
     const handlers: Partial<{
       [M in MobileAccessRequestMethod]: (payload: RequestPayload<M>) => Promise<ResponsePayload<M>>;
-    }> = {
-      'mobile-access.status.get': readStatus,
-      'mobile-access.enable': async () => {
-        enabled = true;
-        return status();
-      },
-    };
+    }> = { 'mobile-access.status.get': readStatus };
+    let notify: () => void = () => undefined;
     const client: IMobileAccessClient = {
+      onMobileAccessChanged(listener) {
+        notify = listener;
+        return () => {
+          notify = () => undefined;
+        };
+      },
       async request<M extends MobileAccessRequestMethod>(
         method: M,
         payload: RequestPayload<M>,
@@ -69,22 +69,22 @@ describe('MobileSettingsCardViewPresenter', () => {
       ],
     });
     const presenter = TestBed.inject(MobileSettingsCardViewPresenter);
-    const store = TestBed.inject(MobileAccessStore);
     presenter.initialize();
-    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(60_000);
+    const readsWhileIdle = readStatus.mock.calls.length;
 
     // act
-    await vi.advanceTimersByTimeAsync(2_000);
+    devices = [
+      { id: 'phone', name: 'Phone', pairedAt: '2026-10-30T08:00:00.000Z', connected: true },
+    ];
+    notify();
+    await vi.advanceTimersByTimeAsync(0);
 
     // assert
-    expect(readStatus).toHaveBeenCalledOnce();
-    await store.setMobileAccess(true);
-    await vi.advanceTimersByTimeAsync(2_000);
+    expect(readsWhileIdle).toBe(1);
     expect(readStatus).toHaveBeenCalledTimes(2);
-    expect(presenter.mobileAccess()).toBe(store.mobileAccessStatus());
+    expect(presenter.mobileAccess()?.devices).toEqual(devices);
     TestBed.resetTestingModule();
-    await vi.advanceTimersByTimeAsync(4_000);
-    expect(readStatus).toHaveBeenCalledTimes(2);
     expect(presenter.disposed()).toBe(true);
   });
 
@@ -111,6 +111,7 @@ describe('MobileSettingsCardViewPresenter', () => {
       'mobile-access.device.revoke': revoke,
     };
     const client: IMobileAccessClient = {
+      onMobileAccessChanged: () => () => undefined,
       async request<M extends MobileAccessRequestMethod>(
         method: M,
         payload: RequestPayload<M>,

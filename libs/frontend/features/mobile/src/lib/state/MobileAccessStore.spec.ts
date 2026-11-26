@@ -40,7 +40,12 @@ function configureStore(
     [M in MobileAccessRequestMethod]: (payload: RequestPayload<M>) => Promise<ResponsePayload<M>>;
   }>,
 ) {
+  const changeListeners = new Set<() => void>();
   const client: IMobileAccessClient = {
+    onMobileAccessChanged(listener) {
+      changeListeners.add(listener);
+      return () => changeListeners.delete(listener);
+    },
     async request<M extends MobileAccessRequestMethod>(
       method: M,
       payload: RequestPayload<M>,
@@ -62,6 +67,7 @@ function configureStore(
     store: TestBed.inject(MobileAccessStore),
     owner: TestBed.inject(MOBILE_ACCESS_OPERATIONS),
     showError,
+    changeListeners,
   };
 }
 
@@ -120,6 +126,36 @@ describe('MobileAccessStore', () => {
     expect(await store.setMobileAccess(false)).toBe(true);
     expect(store.mobileAccessStatus()).toEqual(disabled);
     expect(store.mobilePairingChallenge()).toBeUndefined();
+  });
+
+  it('reads the status again on each change notice and stops following them once destroyed', async () => {
+    // arrange
+    const paired: MobileAccessStatus = {
+      ...enabled,
+      devices: [
+        {
+          id: 'phone',
+          name: 'Phone',
+          pairedAt: '2026-10-30T14:55:00.000Z',
+          connected: true,
+        },
+      ],
+    };
+    const status = vi
+      .fn<() => Promise<MobileAccessStatus>>()
+      .mockResolvedValueOnce(enabled)
+      .mockResolvedValue(paired);
+    const { store, changeListeners } = configureStore({ 'mobile-access.status.get': status });
+    await store.refreshMobileAccess();
+
+    // act
+    for (const listener of changeListeners) listener();
+    await vi.waitFor(() => expect(store.mobileAccessStatus()).toEqual(paired));
+    TestBed.resetTestingModule();
+
+    // assert
+    expect(status).toHaveBeenCalledTimes(2);
+    expect(changeListeners.size).toBe(0);
   });
 
   it('retains confirmed access state and suppresses only background refresh errors', async () => {

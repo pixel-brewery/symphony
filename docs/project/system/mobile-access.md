@@ -39,7 +39,7 @@ Lädt der Browser während der Kopplung neu oder geht eine Antwort verloren, kan
 
 ## Gekoppelte Geräte verwalten
 
-**Paired phones** erscheint, sobald mindestens ein Browser gekoppelt ist, und zeigt je Gerät den Namen sowie `Connected` oder `Last connected <Datum, Uhrzeit>`. Symphony aktualisiert die Liste alle zwei Sekunden, solange der Zugang eingeschaltet und der Bereich offen ist.
+**Paired phones** erscheint, sobald mindestens ein Browser gekoppelt ist, und zeigt je Gerät den Namen sowie `Connected` oder `Last connected <Datum, Uhrzeit>`. Die Liste aktualisiert sich, sobald ein Browser gekoppelt oder entzogen wird oder sich verbindet beziehungsweise trennt.
 
 - **Revoke** fragt zuerst **Revoke <Gerät>?** mit **Revoke** oder **Keep access**. Nach erfolgreichem Speichern verliert das Gerät sofort den Zugang. Seine Verbindung endet, und weitere Anfragen werden ohne Neustart abgewiesen.
 - **Revoke all phones** erscheint ab zwei Geräten und fragt zuerst **Revoke all <n> phones?** mit **Revoke all phones** oder **Keep access**. Nach erfolgreichem Speichern verlieren alle Geräte den Zugang und offene Einladungen werden ungültig.

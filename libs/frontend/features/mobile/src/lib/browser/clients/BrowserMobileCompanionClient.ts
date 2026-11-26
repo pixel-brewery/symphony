@@ -1,19 +1,16 @@
 // #region Imports
 import { DOCUMENT } from '@angular/common';
 import { Inject, inject, Injectable } from '@angular/core';
-import { RemoteClientError, RemoteSession } from '@pixel-brewery/remote-client';
+import { RemoteClientError, type RemoteSessionState } from '@pixel-brewery/remote-client';
 import {
-  BrowserPairingLocation,
-  BrowserRemoteConnector,
+  BrowserRemoteApp,
   BrowserRemoteEvents,
   createBrowserClock,
   createBrowserOperationId,
+  type BrowserRemoteAppPhase,
 } from '@pixel-brewery/remote-browser';
-import {
-  remoteErrorResponseSchema,
-  type IRemoteHostIdentity,
-  type IRemotePairingBootstrap,
-} from '@pixel-brewery/remote-protocol';
+import { remoteErrorResponseSchema } from '@pixel-brewery/remote-protocol';
+import { translateLabel } from '@symphony/frontend-intl/labels';
 import type { IMobileCompanionClient } from './interfaces/IMobileCompanionClient';
 import type { IMobileBrowserWindow } from './interfaces/IMobileBrowserWindow';
 import type { MobileCompanionConnectionState } from './MobileCompanionConnectionState';
@@ -24,8 +21,9 @@ import type { IMobileEventHandlers } from './interfaces/IMobileEventHandlers';
 /**
  * Composes SDK pairing, cookie authentication and bounded events for Symphony's browser product port.
  *
- * @remarks Own one instance per browser document and await dispose when its Angular owner exits.
- * The SDK retains authorization and automatic recovery; this adapter projects only product state.
+ * @remarks Own one instance per browser document and await dispose when its Angular owner exits. The SDK's
+ * `BrowserRemoteApp` pairs from the invitation fragment, restores the session, recovers an interrupted pairing
+ * attempt and prepares again when another invitation opens in the same tab; this adapter projects only product state.
  * @public
  */
 @Injectable({ providedIn: 'root' })
@@ -34,15 +32,15 @@ export class BrowserMobileCompanionClient implements IMobileCompanionClient {
   private readonly _window: IMobileBrowserWindow;
   private readonly _listeners = new Set<(state: MobileCompanionConnectionState) => void>();
   private readonly _events = new Set<BrowserRemoteEvents>();
-  private readonly _controller = new AbortController();
-  private _session: RemoteSession | undefined;
-  private _initialization: Promise<boolean> | undefined;
+  private readonly _app: BrowserRemoteApp<undefined>;
+  private readonly _detach: () => void;
+  private _releaseSession: (() => void) | undefined;
   private _state: MobileCompanionConnectionState = 'offline';
   private _disposed = false;
   // #endregion
   // #region Ctor
   /**
-   * Binds the active browser document without starting a connection.
+   * Binds the active browser document and its invitation lifecycle without starting a connection.
    *
    * @param document - Browser document supplying same-origin networking and timing APIs.
    * @throws An error when the document has no owning browser window.
@@ -52,28 +50,39 @@ export class BrowserMobileCompanionClient implements IMobileCompanionClient {
     if (!document.defaultView)
       throw new Error('Mobile companion access requires a browser window.');
     this._window = document.defaultView as IMobileBrowserWindow;
+    this._app = new BrowserRemoteApp<undefined>({
+      appId: 'symphony',
+      window: this._window,
+      // The companion page is always served by the desktop's gateway; Symphony has no capability read.
+      localOrigins: [],
+      readCapabilities: () => Promise.resolve(undefined),
+      attemptStorageKey: 'symphony.remote.pending-attempt',
+    });
+    this._app.subscribe((phase) => this.project(phase));
+    this._detach = this._app.attach();
   }
   // #endregion
   // #region Methods
   /**
    * Restores or completes a verified Symphony QR invitation, retaining only a public attempt identifier across tab reloads.
    *
+   * @remarks Simultaneous calls share one SDK preparation; a ready session is reused without another one.
    * @returns True when the SDK session is ready; false when the browser needs another invitation.
-   * @throws An error for a disposed client, an invalid invitation or an unavailable or mismatched host.
+   * @throws An error for a disposed client, a pairing that did not complete or an unreachable or mismatched host.
    * @public
    */
-  public initialize(): Promise<boolean> {
-    if (this._disposed) return Promise.reject(new Error('The mobile connection is closed.'));
-    if (!this._initialization) {
-      const operation = this.initializeSession();
-      this._initialization = operation;
-      void operation
-        .finally(() => {
-          if (this._initialization === operation) this._initialization = undefined;
-        })
-        .catch(() => undefined);
-    }
-    return this._initialization;
+  public async initialize(): Promise<boolean> {
+    if (this._disposed) throw new Error('The mobile connection is closed.');
+    const phase = this._app.phase.kind === 'ready' ? this._app.phase : await this._app.prepare();
+    if (phase.kind === 'ready') return true;
+    if (phase.kind === 'error' && phase.reason === 'invitation')
+      throw new Error(pairingIncompleteMessage());
+    // The page is always served by the desktop, so a start without a reachable host (`normal`) is an outage too.
+    if (phase.kind === 'error' || phase.kind === 'normal')
+      throw new Error(
+        translateLabel('loc.symphony.labels.mobile.access.is.temporarily.unavailable.f5a4ef2'),
+      );
+    return false;
   }
 
   /**
@@ -92,10 +101,19 @@ export class BrowserMobileCompanionClient implements IMobileCompanionClient {
     method: 'GET' | 'POST' = 'GET',
     body?: unknown,
   ): Promise<IMobileHttpResponse> {
-    if (!(await this.initialize()) || !this._session) return this.unauthorized();
+    const session = (await this.initialize()) ? this._app.session : undefined;
+    if (!session) return this.unauthorized();
+    // The app stays ready while its session reconnects; an explicit request restores it first instead of waiting
+    // for the retry schedule. Only a confirmed loss of the grant answers as unpaired.
+    if (session.state.kind !== 'ready') await session.initialize().catch(() => undefined);
+    if (isUnpaired(session.state.kind)) return this.unauthorized();
+    if (session.state.kind !== 'ready')
+      throw new Error(
+        translateLabel('loc.symphony.labels.mobile.access.is.temporarily.unavailable.f5a4ef2'),
+      );
     const encoded = body === undefined ? undefined : new TextEncoder().encode(JSON.stringify(body));
     try {
-      const response = await this._session.request({
+      const response = await session.request({
         method,
         path: route,
         ...(encoded
@@ -135,7 +153,11 @@ export class BrowserMobileCompanionClient implements IMobileCompanionClient {
         await response.cancel();
       }
     } catch (cause) {
-      if (cause instanceof RemoteClientError && cause.code === 'SESSION_REQUIRED')
+      if (
+        cause instanceof RemoteClientError &&
+        cause.code === 'SESSION_REQUIRED' &&
+        isUnpaired(session.state.kind)
+      )
         return this.unauthorized();
       throw cause;
     }
@@ -214,110 +236,47 @@ export class BrowserMobileCompanionClient implements IMobileCompanionClient {
   public async dispose(): Promise<void> {
     if (this._disposed) return;
     this._disposed = true;
-    this._controller.abort();
+    this._detach();
+    this._releaseSession?.();
+    this._releaseSession = undefined;
     for (const events of this._events) events.dispose();
     this._events.clear();
-    await this._session?.dispose();
     this._listeners.clear();
+    await this._app.dispose();
   }
 
-  private async initializeSession(): Promise<boolean> {
-    const pairing = new BrowserPairingLocation(this._window.location, this._window.history);
-    const bootstrap = pairing.read();
-    if (bootstrap && bootstrap.appId !== 'symphony')
-      throw new Error('The invitation belongs to another application.');
-    if (!this._session) {
-      const connector = new BrowserRemoteConnector({
-        origin: this._window.location.origin,
-        fetch: this._window.fetch.bind(this._window),
-      });
-      const endpoint = {
-        id: connector.id,
-        transportId: connector.id,
-        origin: this._window.location.origin,
-      };
-      let identity: IRemoteHostIdentity;
-      if (bootstrap) identity = { appId: bootstrap.appId, hostId: bootstrap.hostId };
-      else {
-        const probe = await connector.connect(endpoint, this._controller.signal);
-        try {
-          identity = (await probe.describe(this._controller.signal)).identity;
-        } finally {
-          await probe.dispose();
-        }
-      }
-      if (identity.appId !== 'symphony')
-        throw new Error('This address is not a Symphony installation.');
-      if (this._disposed) return false;
-      const attemptId = bootstrap ? this.readAttemptId(bootstrap) : this.createOperationId();
-      this._session = new RemoteSession({
-        identity,
-        endpoint,
-        connector,
-        clock: createBrowserClock(this._window),
-        createId: () => attemptId,
-      });
-      this._session.subscribe((state) => {
-        const projected: MobileCompanionConnectionState =
+  /** Projects the SDK phase and, while it is ready, the session's own reconnects onto the product state. */
+  private project(phase: BrowserRemoteAppPhase): void {
+    this._releaseSession?.();
+    this._releaseSession = undefined;
+    const session = phase.kind === 'ready' ? this._app.session : undefined;
+    if (session) {
+      this._releaseSession = session.subscribe((state) =>
+        this.publish(
           state.kind === 'ready'
             ? 'ready'
-            : ['pairing-required', 'revoked'].includes(state.kind)
+            : isUnpaired(state.kind)
               ? 'required'
-              : ['connecting', 'reconnecting', 'pairing', 'pending-approval'].includes(state.kind)
-                ? 'connecting'
-                : 'offline';
-        this._state = projected;
-        for (const listener of this._listeners) listener(projected);
-      });
-    }
-    await this._session.initialize();
-    if (bootstrap && this._session.state.kind !== 'ready')
-      await this._session.pair(
-        bootstrap,
-        this._window.navigator.platform ? `${this._window.navigator.platform} browser` : 'Browser',
+              : state.kind === 'offline' || state.kind === 'disposed'
+                ? 'offline'
+                : 'connecting',
+        ),
       );
-    if (this._session.state.kind === 'ready') {
-      if (bootstrap) {
-        pairing.clear();
-        try {
-          this._window.sessionStorage.removeItem('symphony.remote.pending-attempt');
-        } catch {
-          /* No credential is stored in this optional public-ID cache. */
-        }
-      }
-      return true;
+      return;
     }
-    return false;
+    this.publish(
+      phase.kind === 'pairing-required' || (phase.kind === 'error' && phase.reason === 'invitation')
+        ? 'required'
+        : phase.kind === 'preparing' || phase.kind === 'pending-approval'
+          ? 'connecting'
+          : 'offline',
+    );
   }
 
-  private readAttemptId(bootstrap: IRemotePairingBootstrap): string {
-    let attemptId = this.createOperationId();
-    try {
-      const raw: unknown = JSON.parse(
-        this._window.sessionStorage.getItem('symphony.remote.pending-attempt') ?? 'null',
-      );
-      if (
-        raw !== null &&
-        typeof raw === 'object' &&
-        'hostId' in raw &&
-        raw.hostId === bootstrap.hostId &&
-        'expiresAt' in raw &&
-        raw.expiresAt === bootstrap.expiresAt &&
-        'attemptId' in raw &&
-        typeof raw.attemptId === 'string' &&
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(
-          raw.attemptId,
-        )
-      )
-        attemptId = raw.attemptId;
-      this._window.sessionStorage.setItem(
-        'symphony.remote.pending-attempt',
-        JSON.stringify({ hostId: bootstrap.hostId, expiresAt: bootstrap.expiresAt, attemptId }),
-      );
-    } catch {
-      /* The same in-memory SDK attempt still permits recovery when session storage is blocked. */
-    }
-    return attemptId;
+  private publish(state: MobileCompanionConnectionState): void {
+    if (state === this._state) return;
+    this._state = state;
+    for (const listener of this._listeners) listener(state);
   }
 
   private unauthorized(): {
@@ -332,4 +291,16 @@ export class BrowserMobileCompanionClient implements IMobileCompanionClient {
     };
   }
   // #endregion
+}
+
+/** Reports whether the session lost its grant, as opposed to only its connection. */
+function isUnpaired(kind: RemoteSessionState['kind']): boolean {
+  return kind === 'revoked' || kind === 'pairing-required';
+}
+
+/** Localized notice for a pairing that failed or lost its answer; the kept fragment lets a reload resume it. */
+function pairingIncompleteMessage(): string {
+  return translateLabel(
+    'loc.symphony.labels.pairing.did.not.complete.reload.this.page.to.try.aga.31f8729',
+  );
 }

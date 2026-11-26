@@ -15,4 +15,12 @@ export interface IOrchestrationApi {
   ): Promise<ResponsePayload<M>>;
   selectPath(request: PathSelectionRequest): Promise<PathSelectionResponse>;
   onExecutionEvent(listener: (event: ExecutionEventDto) => void): () => void;
+  /**
+   * Observes payload-free notices that the mobile access status changed, such as a paired or revoked phone.
+   *
+   * @param listener - Called once per notice; it reads the status itself.
+   * @returns Idempotent subscription cleanup.
+   * @public
+   */
+  onMobileAccessChanged(listener: () => void): () => void;
 }

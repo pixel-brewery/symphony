@@ -1,5 +1,7 @@
 // #region Imports
+import { EventEmitter } from 'node:events';
 import { createServer, type Server } from 'node:http';
+import type { WebSocket } from 'ws';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ISymphonyMobileApplicationDependencies } from './interfaces/ISymphonyMobileApplicationDependencies';
 import { SymphonyMobileApplicationAdapter } from './SymphonyMobileApplicationAdapter';
@@ -104,5 +106,62 @@ describe('SymphonyMobileApplicationAdapter', () => {
     // assert
     expect(await outcome).toBe('cancelled');
     expect(createWorkItem).not.toHaveBeenCalled();
+  });
+
+  it('reports only a device gaining its first or losing its last event connection', async () => {
+    // arrange
+    const unused = async (): Promise<never> => {
+      throw new Error('Unexpected domain operation.');
+    };
+    const adapter = new SymphonyMobileApplicationAdapter({
+      desktopName: 'Symphony',
+      remoteAutomationEnabled: () => false,
+      snapshot: unused,
+      workItemCreationContext: unused,
+      createWorkItem: unused,
+      draftIssue: unused,
+      cancelIssueDraft: () => false,
+      startAnalyzer: unused,
+      startSolver: unused,
+      cancelExecution: unused,
+      removeQueueEntry: () => {
+        throw new Error('Unexpected queue operation.');
+      },
+      publishPullRequest: unused,
+      moveWorkItem: unused,
+      decideWorkflow: unused,
+    });
+    const changed = vi.fn();
+    const release = adapter.subscribeConnections(changed);
+    const revocation = new AbortController();
+    const context = (deviceId: string, signal: AbortSignal) => ({
+      requestId: 'events',
+      operationId: 'mobile.events',
+      principal: {
+        appId: 'symphony',
+        hostId: 'installation',
+        deviceId,
+        capabilities: ['symphony:read'],
+      },
+      signal,
+    });
+    // Only the close notification of the event socket matters to the connection projection.
+    const first = new EventEmitter() as unknown as WebSocket;
+    const second = new EventEmitter() as unknown as WebSocket;
+    const other = new EventEmitter() as unknown as WebSocket;
+    // act
+    await adapter.webSocket(first, context('phone', revocation.signal));
+    await adapter.webSocket(second, context('phone', revocation.signal));
+    await adapter.webSocket(other, context('tablet', new AbortController().signal));
+    first.emit('close');
+    const whileStillConnected = changed.mock.calls.length;
+    revocation.abort();
+    second.emit('close');
+    release();
+    other.emit('close');
+    // assert
+    expect(whileStillConnected).toBe(2);
+    expect(changed).toHaveBeenCalledTimes(3);
+    expect([...adapter.connectedDeviceIds()]).toEqual([]);
   });
 });
