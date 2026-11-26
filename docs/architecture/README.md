@@ -1,5 +1,7 @@
 # Technische Feature-Dokumentation
 
+- [Modulare Produktkomposition](product-composition/README.md): kanonische Verantwortungen, Paketgrenzen und Abhängigkeitsrichtung sowie Migration des mobilen Zugangs auf das gemeinsame SDK.
+
 - [Anwendungssprache und Katalogprüfung](localization/README.md): englische und deutsche Runtime-Kataloge, Browserpräferenz, gemeinsame Desktop-Fenster, Mosaik-Übersetzungen und die öffentlichen Wortlaut-Qualitätsprüfungen.
 
 - [Anwendungsupdates](application-updates/README.md): Updatezustände, In-App-Download mit Größen- und SHA-256-Prüfung, Installerstart, automatische Downloadseite und Updatefeeds aus Release-Metadaten, Actions-Deployment ohne Veröffentlichungsbranch sowie Paketierung und die getrennte Liveaktivierung.
@@ -17,6 +19,7 @@
 - [AI-Team-Einstellungen](ai-team/README.md): gemeinsame Definition der fünf Schritte, Organisations- und Lieferablauf-Projektion, Verfügbarkeitsregeln, Modellbewertung, Agenten-Sheet mit Validierung, einem Gesamt-Speichern und Team-Abgleich, Entfernen mit Sperrgründen, Parameter `agent` und Auswahl der Ausführungsziele.
 - [Skills-Einstellungen](skills/README.md): Orchestrator-Anfragen `skills.*`, Ergänzungen der Rollen in `skillCustomizations`, Paketzuordnung eins zu eins je Skill-Flow-Rolle im aktiven Team, Schrittprojektion, vier Sheets, Rückfrage für den Papierkorb, Weiterleitung von `/main/skills` und Sucheinstiege.
 - [Automation-Einstellungen](automation/README.md): Laufzeit- und Agentic-Delivery-Vertrag mit Standardwerten und Schemagrenzen, Leitermodell (acht Schalter, Stufen, Sperrgrund, Kaskade beim Ausschalten, abgeleitete Stufe), Speicherwarteschlange mit Wiederherstellung, Auswertung im Orchestrator, Suchbeiträge und die Rückfrage zum Aufräumen.
+- [Mobiler Zugang](mobile-access/README.md): Migration auf den gemeinsamen SDK-Host und Zugriffskern, QR-Besitz als Freigabe, exakte Übernahme vorhandener Geräte-Hashes, sieben Produktoperationen, sichere Settings-Anzeigeprojektion, Browser-Sitzung und Event-Lebenszyklus sowie erforderliche Integrationsnachweise.
 - [Einstellungen dieses Mac](system/README.md): Bereiche System, Mobile access und Appearance mit Speicherstatus `storage.status.get`, Druckregeln und Fail-closed-Schreibsperre, Speichergrenzen, Runner-Ausstattung und Maschinenliste, Updates-Karte, Wachhalten über `power.*` und `keep-awake.json`, `mobile-access.*`-Vertrag, Farbschema und Appearance-Slot.
 
 - [Repository-Prüfung](repository-quality/README.md): Dokumentationsumfang, vollständige Ereignisvergleiche, leichte Prüfpfade, erforderliche Matrixkontexte und Releasefolgen.

@@ -14,6 +14,9 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@pixel-brewery/remote-protocol": "0.1.0",
+    "@symphony/configuration-workspace": "workspace:*",
+    "@symphony/domain-workflow": "workspace:*",
     "zod": "4.6.7"
   },
   "devDependencies": {

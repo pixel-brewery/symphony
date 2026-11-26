@@ -1,3 +1,15 @@
+## 0.1.52 (2026-11-26)
+
+### 🩹 Fixes
+
+- **ci:** authorize source-reviewed dependency workflows ([5ef4624](https://github.com/pixel-brewery/symphony/commit/5ef4624))
+- **ci:** authorize source-reviewed dependency workflows ([#86](https://github.com/pixel-brewery/symphony/pull/86))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+- RueDeRennes @RueDeRennes
+
 ## 0.1.51 (2026-11-26)
 
 ### 🩹 Fixes

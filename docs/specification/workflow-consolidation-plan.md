@@ -5,7 +5,7 @@
 **Quelle Sollzustand:** `recommended-delivery-workflow.md` (Version 1.0, Board `Backlog → Qualified → Ready → Progress → Acceptance → Done`)<br>
 **Quelle Istzustand:** aktueller `main` inklusive Working-Tree (provider-eigene Spalten, `columnMappings`, `columnId`)
 
-Dieser Entwurf dokumentiert den Stand vom 18. August 2026. Seine damaligen Dateipfade und Migrationsoptionen sind historische Ausgangspunkte. Die aktuelle modulare Struktur, implementierten Zuständigkeiten und verbindlichen Paketgrenzen stehen im [Dependency Model](../architecture/dependency-model.md).
+Dieser Entwurf dokumentiert den Stand vom 18. August 2026. Seine damaligen Dateipfade und Migrationsoptionen sind historische Ausgangspunkte. Die aktuelle modulare Struktur, implementierten Zuständigkeiten und verbindlichen Paketgrenzen stehen im [Dependency Model](../architecture/product-composition/README.md).
 
 ---
 

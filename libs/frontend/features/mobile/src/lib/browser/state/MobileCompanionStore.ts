@@ -9,8 +9,8 @@ import {
   signal,
   type Signal,
 } from '@angular/core';
-import type { IMobileCompanionClient } from '../clients/IMobileCompanionClient';
-import { MOBILE_COMPANION_CLIENT } from '../clients/MobileCompanionClient';
+import type { IMobileCompanionClient } from '../clients/interfaces/IMobileCompanionClient';
+import { MOBILE_COMPANION_CLIENT } from '../clients/MOBILE_COMPANION_CLIENT';
 import {
   mobileApiErrorSchema,
   mobileCommandResponseSchema,
@@ -18,8 +18,6 @@ import {
   mobileHttpRoutes,
   mobileIssueDraftCancelResponseSchema,
   mobileIssueDraftSchema,
-  mobilePairingProposalSchema,
-  mobilePairingStatusSchema,
   mobileSnapshotSchema,
   mobileWorkItemCreateResponseSchema,
   mobileWorkItemCreationContextSchema,
@@ -38,6 +36,12 @@ import { translateLabel } from '@symphony/frontend-intl/labels';
 type ConnectionState = 'connecting' | 'connected' | 'disconnected';
 type PairingState = 'required' | 'requesting' | 'waiting' | 'approved' | 'rejected' | 'expired';
 
+/**
+ * Owns mobile product projections and commands while the SDK client owns trust and transport recovery.
+ *
+ * @remarks Pairing evidence comes from the verified session. A failed product read never revokes a valid grant, and a revoked generation cannot repopulate projections.
+ * @public
+ */
 @Injectable({ providedIn: 'root' })
 export class MobileCompanionStore {
   // #region Fields
@@ -55,13 +59,14 @@ export class MobileCompanionStore {
   private readonly _issueDraftBusyState = signal(false);
   private readonly _errorState = signal<string | undefined>(undefined);
   private _disconnectEvents?: () => void;
-  private _pairingTimer?: number;
-  private _reconnectTimer?: number;
-  private _challenge?: string;
   private _issueDraftOperationId?: string;
   private readonly _cancelledIssueDrafts = new Set<string>();
-  private readonly _isPaired = computed(() => this._snapshotState() !== undefined);
+  private readonly _isPaired = computed(() => this._pairingStateValue() === 'approved');
   private _initialized = false;
+  private _initializing = false;
+  private _disposed = false;
+  private _generation = 0;
+  private readonly _unsubscribeConnection: () => void;
 
   // #endregion
 
@@ -70,6 +75,8 @@ export class MobileCompanionStore {
   /**
    * Constructs the mobile companion state against a platform client.
    *
+   * @param client - Session-backed product requests and bounded event delivery.
+   * @param destroyRef - Angular owner that closes the session and event subscriptions.
    * @public
    */
   public constructor(
@@ -79,6 +86,19 @@ export class MobileCompanionStore {
     destroyRef: DestroyRef = inject(DestroyRef),
   ) {
     this._client = client;
+    this._unsubscribeConnection = client.subscribeConnection((state) => {
+      if (this._disposed) return;
+      this._connectionStateValue.set(
+        state === 'ready' ? 'connected' : state === 'connecting' ? 'connecting' : 'disconnected',
+      );
+      if (state === 'required') {
+        this.clearAuthorization();
+      }
+      if (state === 'ready') {
+        this._pairingStateValue.set('approved');
+        if (this._initialized && !this._initializing) void this.refreshSnapshot();
+      }
+    });
     destroyRef.onDestroy(() => this.dispose());
   }
 
@@ -191,45 +211,41 @@ export class MobileCompanionStore {
   // #region Methods
 
   /**
-   * Initializes.
+   * Restores SDK pairing evidence once and loads the initial product snapshot.
    *
+   * @returns Resolves after initial recovery has updated the observable state.
    * @public
    */
   public async initialize(): Promise<void> {
     if (this._initialized) return;
     this._initialized = true;
-    this._challenge = this._client.pairingChallenge();
-
-    if (this._challenge) {
-      await this.requestPairing(this._challenge);
-      return;
-    }
-    await this.refreshSnapshot();
+    await this.restoreSession();
   }
 
   /**
-   * Refreshes the snapshot.
+   * Reconciles the current product snapshot without treating it as authorization evidence.
    *
+   * @returns Resolves after assignment or a visible read failure; obsolete generations are discarded.
    * @public
    */
   public async refreshSnapshot(): Promise<void> {
     this._loadingState.set(true);
+    const generation = this._generation;
     try {
       const response = await this._client.request(mobileHttpRoutes.snapshot);
+      if (this._disposed || generation !== this._generation) return;
       if (response.status === 401) {
-        this._snapshotState.set(undefined);
-        this._pairingStateValue.set('required');
-        this._connectionStateValue.set('disconnected');
+        this.clearAuthorization();
         this._errorState.set(undefined);
         return;
       }
       const snapshot = mobileSnapshotSchema.parse(this.readResponse(response));
       this._snapshotState.set(snapshot);
-      this._pairingStateValue.set('approved');
       this._connectionStateValue.set('connected');
       this._errorState.set(undefined);
       this.connectEvents();
     } catch (error) {
+      if (this._disposed || generation !== this._generation) return;
       this._connectionStateValue.set('disconnected');
       this._errorState.set(this.errorMessage(error));
     } finally {
@@ -238,20 +254,24 @@ export class MobileCompanionStore {
   }
 
   /**
-   * Runs the command.
+   * Dispatches a current product command once and then reconciles reads.
    *
-   * @param command - Command.
+   * @param command - Typed action whose current validity is rechecked by the host.
+   * @returns Started execution identifier when admitted and still in the current session generation.
    * @public
    */
   public async runCommand(command: MobileCommandRequest): Promise<string | undefined> {
+    const generation = this._generation;
     this._loadingState.set(true);
     try {
       const response = await this._client.request(mobileHttpRoutes.command, 'POST', command);
       const result = mobileCommandResponseSchema.parse(this.readResponse(response));
+      if (this._disposed || generation !== this._generation) return undefined;
       await this.refreshSnapshot();
       return result.executionId;
     } catch (error) {
-      this._errorState.set(this.errorMessage(error));
+      if (!this._disposed && generation === this._generation)
+        this._errorState.set(this.errorMessage(error));
       return undefined;
     } finally {
       this._loadingState.set(false);
@@ -259,12 +279,14 @@ export class MobileCompanionStore {
   }
 
   /**
-   * Loads the work item creation context.
+   * Loads the current creation metadata for the selected workspace and optional repository.
    *
-   * @param repository - Repository.
+   * @param repository - Repository selected from current host-owned metadata.
+   * @returns True only after validated metadata is assigned to the current authorized generation.
    * @public
    */
   public async loadWorkItemCreationContext(repository?: string): Promise<boolean> {
+    const generation = this._generation;
     this._workItemCreationBusyState.set(true);
     try {
       const response = await this._client.request(
@@ -272,13 +294,15 @@ export class MobileCompanionStore {
         'POST',
         repository ? { repository } : {},
       );
+      if (this._disposed || generation !== this._generation) return false;
       this._workItemCreationContextState.set(
         mobileWorkItemCreationContextSchema.parse(this.readResponse(response)),
       );
       this._errorState.set(undefined);
       return true;
     } catch (error) {
-      this._errorState.set(this.errorMessage(error));
+      if (!this._disposed && generation === this._generation)
+        this._errorState.set(this.errorMessage(error));
       return false;
     } finally {
       this._workItemCreationBusyState.set(false);
@@ -286,20 +310,24 @@ export class MobileCompanionStore {
   }
 
   /**
-   * Creates the work item.
+   * Creates one work item through the existing host domain admission and storage checks.
    *
-   * @param input - Input.
+   * @param input - Product fields selected from the current validated creation metadata.
+   * @returns Created identifier when the response belongs to the current session generation.
    * @public
    */
   public async createWorkItem(input: MobileWorkItemCreateRequest): Promise<string | undefined> {
+    const generation = this._generation;
     this._workItemCreationBusyState.set(true);
     try {
       const response = await this._client.request(mobileHttpRoutes.workItemCreate, 'POST', input);
       const result = mobileWorkItemCreateResponseSchema.parse(this.readResponse(response));
+      if (this._disposed || generation !== this._generation) return undefined;
       await this.refreshSnapshot();
       return result.workItemId;
     } catch (error) {
-      this._errorState.set(this.errorMessage(error));
+      if (!this._disposed && generation === this._generation)
+        this._errorState.set(this.errorMessage(error));
       return undefined;
     } finally {
       this._workItemCreationBusyState.set(false);
@@ -307,14 +335,16 @@ export class MobileCompanionStore {
   }
 
   /**
-   * Drafts the issue.
+   * Runs one identified host drafting operation without retrying it after a lost response.
    *
-   * @param input - Input.
+   * @param input - Current workspace, repository and drafting instructions.
+   * @returns Validated draft while the same authorized generation still owns the operation.
    * @public
    */
   public async draftIssue(
     input: Omit<MobileIssueDraftRequest, 'operationId'>,
   ): Promise<MobileIssueDraft | undefined> {
+    const generation = this._generation;
     const operationId = this._client.createOperationId();
     this._issueDraftOperationId = operationId;
     this._issueDraftBusyState.set(true);
@@ -323,9 +353,14 @@ export class MobileCompanionStore {
         ...input,
         operationId,
       });
+      if (this._disposed || generation !== this._generation) return undefined;
       return mobileIssueDraftSchema.parse(this.readResponse(response));
     } catch (error) {
-      if (!this._cancelledIssueDrafts.has(operationId)) {
+      if (
+        !this._disposed &&
+        generation === this._generation &&
+        !this._cancelledIssueDrafts.has(operationId)
+      ) {
         this._errorState.set(this.errorMessage(error));
       }
       return undefined;
@@ -339,8 +374,9 @@ export class MobileCompanionStore {
   }
 
   /**
-   * Cancels the issue draft.
+   * Requests cancellation of the currently identified host draft.
    *
+   * @returns Whether the host found and cancelled that operation.
    * @public
    */
   public async cancelIssueDraft(): Promise<boolean> {
@@ -361,71 +397,46 @@ export class MobileCompanionStore {
   }
 
   /**
-   * Retries.
+   * Restores the SDK session, current product reads and a fresh bounded event owner after explicit recovery.
    *
+   * @remarks Disposes the preceding event owner even when its automatic retry budget is exhausted.
+   * Automatic event retries remain owned and bounded by the SDK; preceding mutations are never replayed.
+   * @returns Resolves after recovery state is visible; no preceding mutation is replayed.
    * @public
    */
   public async retry(): Promise<void> {
+    if (this._disposed) return;
+    this._disconnectEvents?.();
+    this._disconnectEvents = undefined;
     this._errorState.set(undefined);
-    if (this._challenge && this._pairingValue()) {
-      await this.pollPairing();
-      return;
-    }
-    if (this._challenge) {
-      await this.requestPairing(this._challenge);
-      return;
-    }
-    await this.refreshSnapshot();
+    await this.restoreSession();
   }
 
-  private async requestPairing(challenge: string): Promise<void> {
-    this._pairingStateValue.set('requesting');
+  private clearAuthorization(): void {
+    this._generation++;
+    this._snapshotState.set(undefined);
+    this._workItemCreationContextState.set(undefined);
+    this._pairingStateValue.set('required');
+    this._connectionStateValue.set('disconnected');
+    this._disconnectEvents?.();
+    this._disconnectEvents = undefined;
+  }
+
+  private async restoreSession(): Promise<void> {
+    this._initializing = true;
     this._loadingState.set(true);
+    this._pairingStateValue.set('requesting');
     try {
-      const response = await this._client.request(mobileHttpRoutes.pairingPropose, 'POST', {
-        challenge,
-        deviceName: this._client.deviceName(),
-      });
-      const pairing = mobilePairingProposalSchema.parse(this.readResponse(response));
-      this._pairingValue.set(pairing);
-      this._pairingStateValue.set('waiting');
-      this._errorState.set(undefined);
-      this.schedulePairingPoll();
-    } catch (error) {
-      this._pairingStateValue.set('required');
-      this._errorState.set(this.errorMessage(error));
-    } finally {
-      this._loadingState.set(false);
-    }
-  }
-
-  private schedulePairingPoll(): void {
-    if (this._pairingTimer !== undefined) this._client.cancel(this._pairingTimer);
-    this._pairingTimer = this._client.schedule(() => void this.pollPairing(), 1_000);
-  }
-
-  private async pollPairing(): Promise<void> {
-    const pairing = this._pairingValue();
-    if (!pairing || !this._challenge) return;
-    try {
-      const response = await this._client.request(mobileHttpRoutes.pairingStatus, 'POST', {
-        pairingId: pairing.pairingId,
-        challenge: this._challenge,
-      });
-      const status = mobilePairingStatusSchema.parse(this.readResponse(response));
-      this._pairingStateValue.set(status.state === 'pending' ? 'waiting' : status.state);
-      this._errorState.set(undefined);
-      if (status.state === 'pending') {
-        this.schedulePairingPoll();
-      } else if (status.state === 'approved') {
+      if (await this._client.initialize()) {
+        this._pairingStateValue.set('approved');
         await this.refreshSnapshot();
-        if (this._snapshotState()) this.clearPairingContext();
-      } else {
-        this.clearPairingContext();
-      }
-    } catch (error) {
-      this._errorState.set(this.errorMessage(error));
-      this.schedulePairingPoll();
+      } else this._pairingStateValue.set('required');
+    } catch (cause) {
+      this._errorState.set(this.errorMessage(cause));
+      this._pairingStateValue.set('required');
+    } finally {
+      this._initializing = false;
+      this._loadingState.set(false);
     }
   }
 
@@ -436,6 +447,7 @@ export class MobileCompanionStore {
       open: () => {
         this._connectionStateValue.set('connected');
         this._errorState.set(undefined);
+        if (!this._disposed) void this.refreshSnapshot();
       },
       message: (data) => {
         try {
@@ -448,21 +460,10 @@ export class MobileCompanionStore {
         }
       },
       close: () => {
-        this._disconnectEvents = undefined;
         this._connectionStateValue.set('disconnected');
-        if (this._snapshotState()) this.scheduleReconnect();
+        if (this._snapshotState()) void this.refreshSnapshot();
       },
     });
-  }
-
-  private scheduleReconnect(): void {
-    if (this._reconnectTimer !== undefined) this._client.cancel(this._reconnectTimer);
-    this._reconnectTimer = this._client.schedule(() => this.connectEvents(), 2_000);
-  }
-
-  private clearPairingContext(): void {
-    this._challenge = undefined;
-    this._client.clearPairingChallenge();
   }
 
   private readResponse(response: {
@@ -484,9 +485,11 @@ export class MobileCompanionStore {
   }
 
   private dispose(): void {
-    if (this._pairingTimer !== undefined) this._client.cancel(this._pairingTimer);
-    if (this._reconnectTimer !== undefined) this._client.cancel(this._reconnectTimer);
+    this._disposed = true;
+    this._generation++;
+    this._unsubscribeConnection();
     this._disconnectEvents?.();
+    void this._client.dispose();
   }
 
   // #endregion
