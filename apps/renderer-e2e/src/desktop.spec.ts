@@ -665,7 +665,7 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
       'Allow mobile access',
     );
     await expect(settings.getByTestId('mobile-network-settings-group')).toContainText(
-      'only to phones that you pair and approve',
+      'Make Symphony available to paired browsers on your local network.',
     );
     await expect(settings.getByTestId('mobile-network-guide')).toContainText(
       'Mac remains the task owner',
@@ -1519,7 +1519,36 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
       )
       .toBe(true);
     await expect(page.getByTestId('task-drawer-start')).toBeEnabled();
+    const priorAnalysisExecutionIds = await page.evaluate(async (workItemId) => {
+      const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
+      return (await api.request('snapshot.get', {})).executions
+        .filter(
+          (execution) =>
+            execution.workItemId === workItemId &&
+            (execution.kind === undefined || execution.kind === 'analysis'),
+        )
+        .map((execution) => execution.id);
+    }, selectedWorkItemId);
     await page.getByTestId('task-drawer-start').click();
+    // Prove admission of a distinct run before waiting for its completion.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            async ({ workItemId, priorIds }) => {
+              const api = (window as unknown as { orchestration: IOrchestrationApi }).orchestration;
+              return (await api.request('snapshot.get', {})).executions.some(
+                (execution) =>
+                  execution.workItemId === workItemId &&
+                  (execution.kind === undefined || execution.kind === 'analysis') &&
+                  !priorIds.includes(execution.id),
+              );
+            },
+            { workItemId: selectedWorkItemId, priorIds: priorAnalysisExecutionIds },
+          ),
+        { timeout: 20_000 },
+      )
+      .toBe(true);
     await expect
       .poll(
         () =>

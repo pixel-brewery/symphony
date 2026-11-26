@@ -71,7 +71,6 @@
       "@symphony/domain-platform": ["./libs/domain/features/platform/src/index.ts"],
       "@symphony/application-core": ["./libs/application/core/src/index.ts"],
       "@symphony/application-ci": ["./libs/application/features/ci/src/index.ts"],
-      "@symphony/application-mobile": ["./libs/application/features/mobile/src/index.ts"],
       "@symphony/application-feedback": ["./libs/application/features/feedback/src/index.ts"],
       "@symphony/application-workspace": ["./libs/application/features/workspace/src/index.ts"],
       "@symphony/application-workflow": ["./libs/application/features/workflow/src/index.ts"],

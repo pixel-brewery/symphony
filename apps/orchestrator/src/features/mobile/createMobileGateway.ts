@@ -1,5 +1,6 @@
 // #region Imports
 import { LocalMobileGateway } from '../../mobile-gateway';
+import { projectMobileDisplaySettings } from '../../mobile-gateway/projectMobileDisplaySettings';
 import { resolve } from 'node:path';
 import { hostname } from 'node:os';
 import {
@@ -8,12 +9,15 @@ import {
   primaryDeliveryContext,
 } from '@symphony/configuration-composition';
 import { type MobileWorkItemCreateRequest } from '@symphony/mobile-contracts';
-import { type ICreateMobileGatewayDependencies } from './ICreateMobileGatewayDependencies';
+import { type ICreateMobileGatewayDependencies } from './interfaces/ICreateMobileGatewayDependencies';
 // #endregion
 
 /**
- * Owns mobileGateway commands and their Utility Process lifecycle state.
+ * Composes the existing product graph with one SDK host and its explicit seven-route adapter.
  *
+ * @param dependencies - Existing product owners and initialized mobile lifecycle facade.
+ * @returns The composed mobile gateway used by lifecycle and typed desktop handlers.
+ * @throws An error when product configuration or SDK host construction rejects the composition.
  * @public
  */
 export function createMobileGateway(dependencies: ICreateMobileGatewayDependencies) {
@@ -31,6 +35,12 @@ export function createMobileGateway(dependencies: ICreateMobileGatewayDependenci
   } = dependencies;
   const mobileGateway = new LocalMobileGateway({
     access: mobileAccess,
+    reportRemoteFailure: (failure) =>
+      logger.error({ event: 'mobile.transport.failed', ...failure }),
+    identity: dependencies.mobileIdentity,
+    recordActivity: dependencies.recordMobileActivity,
+    lastSeenAt: dependencies.lastMobileActivity,
+    displaySettings: () => projectMobileDisplaySettings(settingsState.current),
     assetsPath:
       process.env['SYMPHONY_MOBILE_ASSETS_PATH'] ??
       resolve(process.cwd(), 'dist', 'apps', 'mobile', 'browser'),
@@ -89,19 +99,22 @@ export function createMobileGateway(dependencies: ICreateMobileGatewayDependenci
       });
     },
     cancelIssueDraft: (operationId) => workItemService.cancelDraft(operationId),
-    startAnalyzer: async (workItemId, prompt) => {
+    startAnalyzer: async (workItemId, prompt, signal) => {
       await assertWorkItemStorage(workItemId, 'analysis');
+      signal.throwIfAborted();
       return service.requestAnalysis(false, workItemId, prompt);
     },
-    startSolver: async (workItemId, feedback) => {
+    startSolver: async (workItemId, feedback, signal) => {
       await assertWorkItemStorage(workItemId, 'implementation');
+      signal.throwIfAborted();
       return service.requestSolution(false, workItemId, feedback);
     },
     cancelExecution: (executionId) => service.cancelExecution(executionId),
     removeQueueEntry: (entryId) => service.removeExecutionQueueEntry(entryId),
     publishPullRequest: (executionId) => service.publishPullRequest(executionId),
-    moveWorkItem: async (workItemId, boardColumnId) => {
+    moveWorkItem: async (workItemId, boardColumnId, signal) => {
       await assertWorkItemStorage(workItemId);
+      signal.throwIfAborted();
       const moved = await workItemService.move(workItemId, boardColumnId);
       workflowEngine.adoptOperatorStage(
         moved,
@@ -114,6 +127,7 @@ export function createMobileGateway(dependencies: ICreateMobileGatewayDependenci
     },
     reportRequestFailure: (failure) => logger.error({ event: 'mobile.request.failed', ...failure }),
     host: process.env['SYMPHONY_MOBILE_HOST'],
+    allowLoopbackForTests: process.env['SYMPHONY_MOBILE_ALLOW_TEST_LOOPBACK'] === '1',
     portStart: optionalPort('SYMPHONY_MOBILE_PORT_START'),
     portEnd: optionalPort('SYMPHONY_MOBILE_PORT_END'),
   });

@@ -4,7 +4,7 @@ import { Inject, inject, Injectable, signal } from '@angular/core';
 import type { IMobileAccessOperations } from '@symphony/frontend-core/mobile-access';
 import { NotificationService, operatorErrorMessage } from '@symphony/frontend-notification';
 import type { MobileAccessStatus, MobilePairingChallenge } from '@symphony/mobile-contracts';
-import type { IMobileAccessClient } from '../ports/IMobileAccessClient';
+import type { IMobileAccessClient } from '../ports/interfaces/IMobileAccessClient';
 import { MOBILE_ACCESS_CLIENT } from '../ports/MobileAccessClientToken';
 import { translateLabel } from '@symphony/frontend-intl/labels';
 
