@@ -1,1 +1,3 @@
-export { JsonMobileAccessRepository } from './lib/JsonMobileAccessRepository';
+// #region Imports
+export { SymphonyRemoteAccessStore } from './lib/remote/SymphonyRemoteAccessStore';
+// #endregion

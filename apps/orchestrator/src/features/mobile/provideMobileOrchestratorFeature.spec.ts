@@ -1,70 +1,76 @@
 // #region Imports
-import { describe, expect, it } from 'vitest';
-import { MobileAccessService } from '@symphony/application-mobile';
-import { defaultPersistedMobileAccess } from '@symphony/mobile-contracts';
+import { describe, expect, it, vi } from 'vitest';
+import { RemoteProtocolError } from '@pixel-brewery/remote-protocol';
+import type { IProvideMobileOrchestratorFeatureDependencies } from './interfaces/IProvideMobileOrchestratorFeatureDependencies';
 import { provideMobileOrchestratorFeature } from './provideMobileOrchestratorFeature';
 // #endregion
 
-function accessService() {
-  return new MobileAccessService({
-    repository: { load: () => defaultPersistedMobileAccess, save: (settings) => settings },
-    security: { randomToken: () => 'test-token', hash: (value) => value },
-    now: () => new Date('2026-10-30T08:00:00.000Z'),
-  });
+function fixture() {
+  const status = { enabled: true, state: 'unavailable' as const, pendingPairings: [], devices: [] };
+  const gateway: IProvideMobileOrchestratorFeatureDependencies['mobileGateway'] = {
+    status: () => status,
+    enable: async () => undefined,
+    disable: async () => undefined,
+    createChallenge: async () => ({
+      pairingUrl: 'http://192.168.1.2/#pair=fixture',
+      expiresAt: '2026-11-26T12:05:00.000Z',
+    }),
+    approvePairing: async () => undefined,
+    rejectPairing: async () => undefined,
+    revokeDevice: async () => undefined,
+    revokeAllDevices: async () => undefined,
+  };
+  return { gateway, status };
 }
 
 describe('provideMobileOrchestratorFeature', () => {
-  it('retains access activation when the network gateway cannot start', async () => {
+  it('retains enabled intent for a network failure while propagating a persistence failure', async () => {
     // arrange
-    const access = accessService();
-    const feature = provideMobileOrchestratorFeature({
-      mobileAccess: access,
-      mobileGateway: {
-        start: async () => {
-          throw new Error('Network unavailable');
-        },
-        stop: async () => undefined,
-        disconnectDevice: () => undefined,
-        disconnectAllDevices: () => undefined,
-      },
-    });
-    const enable = feature.handlers.find((handler) => handler.method === 'mobile-access.enable');
-    if (!enable) throw new Error('Mobile enable request missing');
+    const value = fixture();
+    value.gateway.enable = async () => {
+      throw new RemoteProtocolError('network', 'Private network unavailable.');
+    };
+    const handlers = provideMobileOrchestratorFeature({ mobileGateway: value.gateway }).handlers;
+    const enable = handlers.find((handler) => handler.method === 'mobile-access.enable')!;
     // act
-    const result = await enable.execute({}, () => undefined);
+    const enabledStatus = await enable.execute({}, () => undefined);
     // assert
-    expect(result).toMatchObject({ enabled: true, state: 'starting' });
-    expect(access.isEnabled()).toBe(true);
+    expect(enabledStatus).toEqual(value.status);
+    value.gateway.enable = async () => {
+      throw new RemoteProtocolError('persistence', 'Private write failed.');
+    };
+    await expect(enable.execute({}, () => undefined)).rejects.toMatchObject({
+      code: 'persistence',
+    });
   });
 
-  it('stops the gateway before disabling access and disconnects before revoking devices', async () => {
+  it('waits for revocation persistence before returning the updated status', async () => {
     // arrange
-    const access = accessService();
-    access.enable();
-    const order: string[] = [];
-    const feature = provideMobileOrchestratorFeature({
-      mobileAccess: access,
-      mobileGateway: {
-        start: async () => undefined,
-        stop: async () => {
-          order.push(access.isEnabled() ? 'stop-enabled' : 'stop-disabled');
-        },
-        disconnectDevice: () => undefined,
-        disconnectAllDevices: () => {
-          order.push('disconnect');
-        },
-      },
+    const value = fixture();
+    let commit!: () => void;
+    let committed = false;
+    const pending = new Promise<void>((complete) => {
+      commit = complete;
     });
-    const disable = feature.handlers.find((handler) => handler.method === 'mobile-access.disable');
-    const revoke = feature.handlers.find(
+    value.gateway.revokeAllDevices = async () => {
+      await pending;
+      committed = true;
+    };
+    const read = vi.fn(() => {
+      expect(committed).toBe(true);
+      return value.status;
+    });
+    value.gateway.status = read;
+    const revoke = provideMobileOrchestratorFeature({ mobileGateway: value.gateway }).handlers.find(
       (handler) => handler.method === 'mobile-access.devices.revoke-all',
-    );
-    if (!disable || !revoke) throw new Error('Mobile lifecycle requests missing');
+    )!;
     // act
-    await revoke.execute({}, () => undefined);
-    await disable.execute({}, () => undefined);
+    const operation = revoke.execute({}, () => undefined);
+    await Promise.resolve();
+    expect(read).not.toHaveBeenCalled();
+    commit();
+    await operation;
     // assert
-    expect(order).toEqual(['disconnect', 'stop-enabled']);
-    expect(access.status()).toMatchObject({ enabled: false, state: 'disabled', devices: [] });
+    expect(read).toHaveBeenCalledTimes(1);
   });
 });

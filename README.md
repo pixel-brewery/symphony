@@ -117,7 +117,7 @@ release configuration for a later support expansion.
   [autonomous execution](docs/architecture/autonomous-execution.md).
 - **Mobile companion.** An optional Angular PWA served on one selected private local
   network interface, behind pairing and authorization. See
-  [mobile companion](docs/architecture/mobile-companion-phase-1.md).
+  [mobile companion](docs/architecture/mobile-access/README.md).
 
 ## Architecture
 

@@ -1,18 +1,21 @@
 // #region Imports
-import { type IProvideMobileOrchestratorFeatureDependencies } from './IProvideMobileOrchestratorFeatureDependencies';
+import { RemoteProtocolError } from '@pixel-brewery/remote-protocol';
+import { type IProvideMobileOrchestratorFeatureDependencies } from './interfaces/IProvideMobileOrchestratorFeatureDependencies';
 import { mobileRequestSchemas, mobileResponseSchemas } from '@symphony/ipc-contracts-mobile';
 import { createOrchestratorRequestHandler } from '../../transport/createOrchestratorRequestHandler';
 // #endregion
 
 /**
- * Owns mobile commands and their Utility Process lifecycle state.
+ * Registers awaited desktop administration of the single SDK-backed mobile host.
  *
+ * @param dependencies - Existing product owners and initialized mobile lifecycle facade.
+ * @returns The mobile feature identifier and immutable validated handler collection.
  * @public
  */
 export function provideMobileOrchestratorFeature(
   dependencies: IProvideMobileOrchestratorFeatureDependencies,
 ) {
-  const { mobileAccess, mobileGateway } = dependencies;
+  const { mobileGateway } = dependencies;
 
   const handlers = Object.freeze([
     createOrchestratorRequestHandler(
@@ -20,7 +23,7 @@ export function provideMobileOrchestratorFeature(
       mobileRequestSchemas['mobile-access.status.get'],
       mobileResponseSchemas['mobile-access.status.get'],
       async () => {
-        return mobileAccess.status();
+        return mobileGateway.status();
       },
     ),
     createOrchestratorRequestHandler(
@@ -28,9 +31,16 @@ export function provideMobileOrchestratorFeature(
       mobileRequestSchemas['mobile-access.enable'],
       mobileResponseSchemas['mobile-access.enable'],
       async () => {
-        mobileAccess.enable();
-        await mobileGateway.start().catch(() => undefined);
-        return mobileAccess.status();
+        try {
+          await mobileGateway.enable();
+        } catch (cause) {
+          if (
+            !(cause instanceof RemoteProtocolError) ||
+            !['network', 'not-ready'].includes(cause.code)
+          )
+            throw cause;
+        }
+        return mobileGateway.status();
       },
     ),
     createOrchestratorRequestHandler(
@@ -38,9 +48,8 @@ export function provideMobileOrchestratorFeature(
       mobileRequestSchemas['mobile-access.disable'],
       mobileResponseSchemas['mobile-access.disable'],
       async () => {
-        await mobileGateway.stop();
-        mobileAccess.disable();
-        return mobileAccess.status();
+        await mobileGateway.disable();
+        return mobileGateway.status();
       },
     ),
     createOrchestratorRequestHandler(
@@ -48,7 +57,7 @@ export function provideMobileOrchestratorFeature(
       mobileRequestSchemas['mobile-access.pairing.create'],
       mobileResponseSchemas['mobile-access.pairing.create'],
       async () => {
-        return mobileAccess.createChallenge();
+        return mobileGateway.createChallenge();
       },
     ),
     createOrchestratorRequestHandler(
@@ -56,8 +65,8 @@ export function provideMobileOrchestratorFeature(
       mobileRequestSchemas['mobile-access.pairing.approve'],
       mobileResponseSchemas['mobile-access.pairing.approve'],
       async (input) => {
-        mobileAccess.approvePairing(input.pairingId);
-        return mobileAccess.status();
+        await mobileGateway.approvePairing(input.pairingId);
+        return mobileGateway.status();
       },
     ),
     createOrchestratorRequestHandler(
@@ -65,8 +74,8 @@ export function provideMobileOrchestratorFeature(
       mobileRequestSchemas['mobile-access.pairing.reject'],
       mobileResponseSchemas['mobile-access.pairing.reject'],
       async (input) => {
-        mobileAccess.rejectPairing(input.pairingId);
-        return mobileAccess.status();
+        await mobileGateway.rejectPairing(input.pairingId);
+        return mobileGateway.status();
       },
     ),
     createOrchestratorRequestHandler(
@@ -74,9 +83,8 @@ export function provideMobileOrchestratorFeature(
       mobileRequestSchemas['mobile-access.device.revoke'],
       mobileResponseSchemas['mobile-access.device.revoke'],
       async (input) => {
-        mobileGateway.disconnectDevice(input.deviceId);
-        mobileAccess.revokeDevice(input.deviceId);
-        return mobileAccess.status();
+        await mobileGateway.revokeDevice(input.deviceId);
+        return mobileGateway.status();
       },
     ),
     createOrchestratorRequestHandler(
@@ -84,9 +92,8 @@ export function provideMobileOrchestratorFeature(
       mobileRequestSchemas['mobile-access.devices.revoke-all'],
       mobileResponseSchemas['mobile-access.devices.revoke-all'],
       async () => {
-        mobileGateway.disconnectAllDevices();
-        mobileAccess.revokeAllDevices();
-        return mobileAccess.status();
+        await mobileGateway.revokeAllDevices();
+        return mobileGateway.status();
       },
     ),
   ]);
