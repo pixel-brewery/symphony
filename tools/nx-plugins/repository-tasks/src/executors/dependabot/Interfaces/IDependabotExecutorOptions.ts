@@ -4,6 +4,10 @@
  * @internal
  */
 export interface IDependabotExecutorOptions {
-  /** The operation whose external mutations must never be cached. */
+  /**
+   * Selects an external workflow operation that must never be cached.
+   *
+   * @internal
+   */
   readonly mode: 'merge' | 'reconcile' | 'continue';
 }
