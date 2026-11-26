@@ -1,3 +1,4 @@
-export * from './ILocalMobileGatewayDependencies';
-export * from './LocalMobileGateway';
-export * from './selectPrivateHost';
+// #region Imports
+export type { ILocalMobileGatewayDependencies } from './interfaces/ILocalMobileGatewayDependencies';
+export { LocalMobileGateway } from './LocalMobileGateway';
+// #endregion

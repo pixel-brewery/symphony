@@ -8,7 +8,9 @@ import { prepareMainWindow } from './prepareMainWindow';
 
 // #endregion
 
-test('pairs the packaged mobile surface through desktop approval', async ({ browser }) => {
+test('pairs the packaged mobile surface by QR possession without an additional approval', async ({
+  browser,
+}) => {
   // arrange
   test.setTimeout(120_000);
   const workspace = resolve('.');
@@ -27,6 +29,7 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
       SYMPHONY_LEGACY_SKILLS_PATH: resolve(configurationRoot, 'legacy-skills'),
       SYMPHONY_MOBILE_ASSETS_PATH: resolve('dist/apps/mobile/browser'),
       SYMPHONY_MOBILE_HOST: '127.0.0.1',
+      SYMPHONY_MOBILE_ALLOW_TEST_LOOPBACK: '1',
       SYMPHONY_MOBILE_PORT_START: '49351',
       SYMPHONY_MOBILE_PORT_END: '49351',
       SYMPHONY_TRACKER_MODE: 'simulated',
@@ -53,7 +56,7 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
     const pairingAddress = await desktop
       .getByTestId('mobile-pairing-address')
       .evaluate((element) => (element as HTMLElement & { value: string }).value);
-    expect(pairingAddress).toMatch(/^http:\/\/127\.0\.0\.1:49351\/pair#pair=/u);
+    expect(pairingAddress).toMatch(/^http:\/\/127\.0\.0\.1:49351\/#pair=/u);
     const desktopPairingGeometry = await desktop
       .getByTestId('mobile-pairing-code')
       .evaluate((container) => {
@@ -87,7 +90,7 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
     });
     mobile.on('response', (response) => {
       const url = new URL(response.url());
-      if (url.pathname.startsWith('/api/mobile/')) {
+      if (url.pathname.startsWith('/api/mobile/') || url.pathname.startsWith('/__remote/v1/')) {
         mobileApiResponses.push({ pathname: url.pathname, status: response.status() });
       }
     });
@@ -108,7 +111,9 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
       });
     });
     await mobile.goto(pairingAddress, { waitUntil: 'domcontentloaded' });
-    await expect(mobile.getByTestId('mobile-verification-code')).toBeVisible();
+    await expect(mobile.getByTestId('mobile-connection-error')).toBeVisible();
+    await expect(mobile.getByTestId('mobile-verification-code')).toHaveCount(0);
+    await expect(mobile.getByTestId('mobile-connection-loading')).toHaveCount(0);
 
     // assert
     const pairingGeometry = await mobile.getByTestId('mobile-symphony-mark').evaluate((mark) => {
@@ -181,13 +186,6 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
       path: resolve(outputDirectory, 'mobile-pairing-ready.png'),
       fullPage: true,
     });
-    const verificationCode = await mobile
-      .getByTestId('mobile-verification-code')
-      .evaluate((element) => (element as HTMLElement & { text: string }).text.trim());
-    expect(verificationCode).toMatch(/^\d{6}$/u);
-    const pairingRequest = desktop.locator('[test-id^="mobile-pairing-request-"]');
-    await expect(pairingRequest).toContainText(`Verification code ${verificationCode}`);
-    await pairingRequest.getByRole('button', { name: 'Approve' }).click();
     const connectionError = mobile.getByTestId('mobile-connection-error');
     await expect(connectionError).toBeVisible();
     await expect(mobile.getByTestId('mobile-symphony-mark')).toBeVisible();
@@ -207,7 +205,7 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
       pathname: '/api/mobile/v1/snapshot',
       status: 500,
     });
-    expect(mobileConsoleErrors).toEqual([
+    expect(mobileConsoleErrors.filter((message) => !message.includes('401'))).toEqual([
       'Failed to load resource: the server responded with a status of 500 (Internal Server Error)',
     ]);
     await mobile.screenshot({
@@ -221,8 +219,7 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
     await expect.poll(() => mobile.url()).not.toContain('#pair=');
     expect(mobileApiResponses).toEqual(
       expect.arrayContaining([
-        { pathname: '/api/mobile/v1/pairing/propose', status: 202 },
-        { pathname: '/api/mobile/v1/pairing/status', status: 200 },
+        { pathname: '/__remote/v1/pairings', status: 200 },
         { pathname: '/api/mobile/v1/snapshot', status: 200 },
       ]),
     );
@@ -267,6 +264,19 @@ test('pairs the packaged mobile surface through desktop approval', async ({ brow
       path: resolve(outputDirectory, 'mobile-employees-opendots.png'),
       fullPage: true,
     });
+    const pairedDevice = desktop.locator('[test-id^="mobile-device-"]');
+    await expect(pairedDevice).toHaveCount(1);
+    await desktop.locator('[test-id^="revoke-mobile-device-"]').click();
+    await desktop
+      .locator('[test-id^="settings-alert-revoke-mobile-device-"][test-id$="-confirm"]')
+      .click();
+    await expect(pairedDevice).toHaveCount(0);
+    await expect(mobile.getByTestId('mobile-home-view')).toHaveCount(0);
+    await expect(mobile.getByTestId('mobile-symphony-mark')).toBeVisible();
+    const revokedRead = await mobile.request.get(
+      new URL('/api/mobile/v1/snapshot', pairingAddress).toString(),
+    );
+    expect(revokedRead.status()).toBe(401);
     await mobile.close();
   } finally {
     await app.close();

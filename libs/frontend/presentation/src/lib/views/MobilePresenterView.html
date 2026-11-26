@@ -75,12 +75,13 @@
             [header]="'QR code expired'"
             [content]="'Generate and scan a new QR code in Symphony Desktop.'"
           />
-          } @case ('approved') {
+          } @case ('approved') { @if (presenter.loading()) {
           <mosaik-busy-state
             class="h-auto min-h-24 shrink-0"
+            test-id="mobile-connection-loading"
             [content]="'Finishing the connection…'"
           />
-          } @default {
+          } } @default {
           <mosaik-message
             class="block h-auto w-full shrink-0"
             [appearance]="'soft'"

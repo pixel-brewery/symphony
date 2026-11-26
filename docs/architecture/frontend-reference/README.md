@@ -4,6 +4,14 @@
 
 The private reference checkout is supplied locally through `SYMPHONY_REFERENCE_ROOT`. Its identity and resolved path are intentionally withheld. Scope-specific source revisions, paths, Adopt/Adapt/Differ decisions and executed evidence below retain their original meaning; historical checks do not imply current verification of every route.
 
+## 2026-11-26 Remote SDK session migration
+
+**Adopt — feature-owned settings and device administration.** The current read-only private reference was inspected at revision `ae9c6ef78913d9277fd373bd42d125587b2656b7`. The exact sources were `libs/frontend/setting/src/routing/settingsRoutes.ts`, `libs/frontend/setting/src/provider/provideSettingsViewSlotFrom.ts`, `libs/frontend/setting/src/views/SettingsView.html`, `libs/frontend/setting/src/view-presenters/SettingsViewPresenter.ts`, `libs/frontend/presentation/src/lib/views/PresenterView.html`, `libs/frontend/presentation/src/lib/view-presenters/PresenterViewPresenter.ts`, and the connector-pairing owner `libs/frontend/features/edge/src/lib/views/cards/EdgeSettingsCardView.html`, its adjacent ViewPresenter path `libs/frontend/features/edge/src/lib/view-presenters/cards/EdgeSettingsCardViewPresenter.ts`, and `libs/frontend/features/edge/src/lib/provider/provideEdgeFeature.ts`. These establish the searchable feature slot, signals and commands, generated code with expiry and copy, device list and revocation, cancellation of older reads, and reconciliation after liveness invalidation or reconnect. Symphony keeps its existing component composition, settings host and presenter ownership.
+
+**Adapt — local QR possession and SDK lifecycle.** The reference connector screen issues a server-owned 15-minute pairing code and does not add a second verification-code approval. Symphony supplies a five-minute local invitation URL, its private desktop execution boundary and the SDK's `qr-possession` policy. The separate reference `libs/frontend/features/identity/src/lib/user/views/cards/TwoFactorCardView.html` verifies MFA enrollment; that workflow does not define another approval step for a remote QR invitation. Session-ready state establishes pairing independently of a subsequent product snapshot failure. SDK event recovery reconciles current reads and never replays commands. Existing Symphony revocation alerts remain the explicit desktop interaction. The complete migration and test obligations are in [Mobile access](../mobile-access/README.md).
+
+**Catalog and evidence limit:** Symphony stays on the installed Mosaik `0.1.203`; its local catalog was consulted for QR Code, Busy State and Message, and the pairing template/recipe search returned no dedicated match. The reference currently declares Mosaik `0.1.214`; inspecting it does not authorize a dependency upgrade or copying private implementation. The private source comparison is completed. Real Electron interaction, error-state presentation and device journeys remain pending and must be recorded separately after execution.
+
 ## 2026-11-14 FlowBoard content virtualization
 
 **Adapt — keep the Mosaik item shell and defer Angular card content.** The Mosaik 0.1.201 catalog
@@ -756,7 +764,7 @@ Electron and companion run passed with 47 journeys and two existing skips;
 `yarn forge:package` then passed the macOS arm64 packaging/ASAR smoke check.
 The existing skips cover hidden-window macOS activation and external interactive
 OpenCode authentication. These fixture-backed results do not certify live
-external account login. See [the completed verification matrix](../dependency-model.md#source-completion-and-verification-status).
+external account login. See [the completed verification matrix](../product-composition/README.md#source-completion-and-verification-status).
 
 **Actual Electron reference review.** The final-source review opened 26 fresh
 captures from the complete run and compared the affected routes with the exact

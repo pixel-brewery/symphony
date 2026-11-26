@@ -1,7 +1,7 @@
 // #region Imports
 
 import { InjectionToken } from '@angular/core';
-import type { IMobileAccessClient } from './IMobileAccessClient';
+import type { IMobileAccessClient } from './interfaces/IMobileAccessClient';
 
 // #endregion
 

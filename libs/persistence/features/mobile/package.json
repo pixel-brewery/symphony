@@ -14,8 +14,10 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@symphony/application-mobile": "workspace:*",
-    "@symphony/mobile-contracts": "workspace:*"
+    "@symphony/mobile-contracts": "workspace:*",
+    "@pixel-brewery/remote-protocol": "0.1.0",
+    "@pixel-brewery/remote-core": "0.1.0",
+    "@pixel-brewery/remote-node": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6"

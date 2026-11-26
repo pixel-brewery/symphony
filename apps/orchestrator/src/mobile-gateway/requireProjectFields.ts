@@ -5,6 +5,15 @@ import { type MobileWorkItemCreateRequest } from '@symphony/mobile-contracts';
 
 // #endregion
 
+/**
+ * Requires exactly the current project fields and their supported option values.
+ *
+ * @param metadata - Fresh product metadata from the owning workspace and source.
+ * @param values - Submitted typed project-field values.
+ * @returns Returns when every required field, type and selected option belongs to current metadata.
+ * @throws Error when fields, types or selectable options are stale or foreign.
+ * @public
+ */
 export function requireProjectFields(
   metadata: IWorkItemEditorMetadata,
   values: MobileWorkItemCreateRequest['projectFields'],

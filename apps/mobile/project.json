@@ -93,7 +93,9 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
-      "readyWhen": { "signal": true },
+      "readyWhen": {
+        "signal": true
+      },
       "defaultConfiguration": "development",
       "configurations": {
         "production": {
@@ -122,6 +124,7 @@
         "watch": false,
         "setupFiles": ["apps/mobile/src/test-setup.ts"],
         "include": [
+          "../../../libs/frontend/features/mobile/src/lib/browser/clients/BrowserMobileCompanionClient.spec.ts",
           "../../../libs/frontend/features/mobile/src/lib/browser/state/MobileCompanionStore.spec.ts",
           "../../../libs/frontend/features/mobile/src/lib/browser/theme/MobileThemeStore.spec.ts",
           "../../../libs/frontend/features/work/src/lib/board/mobile/MobileHomeViewPresenter.spec.ts",
@@ -133,7 +136,9 @@
     "serve-static": {
       "continuous": true,
       "executor": "@nx/web:file-server",
-      "readyWhen": { "signal": true },
+      "readyWhen": {
+        "signal": true
+      },
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "mobile:build",

@@ -30,7 +30,10 @@
     "@symphony/frontend-ui": "workspace:*",
     "@symphony/ipc-contracts-composition": "workspace:*",
     "@symphony/ipc-contracts-mobile": "workspace:*",
-    "@symphony/mobile-contracts": "workspace:*"
+    "@symphony/mobile-contracts": "workspace:*",
+    "@pixel-brewery/remote-protocol": "0.1.0",
+    "@pixel-brewery/remote-client": "0.1.0",
+    "@pixel-brewery/remote-browser": "0.1.0"
   },
   "devDependencies": {
     "@angular/platform-browser": "22.2.6",

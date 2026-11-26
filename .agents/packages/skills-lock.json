@@ -202,7 +202,7 @@
       "source": ".agents/skills/symphony-architect",
       "archive": ".agents/packages/symphony-architect.skill",
       "claude": ".claude/skills/symphony-architect/SKILL.md",
-      "sha256": "eaf928f8aa58a957d77e60d7c013a396ac5d88bd7e0a42dc1b32bfdb2c02634a"
+      "sha256": "d76e0c31710828548b81de0273866b184b77d23d691d012b85076f2ccd6f7624"
     },
     {
       "name": "symphony-designer",
