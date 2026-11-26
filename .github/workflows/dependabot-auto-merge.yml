@@ -14,10 +14,11 @@ jobs:
   merge:
     if: >-
       ${{ github.repository_id == '1440122208' &&
+          github.event.repository.private == false && github.ref == 'refs/heads/main' &&
           github.event.workflow_run.name == 'Repository Quality' &&
-          (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'workflow_dispatch') &&
+          github.event.workflow_run.event == 'pull_request' &&
           github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.head_repository.id == github.event.repository.id }}
+          github.event.workflow_run.head_repository.full_name == github.repository }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -31,18 +32,18 @@ jobs:
       contents: write
       pull-requests: read
     steps:
-      # Run the default-branch helper without PR code, dependency installation or artifacts.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # Privileged logic comes only from main; no PR code, cache or artifacts are used.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.15.0
           package-manager-cache: false
 
-      - name: Merge only the unchanged Dependabot head after every required job succeeds
+      - name: Merge the unchanged bot head after every platform check succeeds
         id: merge
         env:
           GH_TOKEN: ${{ github.token }}
@@ -53,15 +54,16 @@ jobs:
         run: node tools/nx-plugins/repository-tasks/src/executors/dependabot/runDependabotAutomation.mjs
 
   request-release:
-    needs: merge
-    if: needs.merge.outputs.merged == 'true'
+    needs: [merge, reconcile]
+    if: ${{ always() && (needs.merge.outputs.merge_sha != '' || needs.reconcile.outputs.merge_sha != '') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     concurrency:
-      group: dependency-release-${{ needs.merge.outputs.merge_sha }}
+      group: dependency-release-${{ needs.merge.outputs.merge_sha || needs.reconcile.outputs.merge_sha }}
       cancel-in-progress: false
     permissions:
       contents: read
+      pull-requests: read
       actions: write
     steps:
       # Retain the successful merge output when retrying a failed release request.
@@ -75,24 +77,28 @@ jobs:
           node-version: 24.15.0
           package-manager-cache: false
 
-      - name: Continue full CI and release for the retained merge source
+      - name: Continue verification, Pages and release for the confirmed merge source
         env:
           GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           MERGE_COMMIT_SHA: ${{ needs.merge.outputs.merge_sha }}
+          RECONCILE_MERGE_SHA: ${{ needs.reconcile.outputs.merge_sha }}
           DEPENDABOT_MODE: continue
         run: node tools/nx-plugins/repository-tasks/src/executors/dependabot/runDependabotAutomation.mjs
 
   reconcile:
-    if: github.repository_id == '1440122208'
+    if: github.repository_id == '1440122208' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      merge_sha: ${{ steps.reconcile.outputs.merge_sha }}
     concurrency:
       group: dependabot-reconcile-${{ github.repository_id }}
       cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: write
-      actions: write
+      actions: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -102,9 +108,41 @@ jobs:
         with:
           node-version: 24.15.0
           package-manager-cache: false
-      - name: Refresh stale dependency branches and request their read-only verification
+      - name: Refresh dependency branches and resume verified native CI
+        id: reconcile
         env:
           GH_TOKEN: ${{ github.token }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           DEPENDABOT_MODE: reconcile
+        run: node tools/nx-plugins/repository-tasks/src/executors/dependabot/runDependabotAutomation.mjs
+
+  authorize:
+    needs: reconcile
+    if: >-
+      ${{ always() && github.repository_id == '1440122208' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: dependabot-authorize-${{ github.repository_id }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - name: Authorize only the current source-proven read-only native CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          DEPENDABOT_MODE: authorize
         run: node tools/nx-plugins/repository-tasks/src/executors/dependabot/runDependabotAutomation.mjs

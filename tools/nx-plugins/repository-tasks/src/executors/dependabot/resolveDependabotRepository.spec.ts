@@ -15,6 +15,7 @@ const metadata = {
   name: 'symphony',
   full_name: context.repository,
   default_branch: context.defaultBranch,
+  private: false,
   fork: false,
 };
 
@@ -78,6 +79,7 @@ describe('Dependabot repository identity', () => {
     { id: 1326609527 },
     { id: 1440122209 },
     { fork: true },
+    { private: true },
     { name: 'symphony-private-backup' },
     { full_name: 'another-owner/symphony' },
     { default_branch: 'trunk' },
