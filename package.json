@@ -193,7 +193,6 @@
     "@symphony/application-delivery": "workspace:*",
     "@symphony/application-execution": "workspace:*",
     "@symphony/application-feedback": "workspace:*",
-    "@symphony/application-mobile": "workspace:*",
     "@symphony/application-skills": "workspace:*",
     "@symphony/application-work": "workspace:*",
     "@symphony/application-workflow": "workspace:*",

@@ -3,6 +3,7 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, _electron as electron } from '@playwright/test';
+import type { ImageElement } from '@pixel-brewery/mosaik-elements-foundation';
 import { openSettings } from './openSettings';
 import { prepareMainWindow } from './prepareMainWindow';
 
@@ -116,15 +117,20 @@ test('pairs the packaged mobile surface by QR possession without an additional a
     await expect(mobile.getByTestId('mobile-connection-loading')).toHaveCount(0);
 
     // assert
+    await expect
+      .poll(() =>
+        mobile.getByTestId('mobile-symphony-mark').evaluate((mark) => (mark as ImageElement).state),
+      )
+      .toBe('done');
     const pairingGeometry = await mobile.getByTestId('mobile-symphony-mark').evaluate((mark) => {
-      const image = mark as HTMLImageElement;
+      const image = mark as ImageElement;
       const markBox = mark.getBoundingClientRect();
       const section = mark.closest('section');
       const sectionStyle = section ? getComputedStyle(section) : undefined;
       return {
         markWidth: markBox.width,
         markHeight: markBox.height,
-        markLoaded: image.complete && image.naturalWidth > 0,
+        markLoaded: image.state === 'done',
         paddingLeft: sectionStyle?.paddingLeft,
         paddingRight: sectionStyle?.paddingRight,
         stylesheetMedia: [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')]
@@ -266,6 +272,29 @@ test('pairs the packaged mobile surface by QR possession without an additional a
     });
     const pairedDevice = desktop.locator('[test-id^="mobile-device-"]');
     await expect(pairedDevice).toHaveCount(1);
+    const pairingRequestsBeforeReload = mobileApiResponses.filter(
+      ({ pathname }) => pathname === '/__remote/v1/pairings',
+    ).length;
+    const sessionReadsBeforeReload = mobileApiResponses.filter(
+      ({ pathname, status }) => pathname === '/__remote/v1/session' && status === 200,
+    ).length;
+    expect(pairingRequestsBeforeReload).toBe(1);
+    await mobile.reload({ waitUntil: 'domcontentloaded' });
+    await expect(mobile.getByTestId('mobile-home-view')).toBeVisible();
+    await expect(pairedDevice).toHaveCount(1);
+    expect(
+      mobileApiResponses.filter(
+        ({ pathname, status }) => pathname === '/__remote/v1/session' && status === 200,
+      ).length,
+    ).toBeGreaterThan(sessionReadsBeforeReload);
+    expect(
+      mobileApiResponses.filter(({ pathname }) => pathname === '/__remote/v1/pairings'),
+    ).toHaveLength(pairingRequestsBeforeReload);
+    expect(mobile.url()).not.toContain('#pair=');
+    await mobile.screenshot({
+      path: resolve(outputDirectory, 'mobile-session-restored.png'),
+      fullPage: true,
+    });
     await desktop.locator('[test-id^="revoke-mobile-device-"]').click();
     await desktop
       .locator('[test-id^="settings-alert-revoke-mobile-device-"][test-id$="-confirm"]')

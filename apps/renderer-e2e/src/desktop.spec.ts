@@ -665,7 +665,7 @@ test('runs the Example Workspace-aligned shell and secure Analyzer slice through
       'Allow mobile access',
     );
     await expect(settings.getByTestId('mobile-network-settings-group')).toContainText(
-      'only to phones that you pair and approve',
+      'Make Symphony available to paired browsers on your local network.',
     );
     await expect(settings.getByTestId('mobile-network-guide')).toContainText(
       'Mac remains the task owner',
