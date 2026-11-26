@@ -1,3 +1,19 @@
+## 0.1.53 (2026-11-26)
+
+### 🚀 Features
+
+- **remote:** integrate product-neutral SDK transport ([647c0ac](https://github.com/pixel-brewery/symphony/commit/647c0ac))
+- **remote:** use the published SDK for mobile access ([#87](https://github.com/pixel-brewery/symphony/pull/87))
+
+### 🩹 Fixes
+
+- **remote:** finalize published SDK consumption and pairing tests ([bea4e7a](https://github.com/pixel-brewery/symphony/commit/bea4e7a))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+- RueDeRennes @RueDeRennes
+
 ## 0.1.52 (2026-11-26)
 
 ### 🩹 Fixes
