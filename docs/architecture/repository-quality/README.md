@@ -106,7 +106,7 @@ Pixel-Brewery-Paketfamilien werden gruppiert; eine Major-Version setzt die
 Prüfanforderungen nicht herab. Der GitHub-Paketdienst verwendet die vorhandenen
 Paketfreigaben für das Repository; Zugangsdaten liegen nicht in der Konfiguration.
 
-Der privilegierte Controller läuft nach abgeschlossenen Qualitätsläufen,
+Der privilegierte Controller läuft nach abgeschlossenen Qualitäts- und Releaseläufen,
 stündlich und auf ausdrückliche Workflowanforderung. Er lädt ausschließlich den
 vertrauenswürdigen Standardbranch, installiert keine Pakete und führt keinen
 PR-Code aus. Unveränderliche Repository-ID und bestätigte API-Metadaten begrenzen
