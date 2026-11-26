@@ -29,6 +29,7 @@ function controlled() {
     runs: { total_count: 0, workflow_runs: [] },
     run: {
       id: 404,
+      run_attempt: 1,
       workflow_id: workflowId,
       path: '.github/workflows/ci.yml',
       head_sha: sourceSha,
@@ -204,15 +205,7 @@ describe('Merged source verification request', () => {
     expect(writes(dependencies.request)).toEqual([]);
   });
 
-  it.each([
-    { id: 0 },
-    { head_sha: changedSha },
-    { workflow_id: 304 },
-    { event: 'pull_request' },
-    { head_branch: 'dev' },
-    { repository: {} },
-    { head_repository: {} },
-  ])('rejects foreign or malformed existing release identities: %j', async (override) => {
+  it.each([{ id: 0 }])('rejects malformed existing run identities: %j', async (override) => {
     // arrange
     const dependencies = controlled();
     Object.assign(dependencies.records.run, override);
@@ -225,6 +218,36 @@ describe('Merged source verification request', () => {
     await expect(result).rejects.toThrow('Verification request failed');
     expect(writes(dependencies.request)).toEqual([]);
   });
+
+  it.each([
+    { head_sha: changedSha },
+    { workflow_id: 304 },
+    { event: 'pull_request' },
+    { head_branch: 'dev' },
+    { repository: {} },
+    { head_repository: {} },
+  ])(
+    'ignores noncanonical runs before requesting exact main verification: %j',
+    async (override) => {
+      // arrange
+      const dependencies = controlled();
+      Object.assign(dependencies.records.run, override);
+      dependencies.records.runs = { total_count: 1, workflow_runs: [dependencies.records.run] };
+
+      // act
+      const result = await requestMergedVerification(context, dependencies);
+
+      // assert
+      expect(result).toEqual({ status: 'requested', sourceSha });
+      expect(writes(dependencies.request)).toEqual([
+        [
+          'POST',
+          `${workflowEndpoint}/dispatches`,
+          { ref: 'main', inputs: { expected_head_sha: sourceSha } },
+        ],
+      ]);
+    },
+  );
 
   it('recovers an ambiguous dispatch response by finding the original accepted run', async () => {
     // arrange
