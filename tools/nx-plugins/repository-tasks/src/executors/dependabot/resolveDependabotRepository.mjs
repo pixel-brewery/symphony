@@ -29,6 +29,7 @@ export async function resolveDependabotRepository(context, request) {
   if (
     repository?.id !== repositoryId ||
     repository?.name !== 'symphony' ||
+    repository?.private !== false ||
     repository?.fork !== false ||
     repository?.full_name !== context.repository ||
     repository?.default_branch !== context.defaultBranch

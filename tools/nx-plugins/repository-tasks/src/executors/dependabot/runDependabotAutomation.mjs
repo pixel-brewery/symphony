@@ -6,7 +6,10 @@ import { pathToFileURL } from 'node:url';
 import { mergeDependabotPullRequest } from './mergeDependabotPullRequest.mjs';
 import { reconcileDependabotBranches } from './reconcileDependabotBranches.mjs';
 import { requestMergedVerification } from './requestMergedVerification.mjs';
+import { requestMergedPages } from './requestMergedPages.mjs';
 import { requestMergedRelease } from './requestMergedRelease.mjs';
+import { readCurrentMergedDependabot } from './github/readCurrentMergedDependabot.mjs';
+import { authorizePullRequestWorkflows } from './github/authorizePullRequestWorkflows.mjs';
 
 // #endregion
 
@@ -29,8 +32,20 @@ export async function runDependabotAutomation(mode) {
     runAttempt: process.env.WORKFLOW_RUN_ATTEMPT,
     sourceSha: process.env.MERGE_COMMIT_SHA,
   };
+  if (
+    ['workflow_run', 'workflow_dispatch', 'schedule'].includes(context.eventName) &&
+    process.env.GITHUB_REF !== 'refs/heads/main'
+  )
+    throw new Error('Privileged automation runs only from the default branch.');
   let result;
   switch (mode) {
+    case 'authorize': {
+      const results = await authorizePullRequestWorkflows(context);
+      if (results.some((value) => value.status === 'blocked'))
+        throw new Error('Native CI authorization stopped; inspect the fixed per-PR outcomes.');
+      result = { status: 'authorized', results };
+      break;
+    }
     case 'merge':
       result = await mergeDependabotPullRequest(context);
       if (process.env.GITHUB_OUTPUT)
@@ -40,15 +55,42 @@ export async function runDependabotAutomation(mode) {
           'utf8',
         );
       break;
-    case 'reconcile':
-      result = { status: 'reconciled', results: await reconcileDependabotBranches(context) };
+    case 'reconcile': {
+      const results = await reconcileDependabotBranches(context);
+      if (!results.some((value) => value.status === 'merged')) {
+        const retained = await readCurrentMergedDependabot(context);
+        if (retained) results.push({ status: 'continuation-pending', ...retained });
+      }
+      const confirmed = results
+        .filter((value) => ['merged', 'continuation-pending'].includes(value.status))
+        .at(-1);
+      if (confirmed?.sha && process.env.GITHUB_OUTPUT)
+        appendFileSync(process.env.GITHUB_OUTPUT, `merge_sha=${confirmed.sha}\n`, 'utf8');
+      result = { status: 'reconciled', results };
       break;
-    case 'continue':
+    }
+    case 'continue': {
+      const sources = [context.sourceSha, process.env.RECONCILE_MERGE_SHA].filter((value) =>
+        /^[a-f0-9]{40}$/u.test(value ?? ''),
+      );
+      if (sources.length === 0) throw new Error('Continuation requires a confirmed merge source.');
+      const current = await readCurrentMergedDependabot(context);
+      if (!current) {
+        result = { status: 'skipped', reason: 'unconfirmed-merged-source' };
+        break;
+      }
+      if (!sources.includes(current.sha)) {
+        result = { status: 'superseded', sourceSha: sources[0] };
+        break;
+      }
+      context.sourceSha = current.sha;
       result = {
         verification: await requestMergedVerification(context),
+        pages: await requestMergedPages(context),
         release: await requestMergedRelease(context),
       };
       break;
+    }
     default:
       throw new Error('Unsupported dependency workflow operation.');
   }
