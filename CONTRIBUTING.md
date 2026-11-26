@@ -45,7 +45,7 @@ Read [AGENTS.md](AGENTS.md) and the local `symphony-architect` skill first.
   The renderer remains sandboxed; orchestration, Git and persistence belong behind
   validated desktop contracts.
 - Follow the actual Nx project boundaries and explicit workspace dependencies.
-  See [dependency model](docs/architecture/dependency-model.md).
+  See [dependency model](docs/architecture/product-composition/README.md).
 - Keep one named public declaration per source file, imports in the required region,
   and source-adjacent specs. Backend tests belong beside their production owner.
 - Use Mosaik components and the documented reference patterns for renderer changes.
