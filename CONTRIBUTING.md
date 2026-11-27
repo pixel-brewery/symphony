@@ -117,21 +117,12 @@ installed release App `5547670` bypasses the PR/check rule. Force-push and delet
 prevention retain a separate main-only rule without bypasses; no general
 administrator, human or all-Actions exception exists.
 
-Dependabot checks npm packages and GitHub Actions weekly. TypeScript and the coordinated
-`@pixel-brewery` dependency family remain deliberate maintainer updates. Existing
-major-version exclusions for Angular, Nx and Electron remain in place. Other eligible
-updates may merge only after all five required job results succeed for the current
-revision and current main. The trusted merge helper rejects missing, skipped or
-failed results and former Ubuntu-only three-job runs. It retains the canonical
-workflow, repository, event, latest-attempt and unchanged-head gates. An updated bot
-branch must pass the complete contract again.
-
-The dependency workflows execute their privileged helpers from the trusted default
-branch. They do not install dependencies from a pull request with write credentials.
-After main changes, the refresh workflow requests a deduplicated Dependabot rebase.
-Bot merges explicitly request the release and refresh workflows because a push made
-with `GITHUB_TOKEN` does not start ordinary push workflows. No open bot pull request
-is itself evidence that this path has completed a live merge.
+Dependabot checks npm packages and GitHub Actions weekly and groups related package
+families. A Dependabot pull request whose required checks are green is squash-merged by
+`.github/workflows/dependabot-merge.yml`, which runs when `Repository Quality` finishes
+and hourly. A merge made with `GITHUB_TOKEN` starts no push workflows, so the workflow
+then dispatches CI, the release and, when its paths changed, the download page with the
+merge commit.
 
 ## How a change ships
 
