@@ -290,7 +290,6 @@
     "@symphony/providers-simulated": "workspace:*",
     "@symphony/providers-synapse": "workspace:*",
     "@symphony/providers-work": "workspace:*",
-    "@symphony/repository-tasks": "workspace:*",
     "@tailwindcss/postcss": "4.3.5",
     "@types/node": "26.6.6",
     "@types/three": "0.187.0",
@@ -334,8 +333,7 @@
     "libs/persistence/composition",
     "libs/configuration/features/*",
     "libs/application/composition",
-    "libs/ipc-contracts/desktop",
-    "tools/nx-plugins/*"
+    "libs/ipc-contracts/desktop"
   ],
   "bugs": {
     "url": "https://github.com/pixel-brewery/symphony/issues"
