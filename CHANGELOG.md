@@ -1,3 +1,13 @@
+## 0.1.56 (2026-11-27)
+
+### 🚀 Features
+
+- **remote:** adopt Remote SDK 0.2.0 and push mobile access changes ([#88](https://github.com/pixel-brewery/symphony/pull/88))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+
 ## 0.1.55 (2026-11-27)
 
 This was a version bump only, there were no code changes.
