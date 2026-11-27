@@ -5631,7 +5631,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5644,7 +5644,7 @@ __metadata:
     "@symphony/domain-core": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5669,7 +5669,7 @@ __metadata:
   dependencies:
     "@symphony/domain-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5682,7 +5682,7 @@ __metadata:
     "@symphony/domain-core": "workspace:*"
     "@symphony/domain-delivery": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5709,7 +5709,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/ipc-contracts-execution": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5724,7 +5724,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5736,7 +5736,7 @@ __metadata:
     "@symphony/domain-skills": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5749,7 +5749,7 @@ __metadata:
     "@symphony/domain-skills": "workspace:*"
     "@symphony/domain-work": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5761,7 +5761,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5776,7 +5776,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5836,7 +5836,7 @@ __metadata:
     "@symphony/domain-workflow": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -5856,7 +5856,7 @@ __metadata:
     "@symphony/configuration-core": "workspace:*"
     "@symphony/domain-delivery": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -5958,7 +5958,7 @@ __metadata:
   dependencies:
     "@symphony/domain-ci": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5974,7 +5974,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5996,7 +5996,7 @@ __metadata:
   dependencies:
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6007,7 +6007,7 @@ __metadata:
     "@symphony/domain-ai": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6025,7 +6025,7 @@ __metadata:
   resolution: "@symphony/domain-workflow@workspace:libs/domain/features/workflow"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6068,7 +6068,7 @@ __metadata:
     "@symphony/ipc-contracts-workflow": "workspace:*"
     "@symphony/mobile-contracts": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6088,7 +6088,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6111,7 +6111,7 @@ __metadata:
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6135,7 +6135,7 @@ __metadata:
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
     "@symphony/ipc-contracts-platform": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6182,7 +6182,7 @@ __metadata:
     "@symphony/ipc-contracts-platform": "workspace:*"
     marked: "npm:18.2.0"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6220,7 +6220,7 @@ __metadata:
     "@symphony/ipc-contracts-delivery": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6243,7 +6243,7 @@ __metadata:
     "@symphony/frontend-notification": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6261,7 +6261,7 @@ __metadata:
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6294,7 +6294,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6318,7 +6318,7 @@ __metadata:
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-mobile": "workspace:*"
     "@symphony/mobile-contracts": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6340,7 +6340,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-platform": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6365,7 +6365,7 @@ __metadata:
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
     "@symphony/ipc-contracts-skills": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6387,7 +6387,7 @@ __metadata:
     "@symphony/ipc-contracts-ai": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6428,7 +6428,7 @@ __metadata:
     "@symphony/ipc-contracts-workflow": "workspace:*"
     "@symphony/mobile-contracts": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6448,7 +6448,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-workflow": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6474,7 +6474,7 @@ __metadata:
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6492,7 +6492,7 @@ __metadata:
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6504,7 +6504,7 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/platform-browser": "npm:22.2.6"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.203"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6523,7 +6523,7 @@ __metadata:
     "@symphony/frontend-intl": "workspace:*"
     "@symphony/ipc-contracts-core": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6558,7 +6558,7 @@ __metadata:
     "@symphony/ipc-contracts-desktop": "workspace:*"
     "@symphony/mobile-contracts": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6569,7 +6569,7 @@ __metadata:
     "@angular/core": "npm:22.2.6"
     "@angular/router": "npm:22.2.6"
     "@symphony/frontend-core": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6583,7 +6583,7 @@ __metadata:
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.203"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6602,7 +6602,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6628,7 +6628,7 @@ __metadata:
     "@symphony/ipc-contracts-platform": "workspace:*"
     marked: "npm:18.2.0"
     three: "npm:0.187.0"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6645,7 +6645,7 @@ __metadata:
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6660,7 +6660,7 @@ __metadata:
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-quick-create": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6689,7 +6689,7 @@ __metadata:
     "@symphony/ipc-contracts-core": "workspace:*"
     "@symphony/ipc-contracts-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6723,7 +6723,7 @@ __metadata:
     "@symphony/ipc-contracts-workflow": "workspace:*"
     "@symphony/ipc-contracts-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6733,7 +6733,7 @@ __metadata:
   resolution: "@symphony/ipc-contracts-core@workspace:libs/ipc-contracts/core"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6754,7 +6754,7 @@ __metadata:
   resolution: "@symphony/ipc-contracts-desktop@workspace:libs/ipc-contracts/desktop"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6768,7 +6768,7 @@ __metadata:
     "@symphony/ipc-contracts-skills": "workspace:*"
     "@symphony/ipc-contracts-work": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6808,7 +6808,7 @@ __metadata:
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6831,7 +6831,7 @@ __metadata:
   dependencies:
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6842,7 +6842,7 @@ __metadata:
   dependencies:
     "@symphony/configuration-composition": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6864,7 +6864,7 @@ __metadata:
     "@symphony/domain-team": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6877,7 +6877,7 @@ __metadata:
     "@symphony/domain-ai": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6889,7 +6889,7 @@ __metadata:
     "@symphony/domain-automation": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6902,7 +6902,7 @@ __metadata:
     "@symphony/persistence-core": "workspace:*"
     "@symphony/persistence-platform": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6919,7 +6919,7 @@ __metadata:
     "@symphony/persistence-workflow": "workspace:*"
     "@symphony/persistence-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6940,7 +6940,7 @@ __metadata:
     "@symphony/ipc-contracts-delivery": "workspace:*"
     "@symphony/persistence-platform": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6952,7 +6952,7 @@ __metadata:
     "@symphony/domain-execution": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6982,7 +6982,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7005,7 +7005,7 @@ __metadata:
     "@symphony/domain-workflow": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7018,7 +7018,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7036,7 +7036,7 @@ __metadata:
     "@symphony/domain-workflow": "workspace:*"
     "@symphony/providers-synapse": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7045,7 +7045,7 @@ __metadata:
   resolution: "@symphony/providers-artificial-analysis@workspace:libs/providers/artificial-analysis"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7061,7 +7061,7 @@ __metadata:
     "@symphony/providers-work": "workspace:*"
     "@types/node": "npm:26.6.6"
     marked: "npm:18.2.0"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7075,7 +7075,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/providers-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7084,7 +7084,7 @@ __metadata:
   resolution: "@symphony/providers-core@workspace:libs/providers/core"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7095,7 +7095,7 @@ __metadata:
     "@symphony/application-skills": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     yaml: "npm:2.9.1"
   languageName: unknown
   linkType: soft
@@ -7110,7 +7110,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/providers-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7138,7 +7138,7 @@ __metadata:
     "@symphony/providers-lima": "workspace:*"
     "@symphony/providers-work": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     yaml: "npm:2.9.1"
   languageName: unknown
   linkType: soft
@@ -7151,7 +7151,7 @@ __metadata:
     "@symphony/domain-core": "workspace:*"
     "@symphony/providers-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7163,7 +7163,7 @@ __metadata:
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-feedback": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -7187,7 +7187,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/providers-work": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7210,7 +7210,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7229,7 +7229,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -8032,9 +8032,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/coverage-v8@npm:~5.1.0":
-  version: 5.1.0
-  resolution: "@vitest/coverage-v8@npm:5.1.0"
+"@vitest/coverage-v8@npm:~5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/coverage-v8@npm:5.1.1"
   dependencies:
     "@bcoe/v8-coverage": "npm:^1.0.2"
     "@vitest/istanbul-lib-coverage": "npm:^2.1.0"
@@ -8045,12 +8045,12 @@ __metadata:
     std-env: "npm:^4.3.0"
     tinyrainbow: "npm:^3.2.0"
   peerDependencies:
-    "@vitest/browser": 5.1.0
-    vitest: 5.1.0
+    "@vitest/browser": 5.1.1
+    vitest: 5.1.1
   peerDependenciesMeta:
     "@vitest/browser":
       optional: true
-  checksum: 10c0/dc6f680a9bed5dca4eb64259b7195db77cedf8c01fc47e47529c9590a9d6ab3b0165ea60ca663b2dd7a44bcd5b4d1e01fd3285f2efab3f2697b3d4823a5527a7
+  checksum: 10c0/f18df6e9bb4d874c490913061886ea74c187ac7d01c6681b11990bda5df8d0d16e6d6b4ee3bb82de447d00e93992eff4d650b02a1dcb59764f05e488f2e8a476
   languageName: node
   linkType: hard
 
@@ -8070,14 +8070,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/mocker@npm:5.1.0":
-  version: 5.1.0
-  resolution: "@vitest/mocker@npm:5.1.0"
+"@vitest/mocker@npm:5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/mocker@npm:5.1.1"
   dependencies:
     "@jridgewell/trace-mapping": "npm:0.3.31"
-    "@vitest/spy": "npm:5.1.0"
+    "@vitest/spy": "npm:5.1.1"
     estree-walker: "npm:^3.0.3"
-    magic-string: "npm:^1.4.3"
+    magic-string: "npm:^1.4.5"
   peerDependencies:
     msw: ^2.4.9 || ^3.0.0
     vite: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -8086,14 +8086,14 @@ __metadata:
       optional: true
     vite:
       optional: true
-  checksum: 10c0/b180d01dfcd6fe7065c1415814890bf062f73af2f7de41b1d0c97f22437b6722b39d96567b54081037b04a1e16dc96512aeaa1cff1fe9de94d8b7d2f75001f64
+  checksum: 10c0/08c1e555cf56f6414bdbfa89c386f7e2559ffd978e6cc7535d7835a23f2449e48f6bf1e64f0e5e065bf5fc66968fba3ae5fdd0f31b3d123622dbdbc751827054
   languageName: node
   linkType: hard
 
-"@vitest/spy@npm:5.1.0":
-  version: 5.1.0
-  resolution: "@vitest/spy@npm:5.1.0"
-  checksum: 10c0/6f57b9b0cf8fcf65f89cbe7f7688ee87b2bd64d8678d888c6ea5542b66efe041a0c2be6268de89ced0ee29c685b13d4e925b2e791be435e84236cc6d0394feb6
+"@vitest/spy@npm:5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/spy@npm:5.1.1"
+  checksum: 10c0/bcafafb7bcd975b776c41c07b89452baf1dd441aba8e4214e610722e2d927f697db46fc68b07db5434ea0883772d6378ad21668e9c694528b970e1f43cf88165
   languageName: node
   linkType: hard
 
@@ -12075,7 +12075,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magic-string@npm:^1.1.0, magic-string@npm:^1.4.3":
+"magic-string@npm:^1.1.0, magic-string@npm:^1.4.5":
   version: 1.4.5
   resolution: "magic-string@npm:1.4.5"
   dependencies:
@@ -15423,7 +15423,7 @@ __metadata:
     "@types/three": "npm:0.187.0"
     "@types/ws": "npm:8.18.2"
     "@typescript-eslint/utils": "npm:^8.72.2"
-    "@vitest/coverage-v8": "npm:~5.1.0"
+    "@vitest/coverage-v8": "npm:~5.1.1"
     angular-eslint: "npm:^22.6.0"
     apexcharts: "npm:8.8.2"
     chroma-js: "npm:3.3.0"
@@ -15449,7 +15449,7 @@ __metadata:
     typescript: "npm:6.0.3"
     typescript-eslint: "npm:8.72.2"
     vite: "npm:8.3.8"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     wait-on: "npm:9.5.1"
     ws: "npm:8.23.0"
     yaml: "npm:2.9.1"
@@ -15545,10 +15545,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinybench@npm:^6.2.2":
-  version: 6.2.2
-  resolution: "tinybench@npm:6.2.2"
-  checksum: 10c0/f0e6391f4ca86875ce5a64510696323aa841c10495fdd1c6ca530457c7e77f2b3aa82d9d6f1553126420062b1008607257677ce2b25ff1948732a79d7a56514a
+"tinybench@npm:^6.2.3":
+  version: 6.2.4
+  resolution: "tinybench@npm:6.2.4"
+  checksum: 10c0/a5ca5727be05157819bc196e4a53f01b97fac84bff70e2966dc71946b1b90119f3e666a8ac37e3acb2bc9997fd2a031051f9a3309e7655aedd5acd0efcfc7046
   languageName: node
   linkType: hard
 
@@ -16170,20 +16170,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:5.1.0":
-  version: 5.1.0
-  resolution: "vitest@npm:5.1.0"
+"vitest@npm:5.1.1":
+  version: 5.1.1
+  resolution: "vitest@npm:5.1.1"
   dependencies:
     "@types/chai": "npm:^5.2.2"
-    "@vitest/mocker": "npm:5.1.0"
+    "@vitest/mocker": "npm:5.1.1"
     chai: "npm:^6.3.0"
     es-module-lexer: "npm:^2.3.2"
     expect-type: "npm:^1.4.0"
-    magic-string: "npm:^1.4.3"
+    magic-string: "npm:^1.4.5"
     obug: "npm:^3.0.0"
     picomatch: "npm:^4.0.7"
     std-env: "npm:^4.3.0"
-    tinybench: "npm:^6.2.2"
+    tinybench: "npm:^6.2.3"
     tinyexec: "npm:^1.3.1"
     tinyglobby: "npm:^0.2.17"
     why-is-node-running: "npm:3.2.1"
@@ -16191,12 +16191,12 @@ __metadata:
     "@edge-runtime/vm": "*"
     "@opentelemetry/api": ^1.9.0
     "@types/node": ^22.0.0 || >=24.0.0
-    "@vitest/browser-playwright": 5.1.0
-    "@vitest/browser-preview": 5.1.0
+    "@vitest/browser-playwright": 5.1.1
+    "@vitest/browser-preview": 5.1.1
     "@vitest/browser-webdriverio": ^5.0.0-beta.5 || >=5.0.0
-    "@vitest/coverage-istanbul": 5.1.0
-    "@vitest/coverage-v8": 5.1.0
-    "@vitest/ui": 5.1.0
+    "@vitest/coverage-istanbul": 5.1.1
+    "@vitest/coverage-v8": 5.1.1
+    "@vitest/ui": 5.1.1
     happy-dom: "*"
     jsdom: "*"
     vite: ^6.4.0 || ^7.0.0 || ^8.0.0
@@ -16227,7 +16227,7 @@ __metadata:
       optional: false
   bin:
     vitest: ./vitest.mjs
-  checksum: 10c0/c1be6065fe9fa73ceef69b4fbd245938c4654ba429066b9283e09527ada3e1c91aa03c2b8520b444af4027e1a8a1ca388dbb6b7b3c973582d053b67ffeeac11c
+  checksum: 10c0/c3f9ac564025fba9f2d6058e22fb1a97747cd9efaa2fd6f210855d3775654d30e1da55054dddfcf1f788f00d47edd54b8cb7d22f78209510413cf9c84e168141
   languageName: node
   linkType: hard
 
