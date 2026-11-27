@@ -1,6 +1,5 @@
 // #region Imports
 
-import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Inject, inject, Injectable, type Signal } from '@angular/core';
 import { Command, Hydratable, ViewPresenter } from '@symphony/frontend-core';
 import { createImmediateSetting, SettingsAlertService } from '@symphony/frontend-setting';
@@ -11,7 +10,7 @@ import { translateLabel } from '@symphony/frontend-intl/labels';
 // #endregion
 
 /**
- * Presents the Mobile-owned pairing card and scopes its status refresh to the mounted card.
+ * Presents the Mobile-owned pairing card; the store keeps its status current from the desktop's change notices.
  *
  * @public
  */
@@ -19,9 +18,7 @@ import { translateLabel } from '@symphony/frontend-intl/labels';
 export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
   // #region Fields
 
-  private readonly _window: Window;
   private readonly _alerts: SettingsAlertService;
-  private _mobileRefreshTimer: number | undefined;
   private readonly _toggleMobileAccessCommand: Command<boolean> = new Command(
     (enabled) => void this.onExecuteToggleMobileAccessCommand(enabled),
   );
@@ -61,29 +58,21 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
   // #region Ctor
 
   /**
-   * Connects feature-owned state and the card's browser lifecycle.
+   * Connects feature-owned state and the card's lifecycle.
    *
    * @param store - Mobile access owner.
-   * @param document - Active renderer document.
    * @param destroyRef - Card destruction lifecycle.
    * @param alerts - Settings alert sheets that confirm revoking phones.
    * @public
    */
   public constructor(
     @Inject(MobileAccessStore) store: MobileAccessStore = inject(MobileAccessStore),
-    @Inject(DOCUMENT) document: Document = inject(DOCUMENT),
     @Inject(DestroyRef) destroyRef: DestroyRef = inject(DestroyRef),
     @Inject(SettingsAlertService) alerts: SettingsAlertService = inject(SettingsAlertService),
   ) {
     super(destroyRef);
-    const browserWindow = document.defaultView;
-    if (!browserWindow) throw new Error('Mobile pairing requires a browser window.');
     this.store = store;
     this._alerts = alerts;
-    this._window = browserWindow;
-    this._mobileRefreshTimer = this._window.setInterval(() => {
-      if (this.mobileAccess()?.enabled) void this.store.refreshMobileAccess(true);
-    }, 2_000);
   }
 
   // #endregion
@@ -167,26 +156,16 @@ export class MobileSettingsCardViewPresenter extends Hydratable(ViewPresenter) {
   // #region Methods
 
   /**
-   * Loads access state once when the card first needs it.
+   * Reads access state once when the card mounts; afterwards the store follows the desktop's change notices.
    *
-   * @returns Initial state read when no confirmed status exists.
+   * @returns The initial read when no confirmed status exists; a cached status is shown at once and read again
+   * silently.
    * @public
    */
   public override onHydrate(): Promise<void> | undefined {
-    return this.store.mobileAccessStatus() ? undefined : this.store.refreshMobileAccess();
-  }
-
-  /**
-   * Stops card-owned polling when the Settings slot is destroyed.
-   *
-   * @public
-   */
-  public override dispose(): void {
-    if (this._mobileRefreshTimer !== undefined) {
-      this._window.clearInterval(this._mobileRefreshTimer);
-      this._mobileRefreshTimer = undefined;
-    }
-    super.dispose();
+    if (!this.store.mobileAccessStatus()) return this.store.refreshMobileAccess();
+    void this.store.refreshMobileAccess(true);
+    return undefined;
   }
 
   private async onExecuteToggleMobileAccessCommand(enabled: boolean): Promise<void> {

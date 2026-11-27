@@ -160,6 +160,12 @@ const api: IOrchestrationApi = {
     ipcRenderer.on(channels.event, handler);
     return () => ipcRenderer.removeListener(channels.event, handler);
   },
+  onMobileAccessChanged(listener) {
+    // The notice carries no data: the renderer reads the status through its validated request.
+    const handler = (): void => listener();
+    ipcRenderer.on(channels.mobileAccessChanged, handler);
+    return () => ipcRenderer.removeListener(channels.mobileAccessChanged, handler);
+  },
 };
 
 if (process.platform === 'darwin') {

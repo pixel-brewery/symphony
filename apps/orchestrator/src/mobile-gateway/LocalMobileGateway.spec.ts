@@ -160,7 +160,10 @@ describe('LocalMobileGateway', () => {
       portEnd: port,
       now: () => new Date('2026-08-10T18:00:00.000Z'),
     });
+    const notices = vi.fn();
+    gateway.subscribe(notices);
     await gateway.start();
+    const noticesAfterStart = notices.mock.calls.length;
 
     // act
     const origin = gateway.status().origin;
@@ -186,6 +189,7 @@ describe('LocalMobileGateway', () => {
       error: { code: 'invalid-request' },
     });
     const challenge = await gateway.createChallenge();
+    const noticesAfterChallenge = notices.mock.calls.length;
     const pairingSecret = new URLSearchParams(new URL(challenge.pairingUrl).hash.slice(1)).get(
       'pair',
     );
@@ -202,6 +206,10 @@ describe('LocalMobileGateway', () => {
     expect(statusResponse.status).toBe(200);
     expect(await statusResponse.json()).toMatchObject({ status: 'paired' });
     expect(gateway.status().pendingPairings).toHaveLength(0);
+    // Start and the invitation's reconcile each end with a notice; the committed pairing adds one more.
+    expect(noticesAfterStart).toBeGreaterThan(0);
+    expect(noticesAfterChallenge).toBeGreaterThan(noticesAfterStart);
+    expect(notices.mock.calls.length).toBeGreaterThan(noticesAfterChallenge);
     const cookie = statusResponse.headers.get('set-cookie')?.split(';', 1)[0];
     expect(cookie).toBeTruthy();
 

@@ -125,6 +125,7 @@ function arrange(
       return unsubscribe;
     },
     selectPath: async () => ({ canceled: true, paths: [] }),
+    onMobileAccessChanged: () => () => undefined,
   };
   const windowRoutes: string[] = [];
   const desktop: IDesktopApi = {

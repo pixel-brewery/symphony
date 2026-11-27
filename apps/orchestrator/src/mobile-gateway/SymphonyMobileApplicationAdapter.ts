@@ -272,6 +272,7 @@ function requestFailure(cause: unknown): { status: number; code: string; message
 export class SymphonyMobileApplicationAdapter implements IRemoteApplicationAdapter {
   // #region Fields
   private readonly _sockets = new Map<WebSocket, string>();
+  private readonly _connectionListeners = new Set<() => void>();
   // #endregion
   // #region Ctor
   /**
@@ -497,13 +498,32 @@ export class SymphonyMobileApplicationAdapter implements IRemoteApplicationAdapt
   public async webSocket(socket: WebSocket, context: IRemoteRequestContext): Promise<void> {
     await this._dependencies.recordActivity?.(context.principal.deviceId);
     if (context.signal.aborted) return;
-    this._sockets.set(socket, context.principal.deviceId);
+    const deviceId = context.principal.deviceId;
+    const connectedBefore = this.isConnected(deviceId);
+    this._sockets.set(socket, deviceId);
+    if (!connectedBefore) this.notifyConnections();
     const cleanup = () => {
-      this._sockets.delete(socket);
       context.signal.removeEventListener('abort', cleanup);
+      if (!this._sockets.delete(socket)) return;
+      if (!this.isConnected(deviceId)) this.notifyConnections();
     };
     context.signal.addEventListener('abort', cleanup, { once: true });
     socket.once('close', cleanup);
+  }
+
+  /**
+   * Observes changes of the connected device set, so the desktop shows presence without reading it on a timer.
+   *
+   * @param listener - Called synchronously when a device gains its first or loses its last event connection.
+   * @returns Idempotent cleanup removing only this registration.
+   * @public
+   */
+  public subscribeConnections(listener: () => void): () => void {
+    const registration = (): void => listener();
+    this._connectionListeners.add(registration);
+    return () => {
+      this._connectionListeners.delete(registration);
+    };
   }
 
   /**
@@ -533,6 +553,15 @@ export class SymphonyMobileApplicationAdapter implements IRemoteApplicationAdapt
         if (socket.bufferedAmount > 1_048_576) socket.terminate();
         else socket.send(message);
       }
+  }
+
+  private isConnected(deviceId: string): boolean {
+    for (const owner of this._sockets.values()) if (owner === deviceId) return true;
+    return false;
+  }
+
+  private notifyConnections(): void {
+    for (const listener of [...this._connectionListeners]) listener();
   }
 
   private async mobileSnapshot(): Promise<MobileSnapshot> {

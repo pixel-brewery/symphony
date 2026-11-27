@@ -1,6 +1,6 @@
 // #region Imports
 
-import { Inject, inject, Injectable, signal } from '@angular/core';
+import { DestroyRef, Inject, inject, Injectable, signal } from '@angular/core';
 import type { IMobileAccessOperations } from '@symphony/frontend-core/mobile-access';
 import { NotificationService, operatorErrorMessage } from '@symphony/frontend-notification';
 import type { MobileAccessStatus, MobilePairingChallenge } from '@symphony/mobile-contracts';
@@ -10,7 +10,12 @@ import { translateLabel } from '@symphony/frontend-intl/labels';
 
 // #endregion
 
-/** Owns desktop mobile-access lifecycle and pairing operations. */
+/**
+ * Owns desktop mobile-access lifecycle and pairing operations.
+ *
+ * @remarks The status follows the desktop's change notices (a paired or revoked phone, a phone connecting or
+ * disconnecting) for the application's lifetime; nothing reads it on a timer.
+ */
 @Injectable()
 export class MobileAccessStore implements IMobileAccessOperations {
   // #region Fields
@@ -48,7 +53,7 @@ export class MobileAccessStore implements IMobileAccessOperations {
   // #region Ctor
 
   /**
-   * Constructs the mobile-access store.
+   * Constructs the mobile-access store and follows the desktop's change notices until it is destroyed.
    *
    * @public
    */
@@ -59,7 +64,12 @@ export class MobileAccessStore implements IMobileAccessOperations {
     private readonly _notifications: Pick<NotificationService, 'showError'> = inject(
       NotificationService,
     ),
-  ) {}
+    @Inject(DestroyRef) destroyRef: DestroyRef = inject(DestroyRef),
+  ) {
+    destroyRef.onDestroy(
+      this._client.onMobileAccessChanged(() => void this.refreshMobileAccess(true)),
+    );
+  }
 
   // #endregion
 

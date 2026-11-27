@@ -1,7 +1,6 @@
 // #region Imports
 
-import { DOCUMENT } from '@angular/common';
-import { computed, DestroyRef, inject, Injectable } from '@angular/core';
+import { computed, inject, Injectable } from '@angular/core';
 import type { INotificationItem, INotificationSource } from '@symphony/frontend-notification';
 import { MobileAccessStore } from '../state/MobileAccessStore';
 import { translateLabel } from '@symphony/frontend-intl/labels';
@@ -10,16 +9,10 @@ import { translateLabel } from '@symphony/frontend-intl/labels';
 
 const ITEM_PREFIX = 'mobile-pairing:';
 
-/** While mobile access is on, a phone waiting to pair should appear within seconds. */
-const ENABLED_POLL_MILLISECONDS = 4_000;
-
-/** While it is off nothing can pair; a slow check notices when it is switched on elsewhere. */
-const DISABLED_POLL_MILLISECONDS = 60_000;
-
 /**
  * Reports phones that ask to pair with this Mac. The fixes approve or reject the request with
- * the same commands as `Mobile access` in Settings. Pairing requests arrive from the phone, so
- * the source checks for them itself while it is connected.
+ * the same commands as `Mobile access` in Settings. The store follows the desktop's change
+ * notices, so the source reads the status once when it connects and never on a timer.
  *
  * @public
  */
@@ -28,10 +21,7 @@ export class MobilePairingNotificationSource implements INotificationSource {
   // #region Fields
 
   private readonly _store = inject(MobileAccessStore);
-  private readonly _window = inject(DOCUMENT).defaultView;
-  private _timer?: number;
   private _connected = false;
-  private _disposed = false;
 
   /**
    * One item per pending pairing request.
@@ -77,22 +67,6 @@ export class MobilePairingNotificationSource implements INotificationSource {
 
   // #endregion
 
-  // #region Ctor
-
-  /**
-   * Constructs the source and stops its checks with the window.
-   *
-   * @public
-   */
-  public constructor() {
-    inject(DestroyRef).onDestroy(() => {
-      this._disposed = true;
-      if (this._timer !== undefined) this._window?.clearTimeout(this._timer);
-    });
-  }
-
-  // #endregion
-
   // #region Methods
 
   /**
@@ -105,14 +79,14 @@ export class MobilePairingNotificationSource implements INotificationSource {
   }
 
   /**
-   * Starts checking for pairing requests for as long as the window lives.
+   * Reads the current pairing requests once; later changes arrive through the store's change notices.
    *
    * @public
    */
   public connect(): void {
-    if (this._connected || this._disposed) return;
+    if (this._connected) return;
     this._connected = true;
-    void this.poll();
+    void this.refresh();
   }
 
   /**
@@ -125,17 +99,6 @@ export class MobilePairingNotificationSource implements INotificationSource {
   public async perform(itemId: string, actionId: string): Promise<void> {
     if (actionId !== 'approve' && actionId !== 'reject') return;
     await this._store.decideMobilePairing(itemId.slice(ITEM_PREFIX.length), actionId === 'approve');
-  }
-
-  private async poll(): Promise<void> {
-    await this.refresh();
-    if (this._disposed || !this._window) return;
-    this._timer = this._window.setTimeout(
-      () => void this.poll(),
-      this._store.mobileAccessStatus()?.enabled
-        ? ENABLED_POLL_MILLISECONDS
-        : DISABLED_POLL_MILLISECONDS,
-    );
   }
 
   // #endregion

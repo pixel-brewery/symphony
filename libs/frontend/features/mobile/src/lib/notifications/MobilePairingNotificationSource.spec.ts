@@ -94,23 +94,15 @@ describe('MobilePairingNotificationSource', () => {
     ]);
   });
 
-  it('checks for requests often while access is on and rarely while it is off', async () => {
+  it('reads the requests once on connect and never on a timer', async () => {
     // arrange
     vi.useFakeTimers();
-    const { source, store, current } = arrange(status(true));
+    const { source, store } = arrange(status(true));
     // act
     source.connect();
     source.connect();
-    await vi.advanceTimersByTimeAsync(0);
-    await vi.advanceTimersByTimeAsync(4_000);
-    current.set(status(false));
-    await vi.advanceTimersByTimeAsync(4_000);
-    await vi.advanceTimersByTimeAsync(30_000);
-    // assert
-    expect(store.refreshMobileAccess).toHaveBeenCalledTimes(3);
-    expect(store.refreshMobileAccess).toHaveBeenCalledWith(true);
-    TestBed.resetTestingModule();
     await vi.advanceTimersByTimeAsync(120_000);
-    expect(store.refreshMobileAccess).toHaveBeenCalledTimes(3);
+    // assert
+    expect(store.refreshMobileAccess).toHaveBeenCalledExactlyOnceWith(true);
   });
 });
