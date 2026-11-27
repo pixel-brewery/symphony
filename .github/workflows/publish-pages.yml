@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       expected_head_sha:
-        description: Exact source required by the trusted dependency continuation
+        description: Exact main commit requested by the Dependabot auto-merge workflow
         required: false
         default: ''
         type: string

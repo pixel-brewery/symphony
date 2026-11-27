@@ -92,10 +92,8 @@ offenlassen könnte.
 
 Die Main-Regel verlangt `Quality Gate` zusätzlich zu den fünf vorhandenen
 Matrix-/Abnahme-Kontexten. Die Workflowdatei verändert selbst keine Repositoryeinstellung; die
-erforderlichen Kontexte müssen zusätzlich in der Main-Regel konfiguriert sein. Der privilegierte
-Dependabot-Mergehelfer prüft alle acht erfolgreichen Jobs des auslösenden Laufs. Dazu gehören
-Klassifizierung, Dokumentation, die drei Plattform-Jobs, Electron E2E, der Paket-Smoke-Test
-und das Quality Gate. Paket- und Workflowupdates durchlaufen die vollständige Prüfung.
+erforderlichen Kontexte müssen zusätzlich in der Main-Regel konfiguriert sein. Paket- und
+Workflowupdates durchlaufen die vollständige Prüfung.
 
 ## Automatische Abhängigkeitsaktualisierung
 
@@ -106,124 +104,14 @@ Pixel-Brewery-Paketfamilien werden gruppiert; eine Major-Version setzt die
 Prüfanforderungen nicht herab. Der GitHub-Paketdienst verwendet die vorhandenen
 Paketfreigaben für das Repository; Zugangsdaten liegen nicht in der Konfiguration.
 
-Der privilegierte Controller läuft nach abgeschlossenen Qualitäts- und Releaseläufen,
-stündlich und auf ausdrückliche Workflowanforderung ausschließlich aus `main`.
-Er lädt den vertrauenswürdigen Standardbranch, installiert keine Pakete und führt
-keinen PR-Code aus. Repository-ID `1440122208`, öffentlicher Nicht-Fork-Status und
-bestätigte API-Metadaten begrenzen den Zielbereich. Die Inventur liest höchstens
-500 offene PRs und bearbeitet höchstens 30 bot-eigene Requests je Lauf. Andere
-Autoren, Forks, Entwürfe, geschlossene PRs und andere Zielbranches bleiben unberührt.
-
-Die Schreibrechte sind auf drei unterschiedliche Aufgaben verteilt. `merge` liest
-Actions und PRs und darf den geprüften Head über den normalen Merge-Endpunkt
-integrieren. `reconcile` besitzt die Rechte zum Aktualisieren bot-eigener Branches
-und zum selben geschützten Merge, liest Actions aber nur. Der getrennte Job
-`authorize` besitzt ausschließlich `actions: write`, `contents: read` und
-`pull-requests: read`: Er darf den tatsächlichen Originalrun freigeben, weder
-Branches verändern noch PRs mergen. Die Main-Fortsetzung hat ebenfalls nur
-Contents-/PR-Leserechte und Actions-Schreibrecht. Kein Job erteilt PR-Reviews,
-ersetzt Statuschecks oder verändert Schutzregeln.
-
-Ein veralteter Bot-Branch wird durch `update-branch` mit `expected_head_sha`
-aktualisiert. Der Controller wartet höchstens 16 Intervalle von jeweils 750 ms
-auf einen anderen Head. Danach liest er die tatsächlichen nativen
-`pull_request`-Läufe dieser Revision. Fehlt ein solcher Lauf, bleibt der PR
-wartend; der Controller erzeugt keinen Ersatznachweis durch Dispatch. Manuelle
-`ci.yml`-Läufe bleiben diagnostisch möglich und prüfen `expected_head_sha` gegen
-`GITHUB_SHA`, zählen aber niemals als PR-Mergeproof. Rote, abgebrochene oder
-laufende Originalversuche werden erhalten und nicht blind wiederholt.
-
-Die Laufwahl trennt native PR-Läufe von Diagnose-Dispatches. Eine größere Run-ID
-eines Dispatches verdeckt den älteren nativen Originalrun nicht. Nach der Auswahl
-wird dessen aktueller `run_attempt` erneut geladen, da eine Workflowfreigabe die
-Run-ID beibehält und einen neueren Versuch erzeugen kann. Ein Cron- oder manueller
-Controller darf einen bereits vollständig grünen Originalrun nur über den
-vollständigen Merger fortsetzen; er überspringt keine Source-, Job- oder
-Schutzprüfung.
-
-Eine Originalrun-Freigabe verlangt `action_required`, genau einen eigenen,
-offenen Dependabot-PR und unveränderliche Serviceidentitäten für sowohl Actor als
-auch Triggering Actor. Andere erfolgreiche native CI-Läufe dürfen von einem
-regulären Maintainer stammen; ihre Mergeprüfung ist unabhängig von dieser engen
-Freigabeberechtigung. Die isolierte Freigabestufe läuft mit `needs: reconcile`
-und `always()` nach Abschluss der Reconcile-Stufe. Nach einem eigenen CI- oder
-Release-Abschluss sowie bei Cron und manuellem Aufruf lädt sie die begrenzte
-offene Bot-Inventur neu. Das frühere Ereignis bestimmt nicht den aktuellen Head
-oder Versuch: Jeder aktuelle native Originalrun durchläuft weiterhin dieselbe
-vollständige Source-, Actor-, Attempt-, Ref- und Schutzprüfung.
-API- oder Freigabefehler werden ohne Wiederholung und mit festen, zugangsdatenfreien
-Ergebnissen gemeldet.
-
-Jede Freigabe und jeder Merge bindet den Sourceproof an drei vollständige SHAs:
-`M` ist der aktuelle Hauptbranch, `B` der Bot-Head und `C` die tatsächliche
-`refs/pull/N/merge`-Revision. `M` muss Vorfahr von `B` sein; beide Live-Refs müssen
-die erwarteten Commits bezeichnen. `C` muss genau die Eltern `[M, B]` in dieser
-Reihenfolge und denselben Tree wie `B` besitzen. Der aktuelle vollständige PR muss
-Nummer, Identität, Head, Basis und Mergefähigkeit bestätigen. Die CI-Dateien aus
-`M` und `B` werden anhand ihrer echten Git-Blob-Hashes geprüft.
-
-Die CI-Autorität stammt aus einer positiv geprüften Baseline: Der feste
-`reviewedCiSha256` im vertrauenswürdigen Main-Policyowner ist SHA256 der exakt
-pin-normalisierten, ausdrücklich überprüften CI-Datei. Der zur Laufzeit geladene
-Main-Blob muss diesen Wert erfüllen; die normalisierte PR-Datei muss exakt mit
-Main übereinstimmen. Normalisierung ersetzt ausschließlich vollständige
-40-stellige Actionpins und erlaubte Versionskommentare bei identischem
-Action-Owner und Pfad. Andere CI-Logik, Schreibrechte, Secretverwendung oder
-YAML-Darstellungen werden dadurch nicht automatisch autorisiert. Eine absichtliche
-CI-Logikänderung benötigt eine neue Main-Prüfung samt bewusst aktualisiertem
-Policywert. Weder PR, Event, API-Antwort noch Laufzeitlernen wählen die Baseline.
-
-Der Merger verlangt den aktuellen erfolgreichen `pull_request`-Versuch des
-aktiven Workflows `Repository Quality` mit genau einem zugeordneten PR. Zulässige
-Workflowpfade sind die kanonische Datei, ihr exakter Bot-Branch-Ref oder der exakt
-passende `refs/pull/N/merge`-Suffix. Alle acht Jobnamen und eindeutigen Job-IDs
-müssen zu Head, Run und Versuch gehören und erfolgreich abgeschlossen sein:
-Klassifizierung, Dokumentationsprüfung, drei OS-Prüfungen, Electron E2E, Package
-smoke test und Quality Gate. Zusätzlich liest der Controller GitHubs tatsächlich
-erzwungene PR-Regel und die sechs strikten Actions-Kontexte der drei OS-Jobs,
-Electron E2E, Package smoke test und Quality Gate. Er verändert diese Regeln nicht.
-Unmittelbar vor einem einzigen SHA-gesicherten Squash-Merge werden neuester
-Originalrun, Workflow, PR und alle Live-Refs erneut geprüft. Die abschließende
-vollständige PR-Antwort muss `merged === true` und die bestätigte Merge-SHA
-enthalten. GitHubs Merge-Endpunkt hat keinen atomaren Expected-Base-Parameter;
-eine inzwischen verschobene Basis bleibt zusätzlich durch die strikte
-Branchregel geschützt.
-
-Ein `GITHUB_TOKEN`-Merge startet keine gewöhnlichen Push-Workflows. Der separate
-Fortsetzungsjob übernimmt deshalb die bestätigte Merge-SHA entweder vom direkten
-Mergejob oder von der periodischen vollständigen Nachprüfung. Ging ein Joboutput
-verloren, liest die Automatik nur die mit dem tatsächlichen aktuellen Maincommit
-verbundenen PRs. Eine einfache REST-Zuordnung darf das Feld `merged` auslassen;
-die zusätzlich geladene vollständige Antwort muss denselben PR mit
-`merged === true`, passendem Bot und exakter Merge-SHA bestätigen. Mehrdeutige,
-unbestätigte oder inzwischen überholte Zuordnungen starten keine neue Quelle.
-
-Die Fortsetzung fordert vollständige Main-CI, gegebenenfalls die Downloadseite
-und die vorhandene Patch-Releasepipeline an. Alle drei festen Profile prüfen die
-bestätigte aktuelle Quelle erneut und deduplizieren vollständige, kanonische
-Push- oder Dispatch-Läufe genau dieses Maincommits. Ein gescheiterter oder
-abgebrochener Versuch wird erhalten. Andere Workflowpfade, beliebige Ref-Suffixe,
-PR- oder Branch-Läufe werden bei gültiger Run-ID und positivem Attempt ignoriert;
-unvollständige Inventare sowie ungültige IDs oder Attempts brechen vor einem Dispatch ab. CI und Pages verwenden
-`expected_head_sha`, das Release weiterhin `source_sha`; eine Major-Version einer
-Abhängigkeit ändert den Patch-Releasevertrag nicht.
-
-Die Pages-Fortsetzung übernimmt unverändert die bestehenden Push-Pfadfilter:
-Pages-Workflow, registrierte Downloadseiten- und Icondateien, unmittelbar unter
-`tools` liegende Download-/Pages-Werkzeuge und Releaseasset-Prüfung. Bei
-Umbenennungen zählt auch der vorherige Pfad. Eine reine Lockdateiänderung erzeugt
-keine zusätzliche Seitenauslieferung. Ungültige Pfade oder ein möglicherweise
-abgeschnittenes Commit-Dateiinventar mit mindestens 100 Einträgen brechen vor
-jedem Dispatch ab. Bestehende Stable-/Canary-Auswahlen bleiben erhalten.
-
-Der bestehende Nx-Owner `tools/nx-plugins/repository-tasks` besitzt das nicht
-cachebare Ziel `repository-tasks:dependabot` mit `merge`, `reconcile`, `authorize`
-und `continue`. Das typisierte Optionsinterface, JSON-Schema, die fachlich
-getrennten Helper und kolokalen Tests gehören zu diesem Owner. Der privilegierte
-Workflow startet dieselbe Implementierung über `runDependabotAutomation.mjs`
-direkt mit Node, damit er mit Schreibrechten keine Workspace-Abhängigkeiten
-installieren muss. Dies bleibt eine einzige Nx-eigene Implementierung und kein
-paralleler CLI-Pfad. Offlineprüfungen ersetzen keine ausgeführten GitHub-Läufe.
+Ein Dependabot-PR, dessen erforderliche Checks grün sind, wird von
+`.github/workflows/dependabot-merge.yml` per Squash gemergt; der Workflow läuft nach
+jedem abgeschlossenen `Repository Quality`-Lauf und stündlich. Weil ein
+`GITHUB_TOKEN`-Merge keine gewöhnlichen Push-Workflows startet, stößt derselbe
+Workflow danach jeden Push-Workflow von `main` an, dessen Branch- und Pfadfilter zu
+den gemergten Dateien passen und der eine Quellangabe annimmt: CI und Pages erhalten
+den Merge-Commit als `expected_head_sha`, das Release als `source_sha`. Jeder dieser
+Workflows bricht ab, wenn die Angabe nicht seinem `GITHUB_SHA` entspricht.
 
 ## Releasefolgen
 
