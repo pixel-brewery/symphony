@@ -14,8 +14,8 @@
     "./package.json": "./package.json"
   },
   "devDependencies": {
-    "@types/node": "26.6.6",
-    "vitest": "5.1.1"
+    "@types/node": "26.6.11",
+    "vitest": "5.1.2"
   },
   "dependencies": {
     "@symphony/application-core": "workspace:*",
@@ -24,6 +24,6 @@
     "@symphony/domain-workflow": "workspace:*",
     "@symphony/domain-workspace": "workspace:*",
     "@symphony/providers-work": "workspace:*",
-    "marked": "18.2.0"
+    "marked": "18.3.0"
   }
 }

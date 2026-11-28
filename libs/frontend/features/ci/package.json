@@ -26,21 +26,21 @@
     "@angular/platform-browser": "22.3.0",
     "@angular/router": "22.3.0",
     "@codemirror/autocomplete": "6.20.4",
-    "@codemirror/commands": "6.11.1",
+    "@codemirror/commands": "6.11.2",
     "@codemirror/lang-html": "6.4.12",
     "@codemirror/lang-markdown": "6.5.2",
     "@codemirror/language": "6.13.1",
-    "@codemirror/search": "6.7.2",
+    "@codemirror/search": "6.7.3",
     "@codemirror/state": "6.7.6",
-    "@codemirror/view": "6.43.15",
+    "@codemirror/view": "6.44.2",
     "@lezer/highlight": "1.2.5",
-    "@pixel-brewery/markdowner-core": "0.1.213",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.213",
-    "@pixel-brewery/mosaik-elements-foundation": "0.1.213",
-    "@pixel-brewery/ngpel-core": "0.0.12",
-    "@pixel-brewery/ngpel-mvp": "0.0.12",
-    "@pixel-brewery/ngpel-router": "0.0.12",
-    "@pixel-brewery/ngpel-ui": "0.0.12",
+    "@pixel-brewery/markdowner-core": "0.1.219",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
+    "@pixel-brewery/mosaik-elements-foundation": "0.1.219",
+    "@pixel-brewery/ngpel-core": "0.0.37",
+    "@pixel-brewery/ngpel-mvp": "0.0.37",
+    "@pixel-brewery/ngpel-router": "0.0.37",
+    "@pixel-brewery/ngpel-ui": "0.0.37",
     "@symphony/domain-ci": "workspace:*",
     "@symphony/domain-core": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
@@ -53,7 +53,7 @@
     "@symphony/ipc-contracts-ci": "workspace:*",
     "@symphony/ipc-contracts-composition": "workspace:*",
     "@symphony/ipc-contracts-platform": "workspace:*",
-    "marked": "18.2.0",
+    "marked": "18.3.0",
     "rxjs": "7.8.2"
   },
   "devDependencies": {
@@ -62,6 +62,6 @@
     "@symphony/configuration-composition": "workspace:*",
     "@symphony/domain-workflow": "workspace:*",
     "rxjs": "7.8.2",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }

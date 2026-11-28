@@ -28,6 +28,10 @@ import { NewWorkItemSheet } from '../services/NewWorkItemSheet';
 import { BoardColumnCollapseStore } from '../state/BoardColumnCollapseStore';
 import { BoardViewPresenter } from './BoardViewPresenter';
 
+vi.mock('@symphony/frontend-feature-workflow', () => ({
+  ProcessDrawerView: class ProcessDrawerView {},
+}));
+
 // #endregion
 
 interface IArrangeOptions {

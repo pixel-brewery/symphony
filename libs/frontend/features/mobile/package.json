@@ -21,8 +21,8 @@
   "dependencies": {
     "@angular/common": "22.3.0",
     "@angular/core": "22.3.0",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.213",
-    "@pixel-brewery/mosaik-themes": "0.1.213",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
+    "@pixel-brewery/mosaik-themes": "0.1.219",
     "@pixel-brewery/remote-browser": "0.2.0",
     "@pixel-brewery/remote-client": "0.2.0",
     "@pixel-brewery/remote-protocol": "0.2.0",
@@ -37,6 +37,6 @@
   },
   "devDependencies": {
     "@angular/platform-browser": "22.3.0",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }

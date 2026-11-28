@@ -16,7 +16,7 @@
   "dependencies": {
     "@angular/common": "22.3.0",
     "@angular/core": "22.3.0",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.213",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
     "@symphony/domain-automation": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
     "@symphony/frontend-intl": "workspace:*",
@@ -31,6 +31,6 @@
     "@angular/platform-browser": "22.3.0",
     "@symphony/configuration-composition": "workspace:*",
     "@symphony/frontend-feature-workspace": "workspace:*",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }

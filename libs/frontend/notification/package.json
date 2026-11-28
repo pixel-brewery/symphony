@@ -23,8 +23,8 @@
     "@angular/common": "22.3.0",
     "@angular/core": "22.3.0",
     "@angular/router": "22.3.0",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.213",
-    "@pixel-brewery/mosaik-elements-foundation": "0.1.213",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
+    "@pixel-brewery/mosaik-elements-foundation": "0.1.219",
     "@symphony/frontend-intl": "workspace:*",
     "@symphony/ipc-contracts-core": "workspace:*",
     "rxjs": "7.8.2",
@@ -33,6 +33,6 @@
   "devDependencies": {
     "@angular/compiler": "22.3.0",
     "@angular/platform-browser": "22.3.0",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }

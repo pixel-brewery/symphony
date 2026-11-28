@@ -27,11 +27,11 @@
     "@angular/common": "22.3.0",
     "@angular/core": "22.3.0",
     "@angular/platform-browser": "22.3.0",
-    "@pixel-brewery/markdowner-core": "0.1.213",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.213",
-    "@pixel-brewery/mosaik-elements-foundation": "0.1.213",
-    "@pixel-brewery/mosaik-icons": "0.1.213",
-    "@pixel-brewery/mosaik-themes": "0.1.213",
+    "@pixel-brewery/markdowner-core": "0.1.219",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
+    "@pixel-brewery/mosaik-elements-foundation": "0.1.219",
+    "@pixel-brewery/mosaik-icons": "0.1.219",
+    "@pixel-brewery/mosaik-themes": "0.1.219",
     "@symphony/domain-ci": "workspace:*",
     "@symphony/domain-delivery": "workspace:*",
     "@symphony/domain-team": "workspace:*",
@@ -40,10 +40,10 @@
     "@symphony/frontend-intl": "workspace:*",
     "@symphony/ipc-contracts-composition": "workspace:*",
     "@symphony/ipc-contracts-platform": "workspace:*",
-    "marked": "18.2.0",
+    "marked": "18.3.0",
     "three": "0.187.0"
   },
   "devDependencies": {
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }

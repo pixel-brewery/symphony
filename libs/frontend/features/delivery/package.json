@@ -28,8 +28,8 @@
     "@angular/core": "22.3.0",
     "@angular/forms": "22.3.0",
     "@angular/router": "22.3.0",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.213",
-    "@pixel-brewery/mosaik-elements-foundation": "0.1.213",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
+    "@pixel-brewery/mosaik-elements-foundation": "0.1.219",
     "@symphony/configuration-delivery": "workspace:*",
     "@symphony/domain-ci": "workspace:*",
     "@symphony/domain-core": "workspace:*",
@@ -56,6 +56,6 @@
     "@symphony/configuration-composition": "workspace:*",
     "@symphony/domain-workflow": "workspace:*",
     "rxjs": "7.8.2",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }
