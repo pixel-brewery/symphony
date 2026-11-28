@@ -154,7 +154,7 @@ export function ValidateReleaseWorkflowSigningPolicy(workflowSource, forgeSource
     appTokenSteps.length !== 1 ||
     appTokenSteps[0] !== appTokenStep ||
     appTokenStep?.uses !==
-      'actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510' ||
+      'actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc' ||
     appTokenStep.if !== undefined ||
     Object.keys(appTokenStep.with ?? {}).length !== Object.keys(expectedAppInputs).length ||
     !Object.entries(expectedAppInputs).every(([key, value]) => appTokenStep.with?.[key] === value)

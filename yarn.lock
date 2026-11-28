@@ -621,9 +621,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/generator@npm:^8.1.0, @babel/generator@npm:^8.1.3":
-  version: 8.1.3
-  resolution: "@babel/generator@npm:8.1.3"
+"@babel/generator@npm:^8.1.0, @babel/generator@npm:^8.1.4":
+  version: 8.1.4
+  resolution: "@babel/generator@npm:8.1.4"
   dependencies:
     "@babel/parser": "npm:^8.1.3"
     "@babel/types": "npm:^8.1.3"
@@ -631,7 +631,7 @@ __metadata:
     "@jridgewell/trace-mapping": "npm:^0.3.31"
     "@types/jsesc": "npm:^2.5.0"
     jsesc: "npm:^3.0.2"
-  checksum: 10c0/29a325e31f43ea37d8df98566fa23aa4cb5f278c215216fd3473d38250a12597b8384cf9b737bba0f3196a0081583f6f84fa023603e9eeb6819f59e198345d6c
+  checksum: 10c0/d89e3c3f76dc04c42b3f86586c2546da89868ed4d0e583ff67ccb729db586c861ad0725cfa378ac6b654cdd4b074601af04f61a98fa7ae1f6bd88d0099840832
   languageName: node
   linkType: hard
 
@@ -892,12 +892,12 @@ __metadata:
   linkType: hard
 
 "@babel/helpers@npm:^8.1.0":
-  version: 8.1.3
-  resolution: "@babel/helpers@npm:8.1.3"
+  version: 8.1.4
+  resolution: "@babel/helpers@npm:8.1.4"
   dependencies:
     "@babel/template": "npm:^8.1.2"
     "@babel/types": "npm:^8.1.3"
-  checksum: 10c0/17a5c7c248f51dcd8ac72d27821e1ee98d11764a433030229afe00a5885f2fe6e22d6c3a7831b34d1cf32bc0be6fe1b623e90bb66c9359a5d854f0e286a930d4
+  checksum: 10c0/026ea651a36fcd927e443905d5400890698080afc4465bc0805d6fe12acf3da37595309b5bd2fb53b8cb939d4befa310a705e13baf7a29d3daa91a2bf4eca82a
   languageName: node
   linkType: hard
 
@@ -1891,17 +1891,17 @@ __metadata:
   linkType: hard
 
 "@babel/traverse@npm:^8.1.0":
-  version: 8.1.3
-  resolution: "@babel/traverse@npm:8.1.3"
+  version: 8.1.4
+  resolution: "@babel/traverse@npm:8.1.4"
   dependencies:
     "@babel/code-frame": "npm:^8.0.6"
-    "@babel/generator": "npm:^8.1.3"
+    "@babel/generator": "npm:^8.1.4"
     "@babel/helper-globals": "npm:^8.0.6"
     "@babel/parser": "npm:^8.1.3"
     "@babel/template": "npm:^8.1.2"
     "@babel/types": "npm:^8.1.3"
     obug: "npm:^3.0.0"
-  checksum: 10c0/82c7e563b4631c2d42189c0708a0d4c16086bf4472638f8727092e1fd0b0e9eefd7440f85fff699b7be0781fefc7291e6235c71c7cb27c04edc8c38e2d113daf
+  checksum: 10c0/573633520a0e109eb1b8600b6780b7f7b4e8796e5c9e8b425292c0815249fb6eaeb7349977cdd89fce7623839cee52c9551aace922edf3e756a6ddf63fa5c815
   languageName: node
   linkType: hard
 
@@ -5017,13 +5017,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-auth@npm:0.0.16":
-  version: 0.0.16
-  resolution: "@pixel-brewery/synapse-auth@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-auth%2F0.0.16%2Fb6cfd2e383dbcfef1f2c04de09e382615f638b4a"
+"@pixel-brewery/synapse-auth@npm:0.0.24":
+  version: 0.0.24
+  resolution: "@pixel-brewery/synapse-auth@npm:0.0.24::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-auth%2F0.0.24%2F650f23bb4a3223dffbd2847fe0ba5ce7a455c3d5"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.16"
-    "@pixel-brewery/synapse-runtime": "npm:^0.0.16"
-  checksum: 10c0/85869766b27a4f4e39eda0e6015fdc702b21e343e484a5d2c5f406532fc7b9c13a15b67b8c40e1c3c6475079811404c13e8a42ec698fbd521229d52fe927abf6
+    "@pixel-brewery/synapse-core": "npm:^0.0.24"
+    "@pixel-brewery/synapse-runtime": "npm:^0.0.24"
+  checksum: 10c0/87335f780200990383819021b9708fc88d7cc562040faab262c694216040fbbd14fc38b3a24bd3dfdbc7c0f83c481f05c34e7e2fbbf2e56cc2bf20d8d04773b3
   languageName: node
   linkType: hard
 
@@ -5037,10 +5037,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-core@npm:0.0.16, @pixel-brewery/synapse-core@npm:^0.0.16":
-  version: 0.0.16
-  resolution: "@pixel-brewery/synapse-core@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-core%2F0.0.16%2Fe1baa127d3c3997b3c982586a81027f04a35902e"
-  checksum: 10c0/51f7403bd6c09f5e5d0006ab9daeaeb4bb8f7c4cd40470b27f9a44dd5b5a590b48d95596ec03b22a8bf9183b0af59bb427a4c6ea4bfdc1a74295fac969b32d03
+"@pixel-brewery/synapse-core@npm:0.0.24, @pixel-brewery/synapse-core@npm:^0.0.24":
+  version: 0.0.24
+  resolution: "@pixel-brewery/synapse-core@npm:0.0.24::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-core%2F0.0.24%2F1db4a961ca6ee6c3bcc429b0175badf4a36ef074"
+  checksum: 10c0/6a1adc6874f71538cac04466814564d6a99dacc62e2d49f16eaf238a29d96e77ea189bf3ee2656991d1da79a06eec2ff9eca309e18b846227711c67417bce7a1
   languageName: node
   linkType: hard
 
@@ -5051,13 +5051,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-provider-claude@npm:0.0.16":
-  version: 0.0.16
-  resolution: "@pixel-brewery/synapse-provider-claude@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-claude%2F0.0.16%2Fe5265ad6c0a9a38e8c80dc937b89c54f540586eb"
+"@pixel-brewery/synapse-provider-claude@npm:0.0.24":
+  version: 0.0.24
+  resolution: "@pixel-brewery/synapse-provider-claude@npm:0.0.24::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-claude%2F0.0.24%2F23cf36210a5cef75d4fc91db8ed218ad2e48956e"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.16"
-    "@pixel-brewery/synapse-runtime": "npm:^0.0.16"
-  checksum: 10c0/1f06bbeb324ce31ed416c8b127cb017d1b94d70840d260f547549e59de7c0ffddf815855f8151a1d0dcbffe8ed20e5708b8f9643d78932be2e5015a627d3e37b
+    "@pixel-brewery/synapse-core": "npm:^0.0.24"
+    "@pixel-brewery/synapse-runtime": "npm:^0.0.24"
+  checksum: 10c0/1a668b1399c925881ea4f9eb7db322ec21823dfdcd061411d8e14b4f8009211a4737f979d2f6a543e11a6bd7a1636f78ad4a8c100e458532cab9c4972730cd94
   languageName: node
   linkType: hard
 
@@ -5071,14 +5071,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-provider-codex@npm:0.0.16":
-  version: 0.0.16
-  resolution: "@pixel-brewery/synapse-provider-codex@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-codex%2F0.0.16%2Fdcbc62acb092f3d76e28c1e0e9dcc226dc54f781"
+"@pixel-brewery/synapse-provider-codex@npm:0.0.24":
+  version: 0.0.24
+  resolution: "@pixel-brewery/synapse-provider-codex@npm:0.0.24::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-codex%2F0.0.24%2F3b487552cca1a1ad9800cd5035edb112b0bed24d"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.16"
-    "@pixel-brewery/synapse-runtime": "npm:^0.0.16"
+    "@pixel-brewery/synapse-core": "npm:^0.0.24"
+    "@pixel-brewery/synapse-runtime": "npm:^0.0.24"
     smol-toml: "npm:1.9.1"
-  checksum: 10c0/f5c65c348181fc9f7b2fd4682b82d8047941ccdc6a2c58c0d61cbd4fea62c68674445a6837d08b5b0b21a4e3308666f08727b11572dbaa2bd7c03d46c3863d18
+  checksum: 10c0/1bc99c8cc10638f108ceac5128c8f91ad58ae66bc444f70fbbc803a2ef1657644e759c366d77687af3cf77a01b9a987330266fa92b0ac9de0a746d5b3d64bf1d
   languageName: node
   linkType: hard
 
@@ -5093,13 +5093,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-provider-opencode@npm:0.0.16":
-  version: 0.0.16
-  resolution: "@pixel-brewery/synapse-provider-opencode@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-opencode%2F0.0.16%2F3574c59169bf070c16ea34ed0b8d6f81bd134648"
+"@pixel-brewery/synapse-provider-opencode@npm:0.0.24":
+  version: 0.0.24
+  resolution: "@pixel-brewery/synapse-provider-opencode@npm:0.0.24::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-provider-opencode%2F0.0.24%2F42069a693058f7f9dcc2c4995af589016744eca6"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.16"
-    "@pixel-brewery/synapse-runtime": "npm:^0.0.16"
-  checksum: 10c0/babf25515788e80c3c4726dace3e4f54b7a94a3d8dd15c27f83c8defa937cc9e1f620104b6c65031efc1600df45f915cb1e98597e2f496b4161d4dc48c5a463e
+    "@pixel-brewery/synapse-core": "npm:^0.0.24"
+    "@pixel-brewery/synapse-runtime": "npm:^0.0.24"
+  checksum: 10c0/20946d0b26543b8b8d36452b2caab181bdb1bd66ea06b41645afb0064ddb1b927d305f5d4647d54e23e6e869b40101b72093fd02cae4e6a78ead276dda8b9e50
   languageName: node
   linkType: hard
 
@@ -5113,23 +5113,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-routing@npm:0.0.16":
-  version: 0.0.16
-  resolution: "@pixel-brewery/synapse-routing@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-routing%2F0.0.16%2F7012e81e8dc14eba1e96ea20567c27e7a6e7cf32"
+"@pixel-brewery/synapse-routing@npm:0.0.24":
+  version: 0.0.24
+  resolution: "@pixel-brewery/synapse-routing@npm:0.0.24::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-routing%2F0.0.24%2Fa41720e0a97dbcf69ec3a611d6a4aa25f9cec971"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.16"
-  checksum: 10c0/582c1cf10ddc79b8729c9b7fce822be029c34e4fe7cea818aec1a469ab3d14e90df88ac7d6067d36b759c1dfbc797dd8fed2ad73ec9e1eb5e0bac14d7070b26a
+    "@pixel-brewery/synapse-core": "npm:^0.0.24"
+  checksum: 10c0/5b5a7b8164ad70047c64f6ee0e6ad130e3a2767483a8f9e4f8b6653e3e43f9a3f76aac5cd140291cfd2a0b55037cdb9e543397d4759757b17ec90760ab8f6183
   languageName: node
   linkType: hard
 
-"@pixel-brewery/synapse-runtime@npm:0.0.16, @pixel-brewery/synapse-runtime@npm:^0.0.16":
-  version: 0.0.16
-  resolution: "@pixel-brewery/synapse-runtime@npm:0.0.16::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-runtime%2F0.0.16%2F6596261da26e3edd9caaace41cd83f65d4645920"
+"@pixel-brewery/synapse-runtime@npm:0.0.24, @pixel-brewery/synapse-runtime@npm:^0.0.24":
+  version: 0.0.24
+  resolution: "@pixel-brewery/synapse-runtime@npm:0.0.24::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40pixel-brewery%2Fsynapse-runtime%2F0.0.24%2F25f0f9ef175871cfc5f4d3fd68a5b413b02e6d72"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:^0.0.16"
+    "@pixel-brewery/synapse-core": "npm:^0.0.24"
     ajv: "npm:8.20.0"
     cross-spawn: "npm:7.0.6"
-  checksum: 10c0/404be8de9ef157f7b409d9082f94e50b1f60528eeb209640d2fc03167c70a187aed75cf51993f919b430ed0827bc163beec98887d115b04d2457da455f18f694
+  checksum: 10c0/f11250341c58d1712543360b69ba666a2b85ab821be440cfc8b27607131f9b4727160ced7635f02902de229b16b01c5aa46e9e8dc53147c802881b6493cd4ca1
   languageName: node
   linkType: hard
 
@@ -5609,7 +5609,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5622,7 +5622,7 @@ __metadata:
     "@symphony/domain-core": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5647,7 +5647,7 @@ __metadata:
   dependencies:
     "@symphony/domain-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5660,7 +5660,7 @@ __metadata:
     "@symphony/domain-core": "workspace:*"
     "@symphony/domain-delivery": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5687,7 +5687,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/ipc-contracts-execution": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5702,7 +5702,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5714,7 +5714,7 @@ __metadata:
     "@symphony/domain-skills": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5727,7 +5727,7 @@ __metadata:
     "@symphony/domain-skills": "workspace:*"
     "@symphony/domain-work": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5739,7 +5739,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5754,7 +5754,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5814,7 +5814,7 @@ __metadata:
     "@symphony/domain-workflow": "workspace:*"
     "@symphony/domain-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -5834,7 +5834,7 @@ __metadata:
     "@symphony/configuration-core": "workspace:*"
     "@symphony/domain-delivery": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -5936,7 +5936,7 @@ __metadata:
   dependencies:
     "@symphony/domain-ci": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5952,7 +5952,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5974,7 +5974,7 @@ __metadata:
   dependencies:
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -5985,7 +5985,7 @@ __metadata:
     "@symphony/domain-ai": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6003,7 +6003,7 @@ __metadata:
   resolution: "@symphony/domain-workflow@workspace:libs/domain/features/workflow"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6046,7 +6046,7 @@ __metadata:
     "@symphony/ipc-contracts-workflow": "workspace:*"
     "@symphony/mobile-contracts": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6066,7 +6066,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6089,7 +6089,7 @@ __metadata:
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6113,7 +6113,7 @@ __metadata:
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
     "@symphony/ipc-contracts-platform": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6160,7 +6160,7 @@ __metadata:
     "@symphony/ipc-contracts-platform": "workspace:*"
     marked: "npm:18.2.0"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6198,7 +6198,7 @@ __metadata:
     "@symphony/ipc-contracts-delivery": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6221,7 +6221,7 @@ __metadata:
     "@symphony/frontend-notification": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6239,7 +6239,7 @@ __metadata:
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6272,7 +6272,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6296,7 +6296,7 @@ __metadata:
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-mobile": "workspace:*"
     "@symphony/mobile-contracts": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6318,7 +6318,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-platform": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6343,7 +6343,7 @@ __metadata:
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
     "@symphony/ipc-contracts-skills": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6365,7 +6365,7 @@ __metadata:
     "@symphony/ipc-contracts-ai": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6406,7 +6406,7 @@ __metadata:
     "@symphony/ipc-contracts-workflow": "workspace:*"
     "@symphony/mobile-contracts": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6426,7 +6426,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-workflow": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6452,7 +6452,7 @@ __metadata:
     "@symphony/ipc-contracts-composition": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6470,7 +6470,7 @@ __metadata:
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6482,7 +6482,7 @@ __metadata:
     "@angular/core": "npm:22.3.0"
     "@angular/platform-browser": "npm:22.3.0"
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.213"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6501,7 +6501,7 @@ __metadata:
     "@symphony/frontend-intl": "workspace:*"
     "@symphony/ipc-contracts-core": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6536,7 +6536,7 @@ __metadata:
     "@symphony/ipc-contracts-desktop": "workspace:*"
     "@symphony/mobile-contracts": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6547,7 +6547,7 @@ __metadata:
     "@angular/core": "npm:22.3.0"
     "@angular/router": "npm:22.3.0"
     "@symphony/frontend-core": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6561,7 +6561,7 @@ __metadata:
     "@pixel-brewery/mosaik-elements-angular": "npm:0.1.213"
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-intl": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6580,7 +6580,7 @@ __metadata:
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-composition": "workspace:*"
     rxjs: "npm:7.8.2"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6606,7 +6606,7 @@ __metadata:
     "@symphony/ipc-contracts-platform": "workspace:*"
     marked: "npm:18.2.0"
     three: "npm:0.187.0"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6623,7 +6623,7 @@ __metadata:
     "@symphony/frontend-setting": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
     "@symphony/ipc-contracts-desktop": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6638,7 +6638,7 @@ __metadata:
     "@symphony/frontend-core": "workspace:*"
     "@symphony/frontend-quick-create": "workspace:*"
     "@symphony/frontend-ui": "workspace:*"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6667,7 +6667,7 @@ __metadata:
     "@symphony/ipc-contracts-core": "workspace:*"
     "@symphony/ipc-contracts-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6701,7 +6701,7 @@ __metadata:
     "@symphony/ipc-contracts-workflow": "workspace:*"
     "@symphony/ipc-contracts-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6711,7 +6711,7 @@ __metadata:
   resolution: "@symphony/ipc-contracts-core@workspace:libs/ipc-contracts/core"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6732,7 +6732,7 @@ __metadata:
   resolution: "@symphony/ipc-contracts-desktop@workspace:libs/ipc-contracts/desktop"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6746,7 +6746,7 @@ __metadata:
     "@symphony/ipc-contracts-skills": "workspace:*"
     "@symphony/ipc-contracts-work": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6786,7 +6786,7 @@ __metadata:
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6809,7 +6809,7 @@ __metadata:
   dependencies:
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6820,7 +6820,7 @@ __metadata:
   dependencies:
     "@symphony/configuration-composition": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6842,7 +6842,7 @@ __metadata:
     "@symphony/domain-team": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -6855,7 +6855,7 @@ __metadata:
     "@symphony/domain-ai": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6867,7 +6867,7 @@ __metadata:
     "@symphony/domain-automation": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6880,7 +6880,7 @@ __metadata:
     "@symphony/persistence-core": "workspace:*"
     "@symphony/persistence-platform": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6897,7 +6897,7 @@ __metadata:
     "@symphony/persistence-workflow": "workspace:*"
     "@symphony/persistence-workspace": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6918,7 +6918,7 @@ __metadata:
     "@symphony/ipc-contracts-delivery": "workspace:*"
     "@symphony/persistence-platform": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6930,7 +6930,7 @@ __metadata:
     "@symphony/domain-execution": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6960,7 +6960,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6983,7 +6983,7 @@ __metadata:
     "@symphony/domain-workflow": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -6996,7 +6996,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/persistence-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7004,7 +7004,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/providers-ai@workspace:libs/providers/ai"
   dependencies:
-    "@pixel-brewery/synapse-core": "npm:0.0.16"
+    "@pixel-brewery/synapse-core": "npm:0.0.24"
     "@symphony/application-ai": "workspace:*"
     "@symphony/application-execution": "workspace:*"
     "@symphony/application-work": "workspace:*"
@@ -7014,7 +7014,7 @@ __metadata:
     "@symphony/domain-workflow": "workspace:*"
     "@symphony/providers-synapse": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7023,7 +7023,7 @@ __metadata:
   resolution: "@symphony/providers-artificial-analysis@workspace:libs/providers/artificial-analysis"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7039,7 +7039,7 @@ __metadata:
     "@symphony/providers-work": "workspace:*"
     "@types/node": "npm:26.6.6"
     marked: "npm:18.2.0"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7053,7 +7053,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/providers-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7062,7 +7062,7 @@ __metadata:
   resolution: "@symphony/providers-core@workspace:libs/providers/core"
   dependencies:
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7073,7 +7073,7 @@ __metadata:
     "@symphony/application-skills": "workspace:*"
     "@symphony/domain-skills": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     yaml: "npm:2.9.1"
   languageName: unknown
   linkType: soft
@@ -7088,7 +7088,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/providers-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7116,7 +7116,7 @@ __metadata:
     "@symphony/providers-lima": "workspace:*"
     "@symphony/providers-work": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     yaml: "npm:2.9.1"
   languageName: unknown
   linkType: soft
@@ -7129,7 +7129,7 @@ __metadata:
     "@symphony/domain-core": "workspace:*"
     "@symphony/providers-core": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7141,7 +7141,7 @@ __metadata:
     "@symphony/configuration-composition": "workspace:*"
     "@symphony/domain-feedback": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
@@ -7165,7 +7165,7 @@ __metadata:
     "@symphony/domain-workspace": "workspace:*"
     "@symphony/providers-work": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7173,13 +7173,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@symphony/providers-synapse@workspace:libs/providers/synapse"
   dependencies:
-    "@pixel-brewery/synapse-auth": "npm:0.0.16"
-    "@pixel-brewery/synapse-core": "npm:0.0.16"
-    "@pixel-brewery/synapse-provider-claude": "npm:0.0.16"
-    "@pixel-brewery/synapse-provider-codex": "npm:0.0.16"
-    "@pixel-brewery/synapse-provider-opencode": "npm:0.0.16"
-    "@pixel-brewery/synapse-routing": "npm:0.0.16"
-    "@pixel-brewery/synapse-runtime": "npm:0.0.16"
+    "@pixel-brewery/synapse-auth": "npm:0.0.24"
+    "@pixel-brewery/synapse-core": "npm:0.0.24"
+    "@pixel-brewery/synapse-provider-claude": "npm:0.0.24"
+    "@pixel-brewery/synapse-provider-codex": "npm:0.0.24"
+    "@pixel-brewery/synapse-provider-opencode": "npm:0.0.24"
+    "@pixel-brewery/synapse-routing": "npm:0.0.24"
+    "@pixel-brewery/synapse-runtime": "npm:0.0.24"
     "@symphony/application-ai": "workspace:*"
     "@symphony/application-execution": "workspace:*"
     "@symphony/application-work": "workspace:*"
@@ -7188,7 +7188,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7207,7 +7207,7 @@ __metadata:
     "@symphony/domain-work": "workspace:*"
     "@symphony/domain-workflow": "workspace:*"
     "@types/node": "npm:26.6.6"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
   languageName: unknown
   linkType: soft
 
@@ -7753,39 +7753,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/eslint-plugin@npm:8.72.2"
+"@typescript-eslint/eslint-plugin@npm:8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/eslint-plugin@npm:8.74.0"
   dependencies:
     "@eslint-community/regexpp": "npm:^4.12.2"
-    "@typescript-eslint/scope-manager": "npm:8.72.2"
-    "@typescript-eslint/type-utils": "npm:8.72.2"
-    "@typescript-eslint/utils": "npm:8.72.2"
-    "@typescript-eslint/visitor-keys": "npm:8.72.2"
+    "@typescript-eslint/scope-manager": "npm:8.74.0"
+    "@typescript-eslint/type-utils": "npm:8.74.0"
+    "@typescript-eslint/utils": "npm:8.74.0"
+    "@typescript-eslint/visitor-keys": "npm:8.74.0"
     ignore: "npm:^7.0.5"
     natural-compare: "npm:^1.4.0"
     ts-api-utils: "npm:^2.5.0"
   peerDependencies:
-    "@typescript-eslint/parser": ^8.72.2
+    "@typescript-eslint/parser": ^8.74.0
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/2464497406205ae4e48f4d6270583992f6a4d6990562f9a8a841ee01c2b0f6821409447f5ceef36a896d6fbcf92426debced014551d72263651d4752436d43d6
+  checksum: 10c0/dd59788326d9dbb2b204a4ac55fcb6980fe90e94d6fb50e9ff6dd1538a481749b36e78dbd66825b66c63179ce87a1c583251d65f95ef5a40ef50273f2993c9b1
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/parser@npm:8.72.2"
+"@typescript-eslint/parser@npm:8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/parser@npm:8.74.0"
   dependencies:
-    "@typescript-eslint/scope-manager": "npm:8.72.2"
-    "@typescript-eslint/types": "npm:8.72.2"
-    "@typescript-eslint/typescript-estree": "npm:8.72.2"
-    "@typescript-eslint/visitor-keys": "npm:8.72.2"
+    "@typescript-eslint/scope-manager": "npm:8.74.0"
+    "@typescript-eslint/types": "npm:8.74.0"
+    "@typescript-eslint/typescript-estree": "npm:8.74.0"
+    "@typescript-eslint/visitor-keys": "npm:8.74.0"
     debug: "npm:^4.4.3"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/17e14881171104d5a1729e08668252df1c9d7006a56616a04338c4f5091a7d62539e65ed431908449567b65cea327ee11abebb84d0471c3b5bbdb92c3a2a619f
+  checksum: 10c0/76f117f7a241c9b362d64e9a17e741ed9c65a98605c58d4a1c197259c0bdce98d2999b3610d7cc45e2df8809caebfeae77a303f62c776c395dcebb7096144437
   languageName: node
   linkType: hard
 
@@ -7802,16 +7802,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/project-service@npm:8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/project-service@npm:8.72.2"
+"@typescript-eslint/project-service@npm:8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/project-service@npm:8.74.0"
   dependencies:
-    "@typescript-eslint/tsconfig-utils": "npm:^8.72.2"
-    "@typescript-eslint/types": "npm:^8.72.2"
+    "@typescript-eslint/tsconfig-utils": "npm:^8.74.0"
+    "@typescript-eslint/types": "npm:^8.74.0"
     debug: "npm:^4.4.3"
   peerDependencies:
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/655d448448b05e0394da913d36c6e527b88aaf5ee98dddfa06e7f674f9a55d729df2114f04ecdfb3657cd5ac1ce1dfed2da1c964e5cb766e6a2ea91c76b3f136
+  checksum: 10c0/29b6578c3430f25cd90cf8147406785979edc4fbb8d4f7b396b8c48dc7bfc8d3efef40ea276e153982cfd91253d64e8babae66daf1412f47974c13582cb98070
   languageName: node
   linkType: hard
 
@@ -7825,13 +7825,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/scope-manager@npm:8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/scope-manager@npm:8.72.2"
+"@typescript-eslint/scope-manager@npm:8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/scope-manager@npm:8.74.0"
   dependencies:
-    "@typescript-eslint/types": "npm:8.72.2"
-    "@typescript-eslint/visitor-keys": "npm:8.72.2"
-  checksum: 10c0/c8a0836f9f60b3bebec02f2ce75b7211479d02865e27ca628909d047b27a0dae33c928ea5e6622e58e33227e11bf7da58bf81e534c10cbf8bfd57bae4919da32
+    "@typescript-eslint/types": "npm:8.74.0"
+    "@typescript-eslint/visitor-keys": "npm:8.74.0"
+  checksum: 10c0/35039784e5f52cf4c76c23a7f975ec24d3ab4ba8a9f446711532a693d9644bda5f14efab5690aaed8a48353fe35519f6fe42823c61a3a4cc66cb62757e8f5270
   languageName: node
   linkType: hard
 
@@ -7844,28 +7844,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/tsconfig-utils@npm:8.72.2, @typescript-eslint/tsconfig-utils@npm:^8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/tsconfig-utils@npm:8.72.2"
+"@typescript-eslint/tsconfig-utils@npm:8.74.0, @typescript-eslint/tsconfig-utils@npm:^8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/tsconfig-utils@npm:8.74.0"
   peerDependencies:
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/eafdd9b29185849218277c7c79a23fdcedea1d9d016b2f438e3518eba89e2fff09cb4434afd9ab5f3eec322f554456844cb5b6be5deeaaf77a915733c966b392
+  checksum: 10c0/4122b3dece3c47f5bd2eff1eef11ab5d757b8fac0fb5d3a71bf6045bb8aee2938f2a5613ca710fb456a681b118fcfa45983b222ff8a373b892bcd4094fb9d5eb
   languageName: node
   linkType: hard
 
-"@typescript-eslint/type-utils@npm:8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/type-utils@npm:8.72.2"
+"@typescript-eslint/type-utils@npm:8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/type-utils@npm:8.74.0"
   dependencies:
-    "@typescript-eslint/types": "npm:8.72.2"
-    "@typescript-eslint/typescript-estree": "npm:8.72.2"
-    "@typescript-eslint/utils": "npm:8.72.2"
+    "@typescript-eslint/types": "npm:8.74.0"
+    "@typescript-eslint/typescript-estree": "npm:8.74.0"
+    "@typescript-eslint/utils": "npm:8.74.0"
     debug: "npm:^4.4.3"
     ts-api-utils: "npm:^2.5.0"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/db237b79d866555c84cbaa555d9a23c3e01d5167a259f33a31c6c0e2905fb0111a637386ee9128291935f142cbeb0716ca280cd789c998b37a69aa53b15764ad
+  checksum: 10c0/791c3076ee1494ef4e033d7ae2dd1383e45ef091a5f21689bf06330f7bd24bc068e7793a4a7443d27b80e422fda28be384e78d4f4cef5372545e23a03e1c7b95
   languageName: node
   linkType: hard
 
@@ -7892,10 +7892,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/types@npm:8.72.2, @typescript-eslint/types@npm:^8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/types@npm:8.72.2"
-  checksum: 10c0/283cbfd02033da3790dde8a613f23bbcb21706281393daf256ea798112124e355679d1f5bdd16ee0d3b9730f4d16acd619504b3bfb25c7979f363c0963b3e1b6
+"@typescript-eslint/types@npm:8.74.0, @typescript-eslint/types@npm:^8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/types@npm:8.74.0"
+  checksum: 10c0/211e96af23e34e61a2d545e9438366ed6c63663fea52d1d6150f293668924df7b76d362e8dcadf47d706fbb4b16159d7f752d1220c8a4ae93706c59f3bc7a123
   languageName: node
   linkType: hard
 
@@ -7925,22 +7925,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/typescript-estree@npm:8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/typescript-estree@npm:8.72.2"
+"@typescript-eslint/typescript-estree@npm:8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/typescript-estree@npm:8.74.0"
   dependencies:
-    "@typescript-eslint/project-service": "npm:8.72.2"
-    "@typescript-eslint/tsconfig-utils": "npm:8.72.2"
-    "@typescript-eslint/types": "npm:8.72.2"
-    "@typescript-eslint/visitor-keys": "npm:8.72.2"
+    "@typescript-eslint/project-service": "npm:8.74.0"
+    "@typescript-eslint/tsconfig-utils": "npm:8.74.0"
+    "@typescript-eslint/types": "npm:8.74.0"
+    "@typescript-eslint/visitor-keys": "npm:8.74.0"
     debug: "npm:^4.4.3"
-    minimatch: "npm:^10.2.2"
+    minimatch: "npm:^11.0.1"
     semver: "npm:^7.7.3"
     tinyglobby: "npm:^0.2.15"
     ts-api-utils: "npm:^2.5.0"
   peerDependencies:
+    "@typescript/native": "*"
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/5bcb59ec83bd7e750864308b2a6e2d7844777368f92180f4c4c3a9e92f8102c3fc8a6f9db4bee234e5417ce722a3f4835d6e74e6925b71654f4e8e7642f2fba5
+  peerDependenciesMeta:
+    "@typescript/native":
+      optional: true
+  checksum: 10c0/3a76d861615326ae4ee38b3f5b519e6e4d253f54a125a4bb3713ac6ac33dfad8302c29876e491b2bb6a91b7fbd6e32896e7aa45969962388121fb74835fbe45e
   languageName: node
   linkType: hard
 
@@ -7959,18 +7963,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:8.72.2, @typescript-eslint/utils@npm:^8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/utils@npm:8.72.2"
+"@typescript-eslint/utils@npm:8.74.0, @typescript-eslint/utils@npm:^8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/utils@npm:8.74.0"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.9.1"
-    "@typescript-eslint/scope-manager": "npm:8.72.2"
-    "@typescript-eslint/types": "npm:8.72.2"
-    "@typescript-eslint/typescript-estree": "npm:8.72.2"
+    "@typescript-eslint/scope-manager": "npm:8.74.0"
+    "@typescript-eslint/types": "npm:8.74.0"
+    "@typescript-eslint/typescript-estree": "npm:8.74.0"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/beadf16888dd042ede231e4b062cc058d0b3a58d08ffa99bd111b98d0e9f076da4d62cb3ca5102706a72c381e24fe517903804d38db4c4b46e9d024387f6b8cf
+  checksum: 10c0/d20a9921b7a4579aecf2c3198fd5abab05326db4fe8edbce5305dd1eee92c68a360f7c9f860200b2a19a72da5893e479f070d605d8374440d99aec77aeb33b3a
   languageName: node
   linkType: hard
 
@@ -7984,13 +7988,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/visitor-keys@npm:8.72.2":
-  version: 8.72.2
-  resolution: "@typescript-eslint/visitor-keys@npm:8.72.2"
+"@typescript-eslint/visitor-keys@npm:8.74.0":
+  version: 8.74.0
+  resolution: "@typescript-eslint/visitor-keys@npm:8.74.0"
   dependencies:
-    "@typescript-eslint/types": "npm:8.72.2"
+    "@typescript-eslint/types": "npm:8.74.0"
     eslint-visitor-keys: "npm:^5.0.0"
-  checksum: 10c0/134e441f0c1d055b6b82f59887bc96d07a89909f8e910622e1e95d7fbf42de9c4fa1910d8335af252910c298b474565d2c34888608130d53238eee1504df9894
+  checksum: 10c0/8003ed9ff1e00d5a6e44f9c2112b5b210e85e6580f611e8427124587ee85b7c71d66eebc8c52b8b5ad29d02be4e7db9ea5b47fc1f858d463cea1afb369f38999
   languageName: node
   linkType: hard
 
@@ -8010,9 +8014,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/coverage-v8@npm:~5.1.0":
-  version: 5.1.0
-  resolution: "@vitest/coverage-v8@npm:5.1.0"
+"@vitest/coverage-v8@npm:~5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/coverage-v8@npm:5.1.1"
   dependencies:
     "@bcoe/v8-coverage": "npm:^1.0.2"
     "@vitest/istanbul-lib-coverage": "npm:^2.1.0"
@@ -8023,12 +8027,12 @@ __metadata:
     std-env: "npm:^4.3.0"
     tinyrainbow: "npm:^3.2.0"
   peerDependencies:
-    "@vitest/browser": 5.1.0
-    vitest: 5.1.0
+    "@vitest/browser": 5.1.1
+    vitest: 5.1.1
   peerDependenciesMeta:
     "@vitest/browser":
       optional: true
-  checksum: 10c0/dc6f680a9bed5dca4eb64259b7195db77cedf8c01fc47e47529c9590a9d6ab3b0165ea60ca663b2dd7a44bcd5b4d1e01fd3285f2efab3f2697b3d4823a5527a7
+  checksum: 10c0/f18df6e9bb4d874c490913061886ea74c187ac7d01c6681b11990bda5df8d0d16e6d6b4ee3bb82de447d00e93992eff4d650b02a1dcb59764f05e488f2e8a476
   languageName: node
   linkType: hard
 
@@ -8048,14 +8052,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/mocker@npm:5.1.0":
-  version: 5.1.0
-  resolution: "@vitest/mocker@npm:5.1.0"
+"@vitest/mocker@npm:5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/mocker@npm:5.1.1"
   dependencies:
     "@jridgewell/trace-mapping": "npm:0.3.31"
-    "@vitest/spy": "npm:5.1.0"
+    "@vitest/spy": "npm:5.1.1"
     estree-walker: "npm:^3.0.3"
-    magic-string: "npm:^1.4.3"
+    magic-string: "npm:^1.4.5"
   peerDependencies:
     msw: ^2.4.9 || ^3.0.0
     vite: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -8064,14 +8068,14 @@ __metadata:
       optional: true
     vite:
       optional: true
-  checksum: 10c0/b180d01dfcd6fe7065c1415814890bf062f73af2f7de41b1d0c97f22437b6722b39d96567b54081037b04a1e16dc96512aeaa1cff1fe9de94d8b7d2f75001f64
+  checksum: 10c0/08c1e555cf56f6414bdbfa89c386f7e2559ffd978e6cc7535d7835a23f2449e48f6bf1e64f0e5e065bf5fc66968fba3ae5fdd0f31b3d123622dbdbc751827054
   languageName: node
   linkType: hard
 
-"@vitest/spy@npm:5.1.0":
-  version: 5.1.0
-  resolution: "@vitest/spy@npm:5.1.0"
-  checksum: 10c0/6f57b9b0cf8fcf65f89cbe7f7688ee87b2bd64d8678d888c6ea5542b66efe041a0c2be6268de89ced0ee29c685b13d4e925b2e791be435e84236cc6d0394feb6
+"@vitest/spy@npm:5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/spy@npm:5.1.1"
+  checksum: 10c0/bcafafb7bcd975b776c41c07b89452baf1dd441aba8e4214e610722e2d927f697db46fc68b07db5434ea0883772d6378ad21668e9c694528b970e1f43cf88165
   languageName: node
   linkType: hard
 
@@ -8729,30 +8733,21 @@ __metadata:
   linkType: hard
 
 "brace-expansion@npm:^1.1.7":
-  version: 1.1.18
-  resolution: "brace-expansion@npm:1.1.18"
+  version: 1.1.22
+  resolution: "brace-expansion@npm:1.1.22"
   dependencies:
     balanced-match: "npm:^1.0.0"
     concat-map: "npm:0.0.1"
-  checksum: 10c0/3432c18a9e2ebf94162d4effb62198bd0adea06a9f332b2c0188df5d5e30b1e51ea3c848b6608e47d0b857ebe1ea5b3888ed3326dd3c4f6f9645c94153cf9c14
+  checksum: 10c0/79efabb798348e385f3ec6a0b1cb86811bd164db7b1a25501067de5c436781c2c74cb3cdcf7f9c0f497a6219e7e0d9ee327341c74aa1eb1f178ba690e7202dea
   languageName: node
   linkType: hard
 
-"brace-expansion@npm:^5.0.12":
+"brace-expansion@npm:^5.0.12, brace-expansion@npm:^5.0.8":
   version: 5.0.13
   resolution: "brace-expansion@npm:5.0.13"
   dependencies:
     balanced-match: "npm:^4.0.2"
   checksum: 10c0/80420a1d567db7fa3214e2d49cd28ff8aa89dbb9a889bf3e449372dd72cdcec5267b451a5ff6fcaec1dd8819a88fb3d682e01c63812a8220881e305852b07f60
-  languageName: node
-  linkType: hard
-
-"brace-expansion@npm:^5.0.8":
-  version: 5.0.9
-  resolution: "brace-expansion@npm:5.0.9"
-  dependencies:
-    balanced-match: "npm:^4.0.2"
-  checksum: 10c0/3dea38884a1c3c8b1c9c44a7402a0c76fca460f70cffb3127242b0b4cbf4472019e022ade021eec44838ff19f1dac2625dfd11dd459d7e1e055b0698a8d52fec
   languageName: node
   linkType: hard
 
@@ -12149,7 +12144,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magic-string@npm:1.4.5, magic-string@npm:^1.1.0, magic-string@npm:^1.4.3":
+"magic-string@npm:1.4.5, magic-string@npm:^1.1.0, magic-string@npm:^1.4.5":
   version: 1.4.5
   resolution: "magic-string@npm:1.4.5"
   dependencies:
@@ -15419,13 +15414,13 @@ __metadata:
     "@pixel-brewery/remote-core": "npm:0.2.0"
     "@pixel-brewery/remote-node": "npm:0.2.0"
     "@pixel-brewery/remote-protocol": "npm:0.2.0"
-    "@pixel-brewery/synapse-auth": "npm:0.0.16"
-    "@pixel-brewery/synapse-core": "npm:0.0.16"
-    "@pixel-brewery/synapse-provider-claude": "npm:0.0.16"
-    "@pixel-brewery/synapse-provider-codex": "npm:0.0.16"
-    "@pixel-brewery/synapse-provider-opencode": "npm:0.0.16"
-    "@pixel-brewery/synapse-routing": "npm:0.0.16"
-    "@pixel-brewery/synapse-runtime": "npm:0.0.16"
+    "@pixel-brewery/synapse-auth": "npm:0.0.24"
+    "@pixel-brewery/synapse-core": "npm:0.0.24"
+    "@pixel-brewery/synapse-provider-claude": "npm:0.0.24"
+    "@pixel-brewery/synapse-provider-codex": "npm:0.0.24"
+    "@pixel-brewery/synapse-provider-opencode": "npm:0.0.24"
+    "@pixel-brewery/synapse-routing": "npm:0.0.24"
+    "@pixel-brewery/synapse-runtime": "npm:0.0.24"
     "@pixel-brewery/wortlaut-eslint-rules": "npm:0.2.7"
     "@pixel-brewery/wortlaut-nx-tasks": "npm:0.2.7"
     "@playwright/test": "npm:1.65.1"
@@ -15552,8 +15547,8 @@ __metadata:
     "@types/node": "npm:26.6.6"
     "@types/three": "npm:0.187.0"
     "@types/ws": "npm:8.18.2"
-    "@typescript-eslint/utils": "npm:^8.72.2"
-    "@vitest/coverage-v8": "npm:~5.1.0"
+    "@typescript-eslint/utils": "npm:^8.74.0"
+    "@vitest/coverage-v8": "npm:~5.1.1"
     angular-eslint: "npm:^22.6.0"
     apexcharts: "npm:8.8.2"
     chroma-js: "npm:3.3.0"
@@ -15577,9 +15572,9 @@ __metadata:
     three: "npm:0.187.0"
     tslib: "npm:2.9.1"
     typescript: "npm:6.0.3"
-    typescript-eslint: "npm:8.72.2"
+    typescript-eslint: "npm:8.74.0"
     vite: "npm:8.3.8"
-    vitest: "npm:5.1.0"
+    vitest: "npm:5.1.1"
     wait-on: "npm:9.5.1"
     ws: "npm:8.23.0"
     yaml: "npm:2.9.1"
@@ -15675,10 +15670,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinybench@npm:^6.2.2":
-  version: 6.2.2
-  resolution: "tinybench@npm:6.2.2"
-  checksum: 10c0/f0e6391f4ca86875ce5a64510696323aa841c10495fdd1c6ca530457c7e77f2b3aa82d9d6f1553126420062b1008607257677ce2b25ff1948732a79d7a56514a
+"tinybench@npm:^6.2.3":
+  version: 6.2.4
+  resolution: "tinybench@npm:6.2.4"
+  checksum: 10c0/a5ca5727be05157819bc196e4a53f01b97fac84bff70e2966dc71946b1b90119f3e666a8ac37e3acb2bc9997fd2a031051f9a3309e7655aedd5acd0efcfc7046
   languageName: node
   linkType: hard
 
@@ -15879,18 +15874,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript-eslint@npm:8.72.2":
-  version: 8.72.2
-  resolution: "typescript-eslint@npm:8.72.2"
+"typescript-eslint@npm:8.74.0":
+  version: 8.74.0
+  resolution: "typescript-eslint@npm:8.74.0"
   dependencies:
-    "@typescript-eslint/eslint-plugin": "npm:8.72.2"
-    "@typescript-eslint/parser": "npm:8.72.2"
-    "@typescript-eslint/typescript-estree": "npm:8.72.2"
-    "@typescript-eslint/utils": "npm:8.72.2"
+    "@typescript-eslint/eslint-plugin": "npm:8.74.0"
+    "@typescript-eslint/parser": "npm:8.74.0"
+    "@typescript-eslint/typescript-estree": "npm:8.74.0"
+    "@typescript-eslint/utils": "npm:8.74.0"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/9179509d74c3a0026f6b607e6f1b358b4b915e1ff1ae7a381cf415aa5a58ebfe05c871c5831550a872ca0c55d9cbc266f4b3ddee9bfedcb379d591e351b365a1
+  checksum: 10c0/ece57dc10de3052958ecf1319e6dde7c5650c68596e680c3cf9eaf7d32fbdda9d110ab3c8ca3762d555bd0325517fddc91993639d64d4c8551d9ed21fb07af97
   languageName: node
   linkType: hard
 
@@ -16243,20 +16238,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:5.1.0":
-  version: 5.1.0
-  resolution: "vitest@npm:5.1.0"
+"vitest@npm:5.1.1":
+  version: 5.1.1
+  resolution: "vitest@npm:5.1.1"
   dependencies:
     "@types/chai": "npm:^5.2.2"
-    "@vitest/mocker": "npm:5.1.0"
+    "@vitest/mocker": "npm:5.1.1"
     chai: "npm:^6.3.0"
     es-module-lexer: "npm:^2.3.2"
     expect-type: "npm:^1.4.0"
-    magic-string: "npm:^1.4.3"
+    magic-string: "npm:^1.4.5"
     obug: "npm:^3.0.0"
     picomatch: "npm:^4.0.7"
     std-env: "npm:^4.3.0"
-    tinybench: "npm:^6.2.2"
+    tinybench: "npm:^6.2.3"
     tinyexec: "npm:^1.3.1"
     tinyglobby: "npm:^0.2.17"
     why-is-node-running: "npm:3.2.1"
@@ -16264,12 +16259,12 @@ __metadata:
     "@edge-runtime/vm": "*"
     "@opentelemetry/api": ^1.9.0
     "@types/node": ^22.0.0 || >=24.0.0
-    "@vitest/browser-playwright": 5.1.0
-    "@vitest/browser-preview": 5.1.0
+    "@vitest/browser-playwright": 5.1.1
+    "@vitest/browser-preview": 5.1.1
     "@vitest/browser-webdriverio": ^5.0.0-beta.5 || >=5.0.0
-    "@vitest/coverage-istanbul": 5.1.0
-    "@vitest/coverage-v8": 5.1.0
-    "@vitest/ui": 5.1.0
+    "@vitest/coverage-istanbul": 5.1.1
+    "@vitest/coverage-v8": 5.1.1
+    "@vitest/ui": 5.1.1
     happy-dom: "*"
     jsdom: "*"
     vite: ^6.4.0 || ^7.0.0 || ^8.0.0
@@ -16300,7 +16295,7 @@ __metadata:
       optional: false
   bin:
     vitest: ./vitest.mjs
-  checksum: 10c0/c1be6065fe9fa73ceef69b4fbd245938c4654ba429066b9283e09527ada3e1c91aa03c2b8520b444af4027e1a8a1ca388dbb6b7b3c973582d053b67ffeeac11c
+  checksum: 10c0/c3f9ac564025fba9f2d6058e22fb1a97747cd9efaa2fd6f210855d3775654d30e1da55054dddfcf1f788f00d47edd54b8cb7d22f78209510413cf9c84e168141
   languageName: node
   linkType: hard
 

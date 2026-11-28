@@ -32,6 +32,6 @@
     "@angular/platform-browser": "22.3.0",
     "@symphony/configuration-composition": "workspace:*",
     "@symphony/ipc-contracts-composition": "workspace:*",
-    "vitest": "5.1.0"
+    "vitest": "5.1.1"
   }
 }

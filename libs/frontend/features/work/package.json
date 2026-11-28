@@ -64,6 +64,6 @@
     "@angular/compiler": "22.3.0",
     "@angular/platform-browser": "22.3.0",
     "@symphony/frontend-feature-execution": "workspace:*",
-    "vitest": "5.1.0"
+    "vitest": "5.1.1"
   }
 }

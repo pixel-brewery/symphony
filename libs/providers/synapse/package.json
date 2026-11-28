@@ -16,16 +16,16 @@
   "devDependencies": {
     "@symphony/domain-workflow": "workspace:*",
     "@types/node": "26.6.6",
-    "vitest": "5.1.0"
+    "vitest": "5.1.1"
   },
   "dependencies": {
-    "@pixel-brewery/synapse-auth": "0.0.16",
-    "@pixel-brewery/synapse-core": "0.0.16",
-    "@pixel-brewery/synapse-provider-claude": "0.0.16",
-    "@pixel-brewery/synapse-provider-codex": "0.0.16",
-    "@pixel-brewery/synapse-provider-opencode": "0.0.16",
-    "@pixel-brewery/synapse-routing": "0.0.16",
-    "@pixel-brewery/synapse-runtime": "0.0.16",
+    "@pixel-brewery/synapse-auth": "0.0.24",
+    "@pixel-brewery/synapse-core": "0.0.24",
+    "@pixel-brewery/synapse-provider-claude": "0.0.24",
+    "@pixel-brewery/synapse-provider-codex": "0.0.24",
+    "@pixel-brewery/synapse-provider-opencode": "0.0.24",
+    "@pixel-brewery/synapse-routing": "0.0.24",
+    "@pixel-brewery/synapse-runtime": "0.0.24",
     "@symphony/application-ai": "workspace:*",
     "@symphony/application-execution": "workspace:*",
     "@symphony/application-work": "workspace:*",
