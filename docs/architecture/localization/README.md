@@ -30,7 +30,7 @@ Angular-Datum- und Zahlenpipes behalten die vorhandenen Format-, Zeitzonen- und 
 
 ## Ausführbare Qualitätsprüfung
 
-Die öffentlichen Pakete `@pixel-brewery/wortlaut-nx-tasks` und `@pixel-brewery/wortlaut-eslint-rules` sind auf `0.2.4` gepinnt. Die Installation läuft mit Yarn und dem Node-Modules-Linker gegen GitHub Packages und benötigt dessen Registry-Authentifizierung. Eine normale Analyse und Sortierung benötigen keinen AI-Anbieter.
+Die öffentlichen Pakete `@pixel-brewery/wortlaut-nx-tasks` und `@pixel-brewery/wortlaut-eslint-rules` sind auf `0.2.10` gepinnt. Die Installation läuft mit Yarn und dem Node-Modules-Linker gegen GitHub Packages und benötigt dessen Registry-Authentifizierung. Eine normale Analyse und Sortierung benötigen keinen AI-Anbieter.
 
 `yarn intl:analyze` prüft zuerst, dass jeder Katalogbereich die deklarierten Sprachen als vorhandene, nicht leere JSON-Objekte enthält. Diese Vorprüfung verhindert, dass fehlende oder leere Dateien vor der eigentlichen Analyse unbemerkt entfallen. Anschließend führt der Befehl den echten öffentlichen Nx-Executor aus. Der Target `frontend-intl:intl:analyze` übernimmt die vollständigen Optionen aus `nx.json`: Angular-Preset, JSON-Eingabe, englische Basissprache und die tatsächlichen Katalogwurzeln. Analyse läuft als Dry-run und schreibt keine Übersetzungen. Leere Werte, doppelte Schlüssel und unterschiedliche Schlüsselmengen sind Fehler. Gleiche Werte zur Basissprache bleiben Hinweise, weil Produktnamen und Fachbegriffe zulässig identisch sein können.
 

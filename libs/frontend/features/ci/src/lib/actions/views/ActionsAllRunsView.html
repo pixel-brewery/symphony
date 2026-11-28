@@ -213,7 +213,7 @@
               [key]="row.id"
               [value]="row"
               (click)="presenter.openRunCommand.execute(row)"
-              (keydown.enter)="presenter.openRunCommand.execute(row)"
+              (keydown.enter)="$event.preventDefault(); presenter.openRunCommand.execute(row)"
               (keydown.space)="$event.preventDefault(); presenter.openRunCommand.execute(row)"
             >
               <mosaik-table-body-cell>

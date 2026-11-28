@@ -24,11 +24,11 @@
     }
   },
   "dependencies": {
-    "@angular/common": "22.2.6",
-    "@angular/core": "22.2.6",
-    "@angular/router": "22.2.6",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.203",
-    "@pixel-brewery/mosaik-elements-foundation": "0.1.203",
+    "@angular/common": "22.3.0",
+    "@angular/core": "22.3.0",
+    "@angular/router": "22.3.0",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
+    "@pixel-brewery/mosaik-elements-foundation": "0.1.219",
     "@symphony/domain-core": "workspace:*",
     "@symphony/domain-execution": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
@@ -46,12 +46,12 @@
     "rxjs": "7.8.2"
   },
   "devDependencies": {
-    "@angular/compiler": "22.2.6",
-    "@angular/platform-browser": "22.2.6",
+    "@angular/compiler": "22.3.0",
+    "@angular/platform-browser": "22.3.0",
     "@symphony/configuration-composition": "workspace:*",
     "@symphony/frontend-feature-automation": "workspace:*",
     "@symphony/frontend-feature-workspace": "workspace:*",
     "@symphony/ipc-contracts-desktop": "workspace:*",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }

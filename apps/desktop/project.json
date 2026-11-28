@@ -24,6 +24,13 @@
         "default",
         "^production",
         "{workspaceRoot}/tools/**/*",
+        "{workspaceRoot}/DESIGN.md",
+        "{workspaceRoot}/COMPONENTS.md",
+        "{workspaceRoot}/libs/frontend/ui/src/lib/theme/ApplicationThemeOverrides.ts",
+        "{workspaceRoot}/apps/renderer/src/configuration/ShellConfig.ts",
+        "{workspaceRoot}/apps/renderer/src/tailwind.css",
+        "{workspaceRoot}/apps/mobile/src/tailwind.css",
+        "{workspaceRoot}/apps/renderer/src/styles/mosaik.scss",
         "{workspaceRoot}/.github/workflows/**/*",
         "{workspaceRoot}/forge.config.*",
         "{workspaceRoot}/resources/macos/**/*"

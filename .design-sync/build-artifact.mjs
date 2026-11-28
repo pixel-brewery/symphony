@@ -788,7 +788,7 @@ function buildReadme() {
 
 ## Components
 
-${CARDS.length} Mosaik components from \`${PACKAGE}@${VERSION}\`, exactly the set Symphony renders. Each has
+${CARDS.length} Mosaik components from \`${PACKAGE}@${VERSION}\`, used by Symphony and its authored previews. Each has
 \`components/<Name>/README.md\` (what it is, slots, parts, a verified example, props) and a live
 \`preview.html\`; \`components/index.d.ts\` holds every props contract.
 

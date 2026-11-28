@@ -14,9 +14,9 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@angular/core": "22.2.6",
-    "@angular/router": "22.2.6",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.203",
+    "@angular/core": "22.3.0",
+    "@angular/router": "22.3.0",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
     "@symphony/domain-skills": "workspace:*",
     "@symphony/domain-team": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
@@ -30,9 +30,9 @@
     "@symphony/ipc-contracts-skills": "workspace:*"
   },
   "devDependencies": {
-    "@angular/compiler": "22.2.6",
-    "@angular/platform-browser": "22.2.6",
+    "@angular/compiler": "22.3.0",
+    "@angular/platform-browser": "22.3.0",
     "@symphony/configuration-composition": "workspace:*",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }

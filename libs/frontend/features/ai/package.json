@@ -14,8 +14,8 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@angular/core": "22.2.6",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.203",
+    "@angular/core": "22.3.0",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
     "@symphony/frontend-core": "workspace:*",
     "@symphony/frontend-intl": "workspace:*",
     "@symphony/frontend-notification": "workspace:*",
@@ -24,10 +24,10 @@
     "@symphony/ipc-contracts-composition": "workspace:*"
   },
   "devDependencies": {
-    "@angular/compiler": "22.2.6",
-    "@angular/platform-browser": "22.2.6",
+    "@angular/compiler": "22.3.0",
+    "@angular/platform-browser": "22.3.0",
     "@symphony/configuration-composition": "workspace:*",
     "rxjs": "7.8.2",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }

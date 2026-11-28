@@ -8,17 +8,25 @@ Symphony is an Angular + Electron application, not a component library. The
 design system it renders is **Mosaik**, consumed as Lit web components. The sync
 therefore bundles `@pixel-brewery/mosaik-elements-react` — Mosaik's own React
 wrappers — pinned to the same version Symphony depends on, and scoped to the
-~110 `<mosaik-*>` tags Symphony actually uses (plus Mosaik's React-only
-overlay providers and `Theme2`).
+application's `<mosaik-*>` tags plus the named runtime imports of every existing
+authored preview (including Mosaik's React-only overlay providers and `Theme2`).
+
+The setup parses preview imports with TypeScript, follows imported names rather
+than local aliases, and excludes type-only imports. It validates all required
+names against the published wrappers before writing the component selection or
+slim entry. Missing public exports fail the setup; existing previews are retained.
+Historical re-sync sections below describe the generator behavior at that time.
 
 - The version is read from Symphony's `package.json`, never hardcoded.
 - The installed Mosaik packages must match Symphony’s exact dependency version.
   The setup reuses the installed package artifacts when all five match; otherwise
   it installs the published artifacts from GitHub Packages. A companion build
   is not a substitute: its version may still match while its source has moved on.
-  The published Mosaik packages are used with two scoped consumer patches: the
-  [design CLI path normalizer](../docs/architecture/application-updates/packaging.md#cross-platform-consumer-build-contract)
-  and the [controlled FlowBoard drag correction](../docs/architecture/board/README.md#einträge-stapel-und-virtualisierung).
+  The application consumes the published Mosaik packages directly, without
+  product-owned consumer patches. The public [design CLI contract](../docs/architecture/application-updates/packaging.md#cross-platform-consumer-build-contract)
+  owns portable path serialization; the [FlowBoard contract](../docs/architecture/board/README.md#einträge-stapel-und-virtualisierung)
+  owns the Angular-controlled card projection. The isolated scratch packaging
+  steps described below remain separate from the application's dependencies.
   Avatar and Persona retain their
   published API; employee figures belong to Symphony's Angular component.
   No Mosaik runtime or component source is copied into Symphony.
@@ -445,9 +453,9 @@ theme.
 
 ## Re-sync risks
 
-- **Generated config.** `dtsPropsFor` (100 contracts) and the 223 `null` entries
-  in `componentSrcMap` are machine-written by `generate-props.mjs` and the tag
-  scan. Re-run both generators rather than hand-editing them.
+- **Generated config.** `dtsPropsFor` and the `null` exclusions in
+  `componentSrcMap` are machine-written by `generate-props.mjs` and the combined
+  application/preview scan. Re-run both generators rather than hand-editing them.
 - **Icon map drift.** `provider/SymphonyIcons.ts` is parsed out of
   `ShellConfig.ts`. If that call is ever refactored (renamed, moved, or built
   from a variable), the parser fails loudly — fix the parser, don't inline a copy.

@@ -209,7 +209,7 @@
       "source": ".agents/skills/symphony-designer",
       "archive": ".agents/packages/symphony-designer.skill",
       "claude": ".claude/skills/symphony-designer/SKILL.md",
-      "sha256": "3c917b89f8e84c4a28da05312f9b14434d1cd8ede70b5e0543c6a5c98a57b397"
+      "sha256": "e854aedd09d3d010ea77e75d5f3c659321f01543cdce0622406bea935ccf52e5"
     },
     {
       "name": "symphony-docs",

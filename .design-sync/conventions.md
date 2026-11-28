@@ -135,7 +135,7 @@ they win over `tokens.css`, which mirrors the same names for markup outside it.
 `icon` props and `<Icon>` resolve only these registered names. Anything else
 renders nothing at all — no error, just an empty box:
 
-`add, arrowRight, azureDevOps, board, bot, branch, checkCircle, checkmark,
+`add, arrowRight, azureDevOps, bell, board, bot, branch, checkCircle, checkmark,
 checkmarkCircle, chevronLeft, chevronRight, claude, clear, clipboardTask, comment,
 cloudArrowRight, copy, delete, disconnect, download, edit, error, errorCircle,
 executionOutline, eyeShow, filter, flow, folder, folderOpen, games, github,
