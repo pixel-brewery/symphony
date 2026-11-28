@@ -499,10 +499,10 @@ the complete component-token model with the values Symphony renders.
 
 | Layer | Count | Source |
 |---|---|---|
-| Global tokens (compiled) | 507 | `@pixel-brewery/mosaik-themes@0.1.221` |
+| Global tokens (compiled) | 507 | `@pixel-brewery/mosaik-themes@0.1.222` |
 | Runtime custom properties (light) | 653 | base theme plus the overrides of this product |
-| Components with a token file | 397 | `design/soho/model.json` |
-| Component tokens (mixins expanded) | 11839 | `design/soho/model.json` |
+| Components with a token file | 402 | `design/soho/model.json` |
+| Component tokens (mixins expanded) | 11947 | `design/soho/model.json` |
 | Component tokens that do not resolve | 2 | [Known gaps](#known-gaps) |
 <!-- /design-md:stats -->
 <!-- prettier-ignore-end -->
@@ -1184,6 +1184,11 @@ The full tables with the values Symphony renders are in [COMPONENTS.md](COMPONEN
 | [stepper](COMPONENTS.md#stepper) | `mosaik-stepper` | 40 |
 | [stepperItem](COMPONENTS.md#stepper-item) | `mosaik-stepper-item` | 25 |
 | [sticky](COMPONENTS.md#sticky) | `mosaik-sticky` | 24 |
+| [stories](COMPONENTS.md#stories) | `mosaik-stories` | 34 |
+| [storiesGroup](COMPONENTS.md#stories-group) | `mosaik-stories-group` | 16 |
+| [storiesItem](COMPONENTS.md#stories-item) | `mosaik-stories-item` | 20 |
+| [storiesTray](COMPONENTS.md#stories-tray) | `mosaik-stories-tray` | 18 |
+| [storiesTrayItem](COMPONENTS.md#stories-tray-item) | `mosaik-stories-tray-item` | 20 |
 | [successState](COMPONENTS.md#success-state) | `mosaik-success-state` | 29 |
 | [suggestionMenu](COMPONENTS.md#suggestion-menu) | `mosaik-suggestion-menu` | 25 |
 | [summary](COMPONENTS.md#summary) | `mosaik-summary` | 22 |
