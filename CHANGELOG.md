@@ -1,3 +1,13 @@
+## 0.1.57 (2026-11-28)
+
+### 🩹 Fixes
+
+- update packages and keep run details open on Enter ([#93](https://github.com/pixel-brewery/symphony/pull/93))
+
+### ❤️ Thank You
+
+- André Wehlert @RueDeRennes
+
 ## 0.1.56 (2026-11-27)
 
 ### 🚀 Features
