@@ -4,6 +4,8 @@
 
 The private reference checkout is supplied locally through `SYMPHONY_REFERENCE_ROOT`. Its identity and resolved path are intentionally withheld. Scope-specific source revisions, paths, Adopt/Adapt/Differ decisions and executed evidence below retain their original meaning; historical checks do not imply current verification of every route.
 
+The current package integration is documented in [Mosaik integration](integration.md).
+
 ## 2026-11-26 Remote SDK session migration
 
 **Adopt — feature-owned settings and device administration.** The current read-only private reference was inspected at revision `ae9c6ef78913d9277fd373bd42d125587b2656b7`. The exact sources were `libs/frontend/setting/src/routing/settingsRoutes.ts`, `libs/frontend/setting/src/provider/provideSettingsViewSlotFrom.ts`, `libs/frontend/setting/src/views/SettingsView.html`, `libs/frontend/setting/src/view-presenters/SettingsViewPresenter.ts`, `libs/frontend/presentation/src/lib/views/PresenterView.html`, `libs/frontend/presentation/src/lib/view-presenters/PresenterViewPresenter.ts`, and the connector-pairing owner `libs/frontend/features/edge/src/lib/views/cards/EdgeSettingsCardView.html`, its adjacent ViewPresenter path `libs/frontend/features/edge/src/lib/view-presenters/cards/EdgeSettingsCardViewPresenter.ts`, and `libs/frontend/features/edge/src/lib/provider/provideEdgeFeature.ts`. These establish the searchable feature slot, signals and commands, generated code with expiry and copy, device list and revocation, cancellation of older reads, and reconciliation after liveness invalidation or reconnect. Symphony keeps its existing component composition, settings host and presenter ownership.

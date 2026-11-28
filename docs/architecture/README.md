@@ -26,4 +26,4 @@
 
 - [Repository AI configuration](repository-ai-configuration/README.md): versioned Architecture derivation, native skill installation locks, provider mirrors, self-contained portable archives and the public-source privacy guard.
 
-- [Frontend reference contract](frontend-reference/README.md): private-reference parity decisions through an owner-supplied local checkout, public Mosaik APIs and recorded desktop adaptations.
+- [Frontend reference contract](frontend-reference/README.md): private-reference parity decisions through an owner-supplied local checkout, public Mosaik APIs and recorded desktop adaptations, with the current [Mosaik and ngpel integration](frontend-reference/integration.md).

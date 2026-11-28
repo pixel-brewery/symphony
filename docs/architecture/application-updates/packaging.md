@@ -9,7 +9,7 @@ Nx builds Angular into `dist/apps/renderer/browser`, Electron Main and sandbox-c
 ## Cross-platform consumer build contract
 
 `yarn design:md` and `yarn design:md-check` use the installed public
-`mosaik-design-md` CLI from `@pixel-brewery/mosaik-themes` version `0.1.213`.
+`mosaik-design-md` CLI from `@pixel-brewery/mosaik-themes` version `0.1.219`.
 The published CLI serializes repository-relative source paths with portable `/`
 separators, so the committed `DESIGN.md` and `COMPONENTS.md` remain stable on
 Windows and POSIX systems. Symphony consumes that published package directly;
@@ -17,6 +17,11 @@ the dependency contract contains no Yarn consumer patch or local `node_modules`
 modification. A future dependency defect that appears to require patching must
 be resolved in a published owner package or explicitly approved by the owner
 before Symphony changes dependency source locally.
+
+`desktop:test` hashes both generated projections and the actual theme override,
+icon registration, renderer/mobile Tailwind entries and Mosaik SCSS entry in its
+Nx inputs, in addition to the tools configuration and package lock. Changes to
+these inputs invalidate its cached test result.
 
 ## Native application assets
 
