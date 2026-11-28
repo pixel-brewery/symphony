@@ -16,7 +16,7 @@
   "dependencies": {
     "@angular/core": "22.3.0",
     "@angular/router": "22.3.0",
-    "@pixel-brewery/mosaik-elements-angular": "0.1.219",
+    "@pixel-brewery/mosaik-elements-angular": "0.1.221",
     "@symphony/domain-skills": "workspace:*",
     "@symphony/domain-team": "workspace:*",
     "@symphony/frontend-core": "workspace:*",
