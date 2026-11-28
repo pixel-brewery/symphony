@@ -499,7 +499,7 @@ the complete component-token model with the values Symphony renders.
 
 | Layer | Count | Source |
 |---|---|---|
-| Global tokens (compiled) | 507 | `@pixel-brewery/mosaik-themes@0.1.213` |
+| Global tokens (compiled) | 507 | `@pixel-brewery/mosaik-themes@0.1.219` |
 | Runtime custom properties (light) | 653 | base theme plus the overrides of this product |
 | Components with a token file | 397 | `design/soho/model.json` |
 | Component tokens (mixins expanded) | 11839 | `design/soho/model.json` |
